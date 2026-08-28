@@ -1,6 +1,10 @@
 import Link from "next/link"
 import { PageHeader } from "@/components/PageHeader"
+import { DomainTriage } from "@/components/timesheet/DomainTriage"
 import { MeetingInbox } from "@/components/timesheet/MeetingInbox"
+import { asc } from "drizzle-orm"
+import { db } from "@/db"
+import { clients } from "@/db/schema"
 import { meetingProposals, unmatchedDomains } from "@/lib/meetings"
 import { ROUTES } from "@/lib/nav"
 
@@ -8,9 +12,12 @@ export const metadata = { title: "Meetings" }
 export const dynamic = "force-dynamic"
 
 export default async function MeetingsPage() {
-  const [proposals, unmatched] = await Promise.all([
+  const [proposals, unmatched, clientRows] = await Promise.all([
     meetingProposals(),
-    unmatchedDomains(),
+    // Mapping a domain is a one-off decision, so look back further than the
+    // 60-day window used for proposing entries.
+    unmatchedDomains(365),
+    db.query.clients.findMany({ orderBy: [asc(clients.name)] }),
   ])
 
   return (
@@ -30,7 +37,11 @@ export default async function MeetingsPage() {
         Meetings from the last 60 days whose guests match a client domain, and
         that are not on the timesheet yet. Logging one writes a real time entry.
       </p>
-      <MeetingInbox proposals={proposals} unmatched={unmatched} />
+      <MeetingInbox proposals={proposals} />
+      <DomainTriage
+        rows={unmatched}
+        clients={clientRows.map((c) => ({ slug: c.slug, name: c.name }))}
+      />
     </>
   )
 }

@@ -6,11 +6,11 @@ type Db = PostgresJsDatabase<typeof schema>
 
 declare global {
   // eslint-disable-next-line no-var
-  var __tk_crm_db_v8: Db | undefined
+  var __tk_crm_db_v9: Db | undefined
 }
 
 export function getDb(): Db {
-  if (global.__tk_crm_db_v8) return global.__tk_crm_db_v8
+  if (global.__tk_crm_db_v9) return global.__tk_crm_db_v9
 
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {
@@ -30,7 +30,7 @@ export function getDb(): Db {
   const client = postgres(connectionString, { max: 10 })
   const db = drizzle(client, { schema })
   if (process.env.NODE_ENV !== "production") {
-    global.__tk_crm_db_v8 = db
+    global.__tk_crm_db_v9 = db
   }
   return db
 }

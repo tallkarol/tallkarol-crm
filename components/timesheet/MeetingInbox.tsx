@@ -1,12 +1,9 @@
 "use client"
 
-import Link from "next/link"
 import { useMemo, useState, useTransition } from "react"
 import { Badge } from "@/components/work/Badge"
-import { cn } from "@/lib/cn"
 import type { MeetingProposal } from "@/lib/meetings"
 import { dismissMeeting, logMeeting } from "@/lib/meetings-actions"
-import { ROUTES } from "@/lib/nav"
 
 function pad(n: number) {
   return String(n).padStart(2, "0")
@@ -29,13 +26,7 @@ function dayLabel(iso: string) {
   })
 }
 
-export function MeetingInbox({
-  proposals,
-  unmatched,
-}: {
-  proposals: MeetingProposal[]
-  unmatched: { domain: string; hours: number }[]
-}) {
+export function MeetingInbox({ proposals }: { proposals: MeetingProposal[] }) {
   const [done, setDone] = useState<Record<string, "logged" | "dismissed">>({})
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
@@ -161,38 +152,6 @@ export function MeetingInbox({
         ))
       )}
 
-      {unmatched.length ? (
-        <section className="mt-8 rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-tk-onyx">
-            Meeting time with no client
-          </h2>
-          <p className="mt-1 text-sm text-tk-slate/70">
-            These domains appear on meetings but match no client. Add one to a
-            client on its page and the meetings show up here.
-          </p>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {unmatched.slice(0, 10).map((row) => (
-              <li
-                key={row.domain}
-                className={cn(
-                  "rounded-full border border-tk-slate/20 px-3 py-1.5 text-xs text-tk-slate"
-                )}
-              >
-                {row.domain}
-                <span className="ml-1.5 font-semibold tabular-nums">
-                  {row.hours} hr
-                </span>
-              </li>
-            ))}
-          </ul>
-          <Link
-            href={ROUTES.clients}
-            className="mt-3 inline-block text-xs font-semibold text-tk-teal hover:underline"
-          >
-            Go to clients
-          </Link>
-        </section>
-      ) : null}
     </>
   )
 }
