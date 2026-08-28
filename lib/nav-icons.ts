@@ -1,0 +1,60 @@
+import type { LucideIcon } from "lucide-react"
+import {
+  Activity,
+  BarChart3,
+  Building2,
+  Calendar,
+  CheckSquare,
+  Clock,
+  FileSignature,
+  FileText,
+  FolderKanban,
+  Inbox,
+  Kanban,
+  LayoutDashboard,
+  LineChart,
+  Mail,
+  Plug,
+  Receipt,
+  Repeat,
+  Route,
+  Target,
+  TrendingUp,
+  Settings,
+  UserCog,
+  Users,
+  Wallet,
+} from "lucide-react"
+import type { NavIconName } from "@/lib/nav"
+
+const ICONS: Record<NavIconName, LucideIcon> = {
+  dashboard: LayoutDashboard,
+  inbox: Inbox,
+  pipeline: Kanban,
+  contacts: Users,
+  clients: Building2,
+  projects: FolderKanban,
+  retainers: Repeat,
+  leads: Target,
+  calendar: Calendar,
+  tasks: CheckSquare,
+  activity: Activity,
+  emails: Mail,
+  proposals: FileText,
+  contracts: FileSignature,
+  invoices: Receipt,
+  expenses: Wallet,
+  timesheet: Clock,
+  attribution: Route,
+  analytics: LineChart,
+  reports: BarChart3,
+  revenue: TrendingUp,
+  settings: Settings,
+  team: UserCog,
+  "email-settings": Mail,
+  integrations: Plug,
+}
+
+export function navIcon(name: NavIconName): LucideIcon {
+  return ICONS[name]
+}

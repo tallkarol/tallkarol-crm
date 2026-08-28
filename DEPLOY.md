@@ -36,14 +36,21 @@ Set these variables on the **web** service:
 
 ## 4. Marketing site (Vercel)
 
-On the tallkarol.com project:
+On the **tallkarol.com** project (not Railway, not the CRM):
 
 | Variable | Value |
 |---|---|
 | `CRM_INGEST_URL` | `https://crm.tallkarol.com/api/ingest` |
 | `CRM_INGEST_SECRET` | same as Railway `INGEST_SECRET` |
+| `GA4_MEASUREMENT_ID` | `G-JSHG8GYFXE` |
+| `GA4_API_SECRET` | Measurement Protocol secret from the GA4 web stream |
+| `RESEND_API_KEY` | same Resend key |
+| `RESEND_FROM_EMAIL` | `hello@tallkarol.com` |
+| `CONTACT_EMAIL` | `hello@tallkarol.com` |
 
-Redeploy the site after setting them.
+Never prefix `GA4_*` or `CRM_INGEST_SECRET` with `NEXT_PUBLIC_`. Redeploy after setting them.
+
+The site forwards events server-side on Vercel. The CRM on Railway can take `GA4_PROPERTY_ID=498136327`, `GA4_MEASUREMENT_ID`, `GA4_API_SECRET`, `GSC_SITE_URL=https://www.tallkarol.com/`, `GOOGLE_PROJECT_ID`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, and `GOOGLE_SERVICE_ACCOUNT_KEY`. See [ANALYTICS.md](./ANALYTICS.md).
 
 ## 5. Smoke test
 

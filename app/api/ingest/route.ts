@@ -47,6 +47,11 @@ export async function POST(request: NextRequest) {
       ? (config.projectTypes as string[]).map(String)
       : []
 
+    const attribution =
+      body?.attribution && typeof body.attribution === "object"
+        ? body.attribution
+        : undefined
+
     const [row] = await db
       .insert(inquiries)
       .values({
@@ -55,7 +60,7 @@ export async function POST(request: NextRequest) {
         company: contact.company ? String(contact.company).trim() : null,
         source: inferSource(config),
         projectTypes,
-        payload: { contact, config },
+        payload: { contact, config, attribution },
         status: "new",
       })
       .returning({ id: inquiries.id })

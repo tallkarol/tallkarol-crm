@@ -12,7 +12,7 @@ Admin inquiry inbox for tallkarol.com. Customer portal comes later.
 ## Local
 
 1. Copy `.env.example` → `.env.local`
-2. Use the **public** Railway Postgres URL (Connect tab), not `*.railway.internal`
+2. Use the **public** Railway Postgres URL (Connect tab, host like `*.rlwy.net`), not `*.railway.internal`. The internal host is why local login shows “Could not send the link.”
 3. Generate secrets: `openssl rand -hex 32` for `SESSION_SECRET` and `INGEST_SECRET`
 4. `npm install`
 5. `npm run db:generate` then `npm run db:migrate`
@@ -25,6 +25,12 @@ Admin inquiry inbox for tallkarol.com. Customer portal comes later.
 - Start: `npm run start` (uses `$PORT`)
 - Set env vars from `.env.example`
 - Attach custom domain `crm.tallkarol.com`
+
+## Calendar
+
+Cal.com bookings and Google calendars merge into `/calendar`, alongside
+invoices, contracts, and logged time. Setup — including the service-account
+calendar sharing that replaces OAuth — is in `CALENDAR.md`.
 
 ## Site ingest
 

@@ -8,6 +8,104 @@
       "when": 1787858455690,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787914800000,
+      "tag": "0001_work",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787917200000,
+      "tag": "0002_invoices",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787918400000,
+      "tag": "0003_contracts",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787922000000,
+      "tag": "0004_contract_terms",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787925600000,
+      "tag": "0005_timesheet",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787927189258,
+      "tag": "0006_calendar",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787930789258,
+      "tag": "0007_report_cache",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1787942000000,
+      "tag": "0008_retainer_window",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1787942100000,
+      "tag": "0009_expenses_goals",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1787942200000,
+      "tag": "0010_workstreams_task_due",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1787945800000,
+      "tag": "0011_sites",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1787949728708,
+      "tag": "0012_mean_carlie_cooper",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1787953328708,
+      "tag": "0013_meeting_time",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1787956928708,
+      "tag": "0014_ignored_domains",
+      "breakpoints": true
     }
   ]
 }

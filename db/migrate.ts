@@ -1,8 +1,10 @@
 import { drizzle } from "drizzle-orm/postgres-js"
 import { migrate } from "drizzle-orm/postgres-js/migrator"
 import postgres from "postgres"
+import { loadLocalEnv } from "../lib/load-env"
 
 async function main() {
+  loadLocalEnv()
   const url = process.env.DATABASE_URL
   if (!url) {
     throw new Error("DATABASE_URL is not set")
