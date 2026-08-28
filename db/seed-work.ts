@@ -58,6 +58,12 @@ async function main() {
         notes:
           "Grace Sweeney · 6060 W Canal Rd, Valley View, OH 44125. Website launched Nov 13, 2025. $65/hr. Invoice 002 still open. ACF event system agreed, not started.",
       },
+      {
+        id: IDS.clients.totalSoccerAcademy,
+        name: "Total Soccer Academy",
+        slug: "total-soccer-academy",
+        notes: "Karol Boryka. Ended.",
+      },
     ])
     .onConflictDoUpdate({
       target: clients.id,

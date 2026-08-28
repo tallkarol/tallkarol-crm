@@ -2,6 +2,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { PageHeader } from "@/components/PageHeader"
 import { Forecast } from "@/components/dashboard/Forecast"
+import { NeedsAttention } from "@/components/dashboard/NeedsAttention"
 import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings"
 import { YearBilled } from "@/components/dashboard/YearBilled"
 import { PeekRouter, peekHref } from "@/components/peek/PeekRouter"
@@ -11,6 +12,7 @@ import { CHART_ORDER, clientColor } from "@/lib/client-colors"
 import { buildForecast } from "@/lib/forecast"
 import { getGoals } from "@/lib/goals"
 import { ROUTES } from "@/lib/nav"
+import { ensureRenewalTasks } from "@/lib/renewals"
 import { formatDay, formatMoney } from "@/lib/work"
 
 export const metadata = { title: "Dashboard" }
@@ -20,9 +22,11 @@ function monthKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
 }
 
-function daysOut(iso: string) {
+function daysFromToday(iso: string) {
   const [y, m, d] = iso.split("-").map(Number)
-  return Math.max(0, Math.floor((Date.now() - Date.UTC(y, m - 1, d)) / 86_400_000))
+  const now = new Date()
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+  return Math.round((Date.UTC(y, m - 1, d) - today) / 86_400_000)
 }
 
 function taskDue(dueOn: string | null) {
@@ -43,6 +47,7 @@ export default async function DashboardPage({
     redirect(`${ROUTES.inbox}?status=${searchParams.status}`)
   }
 
+  await ensureRenewalTasks()
   const [invoices, openTasks, retainers, projects, timeEntries, meetings] =
     await Promise.all([
       db.query.invoices.findMany({ with: { client: true } }),
@@ -232,78 +237,92 @@ export default async function DashboardPage({
             configured={meetings.configured}
             meetings={meetings.meetings}
           />
-          <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-tk-slate/10 px-5 py-3.5">
-              <h2 className="text-sm font-semibold text-tk-onyx">Needs attention</h2>
-              <span className="text-xs text-tk-slate/60">unpaid + blocked</span>
-            </div>
-            <ul className="divide-y divide-tk-slate/10">
-              {unpaid.map((inv) => {
-                const age = daysOut(inv.issuedOn)
-                return (
-                  <AttentionRow
-                    key={inv.id}
-                    color={clientColor(inv.client.slug)}
-                    href={peekHref("/", "invoice", inv.number)}
-                    title={`Invoice ${inv.number} · ${inv.client.name}`}
-                    sub={`sent ${formatDay(inv.issuedOn)} · ${age} ${age === 1 ? "day" : "days"} out`}
-                    amount={formatMoney(inv.amountCents, inv.currency)}
-                    pill={age > 30 ? { label: "overdue", tone: "bad" } : { label: "unpaid", tone: "warn" }}
-                  />
-                )
-              })}
-              {actionTasks.map((t) => {
-                const diff = taskDue(t.dueOn)
-                return (
-                  <AttentionRow
-                    key={t.id}
-                    color={t.client ? clientColor(t.client.slug) : "#71807D"}
-                    href={peekHref("/", "task", t.id)}
-                    title={t.client ? `${t.title} — ${t.client.name}` : t.title}
-                    sub={
+          <NeedsAttention
+            groups={[
+              {
+                id: "unpaid",
+                label: "Unpaid",
+                total: formatMoney(
+                  unpaid.reduce((sum, inv) => sum + inv.amountCents, 0)
+                ),
+                items: unpaid.map((inv) => {
+                  const delta = daysFromToday(inv.issuedOn)
+                  const overdue = delta < -30
+                  return {
+                    id: inv.id,
+                    href: peekHref("/", "invoice", inv.number),
+                    color: clientColor(inv.client.slug),
+                    title: inv.client.name,
+                    meta: inv.number,
+                    detail:
+                      delta > 0
+                        ? `sends ${formatDay(inv.issuedOn)}`
+                        : delta === 0
+                          ? "issued today"
+                          : overdue
+                            ? `${-delta} days overdue`
+                            : `${-delta} ${delta === -1 ? "day" : "days"} out`,
+                    amount: formatMoney(inv.amountCents, inv.currency),
+                    tone: overdue ? "bad" : "warn",
+                  }
+                }),
+              },
+              {
+                id: "tasks",
+                label: "Tasks",
+                items: actionTasks.map((t) => {
+                  const diff = taskDue(t.dueOn)
+                  return {
+                    id: t.id,
+                    href: peekHref("/", "task", t.id),
+                    color: t.client ? clientColor(t.client.slug) : "#71807D",
+                    title: t.title,
+                    meta: t.client?.name,
+                    detail:
                       diff == null
                         ? t.notes || undefined
                         : diff < 0
-                          ? `was due ${formatDay(t.dueOn!)}`
+                          ? `overdue since ${formatDay(t.dueOn!)}`
                           : diff === 0
                             ? "due today"
-                            : `due ${formatDay(t.dueOn!)}`
-                    }
-                    pill={
+                            : `due ${formatDay(t.dueOn!)}`,
+                    tone:
                       diff != null && diff < 0
-                        ? { label: "overdue", tone: "bad" }
+                        ? "bad"
                         : diff === 0
-                          ? { label: "due today", tone: "warn" }
-                          : { label: "task open", tone: "warn" }
-                    }
-                  />
-                )
-              })}
-              {pendingDeliverables.map((d) => (
-                <AttentionRow
-                  key={d.id}
-                  color={clientColor(d.project.client.slug)}
-                  href={peekHref("/", "deliverable", d.id)}
-                  title={d.title}
-                  sub={d.project.name}
-                  pill={{ label: "on deck", tone: "ok" }}
-                />
-              ))}
-              {waiting.map((p) => (
-                <AttentionRow
-                  key={p.id}
-                  color={clientColor(p.client.slug)}
-                  href={peekHref("/", "project", p.slug)}
-                  title={`${p.name} — waiting on content`}
-                  sub={p.notes || "kickoff blocked on client media"}
-                  pill={{ label: "blocked", tone: "warn" }}
-                />
-              ))}
-              {unpaid.length + actionTasks.length + pendingDeliverables.length + waiting.length === 0 ? (
-                <li className="px-5 py-8 text-sm text-tk-slate/70">All clear.</li>
-              ) : null}
-            </ul>
-          </section>
+                          ? "warn"
+                          : "neutral",
+                  }
+                }),
+              },
+              {
+                id: "deliverables",
+                label: "On deck",
+                items: pendingDeliverables.map((d) => ({
+                  id: d.id,
+                  href: peekHref("/", "deliverable", d.id),
+                  color: clientColor(d.project.client.slug),
+                  title: d.title,
+                  meta: d.project.client.name,
+                  detail: d.project.name,
+                  tone: "ok" as const,
+                })),
+              },
+              {
+                id: "blocked",
+                label: "Blocked",
+                items: waiting.map((p) => ({
+                  id: p.id,
+                  href: peekHref("/", "project", p.slug),
+                  color: clientColor(p.client.slug),
+                  title: p.name,
+                  meta: p.client.name,
+                  detail: p.notes || "Waiting on client content",
+                  tone: "warn" as const,
+                })),
+              },
+            ]}
+          />
         </div>
       </div>
     </>
@@ -370,43 +389,3 @@ function GoalPie({ fraction }: { fraction: number }) {
   )
 }
 
-function AttentionRow({
-  color,
-  href,
-  title,
-  sub,
-  amount,
-  pill,
-}: {
-  color: string
-  href: string
-  title: string
-  sub?: string
-  amount?: string
-  pill: { label: string; tone: "bad" | "warn" | "ok" }
-}) {
-  const tones = {
-    bad: "bg-red-700/10 text-red-700",
-    warn: "bg-amber-700/10 text-amber-800",
-    ok: "bg-tk-teal/10 text-tk-teal",
-  }
-  return (
-    <li>
-      <Link
-        href={href}
-        scroll={false}
-        className="flex items-center gap-3 px-5 py-3 hover:bg-tk-linen/60"
-      >
-        <span className="size-2 shrink-0 rounded-full" style={{ background: color }} />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate font-medium text-tk-onyx">{title}</span>
-          {sub ? <span className="block truncate text-xs text-tk-slate/60">{sub}</span> : null}
-        </span>
-        {amount ? <span className="text-sm font-semibold tabular-nums text-tk-onyx">{amount}</span> : null}
-        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${tones[pill.tone]}`}>
-          {pill.label}
-        </span>
-      </Link>
-    </li>
-  )
-}

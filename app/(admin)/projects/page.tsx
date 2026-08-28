@@ -1,114 +1,277 @@
 import Link from "next/link"
-import { asc } from "drizzle-orm"
 import { PageHeader } from "@/components/PageHeader"
-import { Badge, projectTone } from "@/components/work/Badge"
+import { PeekRouter } from "@/components/peek/PeekRouter"
 import { db } from "@/db"
-import { projects, type ProjectStatus } from "@/db/schema"
-import { cn } from "@/lib/cn"
+import type { Deliverable } from "@/db/schema"
+import { clientColor } from "@/lib/client-colors"
+import { daysSince, fmtHours } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
-import {
-  FEE_STATUS_LABEL,
-  PROJECT_FILTERS,
-  PROJECT_STATUS_LABEL,
-} from "@/lib/work"
+import { formatMoney } from "@/lib/work"
+import { draftDeliverableInvoice } from "./actions"
 
 export const metadata = { title: "Projects" }
-
-function isStatus(value: string | undefined): value is ProjectStatus {
-  return (
-    value === "waiting_on_content" ||
-    value === "in_progress" ||
-    value === "complete"
-  )
-}
+export const dynamic = "force-dynamic"
 
 export default async function ProjectsPage({
   searchParams,
 }: {
-  searchParams: { status?: string }
+  searchParams: { peek?: string }
 }) {
-  const status = isStatus(searchParams.status) ? searchParams.status : "all"
-  const rows = await db.query.projects.findMany({
-    orderBy: [asc(projects.name)],
-    with: {
-      client: true,
-      retainer: true,
-      deliverables: true,
-    },
-  })
-  const visible =
-    status === "all" ? rows : rows.filter((row) => row.status === status)
+  const [projects, invoices, entries, openTasks, workstreams] = await Promise.all([
+    db.query.projects.findMany({
+      with: { client: true, deliverables: true },
+      orderBy: (p, { asc }) => [asc(p.createdAt)],
+    }),
+    db.query.invoices.findMany(),
+    db.query.timeEntries.findMany(),
+    db.query.tasks.findMany().then((rows) => rows.filter((t) => t.status === "open")),
+    db.query.workstreams.findMany(),
+  ])
+
+  const now = new Date()
+  const activeProjects = projects.filter((p) => p.status !== "complete")
+  const inDelivery = projects.filter((p) => p.status === "in_progress")
+  const blocked = projects.filter((p) => p.status === "waiting_on_content")
+
+  const unbilledDeliverables = activeProjects.flatMap((p) =>
+    p.deliverables.filter((d) => (d.status === "pending" || d.status === "done") && d.feeCents)
+  )
+  const unbilledCents = unbilledDeliverables.reduce((s, d) => s + (d.feeCents ?? 0), 0)
+  const invoiceableCents = unbilledDeliverables
+    .filter((d) => d.status === "done")
+    .reduce((s, d) => s + (d.feeCents ?? 0), 0)
+  const tbdCount = activeProjects.flatMap((p) =>
+    p.deliverables.filter((d) => d.status === "pending" && !d.feeCents)
+  ).length
+
+  const yearStart = `${now.getFullYear()}-01-01`
+  const collectedYtd = invoices
+    .filter((i) => i.projectId && i.status === "paid" && i.issuedOn >= yearStart)
+    .reduce((s, i) => s + i.amountCents, 0)
+
+  const hoursByProject = new Map<string, number>()
+  for (const e of entries) {
+    if (e.projectId) hoursByProject.set(e.projectId, (hoursByProject.get(e.projectId) ?? 0) + Number(e.hours))
+  }
+  const billedByProject = new Map<string, number>()
+  for (const i of invoices) {
+    if (i.projectId && i.status === "paid")
+      billedByProject.set(i.projectId, (billedByProject.get(i.projectId) ?? 0) + i.amountCents)
+  }
 
   return (
     <>
       <PageHeader title="Projects" />
+      {searchParams.peek ? <PeekRouter peek={searchParams.peek} closeHref={ROUTES.projects} /> : null}
 
-      <div className="mt-8 flex flex-wrap gap-2">
-        {PROJECT_FILTERS.map((item) => {
-          const href =
-            item.id === "all"
-              ? ROUTES.projects
-              : `${ROUTES.projects}?status=${item.id}`
-          const active = item.id === status
-          const count =
-            item.id === "all"
-              ? rows.length
-              : rows.filter((row) => row.status === item.id).length
+      <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Kpi label="In delivery" value={String(inDelivery.length)} sub={inDelivery.map((p) => p.name).join(" · ") || "none"} />
+        <Kpi
+          label="Known unbilled"
+          value={formatMoney(unbilledCents)}
+          sub={`${formatMoney(invoiceableCents)} invoiceable today${tbdCount ? ` · +${tbdCount} TBD` : ""}`}
+          tone={invoiceableCents > 0 ? "good" : undefined}
+        />
+        <Kpi
+          label="Blocked"
+          value={String(blocked.length)}
+          sub={blocked.map((p) => `${p.name} — waiting on content`).join(" · ") || "nothing blocked"}
+          tone={blocked.length ? "bad" : undefined}
+        />
+        <Kpi label={`Collected ${now.getFullYear()}`} value={formatMoney(collectedYtd)} sub="paid project invoices this year" />
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        {activeProjects.map((project) => {
+          const color = clientColor(project.client.slug)
+          const deliverables = [...project.deliverables].sort((a, b) => a.sort - b.sort)
+          const totalKnown = deliverables.reduce((s, d) => s + (d.feeCents ?? 0), 0)
+          const paid = deliverables.filter((d) => d.status === "paid").reduce((s, d) => s + (d.feeCents ?? 0), 0)
+          const doneUnbilled = deliverables
+            .filter((d) => d.status === "done" || d.status === "invoiced")
+            .reduce((s, d) => s + (d.feeCents ?? 0), 0)
+          const hasTbd = deliverables.some((d) => !d.feeCents)
+
+          const streams = workstreams.filter((w) => w.projectId === project.id)
+          const tasks = openTasks.filter((t) => t.projectId === project.id)
+          const nextTask = tasks[0]
+
+          const hours = hoursByProject.get(project.id) ?? 0
+          const billed = billedByProject.get(project.id) ?? 0
+          const effRate = hours > 0 && billed > 0 ? Math.round(billed / hours) : null
+
+          const lastMoved = Math.max(
+            project.updatedAt.getTime(),
+            ...streams.map((w) => w.updatedAt.getTime()),
+            ...tasks.map((t) => t.updatedAt.getTime())
+          )
+          const stale = daysSince(new Date(lastMoved), now)
+
+          const invoiceable = deliverables.find((d) => d.status === "done" && d.feeCents)
+
           return (
-            <Link
-              key={item.id}
-              href={href}
-              className={
-                active
-                  ? "rounded-full bg-tk-teal px-3 py-1.5 text-xs font-semibold text-tk-linen"
-                  : "rounded-full border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
-              }
+            <article
+              key={project.id}
+              className="flex flex-col gap-3 rounded-2xl border border-tk-slate/15 bg-white p-5 pb-4 shadow-sm"
+              style={{ borderLeftWidth: 3, borderLeftColor: color }}
             >
-              {item.label}
-              <span className="ml-1.5 tabular-nums opacity-80">{count}</span>
-            </Link>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="size-2 rounded-full" style={{ background: color }} />
+                <Link href={ROUTES.project(project.slug)} className="font-['Inter_Tight',sans-serif] text-base font-bold text-tk-onyx hover:text-tk-teal">
+                  {project.name}
+                </Link>
+                {project.status === "in_progress" ? (
+                  <span className="rounded-full bg-tk-teal/10 px-2 py-0.5 text-[11px] font-semibold text-tk-teal">in progress</span>
+                ) : (
+                  <span className="rounded-full bg-amber-700/10 px-2 py-0.5 text-[11px] font-semibold text-amber-800">waiting on content</span>
+                )}
+                {stale > 14 ? (
+                  <span className="rounded-full bg-red-700/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-red-700">
+                    no movement · {stale}d
+                  </span>
+                ) : null}
+                <span className="ml-auto text-xs text-tk-slate/60">{project.client.name}</span>
+              </div>
+
+              <div>
+                <div className="flex h-2 overflow-hidden rounded-full bg-tk-linen" role="img" aria-label="Fee progress">
+                  {totalKnown > 0 ? (
+                    <>
+                      <span className="block h-full" style={{ width: `${(paid / totalKnown) * 100}%`, background: "#006965" }} />
+                      <span className="block h-full" style={{ width: `${(doneUnbilled / totalKnown) * 100}%`, background: "rgba(0,105,101,.35)" }} />
+                    </>
+                  ) : null}
+                </div>
+                <p className="mt-1.5 text-[11px] tabular-nums text-tk-slate/70">
+                  {totalKnown > 0 ? (
+                    <>
+                      {formatMoney(paid)} paid
+                      {doneUnbilled ? ` · ${formatMoney(doneUnbilled)} done, unbilled` : ""}
+                      {` · ${formatMoney(totalKnown)} total${hasTbd ? " + TBD" : ""}`}
+                    </>
+                  ) : (
+                    "fee agreed · nothing billed yet"
+                  )}
+                </p>
+              </div>
+
+              {deliverables.length ? (
+                <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
+                  {deliverables.map((d, i) => (
+                    <span key={d.id} className="flex items-center">
+                      {i > 0 ? <span className="mx-2 h-0.5 w-5 bg-tk-slate/[0.09]" aria-hidden /> : null}
+                      <Milestone d={d} baseHref={ROUTES.projects} />
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+
+              {streams.length || effRate || hours > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {streams.map((w) => (
+                    <span key={w.id} className="inline-flex items-center gap-1.5 rounded-full border border-tk-slate/15 bg-[#FAF6EE] px-2.5 py-0.5 text-[11px] font-semibold text-tk-slate tabular-nums">
+                      <span className="size-1.5 rounded-full" style={{ background: color }} />
+                      {w.title} · {w.stage}
+                      <span className="text-[10px] font-bold text-tk-teal">{w.pass === 1 ? "1st" : w.pass === 2 ? "2nd" : `${w.pass}th`}</span>
+                    </span>
+                  ))}
+                  {effRate ? (
+                    <span className="inline-flex items-center rounded-full border border-tk-slate/15 bg-[#FAF6EE] px-2.5 py-0.5 text-[11px] font-bold tabular-nums text-emerald-800">
+                      eff. {formatMoney(effRate)}/hr · {fmtHours(hours)} hr vs {formatMoney(billed)} billed
+                    </span>
+                  ) : project.status === "in_progress" ? (
+                    <span className="inline-flex items-center rounded-full border border-tk-slate/15 bg-[#FAF6EE] px-2.5 py-0.5 text-[11px] font-semibold text-tk-slate/60">
+                      eff. rate — log hours to unlock
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <div className="flex flex-wrap items-center gap-2 border-t border-dashed border-tk-slate/10 pt-3 text-[12.5px] text-tk-slate">
+                <span className="text-[10.5px] font-bold uppercase tracking-widest text-tk-slate/50">Next</span>
+                {nextTask ? (
+                  <Link
+                    href={`${ROUTES.projects}?peek=task:${nextTask.id}`}
+                    scroll={false}
+                    className="truncate hover:text-tk-teal hover:underline"
+                  >
+                    {nextTask.title}
+                    {nextTask.notes ? ` — ${nextTask.notes}` : ""}
+                  </Link>
+                ) : (
+                  <span className="text-tk-slate/60">no open tasks</span>
+                )}
+                {invoiceable ? (
+                  <form action={draftDeliverableInvoice.bind(null, invoiceable.id)} className="ml-auto">
+                    <button className="rounded-full bg-tk-teal px-3 py-1 text-xs font-semibold text-tk-linen hover:bg-tk-teal/90">
+                      Invoice {formatMoney(invoiceable.feeCents ?? 0)}
+                    </button>
+                  </form>
+                ) : null}
+              </div>
+            </article>
           )
         })}
       </div>
 
-      {visible.length === 0 ? (
-        <p className="mt-8 text-sm text-tk-slate/70">Nothing in this view.</p>
-      ) : (
-        <ul className="mt-6 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-          {visible.map((project) => (
-            <li
-              key={project.id}
-              className="border-b border-tk-slate/10 last:border-0"
-            >
-              <Link
-                href={ROUTES.project(project.slug)}
-                className={cn(
-                  "flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-tk-linen/60"
-                )}
-              >
-                <div className="min-w-0">
-                  <p className="font-medium text-tk-onyx">{project.name}</p>
-                  <p className="mt-0.5 text-sm text-tk-slate/70">
-                    {project.client.name}
-                    {project.retainer
-                      ? ` · ${project.retainer.name} retainer`
-                      : ""}
-                    {project.deliverables.length
-                      ? ` · ${project.deliverables.filter((d) => d.status === "paid" || d.status === "done" || d.status === "invoiced").length}/${project.deliverables.length} deliverables`
-                      : ""}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
-                  <Badge tone={projectTone(project.status)}>
-                    {PROJECT_STATUS_LABEL[project.status]}
-                  </Badge>
-                  <Badge>{FEE_STATUS_LABEL[project.feeStatus]}</Badge>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="mt-4 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white/60">
+        {projects
+          .filter((p) => p.status === "complete")
+          .map((p) => {
+            const total = p.deliverables.reduce((s, d) => s + (d.feeCents ?? 0), 0)
+            return (
+              <li key={p.id} className="flex flex-wrap items-center gap-2.5 border-b border-tk-slate/10 px-5 py-3 text-sm last:border-0">
+                <span className="size-2 rounded-full" style={{ background: clientColor(p.client.slug) }} />
+                <Link href={ROUTES.project(p.slug)} className="font-semibold text-tk-onyx hover:text-tk-teal">
+                  {p.name}
+                </Link>
+                <span className="text-tk-slate/60">
+                  {p.client.name}
+                  {total ? ` · ${formatMoney(total)} · all paid` : ""}
+                </span>
+                <span className="ml-auto rounded-full bg-tk-slate/10 px-2 py-0.5 text-[11px] font-semibold text-tk-slate/70">complete</span>
+              </li>
+            )
+          })}
+      </ul>
     </>
+  )
+}
+
+function Milestone({ d, baseHref }: { d: Deliverable; baseHref: string }) {
+  const done = d.status === "paid" || d.status === "invoiced"
+  const ready = d.status === "done"
+  return (
+    <Link href={`${baseHref}?peek=deliverable:${d.id}`} scroll={false} className="flex items-center gap-1.5 hover:opacity-80">
+      <span
+        className={
+          done
+            ? "grid size-5 place-items-center rounded-full bg-tk-teal text-[11px] font-bold text-tk-linen"
+            : ready
+              ? "grid size-5 place-items-center rounded-full border-[1.5px] border-tk-teal bg-tk-teal/15 text-[11px] font-bold text-tk-teal"
+              : "grid size-5 place-items-center rounded-full border-[1.5px] border-dashed border-tk-slate/30 bg-tk-linen text-[11px] font-bold text-tk-slate/60"
+        }
+      >
+        {done ? "✓" : ready ? "!" : d.sort || "·"}
+      </span>
+      <span className="text-xs">
+        <span className="font-semibold text-tk-onyx">{d.label}</span>
+        {d.dueOn ? (
+          <span className="text-tk-slate/60"> · {new Date(d.dueOn + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+        ) : null}
+      </span>
+    </Link>
+  )
+}
+
+function Kpi({ label, value, sub, tone }: { label: string; value: string; sub: string; tone?: "good" | "bad" }) {
+  return (
+    <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-tk-slate/60">{label}</p>
+      <p className="mt-1.5 text-[23px] font-semibold leading-tight tracking-tight text-tk-onyx tabular-nums">{value}</p>
+      <p className={`mt-0.5 truncate text-xs ${tone === "bad" ? "font-semibold text-red-700" : tone === "good" ? "font-semibold text-emerald-800" : "text-tk-slate/60"}`}>
+        {sub}
+      </p>
+    </div>
   )
 }

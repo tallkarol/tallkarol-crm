@@ -103,6 +103,7 @@ export const deliverableStatusEnum = pgEnum("deliverable_status", [
   "paid",
 ])
 export const taskStatusEnum = pgEnum("task_status", ["open", "done"])
+export const boardStageEnum = pgEnum("board_stage", ["queue", "doing", "waiting"])
 export const reportStatusEnum = pgEnum("report_status", ["due", "filed"])
 export const cadenceEnum = pgEnum("cadence", ["none", "weekly", "monthly"])
 export const invoiceStatusEnum = pgEnum("invoice_status", [
@@ -164,6 +165,7 @@ export const projects = pgTable("projects", {
   slug: text("slug").notNull().unique(),
   status: projectStatusEnum("status").notNull().default("in_progress"),
   feeStatus: feeStatusEnum("fee_status").notNull().default("agreed"),
+  links: jsonb("links").notNull().default([]),
   notes: text("notes").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
@@ -182,6 +184,8 @@ export const deliverables = pgTable("deliverables", {
   title: text("title").notNull().default(""),
   status: deliverableStatusEnum("status").notNull().default("pending"),
   sort: integer("sort").notNull().default(0),
+  feeCents: integer("fee_cents"),
+  dueOn: date("due_on"),
 })
 
 export const tasks = pgTable("tasks", {
@@ -199,6 +203,7 @@ export const tasks = pgTable("tasks", {
   cadence: cadenceEnum("cadence").notNull().default("none"),
   status: taskStatusEnum("status").notNull().default("open"),
   dueOn: date("due_on"),
+  boardStage: boardStageEnum("board_stage").notNull().default("queue"),
   notes: text("notes").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
