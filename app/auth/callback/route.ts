@@ -7,7 +7,11 @@ import { SESSION_COOKIE } from "@/lib/crypto"
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token")
-  const appUrl = process.env.APP_URL || "http://localhost:3001"
+  // Land on the host the request actually arrived at. The session cookie is
+  // set on that host, so redirecting anywhere else drops it and the sign-in
+  // silently fails — which is what happens when APP_URL names a different
+  // domain than the one the link was opened on.
+  const appUrl = request.nextUrl.origin
 
   if (!token) {
     return NextResponse.redirect(new URL("/login?error=missing", appUrl))
