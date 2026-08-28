@@ -10,6 +10,7 @@ import { db } from "@/db"
 import { invoices } from "@/db/schema"
 import { ROUTES } from "@/lib/nav"
 import { setInvoiceNotesAction, setInvoiceStatusAction } from "@/lib/peek-actions"
+import { updateInvoiceDetails } from "../edit-actions"
 import { formatDay, formatHours, formatMoney } from "@/lib/work"
 
 export async function generateMetadata({
@@ -53,6 +54,12 @@ export default async function InvoiceDetailPage({
       <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
         <PageHeader title={invoice.number} />
         <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href={`/invoice-print/${encodeURIComponent(invoice.number)}`}
+            className="rounded-full bg-tk-teal px-4 py-1.5 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90"
+          >
+            Print / PDF
+          </Link>
           <PickButtons
             current={invoice.status}
             action={setInvoiceStatusAction.bind(null, invoice.id) as (v: string) => Promise<{ ok: boolean; error?: string }>}
@@ -109,12 +116,58 @@ export default async function InvoiceDetailPage({
           Timesheet
         </Link>
       </p>
-      {invoice.billTo ? (
-        <p className="mt-1 text-sm text-tk-slate/70">{invoice.billTo}</p>
-      ) : null}
-      {invoice.description ? (
-        <p className="mt-3 text-sm text-tk-onyx">{invoice.description}</p>
-      ) : null}
+      {invoice.status === "draft" ? (
+        <section className="mt-5 max-w-3xl rounded-2xl border border-amber-700/25 bg-amber-700/[0.04] p-5">
+          <h2 className="text-sm font-semibold text-tk-onyx">
+            Edit draft
+            <span className="ml-2 text-xs font-normal text-tk-slate/60">
+              review the numbers, then Print / PDF and mark sent
+            </span>
+          </h2>
+          <form action={updateInvoiceDetails.bind(null, invoice.id)} className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <label className="block text-sm">
+              <span className="text-xs font-medium text-tk-slate/70">Invoice #</span>
+              <input name="number" defaultValue={invoice.number} required className="mt-1 w-full rounded-lg border border-tk-slate/20 bg-white px-3 py-2 text-sm tabular-nums outline-none focus:border-tk-teal" />
+            </label>
+            <label className="block text-sm">
+              <span className="text-xs font-medium text-tk-slate/70">Date</span>
+              <input name="issuedOn" type="date" defaultValue={invoice.issuedOn} required className="mt-1 w-full rounded-lg border border-tk-slate/20 bg-white px-3 py-2 text-sm outline-none focus:border-tk-teal" />
+            </label>
+            <label className="block text-sm">
+              <span className="text-xs font-medium text-tk-slate/70">Amount ($)</span>
+              <input name="amount" inputMode="decimal" defaultValue={(invoice.amountCents / 100).toFixed(2)} required className="mt-1 w-full rounded-lg border border-tk-slate/20 bg-white px-3 py-2 text-sm tabular-nums outline-none focus:border-tk-teal" />
+            </label>
+            <label className="block text-sm">
+              <span className="text-xs font-medium text-tk-slate/70">Hours</span>
+              <input name="hours" inputMode="decimal" defaultValue={invoice.hours ?? ""} placeholder="—" className="mt-1 w-full rounded-lg border border-tk-slate/20 bg-white px-3 py-2 text-sm tabular-nums outline-none focus:border-tk-teal" />
+            </label>
+            <label className="block text-sm sm:col-span-2 lg:col-span-4">
+              <span className="text-xs font-medium text-tk-slate/70">Bill to (one line — the client profile supplies the full block)</span>
+              <input name="billTo" defaultValue={invoice.billTo} className="mt-1 w-full rounded-lg border border-tk-slate/20 bg-white px-3 py-2 text-sm outline-none focus:border-tk-teal" />
+            </label>
+            <label className="block text-sm sm:col-span-2 lg:col-span-4">
+              <span className="text-xs font-medium text-tk-slate/70">
+                Description — first line is the headline; “- bullet (20%)” lines become table rows with the % in its own column
+              </span>
+              <textarea name="description" rows={6} defaultValue={invoice.description} className="mt-1 w-full rounded-lg border border-tk-slate/20 bg-white px-3 py-2 font-mono text-[13px] leading-relaxed outline-none focus:border-tk-teal" />
+            </label>
+            <div>
+              <button className="rounded-lg bg-tk-teal px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90">
+                Save draft
+              </button>
+            </div>
+          </form>
+        </section>
+      ) : (
+        <>
+          {invoice.billTo ? (
+            <p className="mt-1 text-sm text-tk-slate/70">{invoice.billTo}</p>
+          ) : null}
+          {invoice.description ? (
+            <p className="mt-3 whitespace-pre-line text-sm text-tk-onyx">{invoice.description}</p>
+          ) : null}
+        </>
+      )}
       <div className="mt-3 max-w-xl">
         <NotesControl
           value={invoice.notes}

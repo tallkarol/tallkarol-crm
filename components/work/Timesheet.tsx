@@ -33,9 +33,12 @@ export type TimesheetRow = {
   endedAt: string
   hours: string
   summary: string
+  projectId: string | null
   invoiceId: string | null
   invoiceNumber: string | null
 }
+
+export type TimesheetProject = { id: string; name: string }
 
 export type TimesheetAccount = {
   id: string
@@ -55,6 +58,7 @@ type Draft = {
   hours: string
   hoursLocked: boolean
   summary: string
+  projectId: string | null
   invoiceId: string | null
   invoiceNumber: string | null
 }
@@ -73,6 +77,7 @@ function emptyDraft(): Draft {
     hours: "",
     hoursLocked: false,
     summary: "",
+    projectId: null,
     invoiceId: null,
     invoiceNumber: null,
   }
@@ -89,6 +94,7 @@ function fromRow(row: TimesheetRow): Draft {
     hours: formatSheetHours(row.hours),
     hoursLocked: true,
     summary: row.summary,
+    projectId: row.projectId,
     invoiceId: row.invoiceId,
     invoiceNumber: row.invoiceNumber,
   }
@@ -122,12 +128,14 @@ export function Timesheet({
   clients,
   entries,
   invoices,
+  projects = [],
 }: {
   month: string
   client: TimesheetAccount
   clients: TimesheetAccount[]
   entries: TimesheetRow[]
   invoices: { number: string; status: string }[]
+  projects?: TimesheetProject[]
 }) {
   const router = useRouter()
   const [rows, setRows] = useState<Draft[]>(() => [
@@ -250,6 +258,7 @@ export function Timesheet({
       endedAt: row.endedAt,
       hours: hoursToString(hours),
       summary: row.summary,
+      projectId: row.projectId,
     })
     if (!result.ok) {
       setStatus(result.error)
@@ -453,6 +462,9 @@ export function Timesheet({
                   Hrs Worked
                 </th>
                 <th className="px-2 py-2 font-semibold">Session Highlights</th>
+                {projects.length > 0 ? (
+                  <th className="w-[10rem] px-2 py-2 font-semibold">Project</th>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -551,6 +563,26 @@ export function Timesheet({
                       className={sheetInput()}
                     />
                   </td>
+                  {projects.length > 0 ? (
+                    <td className="px-1 py-0.5">
+                      <select
+                        value={row.projectId ?? ""}
+                        onChange={(e) => {
+                          patch(index, { projectId: e.target.value || null })
+                          if (row.id || hasWork(row)) flushSave(index)
+                        }}
+                        aria-label={`Project, row ${index + 1}`}
+                        className="w-full rounded border border-transparent bg-transparent px-1.5 py-1.5 text-xs text-tk-slate outline-none hover:border-tk-slate/20 focus:border-tk-teal"
+                      >
+                        <option value="">— retainer</option>
+                        {projects.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
@@ -562,7 +594,7 @@ export function Timesheet({
                 <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-tk-onyx">
                   {formatSheetHours(totalHours) || "0"}
                 </td>
-                <td />
+                <td colSpan={projects.length > 0 ? 2 : 1} />
               </tr>
             </tfoot>
           </table>

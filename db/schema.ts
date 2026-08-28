@@ -123,6 +123,8 @@ export const clients = pgTable("clients", {
   slug: text("slug").notNull().unique(),
   /** Email domains that identify this client on a meeting invite. */
   domains: text("domains").array().notNull().default([]),
+  /** Invoice profile: { billTo: string[], customerId, senderEmail }. */
+  billing: jsonb("billing").notNull().default({}),
   notes: text("notes").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

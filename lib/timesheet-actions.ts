@@ -24,6 +24,8 @@ export type TimeEntryInput = {
   endedAt: string
   hours: string
   summary: string
+  /** Optional project tag — powers per-project effective-rate economics. */
+  projectId?: string | null
 }
 
 function revalidateWork() {
@@ -51,7 +53,7 @@ export async function saveTimeEntry(
 
   const client = await db.query.clients.findFirst({
     where: eq(clients.id, input.clientId),
-    with: { retainers: true },
+    with: { retainers: true, projects: true },
   })
   if (!client) return { ok: false, error: "Client not found." }
 
@@ -60,9 +62,22 @@ export async function saveTimeEntry(
     client.retainers[0] ??
     null
 
+  // Only touch the project tag when the caller sent one — undefined leaves
+  // an existing tag alone, null/invalid clears it.
+  const projectPatch =
+    input.projectId === undefined
+      ? {}
+      : {
+          projectId:
+            input.projectId && client.projects.some((p) => p.id === input.projectId)
+              ? input.projectId
+              : null,
+        }
+
   const values = {
     clientId: client.id,
     retainerId: retainer?.id ?? null,
+    ...projectPatch,
     occurredOn: input.occurredOn,
     startedAt: input.startedAt.trim(),
     endedAt: input.endedAt.trim(),

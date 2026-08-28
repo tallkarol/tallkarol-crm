@@ -11,6 +11,7 @@ export const IDS = {
     // a1…0008 was briefly "My Custom Manufacturer" — retired 29 Aug 2026,
     // mycustommanufacturer.com is Mineralife's contract-manufacturing brand.
     totalSoccerAcademy: "a1000000-0000-4000-8000-000000000009",
+    blissCb: "a1000000-0000-4000-8000-000000000010",
   },
   retainers: {
     gdi: "a2000000-0000-4000-8000-000000000001",

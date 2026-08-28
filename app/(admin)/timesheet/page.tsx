@@ -58,6 +58,10 @@ export default async function TimesheetPage({
   const client = sheetClients.find((row) => row.id === selected.id)!
   const { start, end } = monthBounds(month)
 
+  const clientProjects = await db.query.projects.findMany({
+    where: (p, { eq: e }) => e(p.clientId, selected.id),
+    orderBy: (p, { asc: a }) => [a(p.name)],
+  })
   const [entries, monthInvoices] = await Promise.all([
     db.query.timeEntries.findMany({
       where: and(
@@ -102,6 +106,7 @@ export default async function TimesheetPage({
         month={month}
         client={client}
         clients={sheetClients}
+        projects={clientProjects.map((p) => ({ id: p.id, name: p.name }))}
         entries={entries.map((entry) => ({
           id: entry.id,
           occurredOn: entry.occurredOn,
@@ -109,6 +114,7 @@ export default async function TimesheetPage({
           endedAt: entry.endedAt,
           hours: entry.hours,
           summary: entry.summary,
+          projectId: entry.projectId,
           invoiceId: entry.invoiceId,
           invoiceNumber: entry.invoice?.number ?? null,
         }))}
