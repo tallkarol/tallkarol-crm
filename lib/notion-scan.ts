@@ -7,7 +7,8 @@ import { db } from "@/db"
 import { notionPages, notionProposals } from "@/db/schema"
 import type { NotionLink, NotionPage } from "@/db/schema"
 
-const MODEL = "claude-opus-5"
+/** Cheapest capable model by default; override with NOTION_SCAN_MODEL. */
+const MODEL = process.env.NOTION_SCAN_MODEL || "claude-haiku-4-5"
 
 const ScanResult = z.object({
   items: z.array(
