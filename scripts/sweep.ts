@@ -11,7 +11,9 @@ import { sweepMonitors } from "../lib/monitors"
 
 sweepMonitors()
   .then((result) => {
-    console.log(`Checked ${result.checked} monitors.`)
+    console.log(
+      `Checked ${result.checked} of ${result.monitors} monitors (the rest aren't due yet).`
+    )
     for (const r of result.raised) {
       console.log(`  ${r.monitor}: ${r.action}${r.ticketId ? ` → ${r.ticketId}` : ""}`)
     }

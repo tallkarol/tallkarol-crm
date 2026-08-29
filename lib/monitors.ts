@@ -305,16 +305,29 @@ async function applyOutcome(
 /**
  * The half no push can cover: windows that closed with nothing in them. Run on
  * a schedule — one "still nothing" per expected window, not per sweep.
+ *
+ * Each monitor sets how often it's worth checking (`sweepEveryMinutes`), so the
+ * cron can run often without promising every client the same response time.
  */
 export async function sweepMonitors(now = new Date()) {
-  const due = await db.query.monitors.findMany({
+  const all = await db.query.monitors.findMany({
     where: eq(monitors.paused, false),
     with: { client: { columns: { slug: true, name: true } } },
+  })
+
+  const due = all.filter((monitor) => {
+    if (!monitor.lastSweptAt) return true
+    return now.getTime() - monitor.lastSweptAt.getTime() >= monitor.sweepEveryMinutes * MINUTE
   })
 
   const raised: { monitor: string; action: string; ticketId: string | null }[] = []
 
   for (const monitor of due) {
+    await db
+      .update(monitors)
+      .set({ lastSweptAt: now })
+      .where(eq(monitors.id, monitor.id))
+
     const since = monitor.lastRunAt ?? monitor.createdAt
     const dueBy = since.getTime() + (monitor.expectEveryMinutes + monitor.graceMinutes) * MINUTE
     if (now.getTime() <= dueBy) continue
@@ -352,7 +365,7 @@ export async function sweepMonitors(now = new Date()) {
     raised.push({ monitor: monitor.slug, action: outcome.action, ticketId: outcome.ticketId })
   }
 
-  return { checked: due.length, raised }
+  return { monitors: all.length, checked: due.length, raised }
 }
 
 export async function logEvent(input: {

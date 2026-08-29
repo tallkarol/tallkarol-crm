@@ -32,6 +32,10 @@ export function MonitorRow({
           </span>
           <span className="text-tk-slate/25">·</span>
           <span>{monitor.scheduleNote || `every ${monitor.expectEveryMinutes} min`}</span>
+          <span className="text-tk-slate/25">·</span>
+          <span title="How often a missed run is looked for">
+            checked {everyLabel(monitor.sweepEveryMinutes)}
+          </span>
           {monitor.paused ? (
             <>
               <span className="text-tk-slate/25">·</span>
@@ -81,6 +85,16 @@ export function MonitorRow({
       </div>
     </div>
   )
+}
+
+/** "every 12h" reads better than "every 720 min" on a row you scan. */
+function everyLabel(minutes: number) {
+  if (minutes % 1440 === 0) {
+    const days = minutes / 1440
+    return days === 1 ? "daily" : `every ${days}d`
+  }
+  if (minutes % 60 === 0) return `every ${minutes / 60}h`
+  return `every ${minutes}m`
 }
 
 function isOverdue(monitor: Monitor) {

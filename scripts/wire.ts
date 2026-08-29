@@ -5,7 +5,12 @@
  *   npm run wire:app -- artist-house "Artist House" artist-house "Next.js"
  *   npm run wire:rotate -- artist-house
  *   npm run wire:revoke -- artist-house
- *   npm run wire:monitor -- artist-house-daily-ingest "Daily ingest" artist-house 1440 180 "11:30 UTC daily"
+ *   npm run wire:monitor -- artist-house-daily-ingest "Daily ingest" artist-house \
+ *     1440 180 "11:30 UTC daily" 720
+ *
+ * The trailing number is how often we check for a missed run, in minutes —
+ * detection cadence follows the engagement. 720 (twice a day) for a client
+ * without a maintenance plan; 60 for one with.
  *
  * The key is printed once, at creation. It is stored hashed and cannot be read
  * back — rotate if it's lost.
@@ -34,7 +39,8 @@ async function list() {
   if (mons.length) console.log("")
   for (const m of mons) {
     console.log(
-      `${m.slug.padEnd(30)} every ${String(m.expectEveryMinutes).padStart(5)}m +${m.graceMinutes}m grace  streak ${m.failStreak}${m.paused ? "  PAUSED" : ""}`
+      `${m.slug.padEnd(30)} every ${String(m.expectEveryMinutes).padStart(5)}m +${m.graceMinutes}m grace  ` +
+        `swept every ${String(m.sweepEveryMinutes).padStart(4)}m  streak ${m.failStreak}${m.paused ? "  PAUSED" : ""}`
     )
   }
 }
@@ -85,7 +91,8 @@ async function addMonitor(
   appSlug: string,
   every = "1440",
   grace = "180",
-  note = ""
+  note = "",
+  sweep = "720"
 ) {
   if (!slug || !appSlug) {
     throw new Error("Usage: wire:monitor -- <slug> <name> <appSlug> [everyMin] [graceMin] [note]")
@@ -103,6 +110,7 @@ async function addMonitor(
       scheduleNote: note,
       expectEveryMinutes: Number(every) || 1440,
       graceMinutes: Number(grace) || 180,
+      sweepEveryMinutes: Number(sweep) || 720,
     })
     .onConflictDoUpdate({
       target: monitors.slug,
@@ -113,10 +121,14 @@ async function addMonitor(
         scheduleNote: note,
         expectEveryMinutes: Number(every) || 1440,
         graceMinutes: Number(grace) || 180,
+        sweepEveryMinutes: Number(sweep) || 720,
         updatedAt: new Date(),
       },
     })
-  console.log(`Monitor ${slug} watching ${appSlug} — expects a run every ${every}m (+${grace}m grace).`)
+  console.log(
+    `Monitor ${slug} watching ${appSlug} — expects a run every ${every}m (+${grace}m grace), ` +
+      `checked for misses every ${sweep}m.`
+  )
 }
 
 const [cmd, ...args] = process.argv.slice(2)
@@ -128,7 +140,7 @@ const run =
       : cmd === "revoke"
         ? revoke(args[0])
         : cmd === "monitor"
-          ? addMonitor(args[0], args[1] ?? "", args[2], args[3], args[4], args[5])
+          ? addMonitor(args[0], args[1] ?? "", args[2], args[3], args[4], args[5], args[6])
           : list()
 
 run

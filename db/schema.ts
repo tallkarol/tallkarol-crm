@@ -1401,6 +1401,14 @@ export const monitors = pgTable("monitors", {
   scheduleNote: text("schedule_note").notNull().default(""),
   expectEveryMinutes: integer("expect_every_minutes").notNull().default(1440),
   graceMinutes: integer("grace_minutes").notNull().default(180),
+  /**
+   * How often we bother to check for a missed window. Detection cadence follows
+   * the engagement, not the schedule: a client on a maintenance plan is worth
+   * looking at hourly, one without is looked at twice a day. The cron runs more
+   * often than any monitor needs; each monitor decides whether it's due.
+   */
+  sweepEveryMinutes: integer("sweep_every_minutes").notNull().default(720),
+  lastSweptAt: timestamp("last_swept_at", { withTimezone: true }),
   /** Percent of jobs allowed to fail before a partial run raises a ticket. */
   partialThreshold: integer("partial_threshold").notNull().default(10),
   paused: boolean("paused").notNull().default(false),

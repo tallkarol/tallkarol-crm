@@ -113,7 +113,7 @@ npm run site:set -- <slug> uptimeMonitorId <id>`}</code>
             <pre className="mt-3 overflow-x-auto rounded-lg bg-tk-onyx px-3.5 py-3 font-mono text-[11.5px] leading-relaxed text-[#CFD8D4]">
               <code>{`npm run wire:app -- artist-house "Artist House" artist-house "Next.js"
 npm run wire:monitor -- artist-house-daily-ingest "Daily ingest" \\
-  artist-house 1440 180 "11:30 UTC daily"`}</code>
+  artist-house 1440 180 "11:30 UTC daily" 720`}</code>
             </pre>
             <p className="mt-3 text-tk-slate/70">
               The app posts each run to{" "}
@@ -148,7 +148,9 @@ npm run wire:monitor -- artist-house-daily-ingest "Daily ingest" \\
               })}
             </div>
             <p className="mt-3 text-xs text-tk-slate/55">
-              Missed windows are found by the sweeper —{" "}
+              Each monitor sets how often a missed window is looked for, so detection
+            follows the engagement rather than one global setting. The sweeper runs on
+            Railway cron —{" "}
               <code className="rounded bg-tk-linen px-1 py-0.5 text-[11px]">
                 GET /api/monitors/sweep
               </code>{" "}
