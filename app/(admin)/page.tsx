@@ -2,6 +2,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { PageHeader } from "@/components/PageHeader"
 import { Forecast } from "@/components/dashboard/Forecast"
+import { MonthBilled } from "@/components/dashboard/MonthBilled"
 import { NeedsAttention } from "@/components/dashboard/NeedsAttention"
 import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings"
 import { YearBilled } from "@/components/dashboard/YearBilled"
@@ -117,11 +118,41 @@ export default async function DashboardPage({
     }
     return sum
   }
-  const currentRemainderCents =
-    retainerExpectation(thisMonth, true) +
-    openDeliverables
-      .filter((d) => d.status === "done" && (!d.dueOn || d.dueOn.slice(0, 7) <= thisMonth))
-      .reduce((s, d) => s + (d.feeCents ?? 0), 0)
+  /* Itemized "still expected" lines — feed both the month card and the year rows. */
+  const monthExpectedLines: { label: string; sub: string | null; cents: number }[] = []
+  for (const r of retainers) {
+    const rate = rateByRetainer.get(r.id)
+    if (!rate) continue
+    if (invoices.some((i) => i.retainerId === r.id && i.issuedOn.slice(0, 7) === thisMonth)) continue
+    if (retainerCoversMonth(r, thisMonth)) {
+      monthExpectedLines.push({
+        label: r.name,
+        sub: `${r.hoursPerMonth} hr × ${formatMoney(rate)}`,
+        cents: rate * r.hoursPerMonth,
+      })
+    } else {
+      const logged = loggedThisMonth.get(r.id) ?? 0
+      if (logged > 0) {
+        monthExpectedLines.push({
+          label: r.name,
+          sub: `${logged.toLocaleString("en-US", { maximumFractionDigits: 1 })} hr logged × ${formatMoney(rate)}`,
+          cents: Math.round(logged * rate),
+        })
+      }
+    }
+  }
+  for (const p of projects) {
+    for (const d of p.deliverables) {
+      if (d.status === "done" && d.feeCents && (!d.dueOn || d.dueOn.slice(0, 7) <= thisMonth)) {
+        monthExpectedLines.push({
+          label: `${d.label} — ${p.name}`,
+          sub: "done · unbilled",
+          cents: d.feeCents,
+        })
+      }
+    }
+  }
+  const currentRemainderCents = monthExpectedLines.reduce((s, l) => s + l.cents, 0)
   const forecastMonths: { key: string; label: string; cents: number; remainder?: boolean }[] = []
   if (currentRemainderCents > 0) {
     forecastMonths.push({
@@ -220,40 +251,19 @@ export default async function DashboardPage({
 
       <div className="mt-8 grid min-w-0 gap-3 xl:grid-cols-[1fr_3fr]">
         <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
-          <Link
-            href={ROUTES.invoices}
-            className="flex flex-col justify-center rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm transition-colors hover:border-tk-teal/40"
-          >
-            <p className="text-xs font-semibold uppercase tracking-wider text-tk-slate/70">
-              Billed in {now.toLocaleDateString("en-US", { month: "long" })}
-            </p>
-            <div className="mt-3 flex items-center gap-5">
-              <GoalPie
-                fraction={monthlyGoalCents ? billedCents / monthlyGoalCents : 0}
-              />
-              <div className="min-w-0">
-                <p className="text-2xl font-semibold tracking-tight text-tk-onyx tabular-nums">
-                  {formatMoney(billedCents)}
-                </p>
-                <p className="mt-0.5 truncate text-xs text-tk-slate/60">
-                  {monthlyGoalCents ? (
-                    <>
-                      <span className="font-semibold text-tk-teal">
-                        {Math.round((billedCents / monthlyGoalCents) * 100)}%
-                      </span>{" "}
-                      of {formatMoney(monthlyGoalCents)} monthly goal
-                    </>
-                  ) : billedThisMonth.length === 0 ? (
-                    "No invoices yet this month"
-                  ) : (
-                    billedThisMonth
-                      .map((i) => `${i.client.name} ${formatMoney(i.amountCents)}`)
-                      .join(" · ")
-                  )}
-                </p>
-              </div>
-            </div>
-          </Link>
+          <MonthBilled
+            monthLabel={now.toLocaleDateString("en-US", { month: "long" })}
+            billedCents={billedCents}
+            monthlyGoalCents={monthlyGoalCents}
+            invoices={billedThisMonth.map((i) => ({
+              number: i.number,
+              clientName: i.client.name,
+              amountCents: i.amountCents,
+              status: i.status,
+            }))}
+            expected={monthExpectedLines}
+            expectedTotalCents={billedCents + currentRemainderCents}
+          />
           <YearBilled
             year={yearKey}
             ytdCents={ytdCents}
@@ -427,28 +437,4 @@ function MeetingsCard({
   )
 }
 
-/* Filled-wedge progress pie: billed share of the monthly goal. Rendered
-   server-side; the numbers beside it carry the values, so it's decorative. */
-function GoalPie({ fraction }: { fraction: number }) {
-  const f = Math.max(0, Math.min(1, fraction))
-  const r = 32
-  const a = f * 2 * Math.PI
-  const x = 32 + r * Math.sin(a)
-  const y = 32 - r * Math.cos(a)
-  return (
-    <svg viewBox="0 0 64 64" className="size-24 shrink-0 xl:size-32" aria-hidden>
-      <circle cx={32} cy={32} r={r} fill="#F1EADC" />
-      {f >= 1 ? (
-        <circle cx={32} cy={32} r={r} fill="#006965" />
-      ) : f > 0 ? (
-        <path
-          d={`M 32 32 L 32 0 A ${r} ${r} 0 ${f > 0.5 ? 1 : 0} 1 ${x.toFixed(2)} ${y.toFixed(2)} Z`}
-          fill="#006965"
-          stroke="#fff"
-          strokeWidth={2}
-        />
-      ) : null}
-    </svg>
-  )
-}
 
