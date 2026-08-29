@@ -9,7 +9,8 @@ import { PeekRouter, peekHref } from "@/components/peek/PeekRouter"
 import { db } from "@/db"
 import { getUpcomingMeetings } from "@/lib/calendar"
 import { CHART_ORDER, clientColor } from "@/lib/client-colors"
-import { buildForecast } from "@/lib/forecast"
+import { retainerRateCents } from "@/lib/engagements"
+import { buildForecast, retainerCoversMonth } from "@/lib/forecast"
 import { getGoals } from "@/lib/goals"
 import { ROUTES } from "@/lib/nav"
 import { ensureRenewalTasks } from "@/lib/renewals"
@@ -86,6 +87,66 @@ export default async function DashboardPage({
         .reduce((s, i) => s + i.amountCents, 0),
     }
   })
+  /* ---- year forecast: greyed rows for the rest of the year + landing total ---- */
+  const rateByRetainer = new Map(
+    retainers.map((r) => [r.id, retainerRateCents(r, invoices)])
+  )
+  const loggedThisMonth = new Map<string, number>()
+  for (const e of timeEntries) {
+    if (e.retainerId && e.occurredOn.startsWith(thisMonth)) {
+      loggedThisMonth.set(e.retainerId, (loggedThisMonth.get(e.retainerId) ?? 0) + Number(e.hours))
+    }
+  }
+  const openDeliverables = projects.flatMap((p) =>
+    p.deliverables.filter(
+      (d) => (d.status === "pending" || d.status === "done") && d.feeCents
+    )
+  )
+  const retainerExpectation = (key: string, isCurrent: boolean) => {
+    let sum = 0
+    for (const r of retainers) {
+      const rate = rateByRetainer.get(r.id)
+      if (!rate) continue
+      if (invoices.some((i) => i.retainerId === r.id && i.issuedOn.slice(0, 7) === key)) continue
+      if (retainerCoversMonth(r, key)) sum += rate * r.hoursPerMonth
+      else if (isCurrent) {
+        // outside its window but actively logging (e.g. early-start month)
+        const logged = loggedThisMonth.get(r.id) ?? 0
+        if (logged > 0) sum += Math.round(logged * rate)
+      }
+    }
+    return sum
+  }
+  const currentRemainderCents =
+    retainerExpectation(thisMonth, true) +
+    openDeliverables
+      .filter((d) => d.status === "done" && (!d.dueOn || d.dueOn.slice(0, 7) <= thisMonth))
+      .reduce((s, d) => s + (d.feeCents ?? 0), 0)
+  const forecastMonths: { key: string; label: string; cents: number; remainder?: boolean }[] = []
+  if (currentRemainderCents > 0) {
+    forecastMonths.push({
+      key: `${thisMonth}-remainder`,
+      label: now.toLocaleDateString("en-US", { month: "long" }),
+      cents: currentRemainderCents,
+      remainder: true,
+    })
+  }
+  for (let month = now.getMonth() + 1; month < 12; month++) {
+    const key = `${yearKey}-${String(month + 1).padStart(2, "0")}`
+    const cents =
+      retainerExpectation(key, false) +
+      openDeliverables
+        .filter((d) => d.status === "pending" && d.dueOn?.slice(0, 7) === key)
+        .reduce((s, d) => s + (d.feeCents ?? 0), 0)
+    forecastMonths.push({
+      key,
+      label: new Date(Number(yearKey), month, 1).toLocaleDateString("en-US", { month: "long" }),
+      cents,
+    })
+  }
+  const expectedTotalCents =
+    ytdCents + forecastMonths.reduce((s, m) => s + m.cents, 0)
+
   const annualGoalCents =
     goals.annualCents ?? (goals.monthlyCents != null ? goals.monthlyCents * 12 : null)
   const monthlyGoalCents = goals.annualCents
@@ -198,6 +259,8 @@ export default async function DashboardPage({
             ytdCents={ytdCents}
             annualGoalCents={annualGoalCents}
             months={yearMonths}
+            forecastMonths={forecastMonths}
+            expectedTotalCents={expectedTotalCents}
           />
           <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-wider text-tk-slate/70">

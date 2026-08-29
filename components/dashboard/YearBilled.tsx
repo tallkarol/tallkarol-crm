@@ -9,16 +9,27 @@ export type YearMonth = {
   cents: number
 }
 
+export type ForecastMonthRow = YearMonth & {
+  /** true for the current month's "still expected" remainder row */
+  remainder?: boolean
+}
+
 export function YearBilled({
   year,
   ytdCents,
   annualGoalCents,
   months,
+  forecastMonths = [],
+  expectedTotalCents = null,
 }: {
   year: string
   ytdCents: number
   annualGoalCents: number | null
   months: YearMonth[]
+  /** Greyed-out projection rows for the rest of the year. */
+  forecastMonths?: ForecastMonthRow[]
+  /** YTD actual + projected remainder — the year-end landing estimate. */
+  expectedTotalCents?: number | null
 }) {
   return (
     <details className="group min-w-0 rounded-2xl border border-tk-slate/15 bg-white shadow-sm open:[&_svg]:rotate-0">
@@ -71,6 +82,31 @@ export function YearBilled({
                 </span>
               </li>
             ))}
+            {forecastMonths.map((m) => (
+              <li
+                key={m.key}
+                className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs opacity-50"
+              >
+                <span className="italic text-tk-slate/70">
+                  {m.label}
+                  <span className="ml-1 text-[10px] uppercase tracking-wide">
+                    {m.remainder ? "still expected" : "forecast"}
+                  </span>
+                </span>
+                <span className="tabular-nums font-medium text-tk-slate">
+                  {m.remainder ? "+" : ""}
+                  {formatMoney(m.cents)}
+                </span>
+              </li>
+            ))}
+            {expectedTotalCents != null ? (
+              <li className="mt-1.5 grid grid-cols-[1fr_auto] items-center gap-3 border-t border-tk-slate/10 pt-2 text-xs">
+                <span className="font-semibold text-tk-slate">Expected {year} total</span>
+                <span className="tabular-nums font-bold text-tk-teal">
+                  {formatMoney(expectedTotalCents)}
+                </span>
+              </li>
+            ) : null}
           </ul>
         )}
         <Link
