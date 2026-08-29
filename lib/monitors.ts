@@ -106,7 +106,13 @@ type MonitorWithClient = Monitor & { client?: { slug: string; name: string } | n
 export async function recordRun(
   monitor: MonitorWithClient,
   input: RunInput,
-  source?: AppSource | null
+  source?: AppSource | null,
+  /**
+   * Backfilled history is recorded but never judged. Replaying a month of runs
+   * shouldn't open a ticket for a failure you already lived through, or leave
+   * the monitor carrying a fail streak that ended weeks ago.
+   */
+  opts: { backfill?: boolean } = {}
 ) {
   const now = new Date()
   const startedAt = input.startedAt ?? now
@@ -163,11 +169,24 @@ export async function recordRun(
     .set({ lastRunAt: startedAt, updatedAt: now })
     .where(eq(monitors.id, monitor.id))
 
+  if (opts.backfill) {
+    if (input.status === "succeeded" || input.status === "partial") {
+      await db
+        .update(monitors)
+        .set({ lastSuccessAt: startedAt, updatedAt: now })
+        .where(eq(monitors.id, monitor.id))
+    }
+    return { run, action: "recorded" as const, ticketId: null }
+  }
+
   const outcome = await applyOutcome({ ...monitor, lastRunAt: startedAt }, run, source)
   return { run, ...outcome }
 }
 
-type Outcome = { action: "none" | "opened" | "appended" | "escalated" | "recovered"; ticketId: string | null }
+type Outcome = {
+  action: "none" | "opened" | "appended" | "escalated" | "recovered" | "recorded"
+  ticketId: string | null
+}
 
 async function applyOutcome(
   monitor: MonitorWithClient,

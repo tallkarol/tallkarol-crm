@@ -12,7 +12,8 @@ import { findMonitor, recordRun, type RunStatus } from "@/lib/monitors"
  *     "status": "running" | "succeeded" | "partial" | "failed",
  *     "phase": "pipeline", "trigger": "github-actions",
  *     "jobs": { "total": 96, "succeeded": 55, "failed": 41, "skipped": 0 },
- *     "error": { … }, "stats": { … } }
+ *     "error": { … }, "stats": { … },
+ *     "backfill": true }            // record it, don't judge it
  *
  * Failures open or escalate a ticket; a success stands the incident down. What
  * this endpoint cannot see is a run that never starts — that's the sweeper's job.
@@ -81,7 +82,8 @@ export async function POST(request: NextRequest) {
       error: body.error ?? null,
       stats: (body.stats ?? {}) as Record<string, unknown>,
     },
-    auth.source
+    auth.source,
+    { backfill: body.backfill === true }
   )
 
   return NextResponse.json({
