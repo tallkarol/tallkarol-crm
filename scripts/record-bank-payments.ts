@@ -30,12 +30,20 @@ function gdiNotes(hours: string, paidOn: string) {
 async function main() {
   await db
     .insert(clients)
-    .values({
-      id: IDS.clients.totalSoccerAcademy,
-      name: "Total Soccer Academy",
-      slug: "total-soccer-academy",
-      notes: "Karol Boryka. Ended.",
-    })
+    .values([
+      {
+        id: IDS.clients.totalSoccerAcademy,
+        name: "Total Soccer Academy",
+        slug: "total-soccer-academy",
+        notes: "Karol Boryka. Ended.",
+      },
+      {
+        id: IDS.clients.blissCb,
+        name: "Bliss CB",
+        slug: "bliss-cb",
+        notes: "Ended. Paid through Detroit Quality.",
+      },
+    ])
     .onConflictDoUpdate({
       target: clients.id,
       set: {
@@ -44,6 +52,21 @@ async function main() {
         updatedAt: new Date(),
       },
     })
+
+  for (const [from, to] of [
+    ["DQS-002", "DQS-001"],
+    ["BLISS-001", "BLISS-003"],
+  ] as const) {
+    const row = await db.query.invoices.findFirst({
+      where: eq(invoices.number, from),
+    })
+    if (row) {
+      await db
+        .update(invoices)
+        .set({ number: to, updatedAt: new Date() })
+        .where(eq(invoices.id, row.id))
+    }
+  }
 
   const created = [
     {
@@ -104,18 +127,17 @@ async function main() {
     ...gdiInvoice("GDI-2025-09", "2025-09-30", 231500, "September 2025 hours", "Oct 2, 2025"),
     ...gdiInvoice("GDI-2025-08", "2025-08-31", 147100, "August 2025 hours", "Sep 11, 2025"),
     {
-      number: "DQS-001",
-      clientId: IDS.clients.dqs,
-      projectId: DQS_PROJECT,
-      issuedOn: "2026-01-20",
+      number: "BLISS-003",
+      clientId: IDS.clients.blissCb,
+      issuedOn: "2025-12-31",
       amountCents: 315000,
-      billTo: "DQS Solutions & Staffing",
-      description: "DQS payment",
+      billTo: "Bliss CB",
+      description: "2025 Bliss CB",
       notes:
-        "Recorded from bank deposit Jan 20, 2026. Memo: detroit quality. Does not match the $4,160 AXVOR/AIS schedule.",
+        "Recorded from bank deposit Jan 20, 2026. Memo: detroit quality. 2025 Bliss CB work, not DQS.",
     },
     {
-      number: "DQS-002",
+      number: "DQS-001",
       clientId: IDS.clients.dqs,
       projectId: DQS_PROJECT,
       deliverableId: DQS_DEPOSIT,

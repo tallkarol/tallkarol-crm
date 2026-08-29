@@ -64,6 +64,12 @@ async function main() {
         slug: "total-soccer-academy",
         notes: "Karol Boryka. Ended.",
       },
+      {
+        id: IDS.clients.blissCb,
+        name: "Bliss CB",
+        slug: "bliss-cb",
+        notes: "Ended. Paid through Detroit Quality.",
+      },
     ])
     .onConflictDoUpdate({
       target: clients.id,

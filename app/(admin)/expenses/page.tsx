@@ -1,24 +1,14 @@
 import { desc } from "drizzle-orm"
 import { PageHeader } from "@/components/PageHeader"
+import { Importer } from "@/components/expenses/Importer"
 import { db } from "@/db"
 import { clientColor } from "@/lib/client-colors"
+import { EXPENSE_CATEGORIES as CATEGORIES } from "@/lib/expense-categories"
 import { formatDay, formatMoney, plural } from "@/lib/work"
 import { addExpense, deleteExpense, mapExpenseClient } from "./actions"
 
 export const metadata = { title: "Expenses" }
 export const dynamic = "force-dynamic"
-
-const CATEGORIES = [
-  "software",
-  "hosting",
-  "hardware",
-  "contractors",
-  "travel",
-  "meals",
-  "fees",
-  "education",
-  "other",
-] as const
 
 export default async function ExpensesPage() {
   const [rows, clients] = await Promise.all([
@@ -67,6 +57,8 @@ export default async function ExpensesPage() {
         />
       </div>
 
+      <Importer clients={clients.map((c) => ({ id: c.id, name: c.name, slug: c.slug }))} />
+
       <section className="mt-6 rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm">
         <h2 className="text-sm font-semibold text-tk-onyx">Add an expense</h2>
         <form action={addExpense} className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
@@ -113,7 +105,7 @@ export default async function ExpensesPage() {
 
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-tk-slate/70">
-          No expenses yet. Add them above — statement imports (debit/credit CSVs) are coming next.
+          No expenses yet. Drop a statement in the importer above, or add one by hand.
         </p>
       ) : (
         <div className="mt-6 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
