@@ -771,3 +771,55 @@ export const ignoredDomains = pgTable("ignored_domains", {
 })
 
 export type IgnoredDomain = typeof ignoredDomains.$inferSelect
+
+/** Tickets funneled in from external systems (Smartsheet first). */
+export const supportTickets = pgTable(
+  "support_tickets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    source: text("source").notNull().default("smartsheet"),
+    externalId: text("external_id").notNull(),
+    number: text("number").notNull().default(""),
+    title: text("title").notNull().default(""),
+    status: text("status").notNull().default(""),
+    priority: text("priority").notNull().default(""),
+    requestType: text("request_type").notNull().default(""),
+    department: text("department").notNull().default(""),
+    submittedBy: text("submitted_by").notNull().default(""),
+    submittedOn: date("submitted_on"),
+    dueOn: date("due_on"),
+    description: text("description").notNull().default(""),
+    resolution: text("resolution").notNull().default(""),
+    contactEmail: text("contact_email").notNull().default(""),
+    customerContact: text("customer_contact").notNull().default(""),
+    completed: boolean("completed").notNull().default(false),
+    clientId: uuid("client_id").references(() => clients.id, {
+      onDelete: "set null",
+    }),
+    raw: jsonb("raw").notNull().default({}),
+    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    sourceExternal: uniqueIndex("support_tickets_external_unique_idx").on(
+      table.source,
+      table.externalId
+    ),
+  })
+)
+
+export const supportTicketsRelations = relations(supportTickets, ({ one }) => ({
+  client: one(clients, {
+    fields: [supportTickets.clientId],
+    references: [clients.id],
+  }),
+}))
+
+export type SupportTicket = typeof supportTickets.$inferSelect
