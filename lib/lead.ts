@@ -31,6 +31,7 @@ export type LeadListItem = {
   status: InquiryStatus
   createdAt: string
   lead: LeadState
+  pipeline: PipelineState
   attributionLabel: string | null
   formLines: FormLine[]
   firstName: string
@@ -213,6 +214,7 @@ export function toLeadListItem(row: Inquiry): LeadListItem {
     status: row.status,
     createdAt: row.createdAt.toISOString(),
     lead: readLead(row.payload),
+    pipeline: readPipeline(row),
     attributionLabel: sourceLabel(attribution),
     formLines: formLinesFromPayload(row.payload),
     firstName: firstNameFrom(row.name),
@@ -226,24 +228,81 @@ export function meetingIsUpcoming(iso: string | null, now = Date.now()): boolean
   return Number.isFinite(at) && at >= now
 }
 
-export type LeadStage =
-  | "all"
-  | "needs-look"
-  | "fit"
-  | "meeting"
-  | "sent"
-  | "closed"
+/**
+ * The one list of sales stages, with the win probability a column weights by.
+ *
+ * This used to exist twice — `LeadStage` here and `SALES_STAGES` in
+ * `lib/pipeline.ts` — with `readPipeline()` quietly deriving one from the
+ * other. The board and the list disagreed about what "sent" meant whenever
+ * someone edited only one of them.
+ */
+export const SALES_STAGES = [
+  { id: "needs-look", label: "Needs look", prob: 10 },
+  { id: "fit", label: "Fit", prob: 35 },
+  { id: "meeting", label: "Meeting booked", prob: 60 },
+  { id: "sent", label: "Proposal sent", prob: 80 },
+  { id: "closed", label: "Closed", prob: 100 },
+] as const
+
+export type SalesStageId = (typeof SALES_STAGES)[number]["id"]
+export type LeadStage = "all" | SalesStageId
+
+export function isSalesStage(value: unknown): value is SalesStageId {
+  return SALES_STAGES.some((s) => s.id === value)
+}
+
+export type PipelineState = {
+  stage: SalesStageId
+  valueCents: number | null
+  stageChangedAt: string | null
+}
+
+/**
+ * Board placement for a lead. An explicit drag wins; otherwise the stage is
+ * derived from the lead's own state, so the board is populated correctly the
+ * first time it renders.
+ */
+export function readPipeline(row: {
+  payload: unknown
+  status: InquiryStatus
+}): PipelineState {
+  const payload = row.payload
+  const raw = isRecord(payload) && isRecord(payload.pipeline) ? payload.pipeline : {}
+  const explicit = isSalesStage(raw.stage) ? raw.stage : null
+
+  return {
+    stage: explicit ?? derivedStage(row.payload, row.status),
+    valueCents: typeof raw.valueCents === "number" ? raw.valueCents : null,
+    stageChangedAt: typeof raw.stageChangedAt === "string" ? raw.stageChangedAt : null,
+  }
+}
+
+function derivedStage(payload: unknown, status: InquiryStatus): SalesStageId {
+  const lead = readLead(payload)
+  if (status === "closed") return "closed"
+  if (lead.sends.length > 0) return "sent"
+  if (meetingIsUpcoming(lead.meetingAt)) return "meeting"
+  if (lead.qualification === "fit") return "fit"
+  return "needs-look"
+}
+
+export function mergePipelinePayload(
+  payload: unknown,
+  patch: Partial<PipelineState>
+): Record<string, unknown> {
+  const base = isRecord(payload) ? { ...payload } : {}
+  const current = isRecord(base.pipeline) ? base.pipeline : {}
+  return { ...base, pipeline: { ...current, ...patch } }
+}
+
+/** A lead's stage — the same answer the board and the list both read. */
+export function leadStage(lead: LeadListItem): SalesStageId {
+  return lead.pipeline.stage
+}
 
 export function leadMatchesStage(lead: LeadListItem, stage: LeadStage): boolean {
   if (stage === "all") return true
-  if (stage === "closed") return lead.status === "closed"
-  if (stage === "needs-look") {
-    return lead.lead.qualification === "unreviewed" && lead.status !== "closed"
-  }
-  if (stage === "fit") return lead.lead.qualification === "fit"
-  if (stage === "meeting") return meetingIsUpcoming(lead.lead.meetingAt)
-  if (stage === "sent") return lead.lead.sends.length > 0
-  return true
+  return leadStage(lead) === stage
 }
 
 export function leadCounts(leads: LeadListItem[]) {
@@ -256,6 +315,7 @@ export function leadCounts(leads: LeadListItem[]) {
     closed: leads.filter((l) => leadMatchesStage(l, "closed")).length,
   }
 }
+
 
 export const QUALIFICATION_LABEL: Record<Qualification, string> = {
   unreviewed: "Unreviewed",

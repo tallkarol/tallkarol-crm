@@ -1,23 +1,25 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { Fragment, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react"
-import { clientColor } from "@/components/work/InvoicesHub"
+import { Lock, Plus, Trash2 } from "lucide-react"
+import { MonthPicker } from "@/components/timesheet/MonthPicker"
 import { cn } from "@/lib/cn"
+import { clientColor } from "@/lib/client-colors"
 import { ROUTES } from "@/lib/nav"
+import type { SheetState } from "@/lib/sheets"
 import {
   formatSheetDate,
   formatSheetHours,
   hoursBetween,
   hoursToString,
-  monthLong,
   monthShort,
   parseDateInput,
   parseHoursInput,
-  shiftMonth,
   sumHours,
+  weekLabel,
+  weekStart,
 } from "@/lib/timesheet"
 import {
   createInvoiceFromTimesheet,
@@ -33,6 +35,7 @@ export type TimesheetRow = {
   endedAt: string
   hours: string
   summary: string
+  source: string
   projectId: string | null
   invoiceId: string | null
   invoiceNumber: string | null
@@ -46,6 +49,7 @@ export type TimesheetAccount = {
   slug: string
   rateCents: number | null
   retainerSlug: string | null
+  capHours: number | null
 }
 
 type Draft = {
@@ -58,6 +62,7 @@ type Draft = {
   hours: string
   hoursLocked: boolean
   summary: string
+  source: string
   projectId: string | null
   invoiceId: string | null
   invoiceNumber: string | null
@@ -65,6 +70,24 @@ type Draft = {
 
 const COLS = ["date", "start", "end", "hours", "summary"] as const
 type Col = (typeof COLS)[number]
+
+const SOURCE_CHIP: Record<string, { label: string; title: string; tone: string }> = {
+  manual: {
+    label: "man",
+    title: "Typed into the sheet",
+    tone: "bg-tk-slate/10 text-tk-slate/60",
+  },
+  clock: {
+    label: "clock",
+    title: "Approved from a clock-in",
+    tone: "bg-tk-teal/10 text-tk-teal",
+  },
+  meeting: {
+    label: "cal",
+    title: "Logged from a calendar meeting",
+    tone: "bg-emerald-100 text-emerald-800",
+  },
+}
 
 function emptyDraft(): Draft {
   return {
@@ -77,6 +100,7 @@ function emptyDraft(): Draft {
     hours: "",
     hoursLocked: false,
     summary: "",
+    source: "manual",
     projectId: null,
     invoiceId: null,
     invoiceNumber: null,
@@ -94,6 +118,7 @@ function fromRow(row: TimesheetRow): Draft {
     hours: formatSheetHours(row.hours),
     hoursLocked: true,
     summary: row.summary,
+    source: row.source,
     projectId: row.projectId,
     invoiceId: row.invoiceId,
     invoiceNumber: row.invoiceNumber,
@@ -129,6 +154,8 @@ export function Timesheet({
   entries,
   invoices,
   projects = [],
+  monthsWithData = [],
+  lock,
 }: {
   month: string
   client: TimesheetAccount
@@ -136,6 +163,8 @@ export function Timesheet({
   entries: TimesheetRow[]
   invoices: { number: string; status: string }[]
   projects?: TimesheetProject[]
+  monthsWithData?: string[]
+  lock: { locked: boolean; state: SheetState }
 }) {
   const router = useRouter()
   const [rows, setRows] = useState<Draft[]>(() => [
@@ -144,9 +173,12 @@ export function Timesheet({
   ])
   const [status, setStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [unlocked, setUnlocked] = useState(false)
   const rowsRef = useRef(rows)
   const saveTimers = useRef<Record<string, number>>({})
   rowsRef.current = rows
+
+  const readOnly = lock.locked && !unlocked
 
   const [year, mon] = month.split("-").map(Number)
   const fallback = { year, month: mon }
@@ -157,6 +189,12 @@ export function Timesheet({
   const totalHours = sumHours(rows.filter(hasWork).map((row) => row.hours))
   const totalCents =
     client.rateCents != null ? Math.round(totalHours * client.rateCents) : null
+  const capPct =
+    client.capHours && client.capHours > 0
+      ? Math.min(100, Math.round((totalHours / client.capHours) * 100))
+      : null
+  const overCap =
+    client.capHours != null && client.capHours > 0 && totalHours > client.capHours
 
   function patch(index: number, next: Partial<Draft>) {
     setRows((current) => {
@@ -310,6 +348,18 @@ export function Timesheet({
     router.push(ROUTES.invoice(result.number))
   }
 
+  function unlock() {
+    if (
+      lock.state === "paid" &&
+      !window.confirm(
+        "This month is invoiced and paid. Editing it changes a total the client already settled. Unlock anyway?"
+      )
+    ) {
+      return
+    }
+    setUnlocked(true)
+  }
+
   function focusCell(row: number, col: Col) {
     const node = document.querySelector<HTMLInputElement>(
       `[data-sheet-cell="${row}-${col}"]`
@@ -329,61 +379,88 @@ export function Timesheet({
     }
   }
 
+  /* Week bands: a 40-row month is a wall without them. */
+  const weekTotals = new Map<string, number>()
+  for (const row of rows) {
+    if (!row.occurredOn || !hasWork(row)) continue
+    const key = weekStart(row.occurredOn)
+    weekTotals.set(key, (weekTotals.get(key) ?? 0) + Number(row.hours || 0))
+  }
+
+  const colCount = projects.length > 0 ? 7 : 6
+
   return (
     <div>
-      <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3">
-        <div className="flex flex-wrap gap-2">
-          {clients.map((item) => {
-            const active = item.slug === client.slug
-            const color = clientColor(item.slug)
-            return (
-              <Link
-                key={item.id}
-                href={ROUTES.timesheetFor(item.slug, month)}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold",
-                  active
-                    ? "text-white"
-                    : "border-tk-slate/20 bg-white text-tk-slate hover:text-tk-onyx"
-                )}
-                style={
-                  active
-                    ? { backgroundColor: color, borderColor: color }
-                    : undefined
-                }
-              >
-                <span
-                  aria-hidden
-                  className="size-2 rounded-full"
-                  style={{ backgroundColor: active ? "#fff" : color }}
-                />
+      <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3">
+        <label className="sr-only" htmlFor="sheet-client">
+          Client
+        </label>
+        <div className="flex items-center gap-2">
+          <span
+            aria-hidden
+            className="size-2.5 shrink-0 rounded-full"
+            style={{ backgroundColor: clientColor(client.slug) }}
+          />
+          <select
+            id="sheet-client"
+            value={client.slug}
+            onChange={(event) =>
+              router.push(ROUTES.timesheetFor(event.target.value, month))
+            }
+            className="rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-sm font-semibold text-tk-onyx outline-none focus:border-tk-teal"
+          >
+            {clients.map((item) => (
+              <option key={item.id} value={item.slug}>
                 {item.name}
-              </Link>
-            )
-          })}
+              </option>
+            ))}
+          </select>
         </div>
-        <div className="ml-auto flex items-center gap-1">
-          <Link
-            href={ROUTES.timesheetFor(client.slug, shiftMonth(month, -1))}
-            className="flex size-8 items-center justify-center rounded-lg text-tk-slate hover:bg-white hover:text-tk-onyx"
-            aria-label="Previous month"
-          >
-            <ChevronLeft className="size-4" />
-          </Link>
-          <span className="min-w-[7.5rem] text-center text-sm font-semibold text-tk-onyx">
-            {monthLong(month)}
-          </span>
-          <Link
-            href={ROUTES.timesheetFor(client.slug, shiftMonth(month, 1))}
-            className="flex size-8 items-center justify-center rounded-lg text-tk-slate hover:bg-white hover:text-tk-onyx"
-            aria-label="Next month"
-          >
-            <ChevronRight className="size-4" />
-          </Link>
+
+        <div className="ml-auto">
+          <MonthPicker
+            clientSlug={client.slug}
+            month={month}
+            monthsWithData={monthsWithData}
+          />
         </div>
       </div>
 
-      <section className="mt-6 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+      {readOnly ? (
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <Lock className="size-4 shrink-0" />
+          <p>
+            <strong className="font-semibold">
+              {lock.state === "paid" ? "Paid." : "Invoiced."}
+            </strong>{" "}
+            This sheet is on{" "}
+            {billed ? (
+              <Link
+                href={ROUTES.invoice(billed.number)}
+                className="font-semibold underline"
+              >
+                {billed.number}
+              </Link>
+            ) : (
+              "an invoice"
+            )}
+            . Editing it changes a billed total.
+          </p>
+          <button
+            type="button"
+            onClick={unlock}
+            className="ml-auto rounded-full border border-amber-700/40 px-3 py-1 text-xs font-semibold text-amber-900 hover:border-amber-700"
+          >
+            Unlock to edit
+          </button>
+        </div>
+      ) : lock.locked ? (
+        <p className="mt-4 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-900">
+          Unlocked. Changes here move a billed total.
+        </p>
+      ) : null}
+
+      <section className="mt-4 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-6 border-b border-tk-slate/10 px-5 py-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-tk-slate/50">
@@ -409,7 +486,38 @@ export function Timesheet({
                 </>
               ) : null}
             </p>
+
+            {capPct != null ? (
+              <div className="mt-3 max-w-[16rem]">
+                <div
+                  className="h-1.5 overflow-hidden rounded-full bg-tk-linen"
+                  role="img"
+                  aria-label={`${formatSheetHours(totalHours)} of ${client.capHours} hours`}
+                >
+                  <span
+                    className="block h-full rounded-full"
+                    style={{
+                      width: `${capPct}%`,
+                      backgroundColor: overCap
+                        ? "#B45309"
+                        : clientColor(client.slug),
+                    }}
+                  />
+                </div>
+                <p
+                  className={cn(
+                    "mt-1 text-[11px]",
+                    overCap ? "font-semibold text-amber-700" : "text-tk-slate/60"
+                  )}
+                >
+                  {overCap
+                    ? `${formatSheetHours(totalHours - (client.capHours ?? 0))} hr over the ${client.capHours} hr cap`
+                    : `${formatSheetHours(totalHours) || 0} of ${client.capHours} hr cap`}
+                </p>
+              </div>
+            ) : null}
           </div>
+
           <dl className="grid min-w-[12rem] grid-cols-[1fr_auto] gap-x-6 gap-y-1 text-sm">
             <dt className="text-tk-slate/70">Hours Worked</dt>
             <dd className="text-right font-semibold tabular-nums text-tk-onyx">
@@ -447,12 +555,13 @@ export function Timesheet({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] border-collapse text-sm">
+          <table className="w-full min-w-[820px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-tk-slate/15 bg-tk-linen/60 text-left text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
                 <th className="w-8 px-2 py-2 font-semibold">
                   <span className="sr-only">Row</span>
                 </th>
+                <th className="w-14 px-2 py-2 font-semibold">Src</th>
                 <th className="w-[7.5rem] px-2 py-2 font-semibold">Date</th>
                 <th className="w-[7.5rem] px-2 py-2 font-semibold">
                   Time Start
@@ -468,127 +577,175 @@ export function Timesheet({
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, index) => (
-                <tr
-                  key={row.key}
-                  className="border-b border-tk-slate/10 last:border-0"
-                >
-                  <td className="px-1 py-0.5">
-                    {row.id || hasWork(row) ? (
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        className="flex size-7 items-center justify-center rounded text-tk-slate/30 hover:bg-tk-linen hover:text-tk-slate"
-                        aria-label="Delete row"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
-                    ) : (
-                      <span className="flex size-7 items-center justify-center text-tk-slate/20">
-                        <Plus className="size-3.5" />
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-1 py-0.5">
-                    <input
-                      data-sheet-cell={`${index}-date`}
-                      value={row.date}
-                      onChange={(e) => applyDate(index, e.target.value)}
-                      onBlur={() => flushSave(index)}
-                      onKeyDown={(e) => onKeyDown(e, index, "date")}
-                      placeholder="3-Aug"
-                      aria-label={`Date, row ${index + 1}`}
-                      className={sheetInput()}
-                    />
-                  </td>
-                  <td className="px-1 py-0.5">
-                    <input
-                      data-sheet-cell={`${index}-start`}
-                      value={row.startedAt}
-                      onChange={(e) =>
-                        applyClock(index, { startedAt: e.target.value }, row)
-                      }
-                      onBlur={() => flushSave(index)}
-                      onKeyDown={(e) => onKeyDown(e, index, "start")}
-                      placeholder="4:13 PM"
-                      aria-label={`Start time, row ${index + 1}`}
-                      className={sheetInput("tabular-nums")}
-                    />
-                  </td>
-                  <td className="px-1 py-0.5">
-                    <input
-                      data-sheet-cell={`${index}-end`}
-                      value={row.endedAt}
-                      onChange={(e) =>
-                        applyClock(index, { endedAt: e.target.value }, row)
-                      }
-                      onBlur={() => flushSave(index)}
-                      onKeyDown={(e) => onKeyDown(e, index, "end")}
-                      placeholder="5:04 PM"
-                      aria-label={`End time, row ${index + 1}`}
-                      className={sheetInput("tabular-nums")}
-                    />
-                  </td>
-                  <td className="px-1 py-0.5">
-                    <input
-                      data-sheet-cell={`${index}-hours`}
-                      value={row.hours}
-                      onChange={(e) => {
-                        patch(index, {
-                          hours: e.target.value,
-                          hoursLocked: true,
-                        })
-                        queueSave(index)
-                      }}
-                      onBlur={() => flushSave(index)}
-                      onKeyDown={(e) => onKeyDown(e, index, "hours")}
-                      inputMode="decimal"
-                      placeholder="0.85"
-                      aria-label={`Hours, row ${index + 1}`}
-                      className={sheetInput("text-right tabular-nums")}
-                    />
-                  </td>
-                  <td className="px-1 py-0.5">
-                    <input
-                      data-sheet-cell={`${index}-summary`}
-                      value={row.summary}
-                      onChange={(e) => {
-                        patch(index, { summary: e.target.value })
-                        queueSave(index)
-                      }}
-                      onBlur={() => flushSave(index)}
-                      onKeyDown={(e) => onKeyDown(e, index, "summary")}
-                      placeholder="Session highlights"
-                      aria-label={`Highlights, row ${index + 1}`}
-                      className={sheetInput()}
-                    />
-                  </td>
-                  {projects.length > 0 ? (
-                    <td className="px-1 py-0.5">
-                      <select
-                        value={row.projectId ?? ""}
-                        onChange={(e) => {
-                          patch(index, { projectId: e.target.value || null })
-                          if (row.id || hasWork(row)) flushSave(index)
-                        }}
-                        aria-label={`Project, row ${index + 1}`}
-                        className="w-full rounded border border-transparent bg-transparent px-1.5 py-1.5 text-xs text-tk-slate outline-none hover:border-tk-slate/20 focus:border-tk-teal"
-                      >
-                        <option value="">— retainer</option>
-                        {projects.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                  ) : null}
-                </tr>
-              ))}
+              {rows.map((row, index) => {
+                const week = row.occurredOn ? weekStart(row.occurredOn) : null
+                const prevWeek =
+                  index > 0 && rows[index - 1].occurredOn
+                    ? weekStart(rows[index - 1].occurredOn)
+                    : null
+                const bandHere = week != null && week !== prevWeek
+                const chip = SOURCE_CHIP[row.source] ?? SOURCE_CHIP.manual
+
+                return (
+                  <Fragment key={row.key}>
+                    {bandHere ? (
+                      <tr className="bg-tk-linen/50">
+                        <td
+                          colSpan={colCount + (projects.length > 0 ? 1 : 0)}
+                          className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-tk-slate/55"
+                        >
+                          {weekLabel(week!)}
+                          <span className="ml-2 font-mono tabular-nums text-tk-slate/45">
+                            {formatSheetHours(weekTotals.get(week!) ?? 0) || "0"} hr
+                          </span>
+                        </td>
+                      </tr>
+                    ) : null}
+
+                    <tr className="border-b border-tk-slate/10 last:border-0">
+                      <td className="px-1 py-0.5">
+                        {readOnly ? (
+                          <span className="flex size-7 items-center justify-center text-tk-slate/20">
+                            <Lock className="size-3" />
+                          </span>
+                        ) : row.id || hasWork(row) ? (
+                          <button
+                            type="button"
+                            onClick={() => remove(index)}
+                            className="flex size-7 items-center justify-center rounded text-tk-slate/30 hover:bg-tk-linen hover:text-tk-slate"
+                            aria-label="Delete row"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        ) : (
+                          <span className="flex size-7 items-center justify-center text-tk-slate/20">
+                            <Plus className="size-3.5" />
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="px-1 py-0.5">
+                        {row.id ? (
+                          <span
+                            title={chip.title}
+                            className={cn(
+                              "inline-flex rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold",
+                              chip.tone
+                            )}
+                          >
+                            {chip.label}
+                          </span>
+                        ) : null}
+                      </td>
+
+                      <td className="px-1 py-0.5">
+                        <input
+                          data-sheet-cell={`${index}-date`}
+                          value={row.date}
+                          readOnly={readOnly}
+                          onChange={(e) => applyDate(index, e.target.value)}
+                          onBlur={() => flushSave(index)}
+                          onKeyDown={(e) => onKeyDown(e, index, "date")}
+                          placeholder="3-Aug"
+                          aria-label={`Date, row ${index + 1}`}
+                          className={sheetInput(readOnly)}
+                        />
+                      </td>
+                      <td className="px-1 py-0.5">
+                        <input
+                          data-sheet-cell={`${index}-start`}
+                          value={row.startedAt}
+                          readOnly={readOnly}
+                          onChange={(e) =>
+                            applyClock(index, { startedAt: e.target.value }, row)
+                          }
+                          onBlur={() => flushSave(index)}
+                          onKeyDown={(e) => onKeyDown(e, index, "start")}
+                          placeholder="4:13 PM"
+                          aria-label={`Start time, row ${index + 1}`}
+                          className={sheetInput(readOnly, "tabular-nums")}
+                        />
+                      </td>
+                      <td className="px-1 py-0.5">
+                        <input
+                          data-sheet-cell={`${index}-end`}
+                          value={row.endedAt}
+                          readOnly={readOnly}
+                          onChange={(e) =>
+                            applyClock(index, { endedAt: e.target.value }, row)
+                          }
+                          onBlur={() => flushSave(index)}
+                          onKeyDown={(e) => onKeyDown(e, index, "end")}
+                          placeholder="5:04 PM"
+                          aria-label={`End time, row ${index + 1}`}
+                          className={sheetInput(readOnly, "tabular-nums")}
+                        />
+                      </td>
+                      <td className="px-1 py-0.5">
+                        <input
+                          data-sheet-cell={`${index}-hours`}
+                          value={row.hours}
+                          readOnly={readOnly}
+                          onChange={(e) => {
+                            patch(index, {
+                              hours: e.target.value,
+                              hoursLocked: true,
+                            })
+                            queueSave(index)
+                          }}
+                          onBlur={() => flushSave(index)}
+                          onKeyDown={(e) => onKeyDown(e, index, "hours")}
+                          inputMode="decimal"
+                          placeholder="0.85"
+                          aria-label={`Hours, row ${index + 1}`}
+                          className={sheetInput(readOnly, "text-right tabular-nums")}
+                        />
+                      </td>
+                      <td className="px-1 py-0.5">
+                        <input
+                          data-sheet-cell={`${index}-summary`}
+                          value={row.summary}
+                          readOnly={readOnly}
+                          onChange={(e) => {
+                            patch(index, { summary: e.target.value })
+                            queueSave(index)
+                          }}
+                          onBlur={() => flushSave(index)}
+                          onKeyDown={(e) => onKeyDown(e, index, "summary")}
+                          placeholder="Session highlights"
+                          aria-label={`Highlights, row ${index + 1}`}
+                          className={sheetInput(readOnly)}
+                        />
+                      </td>
+                      {projects.length > 0 ? (
+                        <td className="px-1 py-0.5">
+                          <select
+                            value={row.projectId ?? ""}
+                            disabled={readOnly}
+                            onChange={(e) => {
+                              patch(index, { projectId: e.target.value || null })
+                              if (row.id || hasWork(row)) flushSave(index)
+                            }}
+                            aria-label={`Project, row ${index + 1}`}
+                            className="w-full rounded border border-transparent bg-transparent px-1.5 py-1.5 text-xs text-tk-slate outline-none hover:border-tk-slate/20 focus:border-tk-teal disabled:hover:border-transparent"
+                          >
+                            <option value="">— retainer</option>
+                            {projects.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                      ) : null}
+                    </tr>
+                  </Fragment>
+                )
+              })}
             </tbody>
             <tfoot>
               <tr className="bg-tk-linen/40 text-sm">
-                <td colSpan={4} className="px-3 py-2.5 text-tk-slate/70">
+                <td colSpan={5} className="px-3 py-2.5 text-tk-slate/70">
                   Hours Worked
                 </td>
                 <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-tk-onyx">
@@ -605,6 +762,11 @@ export function Timesheet({
         <p className="mt-3 text-sm text-tk-slate/70" role="status">
           {status}
         </p>
+      ) : readOnly ? (
+        <p className="mt-3 text-sm text-tk-slate/50">
+          Read-only while this month is billed. Unlock above if a correction is
+          genuinely needed.
+        </p>
       ) : (
         <p className="mt-3 text-sm text-tk-slate/50">
           Tab through cells like a sheet. Hours fill in from start and end.
@@ -615,10 +777,13 @@ export function Timesheet({
   )
 }
 
-function sheetInput(extra?: string) {
+function sheetInput(readOnly: boolean, extra?: string) {
   return cn(
     "w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 text-sm text-tk-onyx outline-none",
-    "placeholder:text-tk-slate/30 hover:bg-tk-linen/50 focus:border-tk-teal/30 focus:bg-tk-teal/[0.04]",
+    "placeholder:text-tk-slate/30",
+    readOnly
+      ? "cursor-default text-tk-slate/75"
+      : "hover:bg-tk-linen/50 focus:border-tk-teal/30 focus:bg-tk-teal/[0.04]",
     extra
   )
 }

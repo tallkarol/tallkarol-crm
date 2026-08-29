@@ -2,7 +2,8 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { PageHeader } from "@/components/PageHeader"
 import { PeekRouter } from "@/components/peek/PeekRouter"
-import { TaskBoard, type BoardTask } from "@/components/retainers/TaskBoard"
+import { TaskBoardView } from "@/components/tasks/TaskBoardView"
+import { TaskComposer } from "@/components/tasks/TaskComposer"
 import { db } from "@/db"
 import { clientColor } from "@/lib/client-colors"
 import {
@@ -15,6 +16,7 @@ import {
   ym,
 } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
+import { allTasks, taskTargets } from "@/lib/tasks"
 import { formatDay, formatMoney } from "@/lib/work"
 import { draftRetainerInvoice } from "../actions"
 
@@ -45,20 +47,17 @@ export default async function RetainerDetailPage({
   const color = clientColor(retainer.client.slug)
   const rate = retainerRateCents(retainer, invoices)
 
-  const tasks = await db.query.tasks.findMany().then((rows) =>
-    rows.filter(
-      (t) =>
-        t.retainerId === retainer.id &&
-        (t.status === "open" || t.updatedAt >= monthStart)
-    )
+  const retainerRows = await db.query.tasks.findMany({
+    columns: { id: true },
+    where: (t, { eq }) => eq(t.retainerId, retainer.id),
+  })
+  const retainerTaskIds = new Set(retainerRows.map((r) => r.id))
+  const [allTaskRows, targets] = await Promise.all([allTasks(), taskTargets()])
+  const boardTasks = allTaskRows.filter(
+    (t) =>
+      retainerTaskIds.has(t.id) &&
+      (t.status === "open" || (t.completedAt ?? "") >= monthStart.toISOString())
   )
-  const boardTasks: BoardTask[] = tasks.map((t) => ({
-    id: t.id,
-    title: t.title,
-    notes: t.notes,
-    cadence: t.cadence,
-    stage: t.status === "done" ? "done" : t.boardStage,
-  }))
 
   const byMonth = hoursByMonth(entries, retainer.id)
   const loggedNow = byMonth.get(thisMonth) ?? 0
@@ -134,8 +133,23 @@ export default async function RetainerDetailPage({
           })}
       </div>
 
-      <TaskBoard
+      <div className="mt-5">
+        <TaskComposer
+          targets={targets}
+          scope={{
+            clientId: retainer.clientId,
+            clientName: retainer.client.name,
+            clientSlug: retainer.client.slug,
+          }}
+          placeholder={`Add a task for ${retainer.client.name}…`}
+          compact
+        />
+      </div>
+
+      <TaskBoardView
         tasks={boardTasks}
+        peekBase={ROUTES.retainer(retainer.slug)}
+        showClient={false}
         doneLabel={`Done · ${now.toLocaleDateString("en-US", { month: "short" })}`}
       />
 

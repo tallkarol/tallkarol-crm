@@ -2,6 +2,9 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { eq } from "drizzle-orm"
 import { PageHeader } from "@/components/PageHeader"
+import { PeekRouter } from "@/components/peek/PeekRouter"
+import { TaskComposer } from "@/components/tasks/TaskComposer"
+import { TaskRows } from "@/components/tasks/TaskRows"
 import { Badge, projectTone } from "@/components/work/Badge"
 import { ContractList } from "@/components/work/ContractList"
 import { InvoiceList } from "@/components/work/InvoiceList"
@@ -9,6 +12,7 @@ import { Section } from "@/components/work/Section"
 import { db } from "@/db"
 import { clients } from "@/db/schema"
 import { ROUTES } from "@/lib/nav"
+import { tasksFor, taskTargets } from "@/lib/tasks"
 import { currentMonth } from "@/lib/timesheet"
 import {
   FEE_STATUS_LABEL,
@@ -26,8 +30,10 @@ export async function generateMetadata({
 
 export default async function ClientDetailPage({
   params,
+  searchParams,
 }: {
   params: { slug: string }
+  searchParams: { peek?: string }
 }) {
   const client = await db.query.clients.findFirst({
     where: eq(clients.slug, params.slug),
@@ -40,6 +46,14 @@ export default async function ClientDetailPage({
   })
 
   if (!client) notFound()
+
+  // The client page never mentioned tasks — noticing something here meant
+  // leaving the page to write it down.
+  const [clientTasks, targets] = await Promise.all([
+    tasksFor({ clientId: client.id }),
+    taskTargets(),
+  ])
+  const openTasks = clientTasks.filter((t) => t.status === "open")
 
   return (
     <>
@@ -65,6 +79,40 @@ export default async function ClientDetailPage({
       {client.notes ? (
         <p className="mt-2 text-sm text-tk-slate/70">{client.notes}</p>
       ) : null}
+
+      {searchParams.peek ? (
+        <PeekRouter
+          peek={searchParams.peek}
+          closeHref={ROUTES.client(client.slug)}
+        />
+      ) : null}
+
+      <Section title="Tasks" allowOverflow>
+        <div className="mb-3">
+          <TaskComposer
+            targets={targets}
+            scope={{
+              clientId: client.id,
+              clientName: client.name,
+              clientSlug: client.slug,
+            }}
+            placeholder={`Add a task for ${client.name}…`}
+            compact
+          />
+        </div>
+        {openTasks.length === 0 ? (
+          <p className="text-sm text-tk-slate/60">
+            Nothing open. Anything typed above lands on {client.name}.
+          </p>
+        ) : (
+          <TaskRows
+            tasks={openTasks}
+            sortBy="due"
+            grouping="none"
+            peekBase={ROUTES.client(client.slug)}
+          />
+        )}
+      </Section>
 
       {client.retainers.length > 0 ? (
       <Section title="Retainers">

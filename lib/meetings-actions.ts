@@ -16,7 +16,8 @@ type Result = { ok: true } | { ok: false; error: string }
 
 function revalidateAll() {
   revalidatePath("/timesheet")
-  revalidatePath("/timesheet/meetings")
+  revalidatePath("/timesheet/review")
+  revalidatePath("/timesheet/sheets")
   revalidatePath("/calendar")
 }
 
@@ -67,6 +68,8 @@ export async function logMeeting(input: {
     null
 
   await db.insert(timeEntries).values({
+    userId: user.id,
+    source: "meeting",
     clientId: client.id,
     retainerId: retainer?.id ?? null,
     calendarEventId: event.id,

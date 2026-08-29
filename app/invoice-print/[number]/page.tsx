@@ -6,6 +6,7 @@ import { db } from "@/db"
 import { invoices } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { getInvoiceSender, parseDescription, readBilling } from "@/lib/invoice-print"
+import { getPortalScope } from "@/lib/portal"
 import { ROUTES } from "@/lib/nav"
 import { formatMoney } from "@/lib/work"
 
@@ -33,14 +34,20 @@ export default async function InvoicePrintPage({
 }: {
   params: { number: string }
 }) {
-  const user = await getSessionUser()
-  if (!user) redirect("/login")
-
   const invoice = await db.query.invoices.findFirst({
     where: eq(invoices.number, decodeURIComponent(params.number)),
     with: { client: true, retainer: true },
   })
   if (!invoice) notFound()
+
+  // Admins see everything; portal users only their own clients' invoices.
+  const user = await getSessionUser()
+  if (!user) {
+    const scope = await getPortalScope()
+    const allowed =
+      scope?.kind === "customer" && scope.clients.some((c) => c.id === invoice.clientId)
+    if (!allowed) redirect("/login")
+  }
 
   const billing = readBilling(invoice.client.billing)
   const sender = await getInvoiceSender()

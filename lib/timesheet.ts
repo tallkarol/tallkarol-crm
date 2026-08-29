@@ -207,3 +207,47 @@ export function invoiceNumberFor(clientSlug: string, month: string) {
   const [year, mon] = month.split("-")
   return `${prefix}-${year}-${mon}`
 }
+
+/** Monday of the week an ISO day falls in — the sheet's week bands. */
+export function weekStart(iso: string) {
+  const [year, month, day] = iso.split("-").map(Number)
+  const date = new Date(year, month - 1, day)
+  const offset = (date.getDay() + 6) % 7
+  date.setDate(date.getDate() - offset)
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+}
+
+export function weekLabel(iso: string) {
+  const [year, month, day] = iso.split("-").map(Number)
+  return `Week of ${new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "long",
+  })}`
+}
+
+/** The twelve month keys of a year, for the month picker grid. */
+export function monthsOfYear(year: number) {
+  return Array.from({ length: 12 }, (_, i) => ({
+    key: `${year}-${pad2(i + 1)}`,
+    label: new Date(year, i, 1).toLocaleDateString("en-US", { month: "short" }),
+  }))
+}
+
+export function yearOf(month: string) {
+  return Number(month.slice(0, 4))
+}
+
+/** Nearest month with data on either side, so prev/next can skip the gaps. */
+export function stepThroughMonths(
+  months: string[],
+  current: string,
+  delta: -1 | 1
+): string | null {
+  const sorted = [...months].sort()
+  if (delta === -1) {
+    const before = sorted.filter((m) => m < current)
+    return before.length ? before[before.length - 1] : null
+  }
+  const after = sorted.filter((m) => m > current)
+  return after.length ? after[0] : null
+}

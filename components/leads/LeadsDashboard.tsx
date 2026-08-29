@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { cn } from "@/lib/cn"
 import {
   QUALIFICATION_LABEL,
+  SALES_STAGES,
   leadCounts,
   leadMatchesStage,
   type LeadListItem,
@@ -14,6 +15,7 @@ import {
   type LeadState,
   type Qualification,
 } from "@/lib/lead"
+import { SalesBoard } from "@/components/leads/SalesBoard"
 import {
   TemplateCard,
   TemplatePreviewModal,
@@ -24,15 +26,22 @@ import {
   type OutreachTemplate,
 } from "@/lib/lead-templates"
 
-const STAGES: { id: LeadStage; label: string; countKey: keyof ReturnType<typeof leadCounts> }[] =
-  [
-    { id: "all", label: "All", countKey: "total" },
-    { id: "needs-look", label: "Needs a look", countKey: "needsLook" },
-    { id: "fit", label: "Fit", countKey: "fit" },
-    { id: "meeting", label: "Meetings", countKey: "meeting" },
-    { id: "sent", label: "Sent", countKey: "sent" },
-    { id: "closed", label: "Closed", countKey: "closed" },
-  ]
+const COUNT_KEY: Record<string, keyof ReturnType<typeof leadCounts>> = {
+  "needs-look": "needsLook",
+  fit: "fit",
+  meeting: "meeting",
+  sent: "sent",
+  closed: "closed",
+}
+
+const STAGES: { id: LeadStage; label: string; countKey: keyof ReturnType<typeof leadCounts> }[] = [
+  { id: "all", label: "All", countKey: "total" },
+  ...SALES_STAGES.map((s) => ({
+    id: s.id as LeadStage,
+    label: s.label,
+    countKey: COUNT_KEY[s.id],
+  })),
+]
 
 function isStage(value: string | null): value is LeadStage {
   return STAGES.some((s) => s.id === value)
@@ -131,6 +140,8 @@ export function LeadsDashboard({ leads: initial }: { leads: LeadListItem[] }) {
     <>
       <PageHeader title="Leads" />
 
+      <SalesBoard leads={leads} onSelect={(id) => setQuery({ lead: id })} />
+
       {upcoming.length > 0 ? (
         <section className="mt-8 rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-tk-slate/70">
@@ -156,10 +167,7 @@ export function LeadsDashboard({ leads: initial }: { leads: LeadListItem[] }) {
       ) : null}
 
       <div
-        className={cn(
-          "flex flex-wrap gap-2",
-          upcoming.length > 0 ? "mt-4" : "mt-8"
-        )}
+        className={cn("flex flex-wrap gap-2", upcoming.length > 0 ? "mt-4" : "mt-8")}
       >
         {STAGES.map((item) => {
           const active = stage === item.id

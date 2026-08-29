@@ -15,7 +15,10 @@ export function monthLabel(key: string) {
  * Contract rate in cents/hr — explicit rate_cents when set, otherwise derived
  * from the latest invoice that carries hours.
  */
-export function retainerRateCents(retainer: Retainer, invoices: Invoice[]): number | null {
+export function retainerRateCents(
+  retainer: Pick<Retainer, "id" | "rateCents" | "hoursPerMonth">,
+  invoices: Pick<Invoice, "retainerId" | "hours" | "amountCents" | "issuedOn">[]
+): number | null {
   if (retainer.rateCents) return retainer.rateCents
   const latest = invoices
     .filter((i) => i.retainerId === retainer.id && i.hours && Number(i.hours) > 0)

@@ -44,3 +44,28 @@ body {
     opacity: 1;
   }
 }
+
+/* Ticket payloads — the small highlighter in lib/payload-highlight.ts.
+   Tuned for the dark block inside an otherwise light detail pane. */
+.tk-payload .tk-key {
+  color: #8fd6c4;
+}
+.tk-payload .tk-str {
+  color: #e4c07a;
+}
+.tk-payload .tk-num {
+  color: #9fbee8;
+}
+.tk-payload .tk-lit {
+  color: #d68fa8;
+}
+.tk-payload .tk-dim {
+  color: #6f807a;
+}
+.tk-payload .tk-err {
+  color: #f08a7d;
+  font-weight: 500;
+}
+.tk-payload .tk-add {
+  color: #7fd6a5;
+}

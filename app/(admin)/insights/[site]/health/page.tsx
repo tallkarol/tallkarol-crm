@@ -161,6 +161,25 @@ export default async function InsightsHealthPage({
           />
         </Setup>
 
+        <Setup title="UptimeRobot">
+          <Checklist
+            items={[
+              {
+                title: "Read-only API key",
+                body: "Dashboard → Integrations & API → Read-Only API Key. Store it as UPTIMEROBOT_API_KEY on the CRM (local and Railway). Never the main key — that one can delete monitors.",
+              },
+              {
+                title: "Create the HTTP monitor",
+                body: "One monitor per production origin, 5-minute interval is enough. Copy the numeric monitor id.",
+              },
+              {
+                title: "Attach it to the site row",
+                body: "npm run site:discover lists what the key can see. Then npm run site:set -- <slug> uptimeMonitorId <id>. Refresh this tab.",
+              },
+            ]}
+          />
+        </Setup>
+
         <Setup title="GA4 admin (once events flow)">
           <Checklist
             items={[

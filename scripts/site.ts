@@ -3,20 +3,24 @@
  *
  *   npm run site:list
  *   npm run site:add -- zemvelo "Zemvelo" https://zemvelo.com 123456789 sc-domain:zemvelo.com
+ *   npm run site:set -- zemvelo clientSlug zemvelo
  */
 import { loadLocalEnv } from "../lib/load-env"
 loadLocalEnv()
 
 import { asc, eq } from "drizzle-orm"
 import { db } from "../db"
-import { sites } from "../db/schema"
+import { clients, sites } from "../db/schema"
 
 async function list() {
-  const rows = await db.query.sites.findMany({ orderBy: [asc(sites.sort), asc(sites.name)] })
+  const rows = await db.query.sites.findMany({
+    orderBy: [asc(sites.sort), asc(sites.name)],
+    with: { client: { columns: { slug: true } } },
+  })
   if (!rows.length) return console.log("No sites yet.")
   for (const s of rows) {
     console.log(
-      `${s.slug.padEnd(14)} ${s.name.padEnd(20)} GA4=${(s.ga4PropertyId || "—").padEnd(12)} GSC=${s.gscSiteUrl || "—"}`
+      `${s.slug.padEnd(22)} ${s.name.padEnd(22)} CLIENT=${(s.client?.slug || "house").padEnd(22)} GA4=${(s.ga4PropertyId || "—").padEnd(12)} GSC=${(s.gscSiteUrl || "—").padEnd(28)} UPTIME=${s.uptimeMonitorId || "—"}`
     )
   }
 }
@@ -113,15 +117,83 @@ async function discover() {
       )
     }
   }
+
+  if (process.env.UPTIMEROBOT_API_KEY) {
+    const { fetchUptimeMonitors, hostnameOf } = await import("../lib/uptimerobot")
+    try {
+      const monitors = await fetchUptimeMonitors()
+      console.log("\nUptimeRobot monitors:")
+      if (!monitors.length) console.log("  (none)")
+      for (const monitor of monitors) {
+        const used = known.find((k) => k.uptimeMonitorId === monitor.id)
+        const host = hostnameOf(monitor.url)
+        const guessed =
+          used ??
+          known.find((k) => hostnameOf(k.origin) === host || k.slug === host.split(".")[0])
+        console.log(
+          `  ${String(monitor.id).padEnd(12)} ${monitor.name.padEnd(24)} ${monitor.status.padEnd(10)} ${
+            used
+              ? `→ site "${used.slug}"`
+              : guessed
+                ? `· not wired (looks like "${guessed.slug}")`
+                : "· not in sites"
+          }`
+        )
+      }
+      const orphans = monitors.filter((m) => !known.some((k) => k.uptimeMonitorId === m.id))
+      if (orphans.length) {
+        console.log("\nTo wire these, run:")
+        for (const monitor of orphans) {
+          const host = hostnameOf(monitor.url)
+          const guess =
+            known.find((k) => hostnameOf(k.origin) === host) ??
+            known.find((k) => k.slug === host.split(".")[0])
+          if (guess) {
+            console.log(`  npm run site:set -- ${guess.slug} uptimeMonitorId ${monitor.id}`)
+          }
+        }
+      }
+    } catch (err) {
+      console.log(`\nUptimeRobot: ${err instanceof Error ? err.message : err}`)
+    }
+  } else {
+    console.log("\nUptimeRobot: no UPTIMEROBOT_API_KEY (read-only key).")
+  }
 }
 
 async function set(slug: string, field: string, value: string) {
-  const allowed = ["name", "origin", "ga4PropertyId", "gscSiteUrl", "measurementId"] as const
+  const allowed = [
+    "name",
+    "origin",
+    "ga4PropertyId",
+    "gscSiteUrl",
+    "measurementId",
+    "uptimeMonitorId",
+    "clientSlug",
+  ] as const
   if (!allowed.includes(field as any)) {
     throw new Error(`field must be one of: ${allowed.join(", ")}`)
   }
   const row = await db.query.sites.findFirst({ where: eq(sites.slug, slug) })
   if (!row) throw new Error(`No site "${slug}"`)
+
+  // `clientSlug` is the friendly name for the FK — two sites pointed at the
+  // same client is how one client's several domains share a card on /uptime.
+  if (field === "clientSlug") {
+    let clientId: string | null = null
+    if (value) {
+      const client = await db.query.clients.findFirst({ where: eq(clients.slug, value) })
+      if (!client) throw new Error(`No client "${value}"`)
+      clientId = client.id
+    }
+    await db
+      .update(sites)
+      .set({ clientId, updatedAt: new Date() })
+      .where(eq(sites.slug, slug))
+    console.log(`${slug}.client = ${value || "(house)"}`)
+    return
+  }
+
   await db
     .update(sites)
     .set({ [field]: value, updatedAt: new Date() })

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers"
 import { eq, and, gt, isNull } from "drizzle-orm"
 import { db } from "@/db"
-import { magicLinks, sessions, users } from "@/db/schema"
+import { magicLinks, portalGrants, sessions, users } from "@/db/schema"
 import {
   SESSION_COOKIE,
   SESSION_TTL_MS,
@@ -19,8 +19,12 @@ export async function requestMagicLink(emailRaw: string) {
   }
 
   // Always return the same shape — do not leak allowlist membership.
+  // Admins are allowlisted by env; customers by holding a portal grant.
   if (!isAdminEmail(email)) {
-    return { ok: true as const }
+    const grant = await db.query.portalGrants.findFirst({
+      where: eq(portalGrants.email, email),
+    })
+    if (!grant) return { ok: true as const }
   }
 
   const token = newToken()
@@ -86,7 +90,14 @@ export async function consumeMagicLink(token: string) {
     .limit(1)
 
   if (!row) return null
-  if (!isAdminEmail(row.email)) return null
+  const admin = isAdminEmail(row.email)
+  if (!admin) {
+    // Customers get in only while a portal grant exists for their email.
+    const grant = await db.query.portalGrants.findFirst({
+      where: eq(portalGrants.email, row.email),
+    })
+    if (!grant) return null
+  }
 
   await db
     .update(magicLinks)
@@ -102,9 +113,9 @@ export async function consumeMagicLink(token: string) {
   if (!user) {
     ;[user] = await db
       .insert(users)
-      .values({ email: row.email, role: "admin" })
+      .values({ email: row.email, role: admin ? "admin" : "customer" })
       .returning()
-  } else if (user.role !== "admin") {
+  } else if (admin && user.role !== "admin") {
     ;[user] = await db
       .update(users)
       .set({ role: "admin" })

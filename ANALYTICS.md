@@ -112,6 +112,21 @@ comes back from the API.
 
 Then `npm run google:check` walks every site and names anything still missing.
 
+Uptime is UptimeRobot. The CRM only ever reads — `UPTIMEROBOT_API_KEY` must be
+the account's **read-only** key. `site:discover` lists the monitors that key
+can see; attach one with:
+
+```
+npm run site:set -- tallkarol uptimeMonitorId 803857404
+npm run site:set -- karolbuczek uptimeMonitorId 803859654
+npm run site:set -- zemvelo uptimeMonitorId 803863305
+npm run site:set -- mycustommanufacturer uptimeMonitorId 803863309
+```
+
+House plus Zemvelo and Mineralife (mycustommanufacturer.com) are monitored.
+The live board is `/uptime`, grouped by client; the Health tab picks the same
+source up on Refresh. No monitor id, no uptime number — by rule.
+
 ## Cursor analytics-mcp (optional, read-only)
 
 ```

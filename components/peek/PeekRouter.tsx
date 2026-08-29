@@ -1,4 +1,6 @@
 import { PeekShell } from "@/components/peek/PeekShell"
+import { AppHealthPeek } from "@/components/peek/AppHealthPeek"
+import { SiteUptimePeek } from "@/components/peek/SiteUptimePeek"
 import { GonePeek } from "@/components/peek/bits"
 import { DeliverablePeek } from "@/components/peek/DeliverablePeek"
 import { InvoicePeek } from "@/components/peek/InvoicePeek"
@@ -51,6 +53,22 @@ export async function PeekRouter({
       return (
         <PeekShell closeHref={closeHref} eyebrow="Deliverable">
           <DeliverablePeek id={id} />
+        </PeekShell>
+      )
+    case "app":
+      return (
+        <PeekShell
+          closeHref={closeHref}
+          eyebrow="App health"
+          footer={{ href: ROUTES.client(id), label: "Open client" }}
+        >
+          <AppHealthPeek slug={id} />
+        </PeekShell>
+      )
+    case "site":
+      return (
+        <PeekShell closeHref={closeHref} eyebrow="Site uptime">
+          <SiteUptimePeek slug={id} />
         </PeekShell>
       )
     case "project":

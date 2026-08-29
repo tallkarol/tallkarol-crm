@@ -27,6 +27,7 @@ Set these variables on the **web** service:
 | `SESSION_SECRET` | `openssl rand -hex 32` |
 | `INGEST_SECRET` | `openssl rand -hex 32` (copy this for Vercel too) |
 | `NODE_ENV` | `production` |
+| `UPTIMEROBOT_API_KEY` | UptimeRobot **read-only** key (never the main key) |
 
 ## 3. Custom domain
 

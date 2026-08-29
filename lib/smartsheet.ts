@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 import { db } from "@/db"
 import { appSettings, supportTickets } from "@/db/schema"
 
@@ -164,7 +164,13 @@ export async function syncSupportTickets(): Promise<{ ok: boolean; synced: numbe
         .values(values)
         .onConflictDoUpdate({
           target: [supportTickets.source, supportTickets.externalId],
-          set: values,
+          set: {
+            ...values,
+            // A state moved by hand in the CRM sticks until the sheet itself
+            // says something different — then the sheet wins again.
+            state: sql`case when ${supportTickets.status} is distinct from ${values.status}
+              then '' else ${supportTickets.state} end`,
+          },
         })
       synced++
     }
@@ -211,5 +217,96 @@ export async function enableSmartsheetWebhook(): Promise<{ ok: boolean; error?: 
     return { ok: true }
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Webhook setup failed." }
+  }
+}
+
+/* ------------------------------------------------------------ write-back */
+
+const WRITEBACK_PATTERNS: [string, RegExp][] = [
+  ["status", /^status/i],
+  ["completed", /^completed/i],
+  ["resolution", /final resolution/i],
+  ["assignee", /^assigned to/i],
+  ["followUpNotes", /follow.?up notes/i],
+]
+
+/** CRM triage state → the sheet's own Status picklist wording. */
+const STATE_TO_SHEET: Record<string, string> = {
+  open: "New",
+  progress: "In Progress",
+  waiting: "Waiting for Information",
+  closed: "Closed",
+}
+
+/**
+ * Push the CRM-owned fields of one ticket back to its Smartsheet row:
+ * Status, Completed, Final Resolution, Assigned To, Follow-Up Notes.
+ * Everything submitters own (title, description, priority, contacts) is
+ * never written. The webhook echo re-reads what we wrote — idempotent.
+ */
+export async function writeTicketBack(ticketId: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const config = await getSmartsheetConfig()
+    if (!config.sheetId || !smartsheetTokenPresent()) return { ok: true } // nothing to sync to
+
+    const { supportTickets, ticketMessages } = await import("@/db/schema")
+    const { eq: eqOp, and: andOp, asc } = await import("drizzle-orm")
+    const ticket = await db.query.supportTickets.findFirst({
+      where: eqOp(supportTickets.id, ticketId),
+    })
+    if (!ticket || ticket.source !== "smartsheet" || !ticket.externalId) return { ok: true }
+
+    const notes = await db
+      .select()
+      .from(ticketMessages)
+      .where(andOp(eqOp(ticketMessages.ticketId, ticketId), eqOp(ticketMessages.role, "me")))
+      .orderBy(asc(ticketMessages.sentAt))
+    let followUp = notes
+      .map((n) => {
+        const d = n.sentAt
+        return `${d.getMonth() + 1}/${d.getDate()}: ${n.body}`
+      })
+      .join("\n")
+    while (followUp.length > 3800 && notes.length) {
+      followUp = followUp.slice(followUp.indexOf("\n") + 1) // drop oldest lines first
+    }
+
+    // level=2 exposes real column types (contact columns masquerade as TEXT_NUMBER at level 0)
+    const cols = (await api(`/sheets/${config.sheetId}/columns?level=2&pageSize=100`)).data ?? []
+    const findCol = (key: string) => {
+      const pattern = WRITEBACK_PATTERNS.find(([k]) => k === key)?.[1]
+      return pattern
+        ? (cols.find((c: { title?: string }) => pattern.test(String(c.title ?? ""))) ?? null)
+        : null
+    }
+
+    const state = (ticket.state && STATE_TO_SHEET[ticket.state]) || null
+    const cells: Record<string, unknown>[] = []
+    const push = (key: string, value: unknown) => {
+      const col = findCol(key)
+      if (!col) return
+      // Contact columns (e.g. Assigned To) reject plain strings.
+      if (String(col.type).includes("CONTACT") && typeof value === "string" && value) {
+        const contact: Record<string, string> = { objectType: "CONTACT", name: value }
+        if (/karol/i.test(value)) contact.email = "kbuczek@mineralifeonline.com"
+        cells.push({ columnId: col.id, objectValue: contact, strict: false })
+        return
+      }
+      cells.push({ columnId: col.id, value, strict: false })
+    }
+    if (state) push("status", state)
+    push("completed", ticket.completed)
+    push("resolution", ticket.resolution ?? "")
+    push("assignee", ticket.assignee || "Karol Buczek")
+    if (notes.length) push("followUpNotes", followUp)
+    if (cells.length === 0) return { ok: true }
+
+    await api(`/sheets/${config.sheetId}/rows`, {
+      method: "PUT",
+      body: JSON.stringify([{ id: Number(ticket.externalId), cells }]),
+    })
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Smartsheet write failed." }
   }
 }

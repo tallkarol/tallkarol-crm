@@ -20,6 +20,17 @@ export default function SettingsIntegrationsPage() {
       </Link>
 
       <Link
+        href={ROUTES.settingsDevices}
+        className="mt-4 block rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm transition-colors hover:border-tk-teal/40"
+      >
+        <p className="text-sm font-semibold text-tk-onyx">Devices</p>
+        <p className="mt-1 text-sm text-tk-slate/70">
+          Bearer tokens for clocking in from a watch, a phone, or a shortcut —
+          one per device, revocable on its own.
+        </p>
+      </Link>
+
+      <Link
         href={ROUTES.insights}
         className="mt-4 block rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm transition-colors hover:border-tk-teal/40"
       >

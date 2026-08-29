@@ -83,7 +83,7 @@ export async function setDeliverableStatusAction(
   const project = await db.query.projects.findFirst({
     where: eq(projects.id, row.projectId),
   })
-  touch([ROUTES.home, ROUTES.projects, project ? ROUTES.project(project.slug) : ROUTES.projects])
+  touch([ROUTES.home, ROUTES.delivery, ROUTES.projects, project ? ROUTES.project(project.slug) : ROUTES.projects])
   return { ok: true as const }
 }
 
@@ -106,7 +106,7 @@ export async function setProjectStatusAction(id: string, status: ProjectStatus) 
     .where(eq(projects.id, id))
     .returning()
   if (!row) return { ok: false as const, error: "Project not found." }
-  touch([ROUTES.home, ROUTES.projects, ROUTES.project(row.slug)])
+  touch([ROUTES.home, ROUTES.delivery, ROUTES.projects, ROUTES.project(row.slug)])
   return { ok: true as const }
 }
 
@@ -122,7 +122,7 @@ export async function setProjectFeeStatusAction(id: string, status: FeeStatus) {
     .where(eq(projects.id, id))
     .returning()
   if (!row) return { ok: false as const, error: "Project not found." }
-  touch([ROUTES.home, ROUTES.projects, ROUTES.project(row.slug)])
+  touch([ROUTES.home, ROUTES.delivery, ROUTES.projects, ROUTES.project(row.slug)])
   return { ok: true as const }
 }
 
@@ -135,7 +135,7 @@ export async function setProjectNotesAction(id: string, notes: string) {
     .where(eq(projects.id, id))
     .returning()
   if (!row) return { ok: false as const, error: "Project not found." }
-  touch([ROUTES.home, ROUTES.projects, ROUTES.project(row.slug)])
+  touch([ROUTES.home, ROUTES.delivery, ROUTES.projects, ROUTES.project(row.slug)])
   return { ok: true as const }
 }
 

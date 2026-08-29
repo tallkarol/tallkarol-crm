@@ -33,7 +33,7 @@ export default async function InquiryDetailPage({
   return (
     <>
       <Link
-        href={ROUTES.inbox}
+        href={ROUTES.inquiries}
         className="text-sm font-semibold text-tk-teal hover:underline"
       >
         ← Inbox

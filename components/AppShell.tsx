@@ -66,7 +66,7 @@ export function AppShell({
   }
 
   const badges = {
-    ...(inboxBadge > 0 ? { "/inquiries": inboxBadge } : {}),
+    ...(inboxBadge > 0 ? { "/inbox": inboxBadge } : {}),
     ...(leadsBadge > 0 ? { "/leads": leadsBadge } : {}),
   }
 

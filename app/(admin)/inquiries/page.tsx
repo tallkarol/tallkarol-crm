@@ -42,8 +42,8 @@ export default async function InboxPage({
             {FILTERS.map((f) => {
               const href =
                 f.value === "all"
-                  ? ROUTES.inbox
-                  : `${ROUTES.inbox}?status=${f.value}`
+                  ? ROUTES.inquiries
+                  : `${ROUTES.inquiries}?status=${f.value}`
               const active =
                 (f.value === "all" && !isStatus(statusFilter)) ||
                 f.value === statusFilter
@@ -75,7 +75,7 @@ export default async function InboxPage({
             {rows.map((row) => (
               <li key={row.id}>
                 <Link
-                  href={`${ROUTES.inbox}/${row.id}`}
+                  href={ROUTES.inquiry(row.id)}
                   className="flex flex-col gap-2 px-5 py-4 transition-colors hover:bg-tk-linen/60 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">

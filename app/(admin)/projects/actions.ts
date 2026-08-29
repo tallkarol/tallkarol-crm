@@ -39,6 +39,7 @@ export async function draftDeliverableInvoice(deliverableId: string) {
   revalidatePath(ROUTES.projects)
   revalidatePath(ROUTES.project(deliverable.project.slug))
   revalidatePath(ROUTES.invoices)
+  revalidatePath(ROUTES.delivery)
 }
 
 export async function addProjectLink(formData: FormData) {

@@ -4,11 +4,11 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts"
+import { ChartFrame } from "@/components/revenue/ChartFrame"
 import { chartColor } from "@/lib/client-colors"
 
 export type RevenuePoint = {
@@ -22,13 +22,20 @@ export function RevenueChart({
 }: {
   points: RevenuePoint[]
   series: { slug: string; name: string }[]
+  className?: string
 }) {
   const data = points.map((p) => ({ month: p.month, ...p.values }))
 
   return (
-    <div className="h-64 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barCategoryGap="30%">
+    <ChartFrame>
+      {({ width, height }) => (
+        <BarChart
+          width={width}
+          height={height}
+          data={data}
+          margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+          barCategoryGap="30%"
+        >
           <CartesianGrid vertical={false} stroke="rgba(15,22,21,0.08)" />
           <XAxis
             dataKey="month"
@@ -86,7 +93,7 @@ export function RevenueChart({
             />
           ))}
         </BarChart>
-      </ResponsiveContainer>
-    </div>
+      )}
+    </ChartFrame>
   )
 }

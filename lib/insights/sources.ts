@@ -1,5 +1,11 @@
 import type { Site } from "@/db/schema"
 import { probeCollector, validateMeasurementProtocol } from "@/lib/analytics"
+import {
+  fetchUptimeMonitor,
+  formatRatio,
+  statusLabel,
+  uptimeRobotConfigured,
+} from "@/lib/uptimerobot"
 import { ga4Date, ga4Post, gscQuery, num, type Ga4Report } from "@/lib/insights/google"
 import { addDays } from "@/lib/insights/derive"
 import {
@@ -20,6 +26,7 @@ import {
  * apply, merges their slices into the snapshot, and lists their health rows.
  * Adding a source later (DataForSEO, CrUX, Resend…) means adding one entry
  * here — the page, the Health tab, and the refresh action pick it up.
+ * UptimeRobot is already one of those entries.
  */
 export interface InsightSource {
   id: string
@@ -336,6 +343,61 @@ const collectorSource: InsightSource = {
   },
 }
 
+const uptimeSource: InsightSource = {
+  id: "uptime",
+  label: "UptimeRobot",
+  appliesTo: (site) => Boolean(site.uptimeMonitorId),
+  async run(site) {
+    if (!uptimeRobotConfigured()) {
+      return {
+        health: {
+          id: this.id,
+          label: this.label,
+          ok: false,
+          detail: "Add a read-only UPTIMEROBOT_API_KEY to read this monitor.",
+        },
+      }
+    }
+    try {
+      const monitor = await fetchUptimeMonitor(site.uptimeMonitorId)
+      if (!monitor) {
+        return {
+          health: {
+            id: this.id,
+            label: this.label,
+            ok: false,
+            detail: `No UptimeRobot monitor ${site.uptimeMonitorId}.`,
+          },
+        }
+      }
+      const up = monitor.status === "up"
+      const ratio = formatRatio(monitor.ratio30)
+      return {
+        health: {
+          id: this.id,
+          label: this.label,
+          ok: up ? true : monitor.status === "paused" ? null : false,
+          detail: up
+            ? `${statusLabel(monitor.status)} · ${ratio} over 30 days` +
+              (monitor.avgResponseMs != null
+                ? ` · ${Math.round(monitor.avgResponseMs)} ms avg`
+                : "")
+            : `${statusLabel(monitor.status)} · ${ratio} over 30 days`,
+        },
+      }
+    } catch (err) {
+      return {
+        health: {
+          id: this.id,
+          label: this.label,
+          ok: false,
+          detail: err instanceof Error ? err.message : "UptimeRobot request failed.",
+        },
+      }
+    }
+  },
+}
+
 const mpSource: InsightSource = {
   id: "mp",
   label: "Measurement Protocol",
@@ -359,4 +421,5 @@ export const INSIGHT_SOURCES: InsightSource[] = [
   gscSource,
   collectorSource,
   mpSource,
+  uptimeSource,
 ]

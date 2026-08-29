@@ -27,12 +27,24 @@ export async function ensureRenewalTasks(now = new Date()) {
       year: "numeric",
     })
     const title = `Renew or wind down — ${r.name} ends ${endLabel}`
-    if (existing.some((t) => t.retainerId === r.id && t.title === title)) continue
+    // Matched on where it came from, not on its title: renaming one used to
+    // spawn a twin on the next page load.
+    const already = existing.some(
+      (t) =>
+        t.source === "renewal" &&
+        t.refKind === "retainer" &&
+        t.refId === r.id &&
+        t.dueOn === r.endsOn
+    )
+    if (already) continue
     await db.insert(tasks).values({
       title,
       clientId: r.clientId,
       retainerId: r.id,
       dueOn: r.endsOn,
+      source: "renewal",
+      refKind: "retainer",
+      refId: r.id,
       notes: `Auto-created at T-${T_MINUS_DAYS}. Decide before the window closes: renew, extend, or plan the handoff.`,
     })
   }

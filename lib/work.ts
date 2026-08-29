@@ -49,6 +49,7 @@ export const CADENCE_LABEL: Record<Cadence, string> = {
   none: "Once",
   weekly: "Weekly",
   monthly: "Monthly",
+  quarterly: "Quarterly",
 }
 
 export const CONTRACT_STATUS_LABEL: Record<ContractStatus, string> = {

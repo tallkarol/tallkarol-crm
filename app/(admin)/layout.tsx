@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell"
 import { db } from "@/db"
 import { inquiries } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
+import { loadInbox } from "@/lib/inbox-data"
 
 export default async function AdminLayout({
   children,
@@ -13,27 +14,24 @@ export default async function AdminLayout({
   const user = await getSessionUser()
   if (!user) redirect("/login")
 
-  const [inbox] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(inquiries)
-    .where(eq(inquiries.status, "new"))
-
-  const [needsLook] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(inquiries)
-    .where(
-      and(
-        ne(inquiries.status, "closed"),
-        sql`(payload->'lead'->>'qualification' is null or payload->'lead'->>'qualification' = 'unreviewed')`
+  // The Inbox badge counts unread across every kind, not just new inquiries —
+  // otherwise a stream of tickets and mail sits behind a badge reading zero.
+  const [inbox, needsLook] = await Promise.all([
+    loadInbox().then((data) => data.counts.unread),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(inquiries)
+      .where(
+        and(
+          ne(inquiries.status, "closed"),
+          sql`(payload->'lead'->>'qualification' is null or payload->'lead'->>'qualification' = 'unreviewed')`
+        )
       )
-    )
+      .then(([row]) => Number(row?.count ?? 0)),
+  ])
 
   return (
-    <AppShell
-      email={user.email}
-      inboxBadge={Number(inbox?.count ?? 0)}
-      leadsBadge={Number(needsLook?.count ?? 0)}
-    >
+    <AppShell email={user.email} inboxBadge={inbox} leadsBadge={needsLook}>
       {children}
     </AppShell>
   )

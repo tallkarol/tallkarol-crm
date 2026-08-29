@@ -95,9 +95,10 @@ export async function saveTimeEntry(
     return { ok: true, id: input.id }
   }
 
-  const [created] = await db.insert(timeEntries).values(values).returning({
-    id: timeEntries.id,
-  })
+  const [created] = await db
+    .insert(timeEntries)
+    .values({ ...values, userId: user.id, source: "manual" })
+    .returning({ id: timeEntries.id })
   revalidateWork()
   return { ok: true, id: created.id }
 }

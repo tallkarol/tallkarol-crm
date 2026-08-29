@@ -1,47 +1,6 @@
-import Link from "next/link"
-import { PageHeader } from "@/components/PageHeader"
-import { DomainTriage } from "@/components/timesheet/DomainTriage"
-import { MeetingInbox } from "@/components/timesheet/MeetingInbox"
-import { asc } from "drizzle-orm"
-import { db } from "@/db"
-import { clients } from "@/db/schema"
-import { meetingProposals, unmatchedDomains } from "@/lib/meetings"
-import { ROUTES } from "@/lib/nav"
+import { redirect } from "next/navigation"
 
-export const metadata = { title: "Meetings" }
-export const dynamic = "force-dynamic"
-
-export default async function MeetingsPage() {
-  const [proposals, unmatched, clientRows] = await Promise.all([
-    meetingProposals(),
-    // Mapping a domain is a one-off decision, so look back further than the
-    // 60-day window used for proposing entries.
-    unmatchedDomains(365),
-    db.query.clients.findMany({ orderBy: [asc(clients.name)] }),
-  ])
-
-  return (
-    <>
-      <PageHeader
-        title="Meetings"
-        actions={
-          <Link
-            href={ROUTES.timesheet}
-            className="rounded-full border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
-          >
-            Timesheet
-          </Link>
-        }
-      />
-      <p className="mt-2 max-w-2xl text-sm text-tk-slate/70">
-        Meetings from the last 60 days whose guests match a client domain, and
-        that are not on the timesheet yet. Logging one writes a real time entry.
-      </p>
-      <MeetingInbox proposals={proposals} />
-      <DomainTriage
-        rows={unmatched}
-        clients={clientRows.map((c) => ({ slug: c.slug, name: c.name }))}
-      />
-    </>
-  )
+/** Meetings folded into the review queue — same decision, one screen. */
+export default function MeetingsRedirect() {
+  redirect("/timesheet/review?tab=meetings")
 }

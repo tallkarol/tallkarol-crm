@@ -2,6 +2,7 @@ export type NavIconName =
   | "dashboard"
   | "inbox"
   | "pipeline"
+  | "delivery"
   | "contacts"
   | "clients"
   | "projects"
@@ -16,6 +17,11 @@ export type NavIconName =
   | "invoices"
   | "expenses"
   | "timesheet"
+  | "clock"
+  | "review"
+  | "sheets"
+  | "ledger"
+  | "devices"
   | "attribution"
   | "analytics"
   | "reports"
@@ -23,6 +29,7 @@ export type NavIconName =
   | "logs"
   | "support"
   | "uptime"
+  | "notebooks"
   | "settings"
   | "team"
   | "email-settings"
@@ -42,8 +49,10 @@ export type NavSection = {
 
 export const ROUTES = {
   home: "/",
-  inbox: "/inquiries",
+  inbox: "/inbox",
+  inquiries: "/inquiries",
   pipeline: "/pipeline",
+  delivery: "/delivery",
   contacts: "/contacts",
   clients: "/clients",
   projects: "/projects",
@@ -58,7 +67,11 @@ export const ROUTES = {
   invoices: "/invoices",
   expenses: "/expenses",
   timesheet: "/timesheet",
-  timesheetMeetings: "/timesheet/meetings",
+  timesheetLive: "/timesheet/live",
+  timesheetReview: "/timesheet/review",
+  timesheetSheets: "/timesheet/sheets",
+  timesheetEntries: "/timesheet/entries",
+  timesheetMeetings: "/timesheet/review?tab=meetings",
   attribution: "/settings/attribution",
   insights: "/insights",
   reports: "/reports",
@@ -66,18 +79,23 @@ export const ROUTES = {
   logs: "/logs",
   support: "/support",
   uptime: "/uptime",
+  notebooks: "/notebooks",
   settings: "/settings",
+  settingsPortals: "/settings/portals",
   settingsTeam: "/settings/team",
   settingsEmail: "/settings/email",
   settingsIntegrations: "/settings/integrations",
+  settingsDevices: "/settings/integrations/devices",
   settingsCalendar: "/settings/integrations/calendar",
   client: (slug: string) => `/clients/${slug}`,
+  notebook: (slug: string) => `/notebooks/${slug}`,
   retainer: (slug: string) => `/retainers/${slug}`,
   project: (slug: string) => `/projects/${slug}`,
   invoice: (number: string) => `/invoices/${number}`,
   timesheetFor: (client: string, month: string) =>
-    `/timesheet?client=${encodeURIComponent(client)}&month=${encodeURIComponent(month)}`,
+    `/timesheet/${encodeURIComponent(client)}/${encodeURIComponent(month)}`,
   contract: (slug: string) => `/contracts/${slug}`,
+  inquiry: (id: string) => `/inquiries/${id}`,
 } as const
 
 export const ADMIN_NAV: readonly NavSection[] = [
@@ -85,6 +103,8 @@ export const ADMIN_NAV: readonly NavSection[] = [
     items: [
       { href: ROUTES.home, label: "Dashboard", icon: "dashboard" },
       { href: ROUTES.inbox, label: "Inbox", icon: "inbox" },
+      { href: ROUTES.leads, label: "Leads", icon: "leads" },
+      { href: ROUTES.support, label: "Tickets", icon: "support" },
       { href: ROUTES.calendar, label: "Calendar", icon: "calendar" },
       { href: ROUTES.tasks, label: "Tasks", icon: "tasks" },
       {
@@ -92,22 +112,30 @@ export const ADMIN_NAV: readonly NavSection[] = [
         label: "Timesheet",
         icon: "timesheet",
         children: [
-          {
-            href: ROUTES.timesheetMeetings,
-            label: "Meetings",
-            icon: "calendar",
-          },
+          { href: ROUTES.timesheetLive, label: "Clock", icon: "clock" },
+          { href: ROUTES.timesheetReview, label: "Review", icon: "review" },
+          { href: ROUTES.timesheetSheets, label: "Sheets", icon: "sheets" },
+          { href: ROUTES.timesheetEntries, label: "Ledger", icon: "ledger" },
         ],
       },
     ],
   },
   {
-    title: "Pipeline",
+    title: "Insights",
     items: [
-      { href: ROUTES.pipeline, label: "Board", icon: "pipeline" },
-      { href: ROUTES.retainers, label: "Retainers", icon: "retainers" },
+      { href: ROUTES.insights, label: "Analytics", icon: "analytics" },
+      { href: ROUTES.reports, label: "Reports", icon: "reports" },
+      { href: ROUTES.revenue, label: "Revenue", icon: "revenue" },
+      { href: ROUTES.logs, label: "Logs", icon: "logs" },
+      { href: ROUTES.uptime, label: "Uptime", icon: "uptime" },
+    ],
+  },
+  {
+    title: "Delivery",
+    items: [
+      { href: ROUTES.delivery, label: "Delivery", icon: "delivery" },
       { href: ROUTES.projects, label: "Projects", icon: "projects" },
-      { href: ROUTES.leads, label: "Leads", icon: "leads" },
+      { href: ROUTES.retainers, label: "Retainers", icon: "retainers" },
     ],
   },
   {
@@ -115,6 +143,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
     items: [
       { href: ROUTES.contacts, label: "Contacts", icon: "contacts" },
       { href: ROUTES.clients, label: "Clients", icon: "clients" },
+      { href: ROUTES.notebooks, label: "Notebooks", icon: "notebooks" },
       { href: ROUTES.proposals, label: "Proposals", icon: "proposals" },
       { href: ROUTES.contracts, label: "Contracts", icon: "contracts" },
       { href: ROUTES.expenses, label: "Expenses", icon: "expenses" },
@@ -122,25 +151,15 @@ export const ADMIN_NAV: readonly NavSection[] = [
     ],
   },
   {
-    title: "Insights",
-    items: [
-      { href: ROUTES.activity, label: "Activity", icon: "activity" },
-      { href: ROUTES.insights, label: "Insights hub", icon: "analytics" },
-      { href: ROUTES.reports, label: "Reports", icon: "reports" },
-      { href: ROUTES.revenue, label: "Revenue", icon: "revenue" },
-    ],
-  },
-  {
     title: "Workspace",
     items: [
-      { href: ROUTES.logs, label: "Logs", icon: "logs" },
-      { href: ROUTES.support, label: "Support Tickets", icon: "support" },
-      { href: ROUTES.uptime, label: "Uptime", icon: "uptime" },
+      { href: ROUTES.activity, label: "Activity", icon: "activity" },
       {
         href: ROUTES.settings,
         label: "Settings",
         icon: "settings",
         children: [
+          { href: ROUTES.settingsPortals, label: "Client Portals", icon: "clients" },
           { href: ROUTES.settingsTeam, label: "Team", icon: "team" },
           { href: ROUTES.settingsEmail, label: "Email", icon: "email-settings" },
           {
@@ -153,6 +172,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
             label: "Integrations",
             icon: "integrations",
           },
+          { href: ROUTES.settingsDevices, label: "Devices", icon: "devices" },
         ],
       },
     ],

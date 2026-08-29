@@ -17,6 +17,7 @@ import { ROUTES } from "@/lib/nav"
 import { getSessionUser } from "@/lib/auth"
 import { greetingFor } from "@/lib/greeting"
 import { ensureRenewalTasks } from "@/lib/renewals"
+import { reopenDueRecurring, waitingTooLong } from "@/lib/tasks"
 import { formatDay, formatMoney } from "@/lib/work"
 
 export const metadata = { title: "Dashboard" }
@@ -48,10 +49,14 @@ export default async function DashboardPage({
   searchParams: { status?: string; peek?: string }
 }) {
   if (searchParams.status) {
-    redirect(`${ROUTES.inbox}?status=${searchParams.status}`)
+    redirect(`${ROUTES.inquiries}?status=${searchParams.status}`)
   }
 
   await ensureRenewalTasks()
+  // One helper, everywhere tasks are read — so the dashboard and the hub
+  // cannot disagree about whether a repeat is open.
+  await reopenDueRecurring()
+  const stalled = await waitingTooLong()
   const sessionUser = await getSessionUser()
   const [invoices, openTasks, retainers, projects, timeEntries, meetings] =
     await Promise.all([
@@ -343,6 +348,19 @@ export default async function DashboardPage({
                     tone: overdue ? "bad" : "warn",
                   }
                 }),
+              },
+              {
+                id: "waiting",
+                label: "Waiting on client",
+                items: stalled.map((t) => ({
+                  id: t.id,
+                  href: peekHref("/", "task", t.id),
+                  color: t.clientSlug ? clientColor(t.clientSlug) : "#71807D",
+                  title: t.title,
+                  meta: t.clientName ?? undefined,
+                  detail: `no movement for ${t.days} days`,
+                  tone: t.days >= 14 ? ("bad" as const) : ("warn" as const),
+                })),
               },
               {
                 id: "tasks",

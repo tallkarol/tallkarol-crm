@@ -2,11 +2,14 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { PageHeader } from "@/components/PageHeader"
 import { PeekRouter } from "@/components/peek/PeekRouter"
-import { DeliveryLane } from "@/components/pipeline/Boards"
+import { WorkstreamLane } from "@/components/delivery/WorkstreamLane"
+import { TaskComposer } from "@/components/tasks/TaskComposer"
+import { TaskRows } from "@/components/tasks/TaskRows"
 import { db } from "@/db"
 import { clientColor } from "@/lib/client-colors"
 import { daysSince, fmtHours, readLinks } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
+import { tasksFor, taskTargets } from "@/lib/tasks"
 import { formatDay, formatMoney, plural } from "@/lib/work"
 import { addProjectLink, draftDeliverableInvoice, removeProjectLink } from "../actions"
 
@@ -50,9 +53,11 @@ export default async function ProjectDetailPage({
   const invoiceableCents = invoiceable.reduce((s, d) => s + (d.feeCents ?? 0), 0)
   const nextDue = deliverables.find((d) => d.status === "pending" && d.dueOn)
 
-  const tasks = await db.query.tasks.findMany().then((rows) =>
-    rows.filter((t) => t.projectId === project.id && t.status === "open")
-  )
+  const [projectTasks, targets] = await Promise.all([
+    tasksFor({ projectId: project.id }),
+    taskTargets(),
+  ])
+  const tasks = projectTasks.filter((t) => t.status === "open")
 
   const hours = entries
     .filter((e) => e.projectId === project.id)
@@ -105,7 +110,7 @@ export default async function ProjectDetailPage({
 
       {project.status !== "complete" ? (
         <div className="mt-4">
-          <DeliveryLane
+          <WorkstreamLane
             lane={{
               projectId: project.id,
               projectName: project.name,
@@ -343,26 +348,35 @@ export default async function ProjectDetailPage({
               <h2 className="text-[13px] font-bold text-tk-onyx">Open tasks</h2>
               <span className="text-[11px] tabular-nums text-tk-slate/60">{tasks.length}</span>
             </div>
+
+            <div className="px-4 pb-3 pt-2">
+              <TaskComposer
+                targets={targets}
+                scope={{
+                  clientId: project.clientId,
+                  clientName: project.client.name,
+                  clientSlug: project.client.slug,
+                  projectId: project.id,
+                  projectName: project.name,
+                }}
+                placeholder={`Add a task for ${project.name}…`}
+                compact
+              />
+            </div>
+
             {tasks.length === 0 ? (
-              <p className="px-5 pb-4 pt-1 text-sm text-tk-slate/60">Nothing open.</p>
+              <p className="px-5 pb-4 text-sm text-tk-slate/60">
+                Nothing open. Anything typed above lands on this project.
+              </p>
             ) : (
-              <ul className="px-1 pb-2">
-                {tasks.map((t) => (
-                  <li key={t.id}>
-                    <Link
-                      href={`${ROUTES.project(project.slug)}?peek=task:${t.id}`}
-                      scroll={false}
-                      className="flex items-start gap-2.5 border-b border-tk-slate/[0.06] px-4 py-2.5 text-sm last:border-0 hover:bg-tk-linen/50"
-                    >
-                      <span className="mt-1.5 size-1.5 shrink-0 rounded-full" style={{ background: color }} />
-                      <span className="min-w-0">
-                        <span className="block font-semibold text-tk-onyx">{t.title}</span>
-                        {t.notes ? <span className="block text-xs text-tk-slate/60">{t.notes}</span> : null}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <div className="px-3 pb-3">
+                <TaskRows
+                  tasks={tasks}
+                  sortBy="due"
+                  grouping="none"
+                  peekBase={ROUTES.project(project.slug)}
+                />
+              </div>
             )}
           </section>
 

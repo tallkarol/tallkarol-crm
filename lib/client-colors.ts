@@ -7,6 +7,8 @@ export const CLIENT_COLORS: Record<string, string> = {
   dqs: "#B04A5A",
   domynovy: "#54687A",
   "caps-fieldhouse": "#155E75",
+  "bliss-cb": "#6B7A2E",
+  "total-soccer-academy": "#9B3D6E",
 }
 
 /* Chart-only palette — re-stepped from the UI set and validated for
@@ -33,7 +35,6 @@ export const CHART_ORDER = [
 ]
 
 const FALLBACK_COLORS = ["#006965", "#3A5FA8", "#7C4DA0", "#A3652A", "#B04A5A"]
-const CHART_FALLBACK = "#006965"
 
 export function clientColor(slug: string) {
   if (CLIENT_COLORS[slug]) return CLIENT_COLORS[slug]
@@ -43,5 +44,5 @@ export function clientColor(slug: string) {
 }
 
 export function chartColor(slug: string) {
-  return CHART_COLORS[slug] ?? CHART_FALLBACK
+  return CHART_COLORS[slug] ?? clientColor(slug)
 }

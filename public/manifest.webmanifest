@@ -1,0 +1,45 @@
+{
+  "name": "Tall Karol Clock",
+  "short_name": "TK Clock",
+  "description": "Clock in and out on a client or project, then approve the time in the CRM.",
+  "start_url": "/timesheet/live",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F1EADC",
+  "theme_color": "#006965",
+  "categories": ["productivity", "business"],
+  "icons": [
+    {
+      "src": "/icons/clock-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/clock-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/clock-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Clock in",
+      "short_name": "Clock",
+      "url": "/timesheet/live",
+      "icons": [{ "src": "/icons/clock-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Review punches",
+      "short_name": "Review",
+      "url": "/timesheet/review"
+    }
+  ]
+}
