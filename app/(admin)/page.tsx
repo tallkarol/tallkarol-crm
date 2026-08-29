@@ -14,6 +14,8 @@ import { retainerRateCents } from "@/lib/engagements"
 import { buildForecast, retainerCoversMonth } from "@/lib/forecast"
 import { getGoals } from "@/lib/goals"
 import { ROUTES } from "@/lib/nav"
+import { getSessionUser } from "@/lib/auth"
+import { greetingFor } from "@/lib/greeting"
 import { ensureRenewalTasks } from "@/lib/renewals"
 import { formatDay, formatMoney } from "@/lib/work"
 
@@ -50,6 +52,7 @@ export default async function DashboardPage({
   }
 
   await ensureRenewalTasks()
+  const sessionUser = await getSessionUser()
   const [invoices, openTasks, retainers, projects, timeEntries, meetings] =
     await Promise.all([
       db.query.invoices.findMany({ with: { client: true } }),
@@ -63,6 +66,7 @@ export default async function DashboardPage({
     ])
 
   const goals = await getGoals()
+  const greeting = await greetingFor(sessionUser)
   const now = new Date()
   const thisMonth = monthKey(now)
 
@@ -244,7 +248,7 @@ export default async function DashboardPage({
 
   return (
     <>
-      <PageHeader title="Dashboard" />
+      <PageHeader title={greeting} />
       {searchParams.peek ? (
         <PeekRouter peek={searchParams.peek} closeHref="/" />
       ) : null}

@@ -30,6 +30,7 @@ export const inquirySourceEnum = pgEnum("inquiry_source", [
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").notNull().unique(),
+  name: text("name").notNull().default(""),
   role: userRoleEnum("role").notNull().default("customer"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
