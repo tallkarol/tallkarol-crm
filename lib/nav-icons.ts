@@ -24,6 +24,9 @@ import {
   UserCog,
   Users,
   Wallet,
+  LifeBuoy,
+  MonitorCheck,
+  ScrollText,
 } from "lucide-react"
 import type { NavIconName } from "@/lib/nav"
 
@@ -49,6 +52,9 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   analytics: LineChart,
   reports: BarChart3,
   revenue: TrendingUp,
+  logs: ScrollText,
+  support: LifeBuoy,
+  uptime: MonitorCheck,
   settings: Settings,
   team: UserCog,
   "email-settings": Mail,

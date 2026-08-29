@@ -20,6 +20,9 @@ export type NavIconName =
   | "analytics"
   | "reports"
   | "revenue"
+  | "logs"
+  | "support"
+  | "uptime"
   | "settings"
   | "team"
   | "email-settings"
@@ -60,6 +63,9 @@ export const ROUTES = {
   insights: "/insights",
   reports: "/reports",
   revenue: "/revenue",
+  logs: "/logs",
+  support: "/support",
+  uptime: "/uptime",
   settings: "/settings",
   settingsTeam: "/settings/team",
   settingsEmail: "/settings/email",
@@ -127,6 +133,9 @@ export const ADMIN_NAV: readonly NavSection[] = [
   {
     title: "Workspace",
     items: [
+      { href: ROUTES.logs, label: "Logs", icon: "logs" },
+      { href: ROUTES.support, label: "Support Tickets", icon: "support" },
+      { href: ROUTES.uptime, label: "Uptime", icon: "uptime" },
       {
         href: ROUTES.settings,
         label: "Settings",
