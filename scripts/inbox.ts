@@ -25,6 +25,7 @@ import {
   resolveClient,
   resolveMailboxId,
 } from "../lib/jmap"
+import { DEFAULT_TICKET_ALIASES, shouldAutoTicket, ticketFromMail } from "../lib/inbox-mail"
 
 const SETTING_KEY = "inbox_mail_sync"
 
@@ -34,6 +35,8 @@ type SyncSetting = {
   mailbox?: string
   /** Alias local-part → client slug or id, for aliases that are not slugs. */
   aliasMap?: Record<string, string>
+  /** Aliases whose mail opens a ticket on arrival instead of waiting for triage. */
+  ticketAliases?: string[]
 }
 
 async function readSetting(): Promise<SyncSetting> {
@@ -76,6 +79,8 @@ async function check(peek: boolean) {
   const setting = await readSetting()
   console.log(`last sync: ${setting.lastSyncAt ?? "never"}`)
   console.log(`folder:    ${setting.mailbox ?? "(whole account)"}`)
+  console.log(`aliasMap:  ${JSON.stringify(setting.aliasMap ?? {})}`)
+  console.log(`→ tickets: ${(setting.ticketAliases ?? DEFAULT_TICKET_ALIASES).join(", ")}`)
 
   const boxes = await listMailboxes(config)
   console.log("\nfolders")
@@ -128,19 +133,26 @@ async function sync(all: boolean, dry: boolean) {
     .from(clients)
   const aliasMap = setting.aliasMap ?? {}
 
+  const ticketAliases = setting.ticketAliases ?? DEFAULT_TICKET_ALIASES
+
   let added = 0
+  let ticketed = 0
   for (const message of mail) {
     const { clientId, via } = resolveClient(message, clientRows, aliasMap)
+    const recipients = [message.toEmail, message.deliveredTo, message.originalTo].filter(Boolean)
+    const autoTicket = shouldAutoTicket(recipients, ticketAliases)
     const label = clientId
       ? `${clientRows.find((c) => c.id === clientId)?.slug} (via ${via})`
       : "unassigned"
 
     if (dry) {
-      console.log(`  ${message.subject.slice(0, 58).padEnd(58)}  ${label}`)
+      console.log(
+        `  ${message.subject.slice(0, 52).padEnd(52)}  ${label.padEnd(22)}${autoTicket ? "→ ticket" : ""}`
+      )
       continue
     }
 
-    const inserted = await db
+    const [inserted] = await db
       .insert(inboxMail)
       .values({
         messageId: message.messageId,
@@ -159,11 +171,21 @@ async function sync(all: boolean, dry: boolean) {
       })
       // A re-sync must never duplicate; the message id is the natural key.
       .onConflictDoNothing({ target: inboxMail.messageId })
-      .returning({ id: inboxMail.id })
-    if (inserted.length > 0) {
-      added += 1
-      console.log(`  + ${message.subject.slice(0, 58).padEnd(58)}  ${label}`)
+      .returning()
+    if (!inserted) continue
+
+    added += 1
+    let note = ""
+    if (autoTicket) {
+      const result = await ticketFromMail(inserted)
+      if (result.ok && result.created) {
+        ticketed += 1
+        note = `→ ${result.ticket.number}`
+      } else if (!result.ok) {
+        note = `→ ticket FAILED: ${result.error}`
+      }
     }
+    console.log(`  + ${message.subject.slice(0, 52).padEnd(52)}  ${label.padEnd(22)}${note}`)
   }
 
   if (dry) {
@@ -178,7 +200,9 @@ async function sync(all: boolean, dry: boolean) {
   if (newest) await writeSetting({ ...setting, lastSyncAt: newest })
 
   const [{ count }] = await db.select({ count: sql<number>`count(*)::int` }).from(inboxMail)
-  console.log(`\nadded ${added} new · ${count} total in inbox_mail`)
+  console.log(
+    `\nadded ${added} new · ${ticketed} opened as tickets · ${count} total in inbox_mail`
+  )
 }
 
 async function main() {

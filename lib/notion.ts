@@ -401,6 +401,77 @@ export async function refreshPage(rawId: string): Promise<RefreshResult> {
   return { status: "updated", title }
 }
 
+export type UnlinkedNotebook = {
+  id: string
+  title: string
+  url: string
+  clientId: string
+  clientName: string
+}
+
+const DISCOVER_KEY = "notion_shared_pages"
+const DISCOVER_TTL_MS = 15 * 60 * 1000
+
+/**
+ * Top-level shared pages that match a client by name but aren't linked yet —
+ * the "Connect notebook" cards. Search results are cached for 15 minutes so
+ * the index page doesn't pay Notion's API tax on every render.
+ */
+export async function unlinkedSharedPages(): Promise<{
+  matched: UnlinkedNotebook[]
+  unmatched: number
+}> {
+  if (!notionConfigured()) return { matched: [], unmatched: 0 }
+  const { readReport, writeReport } = await import("@/lib/report-cache")
+
+  const cached = await readReport<SharedPage[]>(DISCOVER_KEY)
+  let pages = cached.payload
+  const stale =
+    !cached.refreshedAt ||
+    Date.now() - cached.refreshedAt.getTime() > DISCOVER_TTL_MS
+  if (stale) {
+    try {
+      pages = await searchSharedPages()
+      await writeReport(DISCOVER_KEY, pages)
+    } catch {
+      // keep whatever the cache holds; the cards are a convenience
+    }
+  }
+  if (!pages) return { matched: [], unmatched: 0 }
+
+  const [links, clients] = await Promise.all([
+    db.query.notionLinks.findMany(),
+    db.query.clients.findMany(),
+  ])
+  const linked = new Set(links.map((l) => l.notionPageId))
+  const linkedClients = new Set(links.map((l) => l.clientId))
+  const topLevel = pages.filter(
+    (p) =>
+      (p.parentType === "workspace" || p.parentType === "") && !linked.has(p.id)
+  )
+
+  const norm = (s: string) => s.toLowerCase().replace(/\W+/g, " ").trim()
+  const matched: UnlinkedNotebook[] = []
+  for (const page of topLevel) {
+    const title = norm(page.title)
+    const client = clients.find(
+      (c) =>
+        !linkedClients.has(c.id) &&
+        (title === norm(c.name) || title === norm(c.slug))
+    )
+    if (client) {
+      matched.push({
+        id: page.id,
+        title: page.title,
+        url: page.url,
+        clientId: client.id,
+        clientName: client.name,
+      })
+    }
+  }
+  return { matched, unmatched: topLevel.length - matched.length }
+}
+
 /** Resolve a page the integration can read; throws with a hint if it can't. */
 export async function fetchPageMeta(pageId: string) {
   try {

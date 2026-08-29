@@ -6,7 +6,7 @@ import { db } from "@/db"
 import { notionLinks, notionProposals, tasks } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { ROUTES } from "@/lib/nav"
-import { syncLink } from "@/lib/notion"
+import { fetchPageMeta, syncLink } from "@/lib/notion"
 import { scanLink } from "@/lib/notion-scan"
 
 export async function syncNotebook(linkId: string) {

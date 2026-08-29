@@ -7,6 +7,7 @@ import { clients, inboxMail, inboxState, supportTickets } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { INBOX_KINDS, type InboxKind } from "@/lib/inbox"
 import { ROUTES } from "@/lib/nav"
+import { ticketFromMail } from "@/lib/inbox-mail"
 import { createTask } from "@/lib/task-actions"
 
 /**
@@ -138,9 +139,10 @@ export async function makeTaskAction(
 }
 
 /**
- * Turn a piece of mail into a support ticket. The mail keeps the link, so it
- * leaves the stream rather than being deleted — the thread is still readable
- * from the ticket, and Fastmail still has the original.
+ * Turn a piece of mail into a support ticket by hand. The sync does this
+ * automatically for configured aliases; both go through `ticketFromMail` so
+ * they cannot drift — an earlier version of this inserted directly and skipped
+ * ticket numbering entirely.
  */
 export async function mailToTicketAction(mailId: string): Promise<Result> {
   const user = await getSessionUser()
@@ -150,27 +152,11 @@ export async function mailToTicketAction(mailId: string): Promise<Result> {
     where: (m, { eq: e }) => e(m.id, mailId),
   })
   if (!mail) return { ok: false, error: "That mail is gone." }
-  if (mail.ticketId) return { ok: false, error: "Already a ticket." }
 
-  const [ticket] = await db
-    .insert(supportTickets)
-    .values({
-      source: "email",
-      externalId: mail.messageId,
-      title: mail.subject || "(no subject)",
-      description: mail.body,
-      clientId: mail.clientId,
-      submittedBy: mail.fromName || mail.fromEmail,
-      contactEmail: mail.fromEmail,
-      state: "open",
-      priority: "normal",
-      kind: "question",
-      submittedOn: mail.receivedAt.toISOString().slice(0, 10),
-    })
-    .returning()
-  if (!ticket) return { ok: false, error: "Could not open a ticket." }
+  const result = await ticketFromMail(mail)
+  if (!result.ok) return { ok: false, error: result.error }
+  if (!result.created) return { ok: false, error: result.reason }
 
-  await db.update(inboxMail).set({ ticketId: ticket.id }).where(eq(inboxMail.id, mailId))
   revalidatePath(ROUTES.support)
   touch()
   return { ok: true }

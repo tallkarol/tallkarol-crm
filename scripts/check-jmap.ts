@@ -14,6 +14,7 @@ import {
   resolveClient,
   resolveMailboxId,
 } from "../lib/jmap"
+import { DEFAULT_TICKET_ALIASES, shouldAutoTicket } from "../lib/inbox-mail"
 
 let failures = 0
 function check(label: string, actual: unknown, expected: unknown) {
@@ -229,6 +230,68 @@ console.log("\nFolder resolution")
   check("an id passes straight through", resolveMailboxId(BOXES, "mb1"), "mb1")
   check("an unknown folder resolves to nothing", resolveMailboxId(BOXES, "Nope"), null)
   check("empty resolves to nothing", resolveMailboxId(BOXES, ""), null)
+}
+
+console.log("\nAliases that open a ticket on arrival")
+{
+  check(
+    "support opens a ticket",
+    shouldAutoTicket(["support@tallkarol.com"], ["support"]),
+    true
+  )
+  check(
+    "a client alias does not",
+    shouldAutoTicket(["mineralife@tallkarol.com"], ["support"]),
+    false
+  )
+  check(
+    "the configured list is normalised too",
+    shouldAutoTicket(["support@tallkarol.com"], ["Support@tallkarol.com"]),
+    true
+  )
+  check(
+    "plus addressing still opens one",
+    shouldAutoTicket(["support+urgent@tallkarol.com"], ["support"]),
+    true
+  )
+  check(
+    "any matching recipient is enough",
+    shouldAutoTicket(["agent@tallkarol.com", "support@tallkarol.com"], ["support"]),
+    true
+  )
+  check("an empty config never fires", shouldAutoTicket(["support@tallkarol.com"], []), false)
+  check("no recipients never fires", shouldAutoTicket([], ["support"]), false)
+  check(
+    "a near-miss local part does not fire",
+    shouldAutoTicket(["supported@tallkarol.com"], ["support"]),
+    false
+  )
+  check(
+    "support is the shipped default",
+    shouldAutoTicket(["support@tallkarol.com"], DEFAULT_TICKET_ALIASES),
+    true
+  )
+}
+
+console.log("\nKarol's real aliases, end to end")
+{
+  const REAL = { axvor: "dqs", "great-day": "gdi" }
+  const LIVE = [
+    { id: "c-gdi", slug: "gdi", domains: ["greatdayimprovements.com"] },
+    { id: "c-dqs", slug: "dqs", domains: [] },
+    { id: "c-mineralife", slug: "mineralife", domains: [] },
+    { id: "c-artist", slug: "artist-house", domains: [] },
+  ]
+  const route = (alias: string) =>
+    matchClientByAlias([`${alias}@tallkarol.com`], LIVE, REAL)
+
+  check("mineralife@ → mineralife (slug)", route("mineralife"), "c-mineralife")
+  check("artist-house@ → artist-house (slug)", route("artist-house"), "c-artist")
+  check("axvor@ → dqs (mapped)", route("axvor"), "c-dqs")
+  check("great-day@ → gdi (mapped, Great Day Improvements)", route("great-day"), "c-gdi")
+  check("support@ → no client, by design", route("support"), null)
+  check("invoices@ → no client", route("invoices"), null)
+  check("hello@ → no client", route("hello"), null)
 }
 
 console.log(

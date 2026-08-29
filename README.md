@@ -146,13 +146,35 @@ a personal mailbox would add risk and no capability — do not wire one in.
 guarantee lives in the code, because the token in use is full read/write —
 **a read-only token would make it structural, and nothing here needs write.**
 
+### Aliases are the routing table
+
 Mail is routed to a client by the **alias it was sent to**, not the sender:
 `mineralife@tallkarol.com` means Mineralife whether they wrote from a corporate
 domain or Gmail. Verified against real mail — Fastmail's Redirect preserves the
 original `To:` header. A local part equal to a client slug routes with no
 configuration; anything else needs an entry in
-`app_settings.inbox_mail_sync.aliasMap` (`axvor` → `dqs` is seeded). Sender
-domain is the fallback.
+`app_settings.inbox_mail_sync.aliasMap`. Sender domain is the fallback.
+
+| Alias | Routes to | Note |
+| --- | --- | --- |
+| `mineralife@` | Mineralife | local part = client slug, no config |
+| `artist-house@` | Artist House | local part = client slug, no config |
+| `axvor@` | DQS | mapped — AXVOR is a track on the DQS project |
+| `great-day@` | GDI | mapped — GDI *is* Great Day Improvements |
+| `support@` | no client | **opens a ticket on arrival** |
+| `invoices@`, `hello@` | no client | left as mail |
+
+`ticketAliases` (default `["support"]`) names the aliases whose mail opens a
+support ticket immediately instead of waiting to be triaged. Ticket creation
+goes through `ticketFromMail()` in `lib/inbox-mail.ts` — the *only*
+implementation, shared with the inbox's Make-ticket button, so both number
+tickets properly via `nextTicketNumber()`. Auto-ticketing applies to newly
+synced mail only; anything already in `inbox_mail` stays put and can be
+ticketed by hand.
+
+Everything is idempotent: the RFC message id is the natural key on both
+`inbox_mail` and the ticket's `external_id`, so `inbox:sync -- --all` re-reads
+the whole mailbox and opens nothing twice.
 
 **Do not point `tallkarol.com` MX at Resend.** Resend receives by taking the MX
 for a whole domain at lowest priority, so that would move *every* address off
