@@ -4,51 +4,131 @@ import { PageHeader } from "@/components/PageHeader"
 import { db } from "@/db"
 import { notionLinks } from "@/db/schema"
 import { ROUTES } from "@/lib/nav"
-import { syncNotebook } from "./actions"
+import { unlinkedSharedPages } from "@/lib/notion"
+import { ago } from "./format"
+import { linkNotebook, scanAllNotebooks, syncAllNotebooks } from "./actions"
 
 export const metadata = { title: "Notebooks" }
 export const dynamic = "force-dynamic"
 
-function stamp(date: Date | null) {
-  if (!date) return "never"
-  return date.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  })
-}
+const FRESH_MS = 6 * 60 * 60 * 1000
 
 export default async function NotebooksPage() {
-  const links = await db.query.notionLinks.findMany({
-    with: {
-      client: { columns: { slug: true, name: true } },
-      pages: { columns: { id: true, archived: true, blocks: true } },
-      proposals: { columns: { id: true, status: true } },
-    },
-    orderBy: [asc(notionLinks.createdAt)],
-  })
+  const [links, discovered] = await Promise.all([
+    db.query.notionLinks.findMany({
+      with: {
+        client: { columns: { slug: true, name: true } },
+        pages: {
+          columns: { id: true, title: true, archived: true, blocks: true },
+        },
+        proposals: { columns: { id: true, status: true, pageId: true } },
+      },
+      orderBy: [asc(notionLinks.createdAt)],
+    }),
+    unlinkedSharedPages(),
+  ])
+
+  const totalProposed = links.reduce(
+    (n, l) => n + l.proposals.filter((p) => p.status === "proposed").length,
+    0
+  )
+  const busiest = [...links].sort(
+    (a, b) =>
+      b.proposals.filter((p) => p.status === "proposed").length -
+      a.proposals.filter((p) => p.status === "proposed").length
+  )[0]
+
+  /** Page titles carrying open proposals, across every notebook. */
+  const hotPages = links
+    .flatMap((l) => {
+      const counts = new Map<string, number>()
+      for (const p of l.proposals) {
+        if (p.status === "proposed") {
+          counts.set(p.pageId, (counts.get(p.pageId) ?? 0) + 1)
+        }
+      }
+      return l.pages
+        .filter((page) => counts.has(page.id))
+        .map((page) => page.title)
+    })
+    .slice(0, 3)
 
   return (
     <>
-      <PageHeader title="Notebooks" />
+      <PageHeader
+        title="Notebooks"
+        actions={
+          links.length > 0 ? (
+            <>
+              <form action={syncAllNotebooks}>
+                <button
+                  type="submit"
+                  className="rounded-lg border border-tk-slate/20 px-3 py-1.5 text-[13px] font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+                >
+                  Sync all
+                </button>
+              </form>
+              <form action={scanAllNotebooks}>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-tk-onyx px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-tk-teal"
+                >
+                  Scan all
+                </button>
+              </form>
+            </>
+          ) : undefined
+        }
+      />
 
-      {links.length === 0 ? (
+      {totalProposed > 0 && busiest?.client ? (
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-tk-teal p-5 text-tk-linen">
+          <div>
+            <p className="text-[15px] font-semibold">
+              {totalProposed} actionable{totalProposed === 1 ? "" : "s"} waiting
+              for review
+            </p>
+            <p className="mt-0.5 text-[12.5px] text-tk-linen/75">
+              Found across {hotPages.join(", ")}
+            </p>
+          </div>
+          <Link
+            href={ROUTES.notebook(busiest.client.slug)}
+            className="rounded-lg bg-tk-linen px-3.5 py-1.5 text-[13px] font-bold text-tk-teal hover:bg-white"
+          >
+            Review inbox →
+          </Link>
+        </div>
+      ) : null}
+
+      {links.length === 0 && discovered.matched.length === 0 ? (
         <div className="mt-8 max-w-2xl rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 p-6 text-sm text-tk-slate">
           <p className="font-semibold text-tk-onyx">No notebooks linked yet</p>
           <p className="mt-1.5 text-tk-slate/70">
-            Share a client&apos;s Notion notebook with the integration, then link it:{" "}
+            Share a client&apos;s Notion notebook with the integration and it
+            appears here, or link one directly:{" "}
             <code className="rounded bg-tk-linen px-1 py-0.5 text-xs">
               npm run notion:link -- &lt;clientSlug&gt; &lt;pageId&gt;
             </code>
           </p>
         </div>
       ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {links.map((link) => {
             const live = link.pages.filter((p) => !p.archived)
             const blocks = live.reduce((n, p) => n + p.blocks.length, 0)
-            const proposed = link.proposals.filter((p) => p.status === "proposed").length
+            const open = link.proposals.filter((p) => p.status === "proposed")
+            const perPage = new Map<string, number>()
+            for (const p of open) {
+              perPage.set(p.pageId, (perPage.get(p.pageId) ?? 0) + 1)
+            }
+            const topPages = live
+              .filter((p) => perPage.has(p.id))
+              .sort((a, b) => (perPage.get(b.id) ?? 0) - (perPage.get(a.id) ?? 0))
+              .slice(0, 3)
+            const fresh =
+              link.lastSyncedAt &&
+              Date.now() - link.lastSyncedAt.getTime() < FRESH_MS
             return (
               <div
                 key={link.id}
@@ -62,41 +142,32 @@ export default async function NotebooksPage() {
                     >
                       {link.client?.name ?? "Unknown client"}
                     </Link>
-                    <p className="mt-0.5 truncate text-[13px] text-tk-slate/70">
-                      {link.title}
+                    <p className="mt-0.5 truncate font-mono text-[11px] text-tk-slate/55">
+                      {link.client?.slug} · {live.length} pages · {blocks} blocks
                     </p>
                   </div>
-                  {link.url ? (
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="shrink-0 text-[12px] font-semibold text-tk-teal hover:underline"
-                    >
-                      Notion ↗
-                    </a>
-                  ) : null}
-                </div>
-
-                <div className="mt-4 flex items-baseline gap-4 font-mono text-[11px] text-tk-slate/60">
-                  <span>
-                    <span className="text-sm font-semibold text-tk-onyx tabular-nums">
-                      {live.length}
-                    </span>{" "}
-                    pages
-                  </span>
-                  <span>
-                    <span className="text-sm font-semibold text-tk-onyx tabular-nums">
-                      {blocks}
-                    </span>{" "}
-                    blocks
-                  </span>
-                  {proposed > 0 ? (
-                    <span className="rounded bg-tk-teal/10 px-1.5 py-0.5 font-semibold text-tk-teal">
-                      {proposed} proposed
+                  {open.length > 0 ? (
+                    <span className="shrink-0 rounded-full bg-tk-teal/10 px-2.5 py-0.5 text-[12px] font-bold text-tk-teal">
+                      {open.length} proposed
                     </span>
                   ) : null}
                 </div>
+
+                {topPages.length > 0 ? (
+                  <div className="mt-3.5 flex flex-col gap-1.5">
+                    {topPages.map((page) => (
+                      <div
+                        key={page.id}
+                        className="flex items-center justify-between gap-3 text-[12.5px] text-tk-slate"
+                      >
+                        <span className="truncate">{page.title}</span>
+                        <span className="shrink-0 font-mono text-[10.5px] font-semibold text-tk-teal">
+                          {perPage.get(page.id)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
 
                 {link.lastError ? (
                   <p className="mt-3 rounded bg-[#B4322A]/10 px-2 py-1 text-[11px] text-[#B4322A]">
@@ -104,24 +175,57 @@ export default async function NotebooksPage() {
                   </p>
                 ) : null}
 
-                <div className="mt-4 flex items-center justify-between border-t border-tk-slate/10 pt-3">
-                  <span className="font-mono text-[10.5px] text-tk-slate/45">
-                    synced {stamp(link.lastSyncedAt)}
+                <div className="mt-auto flex items-center justify-between border-t border-tk-slate/10 pt-3.5">
+                  <span className="flex items-center gap-1.5 font-mono text-[10.5px] text-tk-slate/50">
+                    <span
+                      className={`size-1.5 rounded-full ${fresh ? "bg-[#2E7D32]" : "bg-[#B4790A]"}`}
+                    />
+                    synced {ago(link.lastSyncedAt)}
                   </span>
-                  <form action={syncNotebook.bind(null, link.id)}>
-                    <button
-                      type="submit"
-                      className="rounded-lg border border-tk-slate/20 px-2.5 py-1 text-[12px] font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
-                    >
-                      Sync now
-                    </button>
-                  </form>
+                  <Link
+                    href={ROUTES.notebook(link.client?.slug ?? "")}
+                    className="text-[12px] font-semibold text-tk-teal hover:underline"
+                  >
+                    Open →
+                  </Link>
                 </div>
               </div>
             )
           })}
+
+          {discovered.matched.map((page) => (
+            <div
+              key={page.id}
+              className="flex flex-col items-start justify-between rounded-2xl border border-dashed border-tk-slate/25 bg-white/55 p-5"
+            >
+              <div>
+                <p className="text-base font-semibold text-tk-onyx/75">
+                  {page.clientName}
+                </p>
+                <p className="mt-1 text-[12.5px] text-tk-slate/55">
+                  &ldquo;{page.title}&rdquo; is shared with the integration but
+                  not linked yet.
+                </p>
+              </div>
+              <form action={linkNotebook.bind(null, page.id, page.clientId)}>
+                <button
+                  type="submit"
+                  className="mt-4 rounded-lg border border-tk-teal/40 px-3 py-1.5 text-[13px] font-semibold text-tk-teal hover:bg-tk-teal/5"
+                >
+                  Connect notebook
+                </button>
+              </form>
+            </div>
+          ))}
         </div>
       )}
+
+      {discovered.unmatched > 0 ? (
+        <p className="mt-4 font-mono text-[10.5px] text-tk-slate/45">
+          {discovered.unmatched} more shared top-level pages without a matching
+          client · link one with npm run notion:link
+        </p>
+      ) : null}
     </>
   )
 }

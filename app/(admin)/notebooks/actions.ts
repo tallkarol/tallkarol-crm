@@ -104,3 +104,52 @@ export async function acceptProposal(proposalId: string) {
 export async function dismissProposal(proposalId: string) {
   return decideProposal(proposalId, false)
 }
+
+export async function syncAllNotebooks() {
+  const user = await getSessionUser()
+  if (!user || user.role !== "admin") return
+  const links = await db.query.notionLinks.findMany({ with: { client: true } })
+  for (const link of links) {
+    try {
+      await syncLink(link)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      await db
+        .update(notionLinks)
+        .set({ lastError: message.slice(0, 500) })
+        .where(eq(notionLinks.id, link.id))
+    }
+  }
+  revalidatePath(ROUTES.notebooks)
+}
+
+export async function scanAllNotebooks() {
+  const user = await getSessionUser()
+  if (!user || user.role !== "admin") return
+  const links = await db.query.notionLinks.findMany({ with: { client: true } })
+  for (const link of links) {
+    try {
+      await scanLink(link, { limit: 10 })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      await db
+        .update(notionLinks)
+        .set({ lastError: `scan: ${message}`.slice(0, 500) })
+        .where(eq(notionLinks.id, link.id))
+    }
+  }
+  revalidatePath(ROUTES.notebooks)
+}
+
+/** The Connect card: link a discovered shared page to its matching client. */
+export async function linkNotebook(pageId: string, clientId: string) {
+  const user = await getSessionUser()
+  if (!user || user.role !== "admin") return
+
+  const meta = await fetchPageMeta(pageId)
+  await db
+    .insert(notionLinks)
+    .values({ clientId, notionPageId: pageId, title: meta.title, url: meta.url })
+    .onConflictDoNothing()
+  revalidatePath(ROUTES.notebooks)
+}
