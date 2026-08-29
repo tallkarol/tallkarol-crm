@@ -120,6 +120,23 @@ async function sync(clientSlug?: string, full = false) {
   }
 }
 
+async function scan(clientSlug?: string, all = false) {
+  requireToken()
+  const { scanLink } = await import("../lib/notion-scan")
+  let links = await db.query.notionLinks.findMany({ with: { client: true } })
+  if (clientSlug) {
+    links = links.filter((l) => l.client?.slug === clientSlug)
+    if (!links.length) throw new Error(`No linked notebook for "${clientSlug}"`)
+  }
+  for (const l of links) {
+    console.log(`Scanning ${l.client?.name ?? "?"} — ${l.title}${all ? " (all pages)" : ""}`)
+    const stats = await scanLink(l, { all, log: (line) => console.log(line) })
+    console.log(
+      `  done: ${stats.pagesScanned} pages scanned, ${stats.pagesSkipped} unchanged, ${stats.created} new proposals`
+    )
+  }
+}
+
 async function webhookToken() {
   const token = await getNotionWebhookToken()
   if (!token) {
@@ -134,12 +151,14 @@ async function main() {
   const [command, ...rest] = process.argv.slice(2)
   const args = rest.filter((a) => !a.startsWith("--"))
   const full = rest.includes("--full")
+  const all = rest.includes("--all")
   if (command === "discover") return discover()
   if (command === "link") return link(args[0], args[1])
   if (command === "list") return list()
   if (command === "sync") return sync(args[0], full)
+  if (command === "scan") return scan(args[0], all)
   if (command === "webhook-token") return webhookToken()
-  throw new Error("Usage: notion.ts <discover|link|list|sync|webhook-token>")
+  throw new Error("Usage: notion.ts <discover|link|list|sync|scan|webhook-token>")
 }
 
 main()

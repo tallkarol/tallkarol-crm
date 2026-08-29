@@ -8,16 +8,31 @@
  * leaves Fastmail as the system of record: the CRM is only a reader, so a lost
  * row here never loses the mail. Resend stays the sending side.
  *
- * The token is read-only (Fastmail → Settings → Privacy & Security → Manage
- * API tokens), so the worst this code can do is read.
+ * SCOPE, and why it matters: this module issues ONLY read methods —
+ * `Mailbox/get`, `Email/query`, `Email/get`. It never calls `Email/set`,
+ * `Email/import` or `EmailSubmission/set`, so it cannot alter or send mail.
+ *
+ * That guarantee currently comes from this code, not from the credential:
+ * the token in use is full read/write. A read-only token would make it
+ * structural instead, and nothing here needs write access — downgrading it
+ * costs nothing and removes the CRM's ability to touch the mailbox at all.
+ *
+ * Only the agent account is ever read. A token for a personal mailbox must
+ * not be wired in here: the redirected copies already land in the agent
+ * account, so reading a second account would add risk and no capability.
  */
 
 const SESSION_URL = process.env.JMAP_SESSION_URL || "https://api.fastmail.com/jmap/session"
 
 export type JmapConfig = { token: string; sessionUrl: string }
 
+/**
+ * `AGENT_FASTMAIL_TOKEN` names the account the token belongs to, which is the
+ * thing that matters: a Fastmail token is account-scoped, not folder-scoped,
+ * so it should be obvious from the variable name whose mail it can read.
+ */
 export function jmapConfig(): JmapConfig | null {
-  const token = process.env.FASTMAIL_JMAP_TOKEN
+  const token = process.env.AGENT_FASTMAIL_TOKEN || process.env.FASTMAIL_JMAP_TOKEN
   if (!token) return null
   return { token, sessionUrl: SESSION_URL }
 }

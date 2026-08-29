@@ -7,7 +7,7 @@
  *   npm run inbox:sync -- --all  # ignore the watermark, re-read the last 50
  *   npm run inbox:sync -- --dry  # show what would land, write nothing
  *
- * Needs `FASTMAIL_JMAP_TOKEN` (read-only scope is enough). The CRM is a reader
+ * Needs `AGENT_FASTMAIL_TOKEN` (read-only scope is enough). The CRM is a reader
  * here — Fastmail keeps the archive — so re-running this is always safe.
  */
 
@@ -56,13 +56,13 @@ async function writeSetting(next: SyncSetting) {
 function requireConfig() {
   const config = jmapConfig()
   if (!config) {
-    console.log("FASTMAIL_JMAP_TOKEN is not set.")
+    console.log("AGENT_FASTMAIL_TOKEN is not set.")
     console.log("")
     console.log("  1. Fastmail → Settings → My email addresses → add the alias, redirecting")
     console.log("     into agent@tallkarol.com")
     console.log("  2. Sign in AS agent@ → Settings → Privacy & Security → Manage API tokens")
     console.log("  3. New token, JMAP scope, READ-ONLY")
-    console.log("  4. FASTMAIL_JMAP_TOKEN=… in .env.local, then re-run this")
+    console.log("  4. AGENT_FASTMAIL_TOKEN=… in .env.local, then re-run this")
     process.exit(1)
   }
   return config

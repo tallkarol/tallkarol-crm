@@ -24,6 +24,7 @@ export default async function NotebooksPage() {
     with: {
       client: { columns: { slug: true, name: true } },
       pages: { columns: { id: true, archived: true, blocks: true } },
+      proposals: { columns: { id: true, status: true } },
     },
     orderBy: [asc(notionLinks.createdAt)],
   })
@@ -47,6 +48,7 @@ export default async function NotebooksPage() {
           {links.map((link) => {
             const live = link.pages.filter((p) => !p.archived)
             const blocks = live.reduce((n, p) => n + p.blocks.length, 0)
+            const proposed = link.proposals.filter((p) => p.status === "proposed").length
             return (
               <div
                 key={link.id}
@@ -89,6 +91,11 @@ export default async function NotebooksPage() {
                     </span>{" "}
                     blocks
                   </span>
+                  {proposed > 0 ? (
+                    <span className="rounded bg-tk-teal/10 px-1.5 py-0.5 font-semibold text-tk-teal">
+                      {proposed} proposed
+                    </span>
+                  ) : null}
                 </div>
 
                 {link.lastError ? (

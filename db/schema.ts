@@ -1269,6 +1269,8 @@ export const notionPages = pgTable(
     plainText: text("plain_text").notNull().default(""),
     /** Notion's last_edited_time; unchanged pages skip block re-fetch. */
     notionEditedAt: timestamp("notion_edited_at", { withTimezone: true }),
+    /** When the scan agent last read this page; edits after this re-queue it. */
+    scannedAt: timestamp("scanned_at", { withTimezone: true }),
     /** Gone from the walk or archived in Notion; kept for history. */
     archived: boolean("archived").notNull().default(false),
     syncedAt: timestamp("synced_at", { withTimezone: true })
@@ -1280,13 +1282,74 @@ export const notionPages = pgTable(
   })
 )
 
+export const notionProposalStatusEnum = pgEnum("notion_proposal_status", [
+  "proposed",
+  "accepted",
+  "dismissed",
+])
+
+/**
+ * Actionables the scan agent found in notebook pages. Nothing becomes a task
+ * until a human accepts it; dismissed fingerprints are never re-proposed.
+ */
+export const notionProposals = pgTable(
+  "notion_proposals",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    linkId: uuid("link_id")
+      .notNull()
+      .references(() => notionLinks.id, { onDelete: "cascade" }),
+    pageId: uuid("page_id")
+      .notNull()
+      .references(() => notionPages.id, { onDelete: "cascade" }),
+    /** Notion block the item came from; deep-links via url#blockid. */
+    blockId: text("block_id").notNull().default(""),
+    title: text("title").notNull(),
+    detail: text("detail").notNull().default(""),
+    /** Exact source text, shown as evidence next to the proposal. */
+    quote: text("quote").notNull().default(""),
+    /** Hash of page + normalized title; dedupes across repeated scans. */
+    fingerprint: text("fingerprint").notNull().unique(),
+    status: notionProposalStatusEnum("status").notNull().default("proposed"),
+    taskId: uuid("task_id").references(() => tasks.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+  },
+  (table) => ({
+    linkStatusIdx: index("notion_proposals_link_status_idx").on(
+      table.linkId,
+      table.status
+    ),
+  })
+)
+
 export const notionLinksRelations = relations(notionLinks, ({ one, many }) => ({
   client: one(clients, {
     fields: [notionLinks.clientId],
     references: [clients.id],
   }),
   pages: many(notionPages),
+  proposals: many(notionProposals),
 }))
+
+export const notionProposalsRelations = relations(notionProposals, ({ one }) => ({
+  link: one(notionLinks, {
+    fields: [notionProposals.linkId],
+    references: [notionLinks.id],
+  }),
+  page: one(notionPages, {
+    fields: [notionProposals.pageId],
+    references: [notionPages.id],
+  }),
+  task: one(tasks, {
+    fields: [notionProposals.taskId],
+    references: [tasks.id],
+  }),
+}))
+
+export type NotionProposal = typeof notionProposals.$inferSelect
 
 export const notionPagesRelations = relations(notionPages, ({ one }) => ({
   link: one(notionLinks, {

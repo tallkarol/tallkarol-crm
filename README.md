@@ -132,9 +132,27 @@ npm run inbox:sync -- --all
 npm run check:jmap    # domain matching, no mailbox needed
 ```
 
-Set `FASTMAIL_JMAP_TOKEN` (Fastmail → Settings → Privacy & Security → Manage
+Set `AGENT_FASTMAIL_TOKEN` (Fastmail → Settings → Privacy & Security → Manage
 API tokens). Sync is idempotent — the RFC message id is the natural key — and
 the watermark lives in `app_settings.inbox_mail_sync`.
+
+**Only the agent account is read.** A Fastmail token is account-scoped, not
+folder-scoped, so the account the token belongs to *is* the blast radius. The
+redirected copies of every alias already land in the agent account, so reading
+a personal mailbox would add risk and no capability — do not wire one in.
+
+`lib/jmap.ts` issues only read methods (`Mailbox/get`, `Email/query`,
+`Email/get`) and never `Email/set` or `EmailSubmission/set`. Today that
+guarantee lives in the code, because the token in use is full read/write —
+**a read-only token would make it structural, and nothing here needs write.**
+
+Mail is routed to a client by the **alias it was sent to**, not the sender:
+`mineralife@tallkarol.com` means Mineralife whether they wrote from a corporate
+domain or Gmail. Verified against real mail — Fastmail's Redirect preserves the
+original `To:` header. A local part equal to a client slug routes with no
+configuration; anything else needs an entry in
+`app_settings.inbox_mail_sync.aliasMap` (`axvor` → `dqs` is seeded). Sender
+domain is the fallback.
 
 **Do not point `tallkarol.com` MX at Resend.** Resend receives by taking the MX
 for a whole domain at lowest priority, so that would move *every* address off
