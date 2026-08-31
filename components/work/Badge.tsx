@@ -1,3 +1,4 @@
+import type { ProjectStatus } from "@/db/schema"
 import { cn } from "@/lib/cn"
 
 export function Badge({
@@ -21,9 +22,7 @@ export function Badge({
   )
 }
 
-export function projectTone(
-  status: "waiting_on_content" | "in_progress" | "complete"
-) {
+export function projectTone(status: ProjectStatus) {
   if (status === "in_progress") return "teal" as const
   if (status === "complete") return "muted" as const
   return "neutral" as const

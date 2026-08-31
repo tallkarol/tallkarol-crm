@@ -4,6 +4,8 @@ import type {
   DeliverableStatus,
   FeeStatus,
   InvoiceStatus,
+  ProductStatus,
+  ProductStudioKind,
   ProjectStatus,
   ReportStatus,
   RetainerStatus,
@@ -11,9 +13,39 @@ import type {
 } from "@/db/schema"
 
 export const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
+  not_started: "Not started",
   waiting_on_content: "Waiting on content",
   in_progress: "In progress",
+  on_hold: "On hold",
   complete: "Complete",
+}
+
+export const PRODUCT_STATUS_LABEL: Record<ProductStatus, string> = {
+  idea: "Idea",
+  building: "Building",
+  live: "Live",
+  paused: "Paused",
+}
+
+export function productStatusClass(status: ProductStatus) {
+  if (status === "live") return "bg-emerald-800/10 text-emerald-800"
+  if (status === "paused") return "bg-amber-800/10 text-amber-800"
+  if (status === "idea") return "bg-tk-slate/10 text-tk-slate/70"
+  return "bg-tk-teal/10 text-tk-teal"
+}
+
+export const PRODUCT_STUDIO_KIND_LABEL: Record<ProductStudioKind, string> = {
+  solo: "Own",
+  studio: "Studio",
+  team: "Team",
+}
+
+export function studioCaption(studio: {
+  name: string
+  kind: ProductStudioKind
+}) {
+  if (studio.kind === "solo") return studio.name
+  return `${studio.name} · ${PRODUCT_STUDIO_KIND_LABEL[studio.kind].toLowerCase()}`
 }
 
 export const FEE_STATUS_LABEL: Record<FeeStatus, string> = {
@@ -98,7 +130,9 @@ export function hoursTotal(entries: { hours: string }[]) {
 
 export const PROJECT_FILTERS: { id: string; label: string }[] = [
   { id: "all", label: "All" },
+  { id: "not_started", label: "Not started" },
   { id: "in_progress", label: "In progress" },
   { id: "waiting_on_content", label: "Waiting" },
+  { id: "on_hold", label: "On hold" },
   { id: "complete", label: "Complete" },
 ]
