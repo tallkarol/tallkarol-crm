@@ -90,9 +90,23 @@ export const retainerStatusEnum = pgEnum("retainer_status", [
   "ended",
 ])
 export const projectStatusEnum = pgEnum("project_status", [
+  "not_started",
   "waiting_on_content",
   "in_progress",
+  "on_hold",
   "complete",
+])
+export const productStatusEnum = pgEnum("product_status", [
+  "idea",
+  "building",
+  "live",
+  "paused",
+])
+/** Who a product is built with: alone, a named studio, or another team. */
+export const productStudioKindEnum = pgEnum("product_studio_kind", [
+  "solo",
+  "studio",
+  "team",
 ])
 export const feeStatusEnum = pgEnum("fee_status", [
   "agreed",
@@ -170,20 +184,93 @@ export const retainers = pgTable("retainers", {
     .defaultNow(),
 })
 
-export const projects = pgTable("projects", {
+export const projects = pgTable(
+  "projects",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    retainerId: uuid("retainer_id").references(() => retainers.id, {
+      onDelete: "set null",
+    }),
+    name: text("name").notNull(),
+    slug: text("slug").notNull().unique(),
+    status: projectStatusEnum("status").notNull().default("in_progress"),
+    feeStatus: feeStatusEnum("fee_status").notNull().default("agreed"),
+    links: jsonb("links").notNull().default([]),
+    notes: text("notes").notNull().default(""),
+    /** manual | smartsheet_tracker — where this row came from. */
+    source: text("source").notNull().default("manual"),
+    /** The upstream row id. Null for projects typed here. */
+    externalId: text("external_id"),
+    /**
+     * The upstream status verbatim. The sheet has wording our enum flattens
+     * ("Needs Review" lands on in_progress), so write-back compares against
+     * this to know whether the status genuinely changed here — otherwise a
+     * note added in the CRM would quietly overwrite the client's own wording.
+     */
+    sourceStatus: text("source_status").notNull().default(""),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  // Nulls are distinct in Postgres, so projects typed here (external_id null)
+  // are unconstrained while synced rows stay one-to-one with their source row.
+  (table) => ({
+    sourceExternal: uniqueIndex("projects_source_external_idx").on(
+      table.source,
+      table.externalId
+    ),
+  })
+)
+
+/**
+ * A banner products hang off: Tall Karol, a named studio (Sondry), or another team.
+ * A studio can point at a client so notions and mail have somewhere to land.
+ */
+export const productStudios = pgTable("product_studios", {
   id: uuid("id").defaultRandom().primaryKey(),
-  clientId: uuid("client_id")
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  kind: productStudioKindEnum("kind").notNull().default("studio"),
+  clientId: uuid("client_id").references(() => clients.id, {
+    onDelete: "set null",
+  }),
+  notes: text("notes").notNull().default(""),
+  sort: integer("sort").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
-    .references(() => clients.id, { onDelete: "cascade" }),
-  retainerId: uuid("retainer_id").references(() => retainers.id, {
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+})
+
+/**
+ * Own digital products — not client engagements. Each one belongs to a studio
+ * (Tall Karol, Sondry, a future team). The client is optional: Sondry products
+ * share the Sondry account so notebooks and mail work; Tall Karol products may not.
+ */
+export const products = pgTable("products", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  studioId: uuid("studio_id")
+    .notNull()
+    .references(() => productStudios.id, { onDelete: "cascade" }),
+  clientId: uuid("client_id").references(() => clients.id, {
     onDelete: "set null",
   }),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
-  status: projectStatusEnum("status").notNull().default("in_progress"),
-  feeStatus: feeStatusEnum("fee_status").notNull().default("agreed"),
+  tagline: text("tagline").notNull().default(""),
+  status: productStatusEnum("status").notNull().default("building"),
   links: jsonb("links").notNull().default([]),
   notes: text("notes").notNull().default(""),
+  sort: integer("sort").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -219,6 +306,10 @@ export const tasks = pgTable(
       onDelete: "cascade",
     }),
     projectId: uuid("project_id").references(() => projects.id, {
+      onDelete: "cascade",
+    }),
+    /** Own product this work is for — Spectramotus, Jive, and the rest. */
+    productId: uuid("product_id").references(() => products.id, {
       onDelete: "cascade",
     }),
     /** The specific billable line this work finishes, when there is one. */
@@ -258,6 +349,9 @@ export const tasks = pgTable(
     byProject: index("tasks_project_idx")
       .on(table.projectId)
       .where(sql`${table.projectId} is not null`),
+    byProduct: index("tasks_product_idx")
+      .on(table.productId)
+      .where(sql`${table.productId} is not null`),
   })
 )
 
@@ -602,6 +696,8 @@ export type DeviceToken = typeof deviceTokens.$inferSelect
 export const clientsRelations = relations(clients, ({ many }) => ({
   retainers: many(retainers),
   projects: many(projects),
+  products: many(products),
+  productStudios: many(productStudios),
   tasks: many(tasks),
   reports: many(reports),
   invoices: many(invoices),
@@ -637,6 +733,29 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   invoices: many(invoices),
   contracts: many(contracts),
   workstreams: many(workstreams),
+}))
+
+export const productStudiosRelations = relations(
+  productStudios,
+  ({ one, many }) => ({
+    client: one(clients, {
+      fields: [productStudios.clientId],
+      references: [clients.id],
+    }),
+    products: many(products),
+  })
+)
+
+export const productsRelations = relations(products, ({ one, many }) => ({
+  studio: one(productStudios, {
+    fields: [products.studioId],
+    references: [productStudios.id],
+  }),
+  client: one(clients, {
+    fields: [products.clientId],
+    references: [clients.id],
+  }),
+  tasks: many(tasks),
 }))
 
 export const deliverablesRelations = relations(deliverables, ({ one }) => ({
@@ -710,6 +829,10 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
     fields: [tasks.projectId],
     references: [projects.id],
   }),
+  product: one(products, {
+    fields: [tasks.productId],
+    references: [products.id],
+  }),
   deliverable: one(deliverables, {
     fields: [tasks.deliverableId],
     references: [deliverables.id],
@@ -734,6 +857,11 @@ export const reportsRelations = relations(reports, ({ one }) => ({
 export type Client = typeof clients.$inferSelect
 export type Retainer = typeof retainers.$inferSelect
 export type Project = typeof projects.$inferSelect
+export type ProductStudio = typeof productStudios.$inferSelect
+export type ProductStudioKind =
+  (typeof productStudioKindEnum.enumValues)[number]
+export type Product = typeof products.$inferSelect
+export type ProductStatus = (typeof productStatusEnum.enumValues)[number]
 export type Deliverable = typeof deliverables.$inferSelect
 export type Task = typeof tasks.$inferSelect
 export type Report = typeof reports.$inferSelect
@@ -977,6 +1105,10 @@ export const sites = pgTable("sites", {
   measurementId: text("measurement_id").notNull().default(""),
   /** UptimeRobot monitor id. Empty = no monitor; no uptime number. */
   uptimeMonitorId: text("uptime_monitor_id").notNull().default(""),
+  /** Google Ads customer id, digits only. Empty = this site has no Ads account. */
+  adsCustomerId: text("ads_customer_id").notNull().default(""),
+  /** Vercel project id (`prj_…`). Empty = no Host tab / Web Analytics pull. */
+  vercelProjectId: text("vercel_project_id").notNull().default(""),
   clientId: uuid("client_id").references(() => clients.id, {
     onDelete: "set null",
   }),
@@ -1603,3 +1735,102 @@ export const inboxMailRelations = relations(inboxMail, ({ one }) => ({
 
 export type InboxState = typeof inboxState.$inferSelect
 export type InboxMail = typeof inboxMail.$inferSelect
+
+/**
+ * Search Console index scans — the evidence half of a maintenance package.
+ *
+ * The Index Coverage report has no API, so a "scan" is one URL Inspection call
+ * per sitemap URL plus one sitemaps call. Runs on a schedule (first week of the
+ * month, currently by hand), never on page load: 63 inspections is 8 seconds
+ * and 3% of the daily quota, and a page that re-scans on every refresh would
+ * burn both.
+ *
+ * This table is the archive — what the site looked like on a given day. The
+ * lifecycle of any individual problem lives in `gscFindings`.
+ */
+export const gscScans = pgTable(
+  "gsc_scans",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    /** The day the scan ran. One scan per site per day. */
+    scannedOn: date("scanned_on").notNull(),
+    /** `2026-08` — matches snapshotArchive, so a month rolls up across both. */
+    period: text("period").notNull(),
+    urlCount: integer("url_count").notNull().default(0),
+    passCount: integer("pass_count").notNull().default(0),
+    /** Findings this scan opened, re-saw, and closed. For the invoice line. */
+    openedCount: integer("opened_count").notNull().default(0),
+    resolvedCount: integer("resolved_count").notNull().default(0),
+    sitemaps: jsonb("sitemaps").notNull().default(sql`'[]'::jsonb`),
+    /** Every per-URL row, verbatim. The thing a dispute gets settled with. */
+    results: jsonb("results").notNull().default(sql`'[]'::jsonb`),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    siteDay: uniqueIndex("gsc_scans_site_day_idx").on(table.siteId, table.scannedOn),
+    byPeriod: index("gsc_scans_period_idx").on(table.siteId, table.period),
+  })
+)
+
+/**
+ * One row per problem, not per sighting.
+ *
+ * `key` is derived from the rule and the URL, so the same broken page found in
+ * March and again in August is one row with `timesSeen` 2 — not two findings.
+ * That is what makes "what did we fix this month" a query rather than a memory:
+ * resolved rows carry the date they stopped appearing and the task that closed
+ * them, and the task carries the client and retainer the work bills to.
+ */
+export const gscFindings = pgTable(
+  "gsc_findings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    /** `<rule>:<url>` — stable across scans, which is the whole point. */
+    key: text("key").notNull(),
+    rule: text("rule").notNull(),
+    url: text("url").notNull().default(""),
+    /** 1 blocking · 2 should fix · 3 watch. Mirrors tasks.priority. */
+    severity: smallint("severity").notNull().default(2),
+    /** open | resolved | ignored — ignored is a decision, not a failure. */
+    status: text("status").notNull().default("open"),
+    detail: text("detail").notNull().default(""),
+    firstSeenOn: date("first_seen_on").notNull(),
+    lastSeenOn: date("last_seen_on").notNull(),
+    /** The first scan that did NOT see it. Absence is the evidence of a fix. */
+    resolvedOn: date("resolved_on"),
+    timesSeen: integer("times_seen").notNull().default(1),
+    /** The maintenance task this was rolled into, for the billing trail. */
+    taskId: uuid("task_id").references(() => tasks.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    siteKey: uniqueIndex("gsc_findings_site_key_idx").on(table.siteId, table.key),
+    open: index("gsc_findings_open_idx").on(table.siteId, table.status),
+    resolved: index("gsc_findings_resolved_idx").on(table.siteId, table.resolvedOn),
+  })
+)
+
+export const gscScansRelations = relations(gscScans, ({ one }) => ({
+  site: one(sites, { fields: [gscScans.siteId], references: [sites.id] }),
+}))
+
+export const gscFindingsRelations = relations(gscFindings, ({ one }) => ({
+  site: one(sites, { fields: [gscFindings.siteId], references: [sites.id] }),
+  task: one(tasks, { fields: [gscFindings.taskId], references: [tasks.id] }),
+}))
+
+export type GscScan = typeof gscScans.$inferSelect
+export type GscFinding = typeof gscFindings.$inferSelect

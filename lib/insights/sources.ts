@@ -6,19 +6,36 @@ import {
   statusLabel,
   uptimeRobotConfigured,
 } from "@/lib/uptimerobot"
-import { ga4Date, ga4Post, gscQuery, num, type Ga4Report } from "@/lib/insights/google"
+import {
+  adsSearch,
+  ga4Date,
+  ga4Post,
+  gscQuery,
+  microsToAmount,
+  num,
+  type Ga4Report,
+} from "@/lib/insights/google"
 import { addDays } from "@/lib/insights/derive"
+import {
+  fetchVercelAnalytics,
+  vercelConfigured,
+} from "@/lib/insights/vercel"
 import {
   EMPTY_GA4,
   INSIGHTS_DAYS,
   TABLE_WINDOW_DAYS,
+  emptyAds,
   emptyGsc,
+  emptyVercel,
+  type AdsBlock,
+  type AdsCampaignRow,
   type DimRow,
   type Ga4Block,
   type GscBlock,
   type PageRow,
   type SearchRow,
   type SourceHealth,
+  type VercelBlock,
 } from "@/lib/insights/types"
 
 /**
@@ -50,6 +67,8 @@ export type Ga4DailyRow = {
   newUsers: number
   eventCount: number
   keyEvents: number
+  ga4Paid: number
+  ga4Organic: number
 }
 
 export type GscDailyRow = {
@@ -59,12 +78,80 @@ export type GscDailyRow = {
   position: number | null
 }
 
+export type AdsDailyRow = {
+  date: string
+  adImpressions: number
+  adClicks: number
+  adSpend: number
+  adConversions: number
+}
+
+export type VercelDailyRow = {
+  date: string
+  pageviews: number
+  visitors: number
+}
+
 export type SourceOutcome = {
   health: SourceHealth
   ga4?: Ga4Block
   gsc?: GscBlock
+  ads?: AdsBlock
   ga4Daily?: Ga4DailyRow[]
   gscDaily?: GscDailyRow[]
+  adsDaily?: AdsDailyRow[]
+  vercel?: VercelBlock
+  vercelDaily?: VercelDailyRow[]
+}
+
+/**
+ * Traffic that is not a person considering the business.
+ *
+ * `syndicatedsearch.goog` is Google's search-syndication network — on
+ * mycustommanufacturer.com it produced 49 of August's 203 sessions and 74 of
+ * its 158 call-to-action clicks, and never once started a form. `localhost`
+ * is a developer running the site with the production tag id attached.
+ *
+ * Left in, they do not just inflate totals: they land almost entirely on
+ * top-of-funnel events, so every downstream rate is divided by a bigger number
+ * than it should be. August's call-to-action-to-form-start rate reads 14.6%
+ * with them and 26.2% without.
+ *
+ * Filtering here rather than in GA4 is deliberate — a GA4 data filter is not
+ * retroactive, so it would clean the future and leave every historical
+ * comparison dirty. This applies to the whole archive, every time it is read.
+ */
+const PAID_CHANNEL_GROUPS = new Set([
+  "Paid Search",
+  "Paid Social",
+  "Paid Other",
+  "Paid Video",
+  "Display",
+  "Cross-network",
+])
+
+function isPaidChannel(name: string) {
+  return PAID_CHANNEL_GROUPS.has(name)
+}
+
+function isOrganicSearchChannel(name: string) {
+  return name === "Organic Search"
+}
+
+const NOISE_SOURCE_FRAGMENTS = ["syndicatedsearch.goog", "localhost"] as const
+
+/** GA4 dimensionFilter that drops NOISE_SOURCE_FRAGMENTS from any report. */
+const EXCLUDE_NOISE = {
+  notExpression: {
+    orGroup: {
+      expressions: NOISE_SOURCE_FRAGMENTS.map((value) => ({
+        filter: {
+          fieldName: "sessionSourceMedium",
+          stringFilter: { matchType: "CONTAINS", value, caseSensitive: false },
+        },
+      })),
+    },
+  },
 }
 
 function rowsToDims(report: Ga4Report | null): DimRow[] {
@@ -98,6 +185,7 @@ export async function fetchGa4Tables(
       dimensions: [{ name: dimension }],
       metrics: [{ name: metric }],
       orderBys: [{ metric: { metricName: metric }, desc: true }],
+      dimensionFilter: EXCLUDE_NOISE,
       limit,
     })
   const pagesReq = (withKeyEvents: boolean) =>
@@ -109,6 +197,7 @@ export async function fetchGa4Tables(
         ...(withKeyEvents ? [{ name: "keyEvents" }] : []),
       ],
       orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      dimensionFilter: EXCLUDE_NOISE,
       limit: 25,
     })
 
@@ -213,10 +302,11 @@ const ga4Source: InsightSource = {
             ...(withKeyEvents ? [{ name: "keyEvents" }] : []),
           ],
           orderBys: [{ dimension: { dimensionName: "date" } }],
+          dimensionFilter: EXCLUDE_NOISE,
           limit: INSIGHTS_DAYS + 2,
         })
 
-      const [daily, live, liveEvents, tables] = await Promise.all([
+      const [daily, live, liveEvents, tables, channelsDaily] = await Promise.all([
         dailyReq(true).catch(() => dailyReq(false)),
         ga4Post(t, pid, "runRealtimeReport", { metrics: [{ name: "activeUsers" }] }),
         ga4Post(t, pid, "runRealtimeReport", {
@@ -227,16 +317,41 @@ const ga4Source: InsightSource = {
           startDate: addDays(ctx.endDate, -(TABLE_WINDOW_DAYS - 1)),
           endDate: ctx.endDate,
         }),
+        ga4Post(t, pid, "runReport", {
+          dateRanges: [{ startDate: ctx.startDate, endDate: ctx.endDate }],
+          dimensions: [{ name: "date" }, { name: "sessionDefaultChannelGroup" }],
+          metrics: [{ name: "sessions" }],
+          dimensionFilter: EXCLUDE_NOISE,
+          limit: 2000,
+        }).catch(() => null),
       ])
 
-      const ga4Daily: Ga4DailyRow[] = (daily.rows || []).map((row) => ({
-        date: ga4Date(row.dimensionValues?.[0]?.value),
-        users: num(row.metricValues?.[0]?.value),
-        sessions: num(row.metricValues?.[1]?.value),
-        newUsers: num(row.metricValues?.[2]?.value),
-        eventCount: num(row.metricValues?.[3]?.value),
-        keyEvents: row.metricValues?.[4] ? num(row.metricValues[4]?.value) : 0,
-      }))
+      const paidByDate = new Map<string, number>()
+      const organicByDate = new Map<string, number>()
+      for (const row of channelsDaily?.rows || []) {
+        const date = ga4Date(row.dimensionValues?.[0]?.value)
+        const channel = row.dimensionValues?.[1]?.value || ""
+        const sessions = num(row.metricValues?.[0]?.value)
+        if (isPaidChannel(channel)) {
+          paidByDate.set(date, (paidByDate.get(date) || 0) + sessions)
+        } else if (isOrganicSearchChannel(channel)) {
+          organicByDate.set(date, (organicByDate.get(date) || 0) + sessions)
+        }
+      }
+
+      const ga4Daily: Ga4DailyRow[] = (daily.rows || []).map((row) => {
+        const date = ga4Date(row.dimensionValues?.[0]?.value)
+        return {
+          date,
+          users: num(row.metricValues?.[0]?.value),
+          sessions: num(row.metricValues?.[1]?.value),
+          newUsers: num(row.metricValues?.[2]?.value),
+          eventCount: num(row.metricValues?.[3]?.value),
+          keyEvents: row.metricValues?.[4] ? num(row.metricValues[4]?.value) : 0,
+          ga4Paid: paidByDate.get(date) || 0,
+          ga4Organic: organicByDate.get(date) || 0,
+        }
+      })
 
       return {
         health: { id: this.id, label: this.label, ok: true, detail: "Reports are readable." },
@@ -316,6 +431,156 @@ const gscSource: InsightSource = {
       return {
         health: { id: this.id, label: this.label, ok: false, detail: message },
         gsc: { ...emptyGsc(url), error: message },
+      }
+    }
+  },
+}
+
+export type AdsTables = Pick<AdsBlock, "campaigns">
+
+export async function fetchAdsCampaigns(
+  token: string,
+  customerId: string,
+  range: { startDate: string; endDate: string }
+): Promise<AdsCampaignRow[]> {
+  const rows = await adsSearch(
+    token,
+    `SELECT campaign.id, campaign.name, campaign.status, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions FROM campaign WHERE segments.date BETWEEN '${range.startDate}' AND '${range.endDate}' AND metrics.impressions > 0 ORDER BY metrics.cost_micros DESC LIMIT 25`,
+    customerId
+  )
+  return rows.map((row) => ({
+    id: String(row.campaign?.id ?? ""),
+    name: String(row.campaign?.name ?? "(untitled)"),
+    status: String(row.campaign?.status ?? ""),
+    impressions: num(row.metrics?.impressions),
+    clicks: num(row.metrics?.clicks),
+    spend: microsToAmount(row.metrics?.costMicros),
+    conversions: num(row.metrics?.conversions),
+  }))
+}
+
+const adsSource: InsightSource = {
+  id: "ads",
+  label: "Google Ads",
+  appliesTo: (site) => Boolean(site.adsCustomerId),
+  async run(site, ctx) {
+    const customerId = site.adsCustomerId
+    if (!ctx.token) {
+      return {
+        health: {
+          id: this.id,
+          label: this.label,
+          ok: false,
+          detail: "Add a Google service account to read Google Ads.",
+        },
+        ads: { ...emptyAds(customerId), error: "Service account is not connected." },
+      }
+    }
+    try {
+      const [accountRows, dailyRows, campaigns] = await Promise.all([
+        adsSearch(
+          ctx.token,
+          "SELECT customer.id, customer.descriptive_name, customer.currency_code FROM customer LIMIT 1",
+          customerId
+        ),
+        adsSearch(
+          ctx.token,
+          `SELECT segments.date, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions FROM customer WHERE segments.date BETWEEN '${ctx.startDate}' AND '${ctx.endDate}' ORDER BY segments.date`,
+          customerId
+        ),
+        fetchAdsCampaigns(ctx.token, customerId, {
+          startDate: addDays(ctx.endDate, -(TABLE_WINDOW_DAYS - 1)),
+          endDate: ctx.endDate,
+        }),
+      ])
+      const account = accountRows[0]?.customer
+      const accountName = String(account?.descriptiveName || customerId)
+      const currency = String(account?.currencyCode || "USD")
+      const adsDaily: AdsDailyRow[] = dailyRows.map((row) => ({
+        date: String(row.segments?.date || ""),
+        adImpressions: num(row.metrics?.impressions),
+        adClicks: num(row.metrics?.clicks),
+        adSpend: microsToAmount(row.metrics?.costMicros),
+        adConversions: num(row.metrics?.conversions),
+      }))
+      return {
+        health: {
+          id: this.id,
+          label: this.label,
+          ok: true,
+          detail: `Reading ${accountName} (${customerId})`,
+        },
+        adsDaily,
+        ads: {
+          ok: true,
+          error: null,
+          customerId,
+          accountName,
+          currency,
+          campaigns,
+        },
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Google Ads API failed"
+      return {
+        health: { id: this.id, label: this.label, ok: false, detail: message },
+        ads: { ...emptyAds(customerId), error: message },
+      }
+    }
+  },
+}
+
+const vercelSource: InsightSource = {
+  id: "vercel",
+  label: "Vercel Analytics",
+  appliesTo: (site) => Boolean(site.vercelProjectId),
+  async run(site, ctx) {
+    const projectId = site.vercelProjectId
+    if (!vercelConfigured()) {
+      return {
+        health: {
+          id: this.id,
+          label: this.label,
+          ok: false,
+          detail: "Add a VERCEL_TOKEN (and VERCEL_TEAM_ID for team projects) to read Web Analytics.",
+        },
+        vercel: {
+          ...emptyVercel(projectId),
+          error: "VERCEL_TOKEN is not set.",
+        },
+      }
+    }
+    try {
+      const tables = await fetchVercelAnalytics(projectId, ctx.endDate)
+      const pageviews = tables.daily.reduce((sum, row) => sum + row.pageviews, 0)
+      return {
+        health: {
+          id: this.id,
+          label: this.label,
+          ok: true,
+          detail: `${pageviews.toLocaleString("en-US")} pageviews in the last ${tables.daily.length || 30} days from Vercel. Older days stay in this snapshot so Hobby's 30-day window does not erase them.`,
+        },
+        vercel: {
+          ok: true,
+          error: null,
+          projectId,
+          pages: tables.pages,
+          referrers: tables.referrers,
+          devices: tables.devices,
+          countries: tables.countries,
+        },
+        vercelDaily: tables.daily,
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Vercel Analytics API failed"
+      return {
+        health: {
+          id: this.id,
+          label: this.label,
+          ok: false,
+          detail: message,
+        },
+        vercel: { ...emptyVercel(projectId), error: message },
       }
     }
   },
@@ -419,6 +684,8 @@ const mpSource: InsightSource = {
 export const INSIGHT_SOURCES: InsightSource[] = [
   ga4Source,
   gscSource,
+  adsSource,
+  vercelSource,
   collectorSource,
   mpSource,
   uptimeSource,

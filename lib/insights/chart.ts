@@ -8,6 +8,10 @@ export const CHART = {
   teal: "#009688",
   /** Search Console series (clicks, impressions, position). */
   amber: "#B07818",
+  /** Google Ads series — a third hue that still separates from teal/amber. */
+  ink: "#1F3A5F",
+  /** Vercel / host pageviews — cookieless, not Google. */
+  host: "#6B4F8A",
   /** Previous-period comparison line — de-emphasized, never a second hue. */
   prev: "#9AA6A2",
   grid: "rgba(15,22,21,0.07)",
@@ -17,14 +21,17 @@ export const CHART = {
   bad: "#A62228",
 } as const
 
-export type ChartSeries = "teal" | "amber"
+export type ChartSeries = "teal" | "amber" | "ink"
 
 export const METRIC_META = {
-  users: { label: "Users", series: "teal" },
-  sessions: { label: "Sessions", series: "teal" },
-  keyEvents: { label: "Key events", series: "teal" },
-  clicks: { label: "Clicks", series: "amber" },
-  impressions: { label: "Impressions", series: "amber" },
+  users: { label: "Users", series: "teal", money: false },
+  sessions: { label: "Sessions", series: "teal", money: false },
+  keyEvents: { label: "Key events", series: "teal", money: false },
+  clicks: { label: "Clicks", series: "amber", money: false },
+  impressions: { label: "Impressions", series: "amber", money: false },
+  adSpend: { label: "Ad spend", series: "teal", money: true },
+  adClicks: { label: "Ad clicks", series: "teal", money: false },
+  adImpressions: { label: "Ad impressions", series: "teal", money: false },
 } as const
 
 export type TrendMetric = keyof typeof METRIC_META

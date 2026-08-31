@@ -75,9 +75,11 @@ export function KpiTile({
   value: string
   delta: ReactNode
   spark?: number[]
-  series?: "teal" | "amber"
+  series?: "teal" | "amber" | "ink"
   footnote?: string
 }) {
+  const sparkColor =
+    series === "amber" ? CHART.amber : series === "ink" ? CHART.ink : CHART.teal
   return (
     <div className="rounded-2xl border border-tk-slate/15 bg-white px-4 py-3 shadow-sm">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
@@ -86,7 +88,7 @@ export function KpiTile({
       <p className="mt-1 text-[23px] font-semibold leading-tight text-tk-onyx">{value}</p>
       {delta}
       {spark ? (
-        <Sparkline values={spark} color={series === "teal" ? CHART.teal : CHART.amber} />
+        <Sparkline values={spark} color={sparkColor} />
       ) : footnote ? (
         <p className="mt-3 text-[11px] text-tk-slate/50">{footnote}</p>
       ) : (

@@ -90,10 +90,10 @@ export default async function InsightsHealthPage({
                 Robot: <code className="text-tk-onyx">{sa.client_email}</code>
               </p>
               <p className="mt-1 text-xs text-tk-slate/60">
-                Grant this address GA4 Viewer and Search Console access for every
-                property you add. <code>npm run google:check</code> names anything
-                still missing; <code>npm run site:discover</code> lists what it can
-                already read.
+                Grant this address GA4 Viewer, Search Console, and Google Ads
+                Read-only for every property you add. <code>npm run google:check</code>{" "}
+                names anything still missing; <code>npm run site:discover</code> lists
+                what it can already read.
               </p>
             </>
           ) : (
@@ -138,12 +138,12 @@ export default async function InsightsHealthPage({
           />
         </Setup>
 
-        <Setup title="Service account grants (GA4 + Search Console)">
+        <Setup title="Service account grants (GA4 + Search Console + Ads)">
           <Checklist
             items={[
               {
                 title: "Enable the APIs",
-                body: "In the GCP project: Google Analytics Data API, Google Analytics Admin API, Search Console API.",
+                body: "In the GCP project: Google Analytics Data API, Google Analytics Admin API, Search Console API, Google Ads API.",
               },
               {
                 title: "Grant GA4 Viewer",
@@ -154,8 +154,31 @@ export default async function InsightsHealthPage({
                 body: "Search Console → Settings → Users and permissions → add the same email. Domain properties use the sc-domain: form.",
               },
               {
+                title: "Grant Google Ads Read-only",
+                body: "Ads Admin → Access and security → add the robot email as Read-only. Then a developer token from a manager account's API Center, stored as GOOGLE_ADS_DEVELOPER_TOKEN. Attach the customer id with npm run site:set -- <slug> adsCustomerId <id>.",
+              },
+              {
                 title: "Verify",
                 body: "npm run google:check walks every site and names anything still missing, then Refresh here.",
+              },
+            ]}
+          />
+        </Setup>
+
+        <Setup title="Vercel Web Analytics (Host tab)">
+          <Checklist
+            items={[
+              {
+                title: "Turn on Web Analytics and ship the package",
+                body: "Project → Analytics → Enable. The site must render @vercel/analytics (not behind the cookie banner). Mineralife already has this.",
+              },
+              {
+                title: "Token on the CRM",
+                body: "A Vercel access token that can read Web Analytics, stored as VERCEL_TOKEN. Team projects also need VERCEL_TEAM_ID. Same vars on Railway when this leaves localhost.",
+              },
+              {
+                title: "Attach the project to the site row",
+                body: "npm run site:set -- <slug> vercelProjectId prj_…. The Host tab appears only on sites with that id. Refresh writes the last 30 days into the snapshot so Hobby's window does not erase earlier days.",
               },
             ]}
           />

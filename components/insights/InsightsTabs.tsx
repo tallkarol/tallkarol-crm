@@ -6,6 +6,8 @@ import { cn } from "@/lib/cn"
 
 const TABS = [
   { seg: "", label: "Overview" },
+  { seg: "unfiltered", label: "Unfiltered" },
+  { seg: "host", label: "Host" },
   { seg: "search", label: "Search" },
   { seg: "traffic", label: "Traffic" },
   { seg: "conversions", label: "Conversions" },
@@ -13,7 +15,15 @@ const TABS = [
   { seg: "health", label: "Health" },
 ] as const
 
-export function InsightsTabs({ slug, isHouse }: { slug: string; isHouse: boolean }) {
+export function InsightsTabs({
+  slug,
+  isHouse,
+  hasHost,
+}: {
+  slug: string
+  isHouse: boolean
+  hasHost: boolean
+}) {
   const pathname = usePathname()
   const search = useSearchParams()
   const range = search.get("range")
@@ -25,7 +35,11 @@ export function InsightsTabs({ slug, isHouse }: { slug: string; isHouse: boolean
       aria-label="Insights sections"
       className="mt-5 flex gap-0.5 overflow-x-auto border-b border-tk-slate/15"
     >
-      {TABS.filter((tab) => tab.seg !== "conversions" || isHouse).map((tab) => {
+      {TABS.filter((tab) => {
+        if (tab.seg === "conversions") return isHouse
+        if (tab.seg === "host") return hasHost
+        return true
+      }).map((tab) => {
         const href = tab.seg ? `${base}/${tab.seg}` : base
         const active = tab.seg
           ? pathname === `${base}/${tab.seg}`

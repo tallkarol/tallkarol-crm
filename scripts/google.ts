@@ -122,6 +122,7 @@ async function check() {
       // calendarList.list needs a read scope; calendar.events alone only covers
       // event operations on a calendar you already name.
       "https://www.googleapis.com/auth/calendar.readonly",
+      "https://www.googleapis.com/auth/adwords",
     ])
     console.log(`${OK} token: minted, so the key itself is valid`)
   } catch (error) {
@@ -183,8 +184,56 @@ async function check() {
     if (!gscOk && site.gscSiteUrl) {
       console.log(`      → Search Console ${site.gscSiteUrl}: add ${sa.client_email}`)
     }
+
+    if (site.adsCustomerId) {
+      const { adsSearch } = await import("../lib/insights/google")
+      const adsOk = await probe(
+        "  Google Ads",
+        async () => {
+          await adsSearch(
+            token,
+            "SELECT customer.id, customer.descriptive_name FROM customer LIMIT 1",
+            site.adsCustomerId
+          )
+          return new Response(JSON.stringify({ ok: true }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        },
+        () => `readable — ${site.adsCustomerId}`
+      )
+      if (!adsOk) {
+        allSitesOk = false
+        console.log(
+          `      → Google Ads ${site.adsCustomerId}: add ${sa.client_email} as Read-only, check GOOGLE_ADS_DEVELOPER_TOKEN`
+        )
+      }
+    }
   }
   if (!allSites.length) console.log("  no sites configured — npm run site:add")
+  console.log("")
+
+  const ads = await import("../lib/insights/google")
+  if (ads.adsDeveloperToken()) {
+    try {
+      const ids = await ads.adsListAccessibleCustomers(token)
+      const envId = ads.adsCustomerId()
+      console.log(
+        `${OK} Google Ads: ${ids.length} accessible customer(s)${ids.length ? ` — ${ids.join(", ")}` : ""}`
+      )
+      if (envId && !ids.includes(envId)) {
+        console.log(`      → env GOOGLE_ADS_CUSTOMER_ID ${envId} is not visible to this robot`)
+      }
+      if (envId && !allSites.some((s) => s.adsCustomerId === envId)) {
+        console.log(`      → npm run site:set -- <slug> adsCustomerId ${envId}`)
+      }
+    } catch (error) {
+      console.log(`${NO} Google Ads: ${error instanceof Error ? error.message : error}`)
+      console.log("      → enable Google Ads API, add the robot as Read-only, check the developer token")
+    }
+  } else {
+    console.log(`${NO} Google Ads: no GOOGLE_ADS_DEVELOPER_TOKEN`)
+  }
   console.log("")
 
   let calendarCount = 0

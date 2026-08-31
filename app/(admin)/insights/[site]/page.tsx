@@ -14,7 +14,9 @@ import { isHouseSite, loadCrmSlice, windowDates } from "@/lib/insights/crm"
 import {
   deltaPct,
   deriveWindow,
+  fmtConv,
   fmtInt,
+  fmtMoney,
   parseRange,
 } from "@/lib/insights/derive"
 import { getInsightsContext } from "@/lib/insights/queries"
@@ -44,12 +46,16 @@ export default async function InsightsOverviewPage({
   const { totals, previousTotals: prev } = win
   const hasGa4 = snapshot.ga4.ok
   const hasGsc = snapshot.gsc.ok
+  const ads = snapshot.ads
+  const hasAds = Boolean(ads?.ok)
+  const currency = ads?.currency || "USD"
 
   const metrics: TrendMetric[] = [
     ...(hasGa4 ? (["users", "sessions", "keyEvents"] as const) : []),
     ...(hasGsc ? (["clicks", "impressions"] as const) : []),
+    ...(hasAds ? (["adSpend", "adClicks", "adImpressions"] as const) : []),
   ]
-  const initialMetric: TrendMetric = hasGa4 ? "sessions" : "clicks"
+  const initialMetric: TrendMetric = hasGa4 ? "sessions" : hasAds ? "adSpend" : "clicks"
 
   let crm: CrmSlice | null = null
   const house = isHouseSite(site)
@@ -61,8 +67,9 @@ export default async function InsightsOverviewPage({
     crm = await loadCrmSlice(start, end)
   }
 
-  const spark = (key: "users" | "sessions" | "keyEvents" | "clicks" | "impressions") =>
-    win.current.map((p) => p[key])
+  const spark = (
+    key: "users" | "sessions" | "keyEvents" | "clicks" | "impressions" | "adSpend" | "adClicks" | "adImpressions"
+  ) => win.current.map((p) => p[key] ?? 0)
 
   return (
     <>
@@ -122,6 +129,36 @@ export default async function InsightsOverviewPage({
           footnote="lower is better"
         />
       </div>
+
+      {hasAds ? (
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <KpiTile
+            label="Ad spend"
+            value={fmtMoney(totals.adSpend, currency)}
+            delta={<Delta pct={deltaPct(totals.adSpend, prev?.adSpend)} goodWhenUp={false} />}
+            spark={spark("adSpend")}
+          />
+          <KpiTile
+            label="Ad clicks"
+            value={fmtInt(totals.adClicks)}
+            delta={<Delta pct={deltaPct(totals.adClicks, prev?.adClicks)} />}
+            spark={spark("adClicks")}
+          />
+          <KpiTile
+            label="Ad impressions"
+            value={fmtInt(totals.adImpressions)}
+            delta={<Delta pct={deltaPct(totals.adImpressions, prev?.adImpressions)} />}
+            spark={spark("adImpressions")}
+          />
+          <KpiTile
+            label="Ad conversions"
+            value={fmtConv(totals.adConversions)}
+            delta={
+              <Delta abs={prev ? totals.adConversions - prev.adConversions : null} />
+            }
+          />
+        </div>
+      ) : null}
 
       <div className="mt-3 grid gap-3 xl:grid-cols-12">
         <Card
@@ -254,6 +291,63 @@ export default async function InsightsOverviewPage({
           </p>
         )}
       </Card>
+
+      {hasAds ? (
+        <Card
+          title="Campaigns"
+          note={`${TABLE_WINDOW_DAYS}d · ${ads.accountName}`}
+          right={
+            <Link
+              href={`/api/insights/export?site=${site.slug}&table=campaigns`}
+              className="text-[11px] font-semibold text-tk-teal hover:underline"
+            >
+              CSV
+            </Link>
+          }
+          className="mt-3"
+        >
+          {ads.campaigns.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[520px] border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-tk-slate/12 text-left text-[10px] font-bold uppercase tracking-wide text-tk-slate/55">
+                    <th className="px-5 py-2 font-bold">Campaign</th>
+                    <th className="px-3 py-2 text-right font-bold">Spend</th>
+                    <th className="px-3 py-2 text-right font-bold">Clicks</th>
+                    <th className="px-3 py-2 text-right font-bold">Impr.</th>
+                    <th className="px-5 py-2 text-right font-bold">Conv.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ads.campaigns.map((row) => (
+                    <tr key={row.id || row.name} className="border-b border-tk-slate/[.06] last:border-0">
+                      <td className="max-w-[22rem] truncate px-5 py-2 font-medium text-tk-onyx" title={row.name}>
+                        {row.name}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">
+                        {fmtMoney(row.spend, currency)}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">
+                        {fmtInt(row.clicks)}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">
+                        {fmtInt(row.impressions)}
+                      </td>
+                      <td className="px-5 py-2 text-right tabular-nums text-tk-onyx">
+                        {fmtConv(row.conversions)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="px-5 py-5 text-sm text-tk-slate/70">
+              No impressions in this window.
+            </p>
+          )}
+        </Card>
+      ) : null}
     </>
   )
 }

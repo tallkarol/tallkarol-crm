@@ -3,9 +3,17 @@ import { db } from "@/db"
 import { reports, snapshotArchive, type Site } from "@/db/schema"
 import { ANALYTICS_SCOPES } from "@/lib/analytics"
 import { googleAccessToken, googleAuthConfigured } from "@/lib/google-auth"
+import { ADS_SCOPE } from "@/lib/insights/google"
 import { isHouseSite, loadCrmSlice, windowDates } from "@/lib/insights/crm"
 import { monthLabel, todayKey, windowTotals } from "@/lib/insights/derive"
-import { fetchGa4Tables, fetchGscTables, type Ga4Tables, type GscTables } from "@/lib/insights/sources"
+import {
+  fetchAdsCampaigns,
+  fetchGa4Tables,
+  fetchGscTables,
+  type Ga4Tables,
+  type GscTables,
+} from "@/lib/insights/sources"
+import type { AdsCampaignRow } from "@/lib/insights/types"
 import type { ArchivePayload, SnapshotV2 } from "@/lib/insights/types"
 
 function monthDays(period: string) {
@@ -29,11 +37,14 @@ async function fetchMonthTables(site: Site, first: string, last: string) {
   const empty = {
     ga4: null as Ga4Tables | null,
     gsc: null as GscTables | null,
+    ads: null as AdsCampaignRow[] | null,
   }
   if (!googleAuthConfigured()) return empty
   let token: string
   try {
-    token = await googleAccessToken(ANALYTICS_SCOPES)
+    token = await googleAccessToken(
+      site.adsCustomerId ? [...ANALYTICS_SCOPES, ADS_SCOPE] : ANALYTICS_SCOPES
+    )
   } catch {
     return empty
   }
@@ -42,7 +53,7 @@ async function fetchMonthTables(site: Site, first: string, last: string) {
   const priorFirst = `${prior}-01`
   const priorLast = `${prior}-${String(monthDays(prior)).padStart(2, "0")}`
 
-  const [ga4, gsc] = await Promise.all([
+  const [ga4, gsc, ads] = await Promise.all([
     site.ga4PropertyId
       ? fetchGa4Tables(token, site.ga4PropertyId, { startDate: first, endDate: last }).catch(
           () => null
@@ -56,8 +67,13 @@ async function fetchMonthTables(site: Site, first: string, last: string) {
           prevEnd: priorLast,
         }).catch(() => null)
       : Promise.resolve(null),
+    site.adsCustomerId
+      ? fetchAdsCampaigns(token, site.adsCustomerId, { startDate: first, endDate: last }).catch(
+          () => null
+        )
+      : Promise.resolve(null),
   ])
-  return { ga4, gsc }
+  return { ga4, gsc, ads }
 }
 
 /**
@@ -115,6 +131,21 @@ export async function buildArchivePayload(
       siteUrl: site.gscSiteUrl,
       queries: tables.gsc?.queries ?? [],
       pages: tables.gsc?.pages ?? [],
+    },
+    ads: {
+      ok: Boolean(tables.ads),
+      customerId: site.adsCustomerId,
+      accountName: snapshot.ads?.accountName ?? "",
+      currency: snapshot.ads?.currency ?? "USD",
+      campaigns: tables.ads ?? [],
+    },
+    vercel: {
+      ok: Boolean(snapshot.vercel?.ok),
+      projectId: site.vercelProjectId,
+      pages: snapshot.vercel?.pages ?? [],
+      referrers: snapshot.vercel?.referrers ?? [],
+      devices: snapshot.vercel?.devices ?? [],
+      countries: snapshot.vercel?.countries ?? [],
     },
     crm,
     health: snapshot.health,
@@ -183,7 +214,12 @@ export async function ensureMonthlyArchive(site: Site, snapshot: SnapshotV2) {
   const hadData = snapshot.daily.some(
     (p) =>
       p.date.startsWith(period) &&
-      (p.users > 0 || p.sessions > 0 || p.clicks > 0 || p.impressions > 0)
+      (p.users > 0 ||
+        p.sessions > 0 ||
+        p.clicks > 0 ||
+        p.impressions > 0 ||
+        (p.adSpend ?? 0) > 0 ||
+        (p.adClicks ?? 0) > 0)
   )
   if (!hadData) return null
   return archivePeriod(site, snapshot, period, { onlyIfStale: true })

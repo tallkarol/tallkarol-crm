@@ -17,6 +17,19 @@ export type DailyPoint = {
   impressions: number
   /** GSC average position that day; null when Search Console had no row. */
   position: number | null
+  adImpressions: number
+  adClicks: number
+  /** Account currency; cost_micros / 1e6. */
+  adSpend: number
+  adConversions: number
+  /** GA4 sessions in paid channel groups — still consent-gated. */
+  ga4Paid: number
+  /** GA4 sessions in Organic Search — still consent-gated. */
+  ga4Organic: number
+  /** Vercel Web Analytics pageviews — cookieless host count. */
+  vercelPageviews: number
+  /** Vercel unique visitors for that calendar day (hash resets daily). */
+  vercelVisitors: number
 }
 
 export type DimRow = { name: string; value: number }
@@ -62,6 +75,35 @@ export type GscBlock = {
   pages: SearchRow[]
 }
 
+export type AdsCampaignRow = {
+  id: string
+  name: string
+  status: string
+  impressions: number
+  clicks: number
+  spend: number
+  conversions: number
+}
+
+export type AdsBlock = {
+  ok: boolean
+  error: string | null
+  customerId: string
+  accountName: string
+  currency: string
+  campaigns: AdsCampaignRow[]
+}
+
+export type VercelBlock = {
+  ok: boolean
+  error: string | null
+  projectId: string
+  pages: DimRow[]
+  referrers: DimRow[]
+  devices: DimRow[]
+  countries: DimRow[]
+}
+
 export type SnapshotV2 = {
   version: 2
   fetchedAt: string
@@ -70,6 +112,8 @@ export type SnapshotV2 = {
   daily: DailyPoint[]
   ga4: Ga4Block
   gsc: GscBlock
+  ads: AdsBlock
+  vercel: VercelBlock
   health: SourceHealth[]
 }
 
@@ -95,6 +139,29 @@ export const EMPTY_GA4: Ga4Block = {
 
 export function emptyGsc(siteUrl: string): GscBlock {
   return { ok: false, error: null, siteUrl, queries: [], pages: [] }
+}
+
+export function emptyAds(customerId = ""): AdsBlock {
+  return {
+    ok: false,
+    error: null,
+    customerId,
+    accountName: "",
+    currency: "USD",
+    campaigns: [],
+  }
+}
+
+export function emptyVercel(projectId = ""): VercelBlock {
+  return {
+    ok: false,
+    error: null,
+    projectId,
+    pages: [],
+    referrers: [],
+    devices: [],
+    countries: [],
+  }
 }
 
 /** CRM slice — computed live from the local DB (never cached), house site only. */
@@ -127,6 +194,8 @@ export type ArchivePayload = {
   previous: WindowTotals | null
   ga4: Pick<Ga4Block, "ok" | "channels" | "pages" | "events" | "devices" | "countries">
   gsc: Pick<GscBlock, "ok" | "siteUrl" | "queries" | "pages">
+  ads: Pick<AdsBlock, "ok" | "customerId" | "accountName" | "currency" | "campaigns">
+  vercel?: Pick<VercelBlock, "ok" | "projectId" | "pages" | "referrers" | "devices" | "countries">
   crm: CrmSlice | null
   health: SourceHealth[]
 }
@@ -141,4 +210,12 @@ export type WindowTotals = {
   impressions: number
   /** Impressions-weighted GSC average position; null when no impressions. */
   avgPosition: number | null
+  adImpressions: number
+  adClicks: number
+  adSpend: number
+  adConversions: number
+  ga4Paid: number
+  ga4Organic: number
+  vercelPageviews: number
+  vercelVisitors: number
 }

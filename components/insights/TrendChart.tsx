@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react"
 import { CHART, METRIC_META, type TrendMetric } from "@/lib/insights/chart"
-import { fmtDay, fmtInt } from "@/lib/insights/derive"
+import { fmtDay, fmtInt, fmtMoney } from "@/lib/insights/derive"
 import type { DailyPoint } from "@/lib/insights/types"
 import { cn } from "@/lib/cn"
 
@@ -48,9 +48,10 @@ export function TrendChart({
 
   const meta = METRIC_META[metric]
   const color = meta.series === "teal" ? CHART.teal : CHART.amber
+  const format = (v: number) => (meta.money ? fmtMoney(v) : fmtInt(v))
 
-  const cur = useMemo(() => current.map((p) => p[metric]), [current, metric])
-  const prev = useMemo(() => previous.map((p) => p[metric]), [previous, metric])
+  const cur = useMemo(() => current.map((p) => p[metric] ?? 0), [current, metric])
+  const prev = useMemo(() => previous.map((p) => p[metric] ?? 0), [previous, metric])
 
   const yMax = niceMax(Math.max(...cur, ...prev, 1) * 1.1)
   const dx = W / Math.max(cur.length - 1, 1)
@@ -199,10 +200,10 @@ export function TrendChart({
           >
             <p className="font-semibold">{fmtDay(current[h].date)}</p>
             <p className="mt-0.5">
-              {meta.label} · {fmtInt(cur[h])}
+              {meta.label} · {format(cur[h])}
             </p>
             {prev[h] != null && previous[h] ? (
-              <p className="text-tk-linen/60">Previous · {fmtInt(prev[h])}</p>
+              <p className="text-tk-linen/60">Previous · {format(prev[h])}</p>
             ) : null}
           </div>
         ) : null}

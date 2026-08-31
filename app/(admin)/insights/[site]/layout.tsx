@@ -54,7 +54,11 @@ export default async function InsightsSiteLayout({
         </div>
       </div>
 
-      <InsightsTabs slug={site.slug} isHouse={isHouseSite(site)} />
+      <InsightsTabs
+        slug={site.slug}
+        isHouse={isHouseSite(site)}
+        hasHost={Boolean(site.vercelProjectId)}
+      />
 
       <div className="mt-5">{children}</div>
     </>

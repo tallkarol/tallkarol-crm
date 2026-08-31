@@ -11,7 +11,7 @@ import { insightsCacheKey, type SnapshotV2 } from "@/lib/insights/types"
 import { readReport, writeReport } from "@/lib/report-cache"
 
 /**
- * The only thing that calls GA4 / Search Console for the hub. Page views read
+ * The only thing that calls GA4 / Search Console / Ads for the hub. Page views read
  * the stored snapshot; this runs when someone presses Refresh. It also closes
  * out the previous month into snapshot_archive the first time it runs after
  * a month ends.
@@ -24,7 +24,10 @@ export async function refreshInsightsAction(slug: string) {
   if (!site) return { ok: false as const, error: "Site not found." }
 
   try {
-    const snapshot = await loadSnapshotV2(site)
+    const cached = await readReport<SnapshotV2>(insightsCacheKey(site.slug))
+    const previous =
+      cached.payload && cached.payload.version === 2 ? cached.payload : null
+    const snapshot = await loadSnapshotV2(site, previous)
     await writeReport(insightsCacheKey(site.slug), snapshot)
     await ensureMonthlyArchive(site, snapshot)
     revalidatePath("/insights", "layout")

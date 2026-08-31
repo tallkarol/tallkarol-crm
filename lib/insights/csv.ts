@@ -19,6 +19,7 @@ export const CSV_TABLES = [
   "events",
   "devices",
   "countries",
+  "campaigns",
 ] as const
 export type CsvTable = (typeof CSV_TABLES)[number]
 
@@ -32,6 +33,7 @@ export function archiveCsv(payload: ArchivePayload, table: CsvTable): string {
     daily: payload.daily,
     ga4: payload.ga4,
     gsc: payload.gsc,
+    ads: payload.ads,
   } as SnapshotV2
   return snapshotCsv(pseudo, table)
 }
@@ -41,7 +43,25 @@ export function snapshotCsv(snapshot: SnapshotV2, table: CsvTable): string {
   switch (table) {
     case "daily":
       return toCsv(
-        ["date", "users", "sessions", "new_users", "events", "key_events", "clicks", "impressions", "position"],
+        [
+          "date",
+          "users",
+          "sessions",
+          "new_users",
+          "events",
+          "key_events",
+          "clicks",
+          "impressions",
+          "position",
+          "ad_impressions",
+          "ad_clicks",
+          "ad_spend",
+          "ad_conversions",
+          "ga4_paid",
+          "ga4_organic",
+          "vercel_pageviews",
+          "vercel_visitors",
+        ],
         snapshot.daily.map((p) => [
           p.date,
           p.users,
@@ -52,6 +72,14 @@ export function snapshotCsv(snapshot: SnapshotV2, table: CsvTable): string {
           p.clicks,
           p.impressions,
           p.position == null ? null : Number(p.position.toFixed(1)),
+          p.adImpressions ?? 0,
+          p.adClicks ?? 0,
+          Number((p.adSpend ?? 0).toFixed(2)),
+          Number((p.adConversions ?? 0).toFixed(2)),
+          p.ga4Paid ?? 0,
+          p.ga4Organic ?? 0,
+          p.vercelPageviews ?? 0,
+          p.vercelVisitors ?? 0,
         ])
       )
     case "queries":
@@ -82,5 +110,17 @@ export function snapshotCsv(snapshot: SnapshotV2, table: CsvTable): string {
       return toCsv(["device", "sessions"], snapshot.ga4.devices.map((r) => [r.name, r.value]))
     case "countries":
       return toCsv(["country", "sessions"], snapshot.ga4.countries.map((r) => [r.name, r.value]))
+    case "campaigns":
+      return toCsv(
+        ["campaign", "status", "impressions", "clicks", "spend", "conversions"],
+        (snapshot.ads?.campaigns ?? []).map((r) => [
+          r.name,
+          r.status,
+          r.impressions,
+          r.clicks,
+          Number(r.spend.toFixed(2)),
+          Number(r.conversions.toFixed(2)),
+        ])
+      )
   }
 }

@@ -20,7 +20,7 @@ async function list() {
   if (!rows.length) return console.log("No sites yet.")
   for (const s of rows) {
     console.log(
-      `${s.slug.padEnd(22)} ${s.name.padEnd(22)} CLIENT=${(s.client?.slug || "house").padEnd(22)} GA4=${(s.ga4PropertyId || "—").padEnd(12)} GSC=${(s.gscSiteUrl || "—").padEnd(28)} UPTIME=${s.uptimeMonitorId || "—"}`
+      `${s.slug.padEnd(22)} ${s.name.padEnd(22)} CLIENT=${(s.client?.slug || "house").padEnd(22)} GA4=${(s.ga4PropertyId || "—").padEnd(12)} GSC=${(s.gscSiteUrl || "—").padEnd(28)} ADS=${(s.adsCustomerId || "—").padEnd(12)} VERCEL=${(s.vercelProjectId || "—").padEnd(12)} UPTIME=${s.uptimeMonitorId || "—"}`
     )
   }
 }
@@ -159,6 +159,29 @@ async function discover() {
   } else {
     console.log("\nUptimeRobot: no UPTIMEROBOT_API_KEY (read-only key).")
   }
+
+  const adsMod = await import("../lib/insights/google")
+  if (adsMod.adsDeveloperToken() && googleAuthConfigured()) {
+    try {
+      const adsToken = await googleAccessToken(["https://www.googleapis.com/auth/adwords"])
+      const ids = await adsMod.adsListAccessibleCustomers(adsToken)
+      console.log("\nGoogle Ads customers the robot can read:")
+      if (!ids.length) console.log("  (none)")
+      for (const id of ids) {
+        const used = known.filter((k) => k.adsCustomerId === id)
+        console.log(
+          `  ${id.padEnd(14)} ${used.length ? `→ ${used.map((s) => s.slug).join(", ")}` : "· not wired"}`
+        )
+        if (!used.length) {
+          console.log(`      npm run site:set -- <slug> adsCustomerId ${id}`)
+        }
+      }
+    } catch (err) {
+      console.log(`\nGoogle Ads: ${err instanceof Error ? err.message : err}`)
+    }
+  } else {
+    console.log("\nGoogle Ads: no GOOGLE_ADS_DEVELOPER_TOKEN.")
+  }
 }
 
 async function set(slug: string, field: string, value: string) {
@@ -169,6 +192,8 @@ async function set(slug: string, field: string, value: string) {
     "gscSiteUrl",
     "measurementId",
     "uptimeMonitorId",
+    "adsCustomerId",
+    "vercelProjectId",
     "clientSlug",
   ] as const
   if (!allowed.includes(field as any)) {
@@ -194,11 +219,12 @@ async function set(slug: string, field: string, value: string) {
     return
   }
 
+  const next = field === "adsCustomerId" ? value.replace(/\D/g, "") : value
   await db
     .update(sites)
-    .set({ [field]: value, updatedAt: new Date() })
+    .set({ [field]: next, updatedAt: new Date() })
     .where(eq(sites.slug, slug))
-  console.log(`${slug}.${field} = ${value || "(cleared)"}`)
+  console.log(`${slug}.${field} = ${next || "(cleared)"}`)
 }
 
 async function main() {

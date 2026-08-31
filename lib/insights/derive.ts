@@ -38,6 +38,14 @@ export const EMPTY_DAY: Omit<DailyPoint, "date"> = {
   clicks: 0,
   impressions: 0,
   position: null,
+  adImpressions: 0,
+  adClicks: 0,
+  adSpend: 0,
+  adConversions: 0,
+  ga4Paid: 0,
+  ga4Organic: 0,
+  vercelPageviews: 0,
+  vercelVisitors: 0,
 }
 
 export type RangeDays = 7 | 28 | 90
@@ -58,6 +66,14 @@ export function windowTotals(points: DailyPoint[]): WindowTotals {
     clicks: 0,
     impressions: 0,
     avgPosition: null,
+    adImpressions: 0,
+    adClicks: 0,
+    adSpend: 0,
+    adConversions: 0,
+    ga4Paid: 0,
+    ga4Organic: 0,
+    vercelPageviews: 0,
+    vercelVisitors: 0,
   }
   let posWeight = 0
   let posSum = 0
@@ -69,6 +85,14 @@ export function windowTotals(points: DailyPoint[]): WindowTotals {
     t.keyEvents += p.keyEvents
     t.clicks += p.clicks
     t.impressions += p.impressions
+    t.adImpressions += p.adImpressions ?? 0
+    t.adClicks += p.adClicks ?? 0
+    t.adSpend += p.adSpend ?? 0
+    t.adConversions += p.adConversions ?? 0
+    t.ga4Paid += p.ga4Paid ?? 0
+    t.ga4Organic += p.ga4Organic ?? 0
+    t.vercelPageviews += p.vercelPageviews ?? 0
+    t.vercelVisitors += p.vercelVisitors ?? 0
     if (p.position != null && p.impressions > 0) {
       posSum += p.position * p.impressions
       posWeight += p.impressions
@@ -118,6 +142,24 @@ export function deltaPct(cur: number, prev: number | null | undefined) {
 export function fmtInt(n: number | null | undefined) {
   if (n == null) return "—"
   return n.toLocaleString("en-US")
+}
+
+export function fmtMoney(n: number | null | undefined, currency = "USD") {
+  if (n == null) return "—"
+  try {
+    return n.toLocaleString("en-US", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: n >= 100 ? 0 : 2,
+    })
+  } catch {
+    return `${n.toFixed(n >= 100 ? 0 : 2)} ${currency}`
+  }
+}
+
+export function fmtConv(n: number | null | undefined) {
+  if (n == null) return "—"
+  return Number.isInteger(n) ? fmtInt(n) : n.toFixed(1)
 }
 
 export function fmtPct01(ratio: number) {
