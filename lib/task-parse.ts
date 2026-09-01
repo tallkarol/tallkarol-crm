@@ -16,11 +16,13 @@ import type { Cadence } from "@/db/schema"
  */
 
 export type ParseTarget = {
-  clientId: string
-  clientName: string
-  clientSlug: string
+  clientId: string | null
+  clientName: string | null
+  clientSlug: string | null
   projectId: string | null
   projectName: string | null
+  productId?: string | null
+  productName?: string | null
 }
 
 export type ParsedTask = {
@@ -169,8 +171,12 @@ export function parseWhen(
 
 /** Every phrase that should resolve to a given target, longest first. */
 function phrasesFor(target: ParseTarget): string[] {
-  const client = normalise(target.clientName)
-  const slug = normalise(target.clientSlug)
+  const client = target.clientName ? normalise(target.clientName) : ""
+  const slug = target.clientSlug ? normalise(target.clientSlug) : ""
+  if (target.productName) {
+    const product = normalise(target.productName)
+    return [`${client} ${product}`, `${slug} ${product}`, product].filter(Boolean)
+  }
   if (!target.projectName) return [client, slug].filter(Boolean)
   const project = normalise(target.projectName)
   // Deliberately no bare client phrase here: `@caps fieldhouse` must land on
@@ -188,7 +194,9 @@ function matchTarget(words: string[], targets: ParseTarget[]) {
     for (const phrase of phrasesFor(target)) {
       // A project phrase beats a bare client phrase for the same words.
       const existing = index.get(phrase)
-      if (!existing || (!existing.projectId && target.projectId)) {
+      const existingSpecific = Boolean(existing?.projectId || existing?.productId)
+      const incomingSpecific = Boolean(target.projectId || target.productId)
+      if (!existing || (!existingSpecific && incomingSpecific)) {
         index.set(phrase, target)
       }
     }

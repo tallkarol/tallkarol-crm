@@ -8,6 +8,7 @@ import { updateTask } from "@/lib/task-actions"
 
 export type PickerClient = { id: string; name: string; slug: string }
 export type PickerProject = { id: string; name: string; clientId: string }
+export type PickerProduct = { id: string; name: string; clientId: string | null }
 export type PickerDeliverable = {
   id: string
   label: string
@@ -26,17 +27,21 @@ export function TaskTargetPicker({
   taskId,
   clientId,
   projectId,
+  productId,
   deliverableId,
   clients,
   projects,
+  products,
   deliverables,
 }: {
   taskId: string
   clientId: string | null
   projectId: string | null
+  productId: string | null
   deliverableId: string | null
   clients: PickerClient[]
   projects: PickerProject[]
+  products: PickerProduct[]
   deliverables: PickerDeliverable[]
 }) {
   const router = useRouter()
@@ -55,6 +60,7 @@ export function TaskTargetPicker({
   const clientProjects = projects.filter(
     (p) => !clientId || p.clientId === clientId
   )
+  const listedProducts = products
   const projectDeliverables = deliverables.filter(
     (d) => d.projectId === projectId
   )
@@ -67,7 +73,12 @@ export function TaskTargetPicker({
           disabled={busy}
           onChange={(value) =>
             // Changing client drops a project that belonged to the old one.
-            apply({ clientId: value || null, projectId: null, deliverableId: null })
+            apply({
+              clientId: value || null,
+              projectId: null,
+              productId: null,
+              deliverableId: null,
+            })
           }
           swatch={clientId ? clientColor(clients.find((c) => c.id === clientId)?.slug ?? "") : undefined}
           empty="No client"
@@ -77,10 +88,32 @@ export function TaskTargetPicker({
         <Select
           value={projectId ?? ""}
           disabled={busy || clientProjects.length === 0}
-          onChange={(value) => apply({ projectId: value || null, deliverableId: null })}
+          onChange={(value) =>
+            apply({
+              projectId: value || null,
+              productId: null,
+              deliverableId: null,
+            })
+          }
           empty={clientProjects.length === 0 ? "No projects" : "No project"}
           options={clientProjects.map((p) => ({ value: p.id, label: p.name }))}
         />
+
+        {listedProducts.length > 0 ? (
+          <Select
+            value={productId ?? ""}
+            disabled={busy}
+            onChange={(value) =>
+              apply({
+                productId: value || null,
+                projectId: null,
+                deliverableId: null,
+              })
+            }
+            empty="No product"
+            options={listedProducts.map((p) => ({ value: p.id, label: p.name }))}
+          />
+        ) : null}
 
         {projectId ? (
           <Select

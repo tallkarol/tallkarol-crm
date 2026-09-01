@@ -12,6 +12,7 @@ import {
   type NavSection,
 } from "@/lib/nav"
 import { navIcon } from "@/lib/nav-icons"
+import type { UnreadTone } from "@/lib/unread"
 
 function leafClass(active: boolean, collapsed?: boolean) {
   return cn(
@@ -48,18 +49,39 @@ function NavItemIcon({
   )
 }
 
-function Badge({ count, compact }: { count: number; compact?: boolean }) {
+/**
+ * A badge says "unread", and its colour says how patiently it can wait —
+ * the same ladder the dashboard's Unread card runs on, so the sidebar and
+ * the card never tell you two different stories.
+ */
+export type NavBadge = { count: number; tone?: UnreadTone }
+
+const BADGE_TONE: Record<UnreadTone, string> = {
+  clear: "bg-tk-slate/40",
+  lead: "bg-tk-teal",
+  warn: "bg-[#8A5A05]",
+  bad: "bg-[#A62228]",
+}
+
+function Badge({ badge, compact }: { badge?: NavBadge; compact?: boolean }) {
+  const count = badge?.count ?? 0
   if (count <= 0) return null
+  const tone = BADGE_TONE[badge?.tone ?? "lead"]
   if (compact) {
     return (
       <span
-        className="absolute top-1 right-1 size-1.5 rounded-full bg-tk-teal"
+        className={cn("absolute top-1 right-1 size-1.5 rounded-full", tone)}
         aria-hidden
       />
     )
   }
   return (
-    <span className="rounded-full bg-tk-teal px-1.5 py-px text-[10px] font-semibold text-tk-linen">
+    <span
+      className={cn(
+        "rounded-full px-1.5 py-px text-[10px] font-semibold text-tk-linen",
+        tone
+      )}
+    >
       {count > 99 ? "99+" : count}
     </span>
   )
@@ -75,7 +97,7 @@ function NavLeaf({
   item: NavLink
   active: boolean
   collapsed?: boolean
-  badge?: number
+  badge?: NavBadge
   onNavigate?: () => void
 }) {
   return (
@@ -89,7 +111,7 @@ function NavLeaf({
         <>
           <NavItemIcon item={item} active={active} />
           <span className="sr-only">{item.label}</span>
-          <Badge count={badge ?? 0} compact />
+          <Badge badge={badge} compact />
         </>
       ) : (
         <>
@@ -97,7 +119,7 @@ function NavLeaf({
             <NavItemIcon item={item} active={active} />
             <span className="truncate">{item.label}</span>
           </span>
-          <Badge count={badge ?? 0} />
+          <Badge badge={badge} />
         </>
       )}
     </Link>
@@ -206,7 +228,7 @@ export function SidebarNav({
   className,
 }: {
   sections?: readonly NavSection[]
-  badges?: Record<string, number>
+  badges?: Record<string, NavBadge>
   collapsed?: boolean
   onNavigate?: () => void
   className?: string

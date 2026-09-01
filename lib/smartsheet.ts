@@ -62,6 +62,9 @@ async function api(path: string, init?: RequestInit) {
   return res.json()
 }
 
+/** Same credentials, same base URL — the tracker sync calls through this too. */
+export { api as smartsheetApi }
+
 /* Column-title → ticket-field mapping, tolerant of exact sheet wording. */
 const FIELD_PATTERNS: [keyof TicketFields, RegExp][] = [
   ["number", /ticket number/i],

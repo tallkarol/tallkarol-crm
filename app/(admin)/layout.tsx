@@ -1,10 +1,10 @@
-import { and, eq, ne, sql } from "drizzle-orm"
 import { redirect } from "next/navigation"
 import { AppShell } from "@/components/AppShell"
-import { db } from "@/db"
-import { inquiries } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
-import { loadInbox } from "@/lib/inbox-data"
+import { adminNav, ROUTES } from "@/lib/nav"
+import { flattenProducts, studiosWithProducts } from "@/lib/products"
+import { loadUnread } from "@/lib/unread-data"
+import { worstTone } from "@/lib/unread"
 
 export default async function AdminLayout({
   children,
@@ -14,24 +14,26 @@ export default async function AdminLayout({
   const user = await getSessionUser()
   if (!user) redirect("/login")
 
-  // The Inbox badge counts unread across every kind, not just new inquiries —
-  // otherwise a stream of tickets and mail sits behind a badge reading zero.
-  const [inbox, needsLook] = await Promise.all([
-    loadInbox().then((data) => data.counts.unread),
-    db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(inquiries)
-      .where(
-        and(
-          ne(inquiries.status, "closed"),
-          sql`(payload->'lead'->>'qualification' is null or payload->'lead'->>'qualification' = 'unreviewed')`
-        )
-      )
-      .then(([row]) => Number(row?.count ?? 0)),
-  ])
+  // One read behind every badge and behind the dashboard's Unread card, so a
+  // badge can never disagree with the card or the page it points at. The call
+  // is request-cached, so the dashboard shares this one rather than repeating it.
+  const [unread, catalog] = await Promise.all([loadUnread(), studiosWithProducts()])
+
+  const badges = {
+    [ROUTES.inbox]: {
+      count: unread.total,
+      tone: worstTone(unread.leads.tone, unread.tickets.tone),
+    },
+    [ROUTES.leads]: { count: unread.leads.count, tone: unread.leads.tone },
+    [ROUTES.support]: { count: unread.tickets.count, tone: unread.tickets.tone },
+  }
 
   return (
-    <AppShell email={user.email} inboxBadge={inbox} leadsBadge={needsLook}>
+    <AppShell
+      email={user.email}
+      badges={badges}
+      nav={adminNav(flattenProducts(catalog))}
+    >
       {children}
     </AppShell>
   )

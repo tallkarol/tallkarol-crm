@@ -6,8 +6,8 @@ import { db } from "@/db"
 import {
   clients,
   deliverables,
+  products,
   projects,
-  taskCompletions,
   taskItems,
   taskViews,
   tasks,
@@ -15,7 +15,7 @@ import {
 import type { Cadence } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { ROUTES } from "@/lib/nav"
-import { periodKey } from "@/lib/task-view"
+import { completeTask } from "@/lib/task-complete"
 
 type Ok<T = undefined> = T extends undefined
   ? { ok: true }
@@ -31,30 +31,34 @@ function touch() {
   revalidatePath(ROUTES.projects)
   revalidatePath(ROUTES.retainers)
   revalidatePath(ROUTES.clients)
+  revalidatePath(ROUTES.products)
 }
 
 function isDay(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value)
 }
 
-function isoDay(d: Date) {
-  const pad = (n: number) => String(n).padStart(2, "0")
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-}
-
 /**
- * A task always names a client, and a project fills in its own — the same rule
- * a punch follows, so the two surfaces cannot drift apart.
+ * A project or deliverable fills in its client. A product may stand alone
+ * (Tall Karol products have no client). The same rule the composer follows.
  */
 async function resolveTarget(input: {
   clientId?: string | null
   projectId?: string | null
+  productId?: string | null
   deliverableId?: string | null
 }): Promise<
-  | { clientId: string | null; projectId: string | null; retainerId: string | null; deliverableId: string | null }
+  | {
+      clientId: string | null
+      projectId: string | null
+      productId: string | null
+      retainerId: string | null
+      deliverableId: string | null
+    }
   | { error: string }
 > {
   const projectId = input.projectId || null
+  const productId = input.productId || null
   const deliverableId = input.deliverableId || null
 
   if (deliverableId) {
@@ -66,6 +70,7 @@ async function resolveTarget(input: {
     return {
       clientId: deliverable.project.clientId,
       projectId: deliverable.projectId,
+      productId: null,
       retainerId: deliverable.project.retainerId,
       deliverableId,
     }
@@ -79,7 +84,22 @@ async function resolveTarget(input: {
     return {
       clientId: project.clientId,
       projectId: project.id,
+      productId: null,
       retainerId: project.retainerId,
+      deliverableId: null,
+    }
+  }
+
+  if (productId) {
+    const product = await db.query.products.findFirst({
+      where: eq(products.id, productId),
+    })
+    if (!product) return { error: "That product does not exist." }
+    return {
+      clientId: product.clientId,
+      projectId: null,
+      productId: product.id,
+      retainerId: null,
       deliverableId: null,
     }
   }
@@ -95,18 +115,26 @@ async function resolveTarget(input: {
     return {
       clientId: client.id,
       projectId: null,
+      productId: null,
       retainerId: retainer?.id ?? null,
       deliverableId: null,
     }
   }
 
-  return { clientId: null, projectId: null, retainerId: null, deliverableId: null }
+  return {
+    clientId: null,
+    projectId: null,
+    productId: null,
+    retainerId: null,
+    deliverableId: null,
+  }
 }
 
 export type CreateTaskInput = {
   title: string
   clientId?: string | null
   projectId?: string | null
+  productId?: string | null
   deliverableId?: string | null
   dueOn?: string | null
   snoozedUntil?: string | null
@@ -146,6 +174,7 @@ export async function createTask(
       userId: user.id,
       clientId: target.clientId,
       projectId: target.projectId,
+      productId: target.productId,
       retainerId: target.retainerId,
       deliverableId: target.deliverableId,
       dueOn: input.dueOn || null,
@@ -175,37 +204,10 @@ export async function setTaskDone(
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
 
-  const task = await db.query.tasks.findFirst({ where: eq(tasks.id, id) })
-  if (!task) return { ok: false, error: "Task not found." }
-
-  const now = new Date()
-  await db
-    .update(tasks)
-    .set({
-      status: done ? "done" : "open",
-      completedAt: done ? now : null,
-      updatedAt: now,
-    })
-    .where(eq(tasks.id, id))
-
-  if (done && task.cadence !== "none") {
-    const period = periodKey(task.cadence, now)
-    if (period) {
-      await db
-        .insert(taskCompletions)
-        .values({ taskId: id, userId: user.id, period, completedOn: isoDay(now) })
-        .onConflictDoNothing()
-    }
-  }
-  if (!done && task.cadence !== "none" && task.completedAt) {
-    // Un-ticking within the same period retracts that period's record.
-    const period = periodKey(task.cadence, task.completedAt)
-    if (period) {
-      await db
-        .delete(taskCompletions)
-        .where(and(eq(taskCompletions.taskId, id), eq(taskCompletions.period, period)))
-    }
-  }
+  // The recurrence bookkeeping lives in `completeTask` so the widget's
+  // token-authenticated route runs exactly the same logic.
+  const result = await completeTask(id, user.id, done)
+  if (!result.ok) return result
 
   touch()
   return { ok: true }
@@ -234,6 +236,28 @@ export async function setTaskStage(
   return { ok: true }
 }
 
+export async function reorderAttentionTasks(ids: string[]): Promise<Result> {
+  const user = await getSessionUser()
+  if (!user) return { ok: false, error: "Sign in first." }
+
+  const ordered = Array.from(new Set(ids)).slice(0, 500)
+  if (ordered.length !== ids.length) {
+    return { ok: false, error: "That task order is not valid." }
+  }
+
+  await db.transaction(async (tx) => {
+    for (let index = 0; index < ordered.length; index++) {
+      await tx
+        .update(tasks)
+        .set({ sort: index + 1 })
+        .where(eq(tasks.id, ordered[index]))
+    }
+  })
+
+  touch()
+  return { ok: true }
+}
+
 export type TaskPatch = {
   title?: string
   notes?: string
@@ -243,6 +267,7 @@ export type TaskPatch = {
   priority?: number
   clientId?: string | null
   projectId?: string | null
+  productId?: string | null
   deliverableId?: string | null
   retainerId?: string | null
 }
@@ -291,6 +316,7 @@ export async function updateTask(id: string, patch: TaskPatch): Promise<Result> 
   const retargeting =
     patch.clientId !== undefined ||
     patch.projectId !== undefined ||
+    patch.productId !== undefined ||
     patch.deliverableId !== undefined
   if (retargeting) {
     const target = await resolveTarget({
@@ -298,6 +324,8 @@ export async function updateTask(id: string, patch: TaskPatch): Promise<Result> 
         patch.clientId !== undefined ? patch.clientId : existing.clientId,
       projectId:
         patch.projectId !== undefined ? patch.projectId : existing.projectId,
+      productId:
+        patch.productId !== undefined ? patch.productId : existing.productId,
       deliverableId:
         patch.deliverableId !== undefined
           ? patch.deliverableId
@@ -306,6 +334,7 @@ export async function updateTask(id: string, patch: TaskPatch): Promise<Result> 
     if ("error" in target) return { ok: false, error: target.error }
     values.clientId = target.clientId
     values.projectId = target.projectId
+    values.productId = target.productId
     values.deliverableId = target.deliverableId
     // Only adopt a derived retainer; never clear one that was set by hand.
     if (target.retainerId) values.retainerId = target.retainerId

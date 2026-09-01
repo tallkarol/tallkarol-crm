@@ -4,21 +4,23 @@ import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react"
 import { BrandMark } from "@/components/BrandMark"
-import { SidebarNav } from "@/components/SidebarNav"
+import { SidebarNav, type NavBadge } from "@/components/SidebarNav"
 import { logoutAction } from "@/lib/actions"
 import { cn } from "@/lib/cn"
+import { ADMIN_NAV, type NavSection } from "@/lib/nav"
 
 const STORAGE_KEY = "tk-crm-sidebar-collapsed"
 
 export function AppShell({
   email,
-  inboxBadge = 0,
-  leadsBadge = 0,
+  badges = {},
+  nav = ADMIN_NAV,
   children,
 }: {
   email: string
-  inboxBadge?: number
-  leadsBadge?: number
+  /** Keyed by href — see `lib/unread.ts` for what the counts and tones mean. */
+  badges?: Record<string, NavBadge>
+  nav?: readonly NavSection[]
   children: React.ReactNode
 }) {
   const pathname = usePathname()
@@ -65,11 +67,6 @@ export function AppShell({
     })
   }
 
-  const badges = {
-    ...(inboxBadge > 0 ? { "/inbox": inboxBadge } : {}),
-    ...(leadsBadge > 0 ? { "/leads": leadsBadge } : {}),
-  }
-
   return (
     <div className="flex h-[100dvh] min-w-0 flex-1 flex-col overflow-hidden md:flex-row">
       <a
@@ -114,6 +111,7 @@ export function AppShell({
           )}
         >
           <SidebarNav
+            sections={nav}
             collapsed={collapsed}
             badges={badges}
           />
@@ -179,6 +177,7 @@ export function AppShell({
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
               <SidebarNav
+                sections={nav}
                 badges={badges}
                 onNavigate={() => setMenuOpen(false)}
               />

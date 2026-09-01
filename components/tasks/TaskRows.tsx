@@ -89,7 +89,13 @@ function Row({ row, peekBase }: { row: RenderRow; peekBase: string }) {
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [done, setDone] = useState(row.status === "done")
-  const color = row.clientSlug ? clientColor(row.clientSlug) : "#8A9794"
+  const color = row.clientSlug
+    ? clientColor(row.clientSlug)
+    : row.productSlug
+      ? clientColor(row.productSlug)
+      : "#8A9794"
+  const houseName = row.clientName ?? row.productName
+  const showProductBesideClient = Boolean(row.clientName && row.productName)
 
   function toggle() {
     const next = !done
@@ -150,7 +156,7 @@ function Row({ row, peekBase }: { row: RenderRow; peekBase: string }) {
           {row.title}
         </Link>
         <span className="mt-0.5 flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-[11.5px] text-tk-slate/60">
-          {row.clientName ? (
+          {houseName ? (
             <span
               className="inline-flex shrink-0 items-center gap-1.5 font-semibold text-tk-slate"
               style={{ color }}
@@ -160,12 +166,19 @@ function Row({ row, peekBase }: { row: RenderRow; peekBase: string }) {
                 className="size-1.5 rounded-full"
                 style={{ backgroundColor: color }}
               />
-              {row.clientName}
+              {houseName}
             </span>
           ) : (
             <span className="shrink-0 text-tk-slate/40">No client</span>
           )}
-          {row.projectName ? (
+          {showProductBesideClient ? (
+            <>
+              <span aria-hidden className="shrink-0 text-tk-slate/25">
+                ·
+              </span>
+              <span className="shrink-0">{row.productName}</span>
+            </>
+          ) : row.projectName ? (
             <>
               <span aria-hidden className="shrink-0 text-tk-slate/25">
                 ·

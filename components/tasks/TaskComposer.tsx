@@ -17,6 +17,8 @@ export type ComposerScope = {
   clientSlug?: string | null
   projectId?: string | null
   projectName?: string | null
+  productId?: string | null
+  productName?: string | null
   deliverableId?: string | null
   deliverableLabel?: string | null
   refKind?: string | null
@@ -72,10 +74,13 @@ export function TaskComposer({
   const target = parsed.target
   const effectiveClientId = target?.clientId ?? scope?.clientId ?? null
   const effectiveProjectId = target?.projectId ?? scope?.projectId ?? null
+  const effectiveProductId = target?.productId ?? scope?.productId ?? null
   const effectiveClientName = target?.clientName ?? scope?.clientName ?? null
   const effectiveProjectName = target?.projectName ?? scope?.projectName ?? null
+  const effectiveProductName = target?.productName ?? scope?.productName ?? null
   const effectiveClientSlug = target?.clientSlug ?? scope?.clientSlug ?? null
-  const fromScope = !target && Boolean(scope?.clientId || scope?.projectId)
+  const fromScope =
+    !target && Boolean(scope?.clientId || scope?.projectId || scope?.productId)
 
   const cadenceValue = parsed.cadence !== "none" ? parsed.cadence : cadence
   const ready = parsed.title.trim().length > 0
@@ -94,6 +99,7 @@ export function TaskComposer({
         title: parsed.title,
         clientId: effectiveClientId,
         projectId: effectiveProjectId,
+        productId: effectiveProductId,
         // A deliverable only applies when nothing else was typed over it.
         deliverableId: target ? null : scope?.deliverableId ?? null,
         dueOn: parsed.dueOn,
@@ -152,14 +158,26 @@ export function TaskComposer({
 
       {text || !compact ? (
         <div className="flex flex-wrap items-center gap-1.5 border-t border-tk-slate/10 px-3 py-2">
-          {effectiveClientName ? (
+          {effectiveClientName || effectiveProductName ? (
             <Chip
               tone={fromScope ? "scope" : "on"}
-              swatch={effectiveClientSlug ? clientColor(effectiveClientSlug) : undefined}
+              swatch={
+                effectiveClientSlug
+                  ? clientColor(effectiveClientSlug)
+                  : effectiveProductName
+                    ? clientColor(
+                        effectiveProductName.toLowerCase().replace(/\s+/g, "-")
+                      )
+                    : undefined
+              }
               label={
-                effectiveProjectName
-                  ? `${effectiveClientName} · ${effectiveProjectName}`
-                  : effectiveClientName
+                effectiveProductName && effectiveClientName
+                  ? `${effectiveClientName} · ${effectiveProductName}`
+                  : effectiveProductName
+                    ? effectiveProductName
+                    : effectiveProjectName
+                      ? `${effectiveClientName} · ${effectiveProjectName}`
+                      : effectiveClientName!
               }
               note={fromScope ? "from this page" : undefined}
             />

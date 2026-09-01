@@ -30,6 +30,7 @@ export type NavIconName =
   | "support"
   | "uptime"
   | "notebooks"
+  | "product"
   | "settings"
   | "team"
   | "email-settings"
@@ -91,6 +92,8 @@ export const ROUTES = {
   notebook: (slug: string) => `/notebooks/${slug}`,
   retainer: (slug: string) => `/retainers/${slug}`,
   project: (slug: string) => `/projects/${slug}`,
+  products: "/products",
+  productPage: (slug: string) => `/products/${slug}`,
   invoice: (number: string) => `/invoices/${number}`,
   timesheetFor: (client: string, month: string) =>
     `/timesheet/${encodeURIComponent(client)}/${encodeURIComponent(month)}`,
@@ -139,6 +142,17 @@ export const ADMIN_NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Products",
+    items: [
+      {
+        href: ROUTES.products,
+        label: "Products",
+        icon: "product",
+        children: [],
+      },
+    ],
+  },
+  {
     title: "Accounts",
     items: [
       { href: ROUTES.contacts, label: "Contacts", icon: "contacts" },
@@ -178,6 +192,35 @@ export const ADMIN_NAV: readonly NavSection[] = [
     ],
   },
 ]
+
+export type ProductNavItem = {
+  slug: string
+  name: string
+}
+
+/** Fills the Products section from the catalog so a new product is a nav link. */
+export function adminNav(
+  products: readonly ProductNavItem[] = []
+): NavSection[] {
+  return ADMIN_NAV.map((section) => {
+    if (section.title !== "Products") return section
+    return {
+      title: "Products",
+      items: [
+        {
+          href: ROUTES.products,
+          label: "Products",
+          icon: "product",
+          children: products.map((product) => ({
+            href: ROUTES.productPage(product.slug),
+            label: product.name,
+            icon: "product" as const,
+          })),
+        },
+      ],
+    }
+  })
+}
 
 function flattenNav(sections: readonly NavSection[]): NavLink[] {
   return sections.flatMap((section) =>

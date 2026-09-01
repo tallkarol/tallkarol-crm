@@ -33,6 +33,7 @@ export async function POST(request: Request) {
   let title = readString(body, "title") ?? ""
   let clientId = readString(body, "clientId")
   let projectId = readString(body, "projectId")
+  let productId = readString(body, "productId")
   let dueOn = readString(body, "dueOn")
   let cadence = (readString(body, "cadence") ?? "none") as Cadence
   let snoozedUntil = readString(body, "snoozedUntil")
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
     title = title || parsed.title
     clientId = clientId ?? parsed.target?.clientId ?? null
     projectId = projectId ?? parsed.target?.projectId ?? null
+    productId = productId ?? parsed.target?.productId ?? null
     dueOn = dueOn ?? parsed.dueOn
     snoozedUntil = snoozedUntil ?? parsed.snoozedUntil
     if (parsed.cadence !== "none") cadence = parsed.cadence
@@ -55,7 +57,7 @@ export async function POST(request: Request) {
     )
   }
 
-  // A project implies its client — the same resolution the composer does.
+  // A project or product implies its client — the same resolution the composer does.
   let retainerId: string | null = null
   if (projectId) {
     const project = await db.query.projects.findFirst({
@@ -66,6 +68,15 @@ export async function POST(request: Request) {
     }
     clientId = project.clientId
     retainerId = project.retainerId
+    productId = null
+  } else if (productId) {
+    const product = await db.query.products.findFirst({
+      where: (p, { eq }) => eq(p.id, productId!),
+    })
+    if (!product) {
+      return NextResponse.json({ error: "That product does not exist." }, { status: 400 })
+    }
+    clientId = product.clientId
   } else if (clientId) {
     const client = await db.query.clients.findFirst({
       where: (c, { eq }) => eq(c.id, clientId!),
@@ -90,6 +101,7 @@ export async function POST(request: Request) {
       userId: caller.userId,
       clientId,
       projectId,
+      productId,
       retainerId,
       dueOn: dueOn && /^\d{4}-\d{2}-\d{2}$/.test(dueOn) ? dueOn : null,
       snoozedUntil:
@@ -111,6 +123,7 @@ export async function POST(request: Request) {
         title,
         clientId,
         projectId,
+        productId,
         dueOn,
         cadence,
         priority,

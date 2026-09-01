@@ -2,6 +2,7 @@ import { and, asc, eq, inArray, ne } from "drizzle-orm"
 import { db } from "@/db"
 import {
   clients,
+  products,
   projects,
   taskCompletions,
   taskItems,
@@ -171,14 +172,15 @@ export async function ensureDefaultViews(userId: string) {
   const wanted: Omit<ViewRow, "id">[] = [...BUILT_IN]
 
   const live = await db.query.clients.findMany({
-    with: { retainers: true, projects: true },
+    with: { retainers: true, projects: true, products: true },
     orderBy: [asc(clients.name)],
   })
   let position = BUILT_IN.length
   for (const client of live) {
     const active =
       client.retainers.some((r) => r.status === "active") ||
-      client.projects.some((p) => p.status !== "complete")
+      client.projects.some((p) => p.status !== "complete") ||
+      client.products.length > 0
     if (!active) continue
     wanted.push({
       name: client.name,
@@ -231,6 +233,7 @@ export async function allTasks(now = new Date()): Promise<HubTask[]> {
     with: {
       client: { columns: { id: true, name: true, slug: true } },
       project: { columns: { id: true, name: true, slug: true } },
+      product: { columns: { id: true, name: true, slug: true } },
       retainer: { columns: { name: true } },
       deliverable: { columns: { label: true } },
       items: { columns: { id: true, done: true } },
@@ -259,6 +262,9 @@ export async function allTasks(now = new Date()): Promise<HubTask[]> {
       projectId: row.projectId,
       projectName: row.project?.name ?? null,
       projectSlug: row.project?.slug ?? null,
+      productId: row.productId,
+      productName: row.product?.name ?? null,
+      productSlug: row.product?.slug ?? null,
       retainerName: row.retainer?.name ?? null,
       deliverableLabel: row.deliverable?.label ?? null,
       items: { total: items.length, done: items.filter((i) => i.done).length },
@@ -287,11 +293,17 @@ export async function listTasks(
 
 /** Open tasks filed against one project or client — the entity-page lists. */
 export async function tasksFor(
-  scope: { projectId?: string; clientId?: string; retainerId?: string },
+  scope: {
+    projectId?: string
+    clientId?: string
+    retainerId?: string
+    productId?: string
+  },
   now = new Date()
 ): Promise<HubTask[]> {
   const rows = await allTasks(now)
   return rows.filter((task) => {
+    if (scope.productId) return task.productId === scope.productId
     if (scope.projectId) return task.projectId === scope.projectId
     if (scope.clientId) return task.clientId === scope.clientId
     return false
@@ -304,13 +316,21 @@ export async function tasksFor(
 
 /** Everything `@` can resolve to: every client, and every open project. */
 export async function taskTargets(): Promise<ParseTarget[]> {
-  const [clientRows, projectRows] = await Promise.all([
+  const [clientRows, projectRows, productRows] = await Promise.all([
     db.query.clients.findMany({ orderBy: [asc(clients.name)] }),
     db
       .select({ id: projects.id, name: projects.name, clientId: projects.clientId })
       .from(projects)
       .where(ne(projects.status, "complete"))
       .orderBy(asc(projects.name)),
+    db
+      .select({
+        id: products.id,
+        name: products.name,
+        clientId: products.clientId,
+      })
+      .from(products)
+      .orderBy(asc(products.sort), asc(products.name)),
   ])
 
   const byId = new Map(clientRows.map((row) => [row.id, row]))
@@ -320,6 +340,8 @@ export async function taskTargets(): Promise<ParseTarget[]> {
     clientSlug: row.slug,
     projectId: null,
     projectName: null,
+    productId: null,
+    productName: null,
   }))
   for (const project of projectRows) {
     const client = byId.get(project.clientId)
@@ -330,6 +352,21 @@ export async function taskTargets(): Promise<ParseTarget[]> {
       clientSlug: client.slug,
       projectId: project.id,
       projectName: project.name,
+      productId: null,
+      productName: null,
+    })
+  }
+  for (const product of productRows) {
+    const client = product.clientId ? byId.get(product.clientId) : null
+    if (product.clientId && !client) continue
+    out.push({
+      clientId: client?.id ?? null,
+      clientName: client?.name ?? null,
+      clientSlug: client?.slug ?? null,
+      projectId: null,
+      projectName: null,
+      productId: product.id,
+      productName: product.name,
     })
   }
   return out

@@ -31,6 +31,7 @@ import {
   LifeBuoy,
   MonitorCheck,
   NotebookText,
+  Package,
   ScrollText,
 } from "lucide-react"
 import type { NavIconName } from "@/lib/nav"
@@ -67,6 +68,7 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   support: LifeBuoy,
   uptime: MonitorCheck,
   notebooks: NotebookText,
+  product: Package,
   settings: Settings,
   team: UserCog,
   "email-settings": Mail,

@@ -26,6 +26,8 @@
     "notion:sync": "tsx scripts/notion.ts sync",
     "notion:webhook-token": "tsx scripts/notion.ts webhook-token",
     "notion:scan": "tsx scripts/notion.ts scan",
+    "tracker:sync": "tsx scripts/tracker-sync.ts",
+    "smartsheet:sync": "tsx scripts/smartsheet-sync.ts",
     "client:domains": "tsx scripts/client.ts",
     "client:suggest": "tsx scripts/client.ts suggest",
     "db:dry-run": "tsx scripts/migrate-dry-run.ts",
@@ -33,6 +35,7 @@
     "icons": "python3 scripts/make-icons.py",
     "check:tasks": "tsx scripts/check-tasks.ts",
     "check:attention": "tsx scripts/check-attention.ts",
+    "check:schedule": "tsx scripts/check-schedule.ts",
     "check:jmap": "tsx scripts/check-jmap.ts",
     "inbox:sync": "tsx scripts/inbox.ts sync",
     "inbox:check": "tsx scripts/inbox.ts check",
@@ -41,7 +44,10 @@
     "wire:rotate": "tsx scripts/wire.ts rotate",
     "wire:revoke": "tsx scripts/wire.ts revoke",
     "wire:monitor": "tsx scripts/wire.ts monitor",
-    "monitors:sweep": "tsx scripts/sweep.ts"
+    "monitors:sweep": "tsx scripts/sweep.ts",
+    "cron:tick": "tsx scripts/tick.ts",
+    "gsc:scan": "tsx --env-file-if-exists=.env.local scripts/gsc-scan.ts",
+    "experiment:seed": "tsx --env-file-if-exists=.env.local scripts/experiment-seed.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

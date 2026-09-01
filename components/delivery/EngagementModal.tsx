@@ -39,8 +39,10 @@ import { WORKSTREAM_STAGES, ordinal } from "@/lib/pipeline"
 /* ------------------------------------------------------------------ menus */
 
 const PROJECT_STATUS_OPTIONS: StatusOption[] = [
+  { value: "not_started", label: PROJECT_STATUS_LABEL.not_started, tone: "flat" },
   { value: "in_progress", label: PROJECT_STATUS_LABEL.in_progress, tone: "progress" },
   { value: "waiting_on_content", label: PROJECT_STATUS_LABEL.waiting_on_content, tone: "waiting" },
+  { value: "on_hold", label: PROJECT_STATUS_LABEL.on_hold, tone: "waiting" },
   { value: "complete", label: PROJECT_STATUS_LABEL.complete, tone: "done" },
 ]
 

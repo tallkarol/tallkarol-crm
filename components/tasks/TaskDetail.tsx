@@ -10,7 +10,7 @@ import {
 import { TaskChecklist } from "@/components/tasks/TaskChecklist"
 import { TaskTargetPicker } from "@/components/tasks/TaskTargetPicker"
 import { db } from "@/db"
-import { clients, deliverables, projects, tasks } from "@/db/schema"
+import { clients, deliverables, products, projects, tasks } from "@/db/schema"
 import { clientColor } from "@/lib/client-colors"
 import { ROUTES } from "@/lib/nav"
 import { completionHistory, taskChecklist } from "@/lib/tasks"
@@ -52,17 +52,25 @@ const SOURCE_NOTE: Record<string, string> = {
 export async function TaskDetailBody({ id }: { id: string }) {
   const task = await db.query.tasks.findFirst({
     where: eq(tasks.id, id),
-    with: { client: true, retainer: true, project: true, deliverable: true },
+    with: { client: true, retainer: true, project: true, product: true, deliverable: true },
   })
   if (!task) return null
 
-  const [clientRows, projectRows, deliverableRows, items, history] =
+  const [clientRows, projectRows, productRows, deliverableRows, items, history] =
     await Promise.all([
       db.query.clients.findMany({ orderBy: [asc(clients.name)] }),
       db
         .select({ id: projects.id, name: projects.name, clientId: projects.clientId })
         .from(projects)
         .orderBy(asc(projects.name)),
+      db
+        .select({
+          id: products.id,
+          name: products.name,
+          clientId: products.clientId,
+        })
+        .from(products)
+        .orderBy(asc(products.sort), asc(products.name)),
       db
         .select({
           id: deliverables.id,
@@ -94,6 +102,13 @@ export async function TaskDetailBody({ id }: { id: string }) {
               color={clientColor(task.client.slug)}
             >
               {task.client.name}
+            </EntityLink>
+          ) : task.product ? (
+            <EntityLink
+              href={ROUTES.productPage(task.product.slug)}
+              color={clientColor(task.product.slug)}
+            >
+              {task.product.name}
             </EntityLink>
           ) : (
             <span className="text-tk-slate/55">No client</span>
@@ -133,9 +148,11 @@ export async function TaskDetailBody({ id }: { id: string }) {
           taskId={task.id}
           clientId={task.clientId}
           projectId={task.projectId}
+          productId={task.productId}
           deliverableId={task.deliverableId}
           clients={clientRows.map((c) => ({ id: c.id, name: c.name, slug: c.slug }))}
           projects={projectRows}
+          products={productRows}
           deliverables={deliverableRows}
         />
         {task.retainer ? (
@@ -271,6 +288,13 @@ export async function TaskDetailBody({ id }: { id: string }) {
             </Fact>
           )}
           <Fact label="Origin">{SOURCE_NOTE[task.source] ?? task.source}</Fact>
+          {task.product ? (
+            <Fact label="Product">
+              <EntityLink href={ROUTES.productPage(task.product.slug)}>
+                {task.product.name}
+              </EntityLink>
+            </Fact>
+          ) : null}
           {task.project ? (
             <Fact label="Project">
               <EntityLink href={ROUTES.project(task.project.slug)}>

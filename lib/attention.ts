@@ -344,6 +344,8 @@ export function projectBand(
   if (project.status === "complete") return "closed"
   if (flags.length > 0) return "needs-you"
   if (project.status === "waiting_on_content") return "waiting"
+  // Parked on purpose. It has not gone quiet on us — someone decided it waits.
+  if (project.status === "on_hold") return "waiting"
   const lastMove = project.workstreams.reduce<Date | null>(
     (latest, w) => (latest == null || w.updatedAt > latest ? w.updatedAt : latest),
     null

@@ -11,9 +11,13 @@ const TABS = [
   { seg: "search", label: "Search" },
   { seg: "traffic", label: "Traffic" },
   { seg: "conversions", label: "Conversions" },
+  { seg: "experiments", label: "Experiments" },
   { seg: "reports", label: "Reports" },
   { seg: "health", label: "Health" },
 ] as const
+
+/** Tabs that show their own fixed windows, so `?range=` means nothing to them. */
+const RANGELESS = new Set<string>(["reports", "health", "experiments"])
 
 export function InsightsTabs({
   slug,
@@ -47,7 +51,7 @@ export function InsightsTabs({
         return (
           <Link
             key={tab.label}
-            href={`${href}${tab.seg === "reports" || tab.seg === "health" ? "" : suffix}`}
+            href={`${href}${RANGELESS.has(tab.seg) ? "" : suffix}`}
             aria-current={active ? "page" : undefined}
             className={cn(
               "-mb-px whitespace-nowrap border-b-2 px-3 pb-2.5 pt-1.5 text-xs font-semibold transition-colors",

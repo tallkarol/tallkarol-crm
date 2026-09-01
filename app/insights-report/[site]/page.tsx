@@ -8,7 +8,7 @@ import { PrintButton } from "@/components/insights/PrintButton"
 import { PrintTrend } from "@/components/insights/PrintTrend"
 import { SearchTable } from "@/components/insights/SearchTable"
 import { getSessionUser } from "@/lib/auth"
-import { fmtDayYear, fmtInt } from "@/lib/insights/derive"
+import { fmtConv, fmtDayYear, fmtInt, fmtMoney } from "@/lib/insights/derive"
 import type { ArchivePayload } from "@/lib/insights/types"
 
 export const metadata = { title: "Snapshot report" }
@@ -80,6 +80,7 @@ export default async function InsightsReportPage({
   )
   const hasGa4 = data.ga4.ok
   const hasGsc = data.gsc.ok
+  const hasAds = Boolean(data.ads?.ok)
   const t = data.totals
   const p = data.previous
 
@@ -143,6 +144,26 @@ export default async function InsightsReportPage({
                     : null
                 }
                 goodWhenUp={false}
+              />
+            </>
+          ) : null}
+          {hasAds ? (
+            <>
+              <Stat
+                label="Ad spend"
+                value={fmtMoney(t.adSpend ?? 0, data.ads?.currency ?? "USD")}
+                change={pct(t.adSpend ?? 0, p?.adSpend)}
+                goodWhenUp={false}
+              />
+              <Stat
+                label="Ad clicks"
+                value={fmtInt(t.adClicks ?? 0)}
+                change={pct(t.adClicks ?? 0, p?.adClicks)}
+              />
+              <Stat
+                label="Ad conversions"
+                value={fmtConv(t.adConversions ?? 0)}
+                change={pct(t.adConversions ?? 0, p?.adConversions)}
               />
             </>
           ) : null}

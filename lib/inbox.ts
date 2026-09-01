@@ -37,6 +37,15 @@ export const KIND_TONE: Record<InboxKind, string> = {
 
 export type InboxItemState = "unread" | "read" | "snoozed" | "archived"
 
+export const INBOX_SEVERITIES = ["info", "warn", "error"] as const
+export type InboxSeverity = (typeof INBOX_SEVERITIES)[number]
+
+export function toSeverity(raw: string): InboxSeverity {
+  return (INBOX_SEVERITIES as readonly string[]).includes(raw)
+    ? (raw as InboxSeverity)
+    : "info"
+}
+
 export type InboxItem = {
   /** `${kind}:${id}` — the triage-state key and the URL selector. */
   key: string
@@ -54,6 +63,13 @@ export type InboxItem = {
   /** Waiting on us specifically, not merely open. */
   needsReply: boolean
   priority: TicketPriority | null
+  /**
+   * How loud the arrival is in itself. Only events carry anything but "info"
+   * today — a monitor's `run.failed` is an error, `run.partial` a warning —
+   * and that is what lets the dashboard file a broken cron under tickets
+   * rather than under the noise.
+   */
+  severity: InboxSeverity
   /** Where "open in full" goes, when there is a fuller surface. */
   href: string | null
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSmartsheetConfig, syncSupportTickets } from "@/lib/smartsheet"
+import { getTrackerConfig, syncTracker } from "@/lib/smartsheet-tracker"
 
 export const dynamic = "force-dynamic"
 
@@ -27,12 +28,23 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Only react to the webhook we registered.
-  const config = await getSmartsheetConfig()
-  if (!config.webhookId || String(body.webhookId ?? "") !== config.webhookId) {
-    return NextResponse.json({ ok: true, ignored: true })
+  // Two sheets call this URL — the support sheet and the marketing tracker.
+  // The webhook id says which one, and anything else is ignored.
+  const webhookId = String(body.webhookId ?? "")
+  const [support, tracker] = await Promise.all([
+    getSmartsheetConfig(),
+    getTrackerConfig(),
+  ])
+
+  if (support.webhookId && webhookId === support.webhookId) {
+    const result = await syncSupportTickets()
+    return NextResponse.json({ ok: result.ok, sheet: "support", synced: result.synced })
   }
 
-  const result = await syncSupportTickets()
-  return NextResponse.json({ ok: result.ok, synced: result.synced })
+  if (tracker.webhookId && webhookId === tracker.webhookId) {
+    const result = await syncTracker()
+    return NextResponse.json({ ok: result.ok, sheet: "tracker", synced: result.synced })
+  }
+
+  return NextResponse.json({ ok: true, ignored: true })
 }

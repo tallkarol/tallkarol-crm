@@ -134,6 +134,9 @@ export type HubTask = {
   projectId: string | null
   projectName: string | null
   projectSlug: string | null
+  productId: string | null
+  productName: string | null
+  productSlug: string | null
   retainerName: string | null
   deliverableLabel: string | null
   items: { total: number; done: number }
@@ -198,7 +201,13 @@ export function taskMatches(
 
   if (q.trim()) {
     const needle = q.trim().toLowerCase()
-    const hay = [task.title, task.notes, task.clientName ?? "", task.projectName ?? ""]
+    const hay = [
+      task.title,
+      task.notes,
+      task.clientName ?? "",
+      task.projectName ?? "",
+      task.productName ?? "",
+    ]
       .join(" ")
       .toLowerCase()
     if (!hay.includes(needle)) return false
@@ -320,7 +329,9 @@ export function groupKey(task: HubTask, grouping: string, today: string): string
 }
 
 export function groupTitle(key: string, grouping: string, task: HubTask): string {
-  if (grouping === "client") return task.clientName ?? "No client"
+  if (grouping === "client") {
+    return task.clientName ?? task.productName ?? "No client"
+  }
   if (grouping === "project") return task.projectName ?? "No project"
   if (grouping === "priority") return PRIORITY_LABEL[task.priority] ?? "Normal"
   if (grouping === "stage") {
@@ -358,7 +369,10 @@ export function layoutRows(
       return {
         key,
         title: groupTitle(key, grouping, rows[0]),
-        color: grouping === "client" ? rows[0].clientSlug : null,
+        color:
+          grouping === "client"
+            ? rows[0].clientSlug ?? rows[0].productSlug
+            : null,
         rows: rows.map((task, i) => ({
           ...task,
           band: (index % 2) as 0 | 1,

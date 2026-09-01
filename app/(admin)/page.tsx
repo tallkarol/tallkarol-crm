@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { Forecast } from "@/components/dashboard/Forecast"
 import { MonthBilled } from "@/components/dashboard/MonthBilled"
 import { NeedsAttention } from "@/components/dashboard/NeedsAttention"
+import { Unread } from "@/components/dashboard/Unread"
 import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings"
 import { YearBilled } from "@/components/dashboard/YearBilled"
 import { PeekRouter, peekHref } from "@/components/peek/PeekRouter"
@@ -17,6 +18,7 @@ import { ROUTES } from "@/lib/nav"
 import { getSessionUser } from "@/lib/auth"
 import { greetingFor } from "@/lib/greeting"
 import { ensureRenewalTasks } from "@/lib/renewals"
+import { loadUnread } from "@/lib/unread-data"
 import { reopenDueRecurring, waitingTooLong } from "@/lib/tasks"
 import { formatDay, formatMoney } from "@/lib/work"
 
@@ -58,7 +60,7 @@ export default async function DashboardPage({
   await reopenDueRecurring()
   const stalled = await waitingTooLong()
   const sessionUser = await getSessionUser()
-  const [invoices, openTasks, retainers, projects, timeEntries, meetings] =
+  const [invoices, openTasks, retainers, projects, timeEntries, meetings, unread] =
     await Promise.all([
       db.query.invoices.findMany({ with: { client: true } }),
       db.query.tasks.findMany({ with: { client: true } }).then((rows) =>
@@ -68,6 +70,8 @@ export default async function DashboardPage({
       db.query.projects.findMany({ with: { client: true, deliverables: true } }),
       db.query.timeEntries.findMany({ with: { client: true } }),
       getUpcomingMeetings(),
+      // Cached per request — the shell already loaded this for the badges.
+      loadUnread(),
     ])
 
   const goals = await getGoals()
@@ -221,10 +225,16 @@ export default async function DashboardPage({
       return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
     })
 
-  // Dated tasks first (overdue at the top), undated after.
+  // A manual dashboard order wins once one exists. New/unranked tasks sit
+  // after it and retain the useful due-date ordering until the next drag.
   const actionTasks = openTasks
     .filter((t) => t.cadence === "none")
     .sort((a, b) => {
+      if (a.sort !== b.sort && (a.sort > 0 || b.sort > 0)) {
+        if (a.sort <= 0) return 1
+        if (b.sort <= 0) return -1
+        return a.sort - b.sort
+      }
       if (a.dueOn && b.dueOn) return a.dueOn < b.dueOn ? -1 : 1
       if (a.dueOn) return -1
       if (b.dueOn) return 1
@@ -258,7 +268,11 @@ export default async function DashboardPage({
         <PeekRouter peek={searchParams.peek} closeHref="/" />
       ) : null}
 
-      <div className="mt-8 grid min-w-0 gap-3 xl:grid-cols-[1fr_3fr]">
+      <div className="mt-5 min-w-0 md:mt-8">
+        <Unread summary={unread} />
+      </div>
+
+      <div className="mt-3 grid min-w-0 gap-3 xl:grid-cols-[1fr_3fr]">
         <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
           <MonthBilled
             monthLabel={now.toLocaleDateString("en-US", { month: "long" })}
@@ -273,15 +287,17 @@ export default async function DashboardPage({
             expected={monthExpectedLines}
             expectedTotalCents={billedCents + currentRemainderCents}
           />
-          <YearBilled
-            year={yearKey}
-            ytdCents={ytdCents}
-            annualGoalCents={annualGoalCents}
-            months={yearMonths}
-            forecastMonths={forecastMonths}
-            expectedTotalCents={expectedTotalCents}
-          />
-          <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
+          <div className="hidden md:block">
+            <YearBilled
+              year={yearKey}
+              ytdCents={ytdCents}
+              annualGoalCents={annualGoalCents}
+              months={yearMonths}
+              forecastMonths={forecastMonths}
+              expectedTotalCents={expectedTotalCents}
+            />
+          </div>
+          <div className="hidden rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm md:block">
             <p className="text-xs font-semibold uppercase tracking-wider text-tk-slate/70">
               Retainer load{loadMonth ? ` · ${loadMonth}` : ""}
             </p>
@@ -311,7 +327,9 @@ export default async function DashboardPage({
               )}
             </div>
           </div>
-          <Forecast months={forecast.months} />
+          <div className="hidden md:block">
+            <Forecast months={forecast.months} />
+          </div>
         </div>
 
         <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
@@ -365,6 +383,8 @@ export default async function DashboardPage({
               {
                 id: "tasks",
                 label: "Tasks",
+                reorderable: true,
+                completable: true,
                 items: actionTasks.map((t) => {
                   const diff = taskDue(t.dueOn)
                   return {

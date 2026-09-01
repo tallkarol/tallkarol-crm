@@ -69,8 +69,10 @@ export async function ProjectPeek({ slug }: { slug: string }) {
                 current={project.status}
                 action={setProjectStatusAction.bind(null, project.id) as (v: string) => Promise<{ ok: boolean; error?: string }>}
                 options={[
+                  { value: "not_started", label: "Not started", tone: "neutral" },
                   { value: "waiting_on_content", label: "Waiting", tone: "neutral" },
                   { value: "in_progress", label: "In progress" },
+                  { value: "on_hold", label: "On hold", tone: "neutral" },
                   { value: "complete", label: "Complete" },
                 ]}
               />

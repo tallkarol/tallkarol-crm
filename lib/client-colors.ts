@@ -9,6 +9,11 @@ export const CLIENT_COLORS: Record<string, string> = {
   "caps-fieldhouse": "#155E75",
   "bliss-cb": "#6B7A2E",
   "total-soccer-academy": "#9B3D6E",
+  sondry: "#1F3A4D",
+  spectramotus: "#5B3A8C",
+  momentum: "#C45C26",
+  jive: "#0E7A6B",
+  daedalus: "#3E4A7A",
 }
 
 /* Chart-only palette — re-stepped from the UI set and validated for

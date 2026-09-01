@@ -7,10 +7,14 @@ import {
   contracts,
   deliverables,
   invoices,
+  productStudios,
+  products,
   projects,
   retainers,
+  taskItems,
   tasks,
   timeEntries,
+  workstreams,
 } from "./schema"
 import { ARTIST_HOUSE_TERMS } from "./agreements/artist-house"
 import { DQS_TERMS } from "./agreements/dqs"
@@ -70,6 +74,13 @@ async function main() {
         slug: "bliss-cb",
         notes: "Ended. Paid through Detroit Quality.",
       },
+      {
+        id: IDS.clients.sondry,
+        name: "Sondry",
+        slug: "sondry",
+        notes:
+          "Side-project digital product studio with a partner. Not a billed client — notions, mail, and the products live here. Spectramotus, Momentum, Jive. Practice for the product-development work that follows a build.",
+      },
     ])
     .onConflictDoUpdate({
       target: clients.id,
@@ -101,6 +112,8 @@ async function main() {
         slug: "mineralife",
         hoursPerMonth: 30,
         status: "active",
+        notes:
+          "September: titles & descriptions (SERP CTR on ~29k non-brand impressions) and a blog pipeline — 12–15 posts queued by month-end, then one a week through year-end.",
       },
       {
         id: IDS.retainers.zemvelo,
@@ -193,6 +206,46 @@ async function main() {
         notes:
           "Scoped and agreed. ACF-driven event system integrated across the site. ~4–5 hr backend, ~2 hr front end. Cap at $400. Not started. Bill on Invoice 002 with remaining website hours.",
       },
+      {
+        id: IDS.projects.mineralifeTitles,
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        name: "Titles and descriptions",
+        slug: "mineralife-titles-descriptions",
+        status: "in_progress",
+        feeStatus: "agreed",
+        links: [
+          { label: "Live", url: "https://www.mycustommanufacturer.com" },
+          {
+            label: "Insights",
+            url: "https://crm.tallkarol.com/insights/mycustommanufacturer",
+          },
+        ],
+        notes:
+          "August SEM: impressions +11%, position 3.2 better, clicks −16.6%. The pages are found and climbing; the listing is not winning the click. 60 of 68 attributed clicks were brand-name searches (27% CTR). Everything else: 1,108 terms, 28,964 impressions, 0.03% CTR. Core terms shown hundreds of times at positions 3–12 with zero clicks — supplement manufacturer, custom supplement manufacturer, nutraceutical manufacturing. Audit every title and description against GSC, Ads, the site, and the SEM report, then rewrite the ones that can move the number. Billed to the September retainer.",
+      },
+      {
+        id: IDS.projects.mineralifeBlog,
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        name: "Blog pipeline",
+        slug: "mineralife-blog-pipeline",
+        status: "in_progress",
+        feeStatus: "agreed",
+        links: [
+          { label: "Blog", url: "https://www.mycustommanufacturer.com/blog" },
+          {
+            label: "Insights",
+            url: "https://crm.tallkarol.com/insights/mycustommanufacturer",
+          },
+          {
+            label: "Blog Generation (tracker row 16)",
+            url: "https://app.smartsheet.com/sheets/x6rcQmmq72pmRxjRFx5vVw5j5x8PGhrvVVvrChV1?rowId=7205046678912900",
+          },
+        ],
+        notes:
+          "Organic is the long game. Paid can be judged in weeks; this cannot. Stand up a pipeline that can take a batch of posts and schedule them on a clock — then fill it with 12 posts by 30 September (15 if the writing holds), so one a week is already queued through year-end. Each publish gets agentic follow-up: index the URL, check it appeared, fix the ones Google skips (the hiring post with the emoji slug and glutathione are already in that state). Read the plan after 3–6 months, not next week. Billed to the September retainer.\n\nThe queue does not start empty. Blog Generation is row 16 of the marketing tracker — Rebecca's, assigned to BG at 1–3 blogs a week, in progress, due 30 September. Its note reads: \"3 blogs attached 07/01/26 / 3 blogs attached 07/09/26 / - need uploaded to B2B site\". So six posts are already written and sitting on that row waiting to go up. Count them against the 12 before commissioning anything new, and check the row for more before each batch — it is the upstream feed for this pipeline. It stays out of the CRM's synced projects because the sync only claims rows assigned to me.",
+      },
     ])
     .onConflictDoUpdate({
       target: projects.id,
@@ -200,7 +253,106 @@ async function main() {
         status: sql`excluded.status`,
         feeStatus: sql`excluded.fee_status`,
         notes: sql`excluded.notes`,
+        links: sql`excluded.links`,
         retainerId: sql`excluded.retainer_id`,
+        updatedAt: new Date(),
+      },
+    })
+
+  await db
+    .insert(productStudios)
+    .values([
+      {
+        id: IDS.studios.sondry,
+        name: "Sondry",
+        slug: "sondry",
+        kind: "studio",
+        clientId: IDS.clients.sondry,
+        sort: 1,
+        notes:
+          "Side-project digital product studio with a partner. Dabble, don't dominate the week.",
+      },
+      {
+        id: IDS.studios.tallkarol,
+        name: "Tall Karol",
+        slug: "tall-karol",
+        kind: "solo",
+        sort: 2,
+        notes: "Your own products. Built as Tall Karol.",
+      },
+    ])
+    .onConflictDoUpdate({
+      target: productStudios.id,
+      set: {
+        name: sql`excluded.name`,
+        slug: sql`excluded.slug`,
+        kind: sql`excluded.kind`,
+        clientId: sql`excluded.client_id`,
+        notes: sql`excluded.notes`,
+        sort: sql`excluded.sort`,
+        updatedAt: new Date(),
+      },
+    })
+
+  await db
+    .insert(products)
+    .values([
+      {
+        id: IDS.products.spectramotus,
+        studioId: IDS.studios.sondry,
+        clientId: IDS.clients.sondry,
+        name: "Spectramotus",
+        slug: "spectramotus",
+        tagline: "Sondry product.",
+        status: "building",
+        sort: 1,
+        notes: "Sondry. First up: a full digital product page presentation.",
+      },
+      {
+        id: IDS.products.momentum,
+        studioId: IDS.studios.sondry,
+        clientId: IDS.clients.sondry,
+        name: "Momentum",
+        slug: "momentum",
+        tagline: "Sondry product.",
+        status: "building",
+        sort: 2,
+        notes: "Sondry. Building.",
+      },
+      {
+        id: IDS.products.jive,
+        studioId: IDS.studios.sondry,
+        clientId: IDS.clients.sondry,
+        name: "Jive",
+        slug: "jive",
+        tagline: "Sondry product.",
+        status: "building",
+        sort: 3,
+        notes: "Sondry. First up: a full digital product page presentation.",
+      },
+      {
+        id: IDS.products.daedalus,
+        studioId: IDS.studios.tallkarol,
+        clientId: null,
+        name: "Daedalus",
+        slug: "daedalus",
+        tagline: "",
+        status: "building",
+        sort: 1,
+        notes:
+          "Insights, hive-mind, client packs — the product-development line.",
+      },
+    ])
+    .onConflictDoUpdate({
+      target: products.id,
+      set: {
+        name: sql`excluded.name`,
+        tagline: sql`excluded.tagline`,
+        status: sql`excluded.status`,
+        notes: sql`excluded.notes`,
+        sort: sql`excluded.sort`,
+        studioId: sql`excluded.studio_id`,
+        clientId: sql`excluded.client_id`,
         updatedAt: new Date(),
       },
     })
@@ -264,18 +416,146 @@ async function main() {
         status: "pending",
         sort: 1,
       },
+      {
+        id: IDS.deliverables.mineralifeTitlesInventory,
+        projectId: IDS.projects.mineralifeTitles,
+        label: "Inventory",
+        title: "Current titles and descriptions vs all query and page data",
+        status: "pending",
+        sort: 1,
+        dueOn: "2026-09-12",
+      },
+      {
+        id: IDS.deliverables.mineralifeTitlesRewrite,
+        projectId: IDS.projects.mineralifeTitles,
+        label: "Rewrites",
+        title: "Titles and descriptions for high-impression, low-CTR pages",
+        status: "pending",
+        sort: 2,
+        dueOn: "2026-09-26",
+      },
+      {
+        id: IDS.deliverables.mineralifeTitlesShip,
+        projectId: IDS.projects.mineralifeTitles,
+        label: "Ship",
+        title: "Published, confirmed in the SERP, August baseline recorded",
+        status: "pending",
+        sort: 3,
+        dueOn: "2026-09-30",
+      },
+      {
+        id: IDS.deliverables.mineralifeBlogPipeline,
+        projectId: IDS.projects.mineralifeBlog,
+        label: "Pipeline",
+        title: "CMS can take a batch and schedule consistent publish dates",
+        status: "pending",
+        sort: 1,
+        dueOn: "2026-09-12",
+      },
+      {
+        id: IDS.deliverables.mineralifeBlogQueue,
+        projectId: IDS.projects.mineralifeBlog,
+        label: "Queue",
+        title: "12 posts in by 30 September — 15 if the writing holds",
+        status: "pending",
+        sort: 2,
+        dueOn: "2026-09-30",
+      },
+      {
+        id: IDS.deliverables.mineralifeBlogCadence,
+        projectId: IDS.projects.mineralifeBlog,
+        label: "Cadence",
+        title: "Weekly publish through year-end, with index and follow-up on each",
+        status: "pending",
+        sort: 3,
+        dueOn: "2026-10-05",
+      },
+      {
+        id: IDS.deliverables.mineralifeBlogReview,
+        projectId: IDS.projects.mineralifeBlog,
+        label: "Review",
+        title: "Read the plan after 3–6 months of weekly publishing",
+        status: "pending",
+        sort: 4,
+        dueOn: "2027-01-31",
+      },
     ])
     .onConflictDoUpdate({
       target: deliverables.id,
       set: {
         status: sql`excluded.status`,
         title: sql`excluded.title`,
+        dueOn: sql`excluded.due_on`,
       },
     })
 
   await db
     .delete(deliverables)
     .where(inArray(deliverables.id, [IDS.deliverables.ah3, IDS.deliverables.dqs3]))
+
+  await db
+    .insert(workstreams)
+    .values([
+      {
+        id: IDS.workstreams.mineralifeTitlesAudit,
+        projectId: IDS.projects.mineralifeTitles,
+        title: "Audit against the data",
+        stage: "building",
+        sort: 1,
+        notes:
+          "GSC, current titles/descriptions, SEM report, Ads keywords — one working set.",
+      },
+      {
+        id: IDS.workstreams.mineralifeTitlesRewrite,
+        projectId: IDS.projects.mineralifeTitles,
+        title: "Rewrite titles and descriptions",
+        stage: "building",
+        sort: 2,
+        notes:
+          "Win the click at positions 8–12. Core terms first. Stay in Mineralife's own language.",
+      },
+      {
+        id: IDS.workstreams.mineralifeTitlesShip,
+        projectId: IDS.projects.mineralifeTitles,
+        title: "Ship and confirm in the SERP",
+        stage: "building",
+        sort: 3,
+        notes: "Publish, confirm render, snapshot the August baseline.",
+      },
+      {
+        id: IDS.workstreams.mineralifeBlogPipeline,
+        projectId: IDS.projects.mineralifeBlog,
+        title: "Stand up the pipeline",
+        stage: "building",
+        sort: 1,
+        notes: "Upload a batch, set dates, publish on a clock.",
+      },
+      {
+        id: IDS.workstreams.mineralifeBlogQueue,
+        projectId: IDS.projects.mineralifeBlog,
+        title: "Fill the queue",
+        stage: "building",
+        sort: 2,
+        notes: "12 by 30 September, 15 if the writing holds.",
+      },
+      {
+        id: IDS.workstreams.mineralifeBlogPlaybook,
+        projectId: IDS.projects.mineralifeBlog,
+        title: "Publish-week playbook",
+        stage: "building",
+        sort: 3,
+        notes: "Index, confirm crawl, follow up the ones Google skips.",
+      },
+    ])
+    .onConflictDoUpdate({
+      target: workstreams.id,
+      set: {
+        title: sql`excluded.title`,
+        notes: sql`excluded.notes`,
+        sort: sql`excluded.sort`,
+        updatedAt: new Date(),
+      },
+    })
 
   await db
     .insert(tasks)
@@ -363,6 +643,140 @@ async function main() {
         notes:
           "Find .local links on UWD preprod and update just those to the preprod address — content bundle or otherwise.",
       },
+      {
+        id: IDS.tasks.spectramotusPresentation,
+        title: "Build a full digital product page presentation",
+        clientId: IDS.clients.sondry,
+        productId: IDS.products.spectramotus,
+        cadence: "none",
+        status: "open",
+        priority: 1,
+        notes:
+          "Full presentation page for Spectramotus — the product, not a client site.",
+      },
+      {
+        id: IDS.tasks.jivePresentation,
+        title: "Build a full digital product page presentation",
+        clientId: IDS.clients.sondry,
+        productId: IDS.products.jive,
+        cadence: "none",
+        status: "open",
+        priority: 1,
+        notes:
+          "Full presentation page for Jive — the product, not a client site.",
+      },
+      {
+        id: IDS.tasks.mineralifeTitlesData,
+        title: "Pull titles, descriptions, and query data into one working set",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        projectId: IDS.projects.mineralifeTitles,
+        deliverableId: IDS.deliverables.mineralifeTitlesInventory,
+        cadence: "none",
+        status: "open",
+        priority: 1,
+        dueOn: "2026-09-12",
+        notes:
+          "August SEM: 32,878 impressions, 131 clicks, 0.40% CTR, avg position 12.9. Brand-name searches: 60 clicks / 219 impressions (27% CTR). Everything else: 8 clicks / 28,964 impressions (0.03% CTR). Use GSC, the live site, Ads keyword research, and the August SEM report.",
+      },
+      {
+        id: IDS.tasks.mineralifeTitlesRewrite,
+        title: "Rewrite titles and descriptions so the listing wins the click",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        projectId: IDS.projects.mineralifeTitles,
+        deliverableId: IDS.deliverables.mineralifeTitlesRewrite,
+        cadence: "none",
+        status: "open",
+        priority: 1,
+        dueOn: "2026-09-26",
+        notes:
+          "Not a ranking problem — pages are found and climbing. A listing at position nine is competing with eight results above it. Fractional CTR lift on ~29k non-brand impressions is worth more than most other work available.",
+      },
+      {
+        id: IDS.tasks.mineralifeTitlesShip,
+        title: "Ship the title and description rewrites",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        projectId: IDS.projects.mineralifeTitles,
+        deliverableId: IDS.deliverables.mineralifeTitlesShip,
+        cadence: "none",
+        status: "open",
+        priority: 1,
+        dueOn: "2026-09-30",
+        notes:
+          "Publish, confirm they render, snapshot impressions / CTR / position so October can be compared to August.",
+      },
+      {
+        id: IDS.tasks.mineralifeBlogPipeline,
+        title: "Stand up the blog pipeline — upload a batch and schedule it",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        projectId: IDS.projects.mineralifeBlog,
+        deliverableId: IDS.deliverables.mineralifeBlogPipeline,
+        cadence: "none",
+        status: "open",
+        priority: 1,
+        dueOn: "2026-09-12",
+        notes:
+          "One place to drop a batch of posts and set publish dates so the rest of the year is already on a clock.",
+      },
+      {
+        id: IDS.tasks.mineralifeBlogQueue,
+        title: "Get 12–15 posts written and queued by 30 September",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        projectId: IDS.projects.mineralifeBlog,
+        deliverableId: IDS.deliverables.mineralifeBlogQueue,
+        cadence: "none",
+        status: "open",
+        priority: 1,
+        dueOn: "2026-09-30",
+        notes:
+          "12 is the floor — one a week through year-end. 15 is the target, so a week can slip without going dark. Topics from real demand, not brand-name posts.",
+      },
+      {
+        id: IDS.tasks.mineralifeBlogPlaybook,
+        title: "Write the publish-week playbook (index and follow up)",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        projectId: IDS.projects.mineralifeBlog,
+        deliverableId: IDS.deliverables.mineralifeBlogCadence,
+        cadence: "none",
+        status: "open",
+        priority: 1,
+        dueOn: "2026-09-26",
+        notes:
+          "Agentic support around each publish: request indexing, confirm crawl, follow up the ones Google skips. August already flagged two blog URLs — emoji hiring slug and glutathione never crawled.",
+      },
+      {
+        id: IDS.tasks.mineralifeBlogWeekly,
+        title: "Publish this week's post and get it indexed",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        projectId: IDS.projects.mineralifeBlog,
+        deliverableId: IDS.deliverables.mineralifeBlogCadence,
+        cadence: "weekly",
+        status: "open",
+        priority: 2,
+        snoozedUntil: "2026-10-05",
+        notes:
+          "Hidden until the first October publish week. Repeats weekly through year-end. Tick the checklist each week; the row reopens next period.",
+      },
+      {
+        id: IDS.tasks.mineralifeBlogReview,
+        title: "Read the blog plan after 3–6 months of weekly publishing",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        projectId: IDS.projects.mineralifeBlog,
+        deliverableId: IDS.deliverables.mineralifeBlogReview,
+        cadence: "none",
+        status: "open",
+        priority: 2,
+        dueOn: "2027-01-31",
+        notes:
+          "First read at the end of January (Oct–Dec published). A fuller read in March if three months is too thin. Compare to the August SEM baseline — impressions, clicks, CTR, index coverage, which posts earned non-brand clicks.",
+      },
     ])
     .onConflictDoUpdate({
       target: tasks.id,
@@ -371,7 +785,225 @@ async function main() {
         status: sql`excluded.status`,
         notes: sql`excluded.notes`,
         dueOn: sql`excluded.due_on`,
+        snoozedUntil: sql`excluded.snoozed_until`,
+        clientId: sql`excluded.client_id`,
+        projectId: sql`excluded.project_id`,
+        retainerId: sql`excluded.retainer_id`,
+        deliverableId: sql`excluded.deliverable_id`,
+        productId: sql`excluded.product_id`,
+        priority: sql`excluded.priority`,
+        cadence: sql`excluded.cadence`,
         updatedAt: new Date(),
+      },
+    })
+
+  await db
+    .insert(taskItems)
+    .values([
+      {
+        id: IDS.taskItems.titlesDataGsc,
+        taskId: IDS.tasks.mineralifeTitlesData,
+        title: "Export GSC queries and pages for the last 28 days — impressions, clicks, CTR, position",
+        sort: 1,
+      },
+      {
+        id: IDS.taskItems.titlesDataInventory,
+        taskId: IDS.tasks.mineralifeTitlesData,
+        title: "Inventory current titles and meta descriptions on every indexed URL",
+        sort: 2,
+      },
+      {
+        id: IDS.taskItems.titlesDataSem,
+        taskId: IDS.tasks.mineralifeTitlesData,
+        title: "Overlay the August SEM high-impression / zero-click terms",
+        sort: 3,
+      },
+      {
+        id: IDS.taskItems.titlesDataAds,
+        taskId: IDS.tasks.mineralifeTitlesData,
+        title: "Include Ads keyword research so organic copy does not fight paid positioning",
+        sort: 4,
+      },
+      {
+        id: IDS.taskItems.titlesDataNearPageOne,
+        taskId: IDS.tasks.mineralifeTitlesData,
+        title: "Flag near-page-one terms — custom supplement manufacturer 8.7, nutraceutical 3.1, probiotic manufacturer 4.6",
+        sort: 5,
+      },
+      {
+        id: IDS.taskItems.titlesRewriteCore,
+        taskId: IDS.tasks.mineralifeTitlesRewrite,
+        title: "Prioritize supplement manufacturer / manufacturers / nutraceutical manufacturing / custom supplement manufacturer",
+        sort: 1,
+      },
+      {
+        id: IDS.taskItems.titlesRewriteNutraceutical,
+        taskId: IDS.tasks.mineralifeTitlesRewrite,
+        title: "Recast or skip nutraceutical — ranks well; people looking up a word",
+        sort: 2,
+      },
+      {
+        id: IDS.taskItems.titlesRewriteProbiotic,
+        taskId: IDS.tasks.mineralifeTitlesRewrite,
+        title: "Do not chase probiotic manufacturer — a category the FAQ declines",
+        sort: 3,
+      },
+      {
+        id: IDS.taskItems.titlesRewriteVoice,
+        taskId: IDS.tasks.mineralifeTitlesRewrite,
+        title: "Stay in Mineralife's own language — no private-label wording in organic",
+        sort: 4,
+      },
+      {
+        id: IDS.taskItems.titlesRewriteDrafts,
+        taskId: IDS.tasks.mineralifeTitlesRewrite,
+        title: "Draft titles and descriptions that can win the click at positions 8–12",
+        sort: 5,
+      },
+      {
+        id: IDS.taskItems.titlesShipPublish,
+        taskId: IDS.tasks.mineralifeTitlesShip,
+        title: "Publish the rewritten titles and descriptions",
+        sort: 1,
+      },
+      {
+        id: IDS.taskItems.titlesShipSerp,
+        taskId: IDS.tasks.mineralifeTitlesShip,
+        title: "Confirm they render on the live page and in the SERP",
+        sort: 2,
+      },
+      {
+        id: IDS.taskItems.titlesShipBaseline,
+        taskId: IDS.tasks.mineralifeTitlesShip,
+        title: "Snapshot impressions / CTR / position so October can be compared to August",
+        sort: 3,
+      },
+      {
+        id: IDS.taskItems.blogPipeCms,
+        taskId: IDS.tasks.mineralifeBlogPipeline,
+        title: "Confirm how posts are created, scheduled, and made live on mycustommanufacturer.com",
+        sort: 1,
+      },
+      {
+        id: IDS.taskItems.blogPipeBatch,
+        taskId: IDS.tasks.mineralifeBlogPipeline,
+        title: "One drop-point for a batch of posts with set publish dates",
+        sort: 2,
+      },
+      {
+        id: IDS.taskItems.blogPipeCalendar,
+        taskId: IDS.tasks.mineralifeBlogPipeline,
+        title: "Calendar: one a week October–December (13 weeks) — 12 floor, 15 for slip",
+        sort: 3,
+      },
+      {
+        id: IDS.taskItems.blogPipeBroken,
+        taskId: IDS.tasks.mineralifeBlogPipeline,
+        title: "Fix the two broken blog URLs — emoji hiring slug; glutathione never crawled",
+        sort: 4,
+      },
+      {
+        id: IDS.taskItems.blogQueueTopics,
+        taskId: IDS.tasks.mineralifeBlogQueue,
+        title: "Topics from real demand (GSC + keyword research), not brand-name posts",
+        sort: 1,
+      },
+      {
+        id: IDS.taskItems.blogQueueVoice,
+        taskId: IDS.tasks.mineralifeBlogQueue,
+        title: "No private-label language; FAQ-declined categories stay declined",
+        sort: 2,
+      },
+      {
+        id: IDS.taskItems.blogQueueReady,
+        taskId: IDS.tasks.mineralifeBlogQueue,
+        title: "Each post has a title, description, slug, and date before it enters the queue",
+        sort: 3,
+      },
+      {
+        id: IDS.taskItems.blogQueueCount,
+        taskId: IDS.tasks.mineralifeBlogQueue,
+        title: "12 in the queue is the floor; 15 is the target",
+        sort: 4,
+      },
+      {
+        id: IDS.taskItems.blogPlayIndex,
+        taskId: IDS.tasks.mineralifeBlogPlaybook,
+        title: "Submit each new URL to Search Console / request indexing",
+        sort: 1,
+      },
+      {
+        id: IDS.taskItems.blogPlayCrawl,
+        taskId: IDS.tasks.mineralifeBlogPlaybook,
+        title: "Confirm it is in the sitemap and that Google crawls it",
+        sort: 2,
+      },
+      {
+        id: IDS.taskItems.blogPlayFollowup,
+        taskId: IDS.tasks.mineralifeBlogPlaybook,
+        title: "Follow up Discovered / not indexed the way August already flagged two posts",
+        sort: 3,
+      },
+      {
+        id: IDS.taskItems.blogPlayLinks,
+        taskId: IDS.tasks.mineralifeBlogPlaybook,
+        title: "Light internal links from pages Google already visits",
+        sort: 4,
+      },
+      {
+        id: IDS.taskItems.blogWeeklyPublish,
+        taskId: IDS.tasks.mineralifeBlogWeekly,
+        title: "Publish the scheduled post",
+        sort: 1,
+      },
+      {
+        id: IDS.taskItems.blogWeeklyIndex,
+        taskId: IDS.tasks.mineralifeBlogWeekly,
+        title: "Request indexing",
+        sort: 2,
+      },
+      {
+        id: IDS.taskItems.blogWeeklyCrawl,
+        taskId: IDS.tasks.mineralifeBlogWeekly,
+        title: "Confirm Google crawled it",
+        sort: 3,
+      },
+      {
+        id: IDS.taskItems.blogWeeklyNote,
+        taskId: IDS.tasks.mineralifeBlogWeekly,
+        title: "Note anything skipped and follow it up",
+        sort: 4,
+      },
+      {
+        id: IDS.taskItems.blogReviewMetrics,
+        taskId: IDS.tasks.mineralifeBlogReview,
+        title: "Impressions, clicks, CTR, and index coverage vs the August baseline",
+        sort: 1,
+      },
+      {
+        id: IDS.taskItems.blogReviewPosts,
+        taskId: IDS.tasks.mineralifeBlogReview,
+        title: "Which posts earned non-brand clicks",
+        sort: 2,
+      },
+      {
+        id: IDS.taskItems.blogReviewCadence,
+        taskId: IDS.tasks.mineralifeBlogReview,
+        title: "Whether the weekly cadence held",
+        sort: 3,
+      },
+      {
+        id: IDS.taskItems.blogReviewRefill,
+        taskId: IDS.tasks.mineralifeBlogReview,
+        title: "Decide whether to refill the 2027 queue",
+        sort: 4,
+      },
+    ])
+    .onConflictDoUpdate({
+      target: taskItems.id,
+      set: {
+        title: sql`excluded.title`,
+        sort: sql`excluded.sort`,
       },
     })
 
@@ -397,12 +1029,12 @@ async function main() {
         clientId: IDS.clients.gdi,
         retainerId: IDS.retainers.gdi,
         issuedOn: "2026-08-31",
-        amountCents: 421500,
-        hours: "70.25",
+        amountCents: 426900,
+        hours: "71.15",
         status: "sent",
         billTo: "GDI",
         description: "August 2026 hours",
-        notes: "1099. 70.25 hr at $60/hr. UWD migration, punchlist.",
+        notes: "1099. 71.15 hr at $60/hr. UWD migration, punchlist.",
       },
       {
         id: IDS.invoices.ah001,

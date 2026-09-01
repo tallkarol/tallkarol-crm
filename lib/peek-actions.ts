@@ -16,6 +16,7 @@ import {
 } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { ROUTES } from "@/lib/nav"
+import { writeTrackerRowBack } from "@/lib/smartsheet-tracker"
 
 /**
  * Mutations behind the dashboard peek cards. Every card action lands here:
@@ -88,8 +89,10 @@ export async function setDeliverableStatusAction(
 }
 
 const PROJECT_STATUSES: ProjectStatus[] = [
+  "not_started",
   "waiting_on_content",
   "in_progress",
+  "on_hold",
   "complete",
 ]
 const FEE_STATUSES: FeeStatus[] = ["agreed", "deposit_paid", "paid"]
@@ -102,11 +105,20 @@ export async function setProjectStatusAction(id: string, status: ProjectStatus) 
   }
   const [row] = await db
     .update(projects)
-    .set({ status, updatedAt: new Date() })
+    .set({
+      status,
+      completedAt: status === "complete" ? new Date() : null,
+      updatedAt: new Date(),
+    })
     .where(eq(projects.id, id))
     .returning()
   if (!row) return { ok: false as const, error: "Project not found." }
+  // No-ops for projects typed here, and for tracker rows while write-back is off.
+  const sheet = await writeTrackerRowBack(id)
   touch([ROUTES.home, ROUTES.delivery, ROUTES.projects, ROUTES.project(row.slug)])
+  if (!sheet.ok) {
+    return { ok: false as const, error: `Saved here — Smartsheet write failed: ${sheet.error}` }
+  }
   return { ok: true as const }
 }
 

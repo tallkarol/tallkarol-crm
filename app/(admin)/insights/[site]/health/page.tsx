@@ -3,8 +3,10 @@ import { Badge } from "@/components/work/Badge"
 import { Card } from "@/components/insights/Card"
 import { RefreshInsights } from "@/components/insights/RefreshInsights"
 import { SendTestHit } from "@/components/analytics/SendTestHit"
+import { IndexHealth } from "@/components/insights/IndexHealth"
 import { readServiceAccount } from "@/lib/google-auth"
 import { getInsightsContext } from "@/lib/insights/queries"
+import { latestScan, maintenancePackage, openFindings } from "@/lib/insights/gsc-queries"
 
 export const metadata = { title: "Health · Insights" }
 export const dynamic = "force-dynamic"
@@ -48,6 +50,15 @@ export default async function InsightsHealthPage({
   const { site, snapshot, refreshedAt } = ctx
   const sa = readServiceAccount()
 
+  // Index coverage is read from the last stored scan, never fetched here: 63
+  // URL Inspection calls is eight seconds and 3% of the daily quota.
+  const period = new Date().toISOString().slice(0, 7)
+  const [scan, open, pkg] = await Promise.all([
+    latestScan(site.id),
+    openFindings(site.id),
+    maintenancePackage(site.id, period),
+  ])
+
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -81,6 +92,8 @@ export default async function InsightsHealthPage({
           No snapshot yet — fetch once and every applicable source reports in here.
         </p>
       )}
+
+      <IndexHealth scan={scan} open={open} resolvedThisPeriod={pkg.resolved} />
 
       <Card title="Service account" className="mt-3">
         <div className="px-5 py-3.5 text-sm text-tk-slate/80">

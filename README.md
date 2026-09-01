@@ -121,6 +121,9 @@ lives in `lib/inbox-data.ts`. Same split as `task-view` versus `tasks`.
 
 ### Mail
 
+The mailbox map — users, aliases, folders, redirects, what is still open —
+is in [`MAIL.md`](./MAIL.md). Read that instead of opening Fastmail.
+
 `crm@tallkarol.com` stays on **Fastmail**; the CRM reads it over JMAP with a
 **read-only** API token and polls, the way `calendar:sync` and `notion:sync`
 already do.

@@ -260,6 +260,13 @@
       "when": 1788139000000,
       "tag": "0036_site_vercel",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1788290878746,
+      "tag": "0037_amused_lightspeed",
+      "breakpoints": true
     }
   ]
 }

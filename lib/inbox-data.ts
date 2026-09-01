@@ -6,7 +6,7 @@ import { readLead } from "@/lib/lead"
 import { ROUTES } from "@/lib/nav"
 import { ticketNumber, ticketPriority, ticketState } from "@/lib/support"
 import type { InboxData, InboxItem, InboxItemState, InboxKind, InboxLens } from "@/lib/inbox"
-import { INBOX_KINDS } from "@/lib/inbox"
+import { INBOX_KINDS, toSeverity } from "@/lib/inbox"
 
 /**
  * The db half of the inbox — the union query itself.
@@ -108,6 +108,7 @@ export async function loadInbox(now = new Date()): Promise<InboxData> {
       state: resolveState(key),
       needsReply: lead.qualification === "unreviewed" && row.status !== "closed",
       priority: null,
+      severity: "info",
       href: `${ROUTES.leads}?lead=${row.id}`,
     })
   }
@@ -133,6 +134,7 @@ export async function loadInbox(now = new Date()): Promise<InboxData> {
       state: resolveState(key),
       needsReply: t.firstResponseAt == null,
       priority: ticketPriority(t.priority),
+      severity: "info",
       href: `${ROUTES.support}/${ticketNumber(t)}`,
     })
   }
@@ -158,6 +160,7 @@ export async function loadInbox(now = new Date()): Promise<InboxData> {
       state: resolveState(key),
       needsReply: true,
       priority: ticketPriority(ticket.priority),
+      severity: "info",
       href: `${ROUTES.support}/${ticketNumber(ticket)}`,
     })
   }
@@ -179,6 +182,7 @@ export async function loadInbox(now = new Date()): Promise<InboxData> {
       state: resolveState(key),
       needsReply: true,
       priority: null,
+      severity: "info",
       href: null,
     })
   }
@@ -200,6 +204,7 @@ export async function loadInbox(now = new Date()): Promise<InboxData> {
       state: resolveState(key),
       needsReply: false,
       priority: null,
+      severity: toSeverity(e.severity),
       href: null,
     })
   }

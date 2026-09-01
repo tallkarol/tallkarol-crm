@@ -48,6 +48,33 @@ const TARGETS: ParseTarget[] = [
     projectId: "p-dqs",
     projectName: "DQS / AXVOR / AIS",
   },
+  {
+    clientId: "c-sondry",
+    clientName: "Sondry",
+    clientSlug: "sondry",
+    projectId: null,
+    projectName: null,
+    productId: "prod-spectra",
+    productName: "Spectramotus",
+  },
+  {
+    clientId: "c-sondry",
+    clientName: "Sondry",
+    clientSlug: "sondry",
+    projectId: null,
+    projectName: null,
+    productId: "prod-jive",
+    productName: "Jive",
+  },
+  {
+    clientId: null,
+    clientName: null,
+    clientSlug: null,
+    projectId: null,
+    projectName: null,
+    productId: "prod-daedalus",
+    productName: "Daedalus",
+  },
 ]
 
 // A Tuesday, so weekday maths has somewhere to land.
@@ -83,6 +110,27 @@ console.log("\ntargets — the old parser matched one word, at the end only")
 
   const punct = parseTaskInput("invoice it @DQS / AXVOR / AIS", TARGETS, NOW)
   check("punctuation in a project name", punct.target?.projectId, "p-dqs")
+
+  const product = parseTaskInput("build the page @spectramotus", TARGETS, NOW)
+  check(
+    "product named alone",
+    [product.title, product.target?.productId, product.target?.clientId],
+    ["build the page", "prod-spectra", "c-sondry"]
+  )
+
+  const house = parseTaskInput("build the page @sondry jive", TARGETS, NOW)
+  check(
+    "house plus product",
+    [house.title, house.target?.productId],
+    ["build the page", "prod-jive"]
+  )
+
+  const solo = parseTaskInput("ship the pack @daedalus", TARGETS, NOW)
+  check(
+    "solo product has no client",
+    [solo.title, solo.target?.productId, solo.target?.clientId],
+    ["ship the pack", "prod-daedalus", null]
+  )
 
   const miss = parseTaskInput("ping @nobody about it", TARGETS, NOW)
   check(

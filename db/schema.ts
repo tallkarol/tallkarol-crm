@@ -1124,6 +1124,7 @@ export const sites = pgTable("sites", {
 export const sitesRelations = relations(sites, ({ one, many }) => ({
   client: one(clients, { fields: [sites.clientId], references: [clients.id] }),
   snapshotArchives: many(snapshotArchive),
+  experiments: many(experiments),
 }))
 
 export type Site = typeof sites.$inferSelect
@@ -1834,3 +1835,102 @@ export const gscFindingsRelations = relations(gscFindings, ({ one }) => ({
 
 export type GscScan = typeof gscScans.$inferSelect
 export type GscFinding = typeof gscFindings.$inferSelect
+
+/**
+ * A change we made on purpose, and the readings that tell us whether it did
+ * anything.
+ *
+ * This is a work log with numbers attached rather than a statistics engine: no
+ * randomisation, no control group, no significance test. It answers "we did X
+ * on this date — what happened to the pages we care about?" and keeps each
+ * answer frozen so a figure quoted in October still reads the same in December.
+ */
+export const experiments = pgTable(
+  "experiments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    /** `homepage-intake-form` — unique per site, used in URLs. */
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    /** What we expect to happen, written before the result is known. */
+    hypothesis: text("hypothesis").notNull().default(""),
+    /** What actually shipped, in plain words. */
+    changeNote: text("change_note").notNull().default(""),
+    /** The day the change went live. Checkpoint windows count from here. */
+    startedOn: date("started_on").notNull(),
+    /** The pre-period the baseline reading covers. */
+    baselineFrom: date("baseline_from").notNull(),
+    baselineTo: date("baseline_to").notNull(),
+    /**
+     * Pages this experiment watches:
+     * `[{ key, label, path, role }]` where role is `target` (what we changed),
+     * `guardrail` (what it might cannibalise) or `context`.
+     */
+    pages: jsonb("pages").notNull().default(sql`'[]'::jsonb`),
+    /** Values of the GA4 `form_location` dimension worth splitting out. */
+    formLocations: jsonb("form_locations").notNull().default(sql`'[]'::jsonb`),
+    /** running | concluded | abandoned */
+    status: text("status").notNull().default("running"),
+    /** Filled in at the end: supported | refuted | inconclusive | "" */
+    verdict: text("verdict").notNull().default(""),
+    notes: text("notes").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    siteSlug: uniqueIndex("experiments_site_slug_idx").on(table.siteId, table.slug),
+    siteStatus: index("experiments_site_status_idx").on(table.siteId, table.status),
+  })
+)
+
+/**
+ * One frozen reading. Never rewritten in place — recapturing a checkpoint
+ * replaces the row, which is the only way a number here should ever change.
+ */
+export const experimentReadings = pgTable(
+  "experiment_readings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    experimentId: uuid("experiment_id")
+      .notNull()
+      .references(() => experiments.id, { onDelete: "cascade" }),
+    /** `baseline`, `d30`, `d60`, `d90` — or anything else for an ad-hoc look. */
+    checkpoint: text("checkpoint").notNull(),
+    windowFrom: date("window_from").notNull(),
+    windowTo: date("window_to").notNull(),
+    /** `ReadingPayload` — per-page funnel counts, sitewide totals, CRM leads. */
+    payload: jsonb("payload").notNull(),
+    note: text("note").notNull().default(""),
+    capturedAt: timestamp("captured_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    once: uniqueIndex("experiment_readings_checkpoint_idx").on(
+      table.experimentId,
+      table.checkpoint
+    ),
+  })
+)
+
+export const experimentsRelations = relations(experiments, ({ one, many }) => ({
+  site: one(sites, { fields: [experiments.siteId], references: [sites.id] }),
+  readings: many(experimentReadings),
+}))
+
+export const experimentReadingsRelations = relations(experimentReadings, ({ one }) => ({
+  experiment: one(experiments, {
+    fields: [experimentReadings.experimentId],
+    references: [experiments.id],
+  }),
+}))
+
+export type Experiment = typeof experiments.$inferSelect
+export type ExperimentReading = typeof experimentReadings.$inferSelect

@@ -220,7 +220,9 @@ function Card({
               {task.clientName}
             </span>
           ) : null}
-          {task.projectName && !showClient ? (
+          {task.productName && !showClient ? (
+            <span className="text-[11px] text-tk-slate/60">{task.productName}</span>
+          ) : task.projectName && !showClient ? (
             <span className="text-[11px] text-tk-slate/60">{task.projectName}</span>
           ) : null}
           {task.items.total > 0 ? (
