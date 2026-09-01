@@ -102,20 +102,40 @@ in a browser. The macOS widgets read without rendering those pages, so the
 clock work moved to a service of its own — which also puts the monitor sweep on
 a schedule for the first time.
 
-Add a **third Railway service**, same repo, no domain, exactly like the
-Smartsheet cron above.
+This is live as the **`tallkarol-cron`** service — same repo, no domain.
 
 | Setting | Value |
 | --- | --- |
-| Config file | `railway.cron.json` |
+| Start command | `npm run cron:tick` |
 | Cron schedule | `*/15 * * * *` |
-| Variables | `DATABASE_URL`, `SWEEP_SECRET` |
+| Restart policy | `NEVER` |
+| Variables | `DATABASE_URL` (references `${{Postgres.DATABASE_URL}}`), `SWEEP_SECRET` |
 
-The config file matters: the root `railway.json` sets `startCommand` to
-`npm run start`, and config-as-code beats dashboard settings. A cron service
-running the web server would never exit, and Railway skips a scheduled run
-while the previous one is still going — so it would fire exactly once, ever.
-`railway.cron.json` starts `npm run cron:tick` instead and never restarts it.
+The start command is set **on the service**, not in a config file. Railway has
+deprecated config-as-code — `serviceInstanceUpdate` now rejects
+`railwayConfigFile` outright — so a per-service `railway.cron.json` is not
+possible. That matters because the root `railway.json` starts the web server:
+had the cron service inherited it, it would never exit, and Railway skips a
+scheduled run while the previous one is still going, so it would have fired
+exactly once and then gone quiet.
+
+The restart policy has to be `NEVER`. A cron job exits when it is done, and
+anything that restarts it turns a 15-minute job into a hot loop.
+
+Recreating it from the CLI:
+
+```sh
+railway add --service tallkarol-cron --repo tallkarol/tallkarol-crm --branch main
+railway variables --service tallkarol-cron \
+  --set 'DATABASE_URL=${{Postgres.DATABASE_URL}}' --set "SWEEP_SECRET=$SWEEP_SECRET"
+# then set startCommand / cronSchedule / restartPolicyType via
+# `railway api` → serviceInstanceUpdate
+```
+
+> The root `railway.json` still works today — the `releaseCommand` migration
+> ran on the last deploy — but it is on notice. If Railway drops it, the web
+> service loses both its start command and `npm run db:migrate` on deploy.
+> Worth migrating to `.railway/railway.ts` before that happens.
 
 Every wake-up reopens repeating tasks whose period rolled over, then sweeps
 monitors whose window closed with nothing in it. A quiet tick costs about a
