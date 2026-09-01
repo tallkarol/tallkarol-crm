@@ -2,6 +2,10 @@
 
 Snapshot **2026-08-30**. Read this instead of opening Fastmail or calling JMAP.
 
+**Sending from a client alias, or telling a client to write to one, is
+[`MAIL-ENGAGEMENT.md`](./MAIL-ENGAGEMENT.md).** The map below is not permission
+to go live. GDI and Mineralife are last on that ladder.
+
 A twin lives at `~/Work/daedalus-docs/email.md`. Update both when the mailbox
 changes. Fastmail's UI is authority for aliases, Sieve, shares, and redirects.
 This repo is authority for how the CRM *reads* mail (`lib/jmap.ts`,

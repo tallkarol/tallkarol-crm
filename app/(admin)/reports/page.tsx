@@ -130,11 +130,21 @@ export default async function ReportsPage() {
                         : ""}
                     </p>
                   </div>
-                  <div className="flex shrink-0 gap-1.5">
+                  <div className="flex shrink-0 items-center gap-1.5">
                     {report.cadence !== "none" ? (
                       <Badge>{CADENCE_LABEL[report.cadence]}</Badge>
                     ) : null}
                     <Badge>{REPORT_STATUS_LABEL[report.status]}</Badge>
+                    {report.slug && report.bodyPath ? (
+                      <a
+                        href={ROUTES.reportDoc(report.slug)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-md bg-tk-teal px-2.5 py-1 text-[10.5px] font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90"
+                      >
+                        View
+                      </a>
+                    ) : null}
                   </div>
                 </li>
               )

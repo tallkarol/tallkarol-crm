@@ -7,9 +7,12 @@ import type {
   ProductStatus,
   ProductStudioKind,
   ProjectStatus,
+  ProposalStatus,
   ReportStatus,
   RetainerStatus,
   TaskStatus,
+  WorksheetMode,
+  WorksheetStatus,
 } from "@/db/schema"
 
 export const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
@@ -75,6 +78,25 @@ export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
 export const REPORT_STATUS_LABEL: Record<ReportStatus, string> = {
   due: "Due",
   filed: "Filed",
+}
+
+export const PROPOSAL_STATUS_LABEL: Record<ProposalStatus, string> = {
+  draft: "Draft",
+  sent: "Sent",
+  accepted: "Accepted",
+}
+
+export const WORKSHEET_STATUS_LABEL: Record<WorksheetStatus, string> = {
+  blank: "Blank",
+  filled: "Filled",
+  review: "With client",
+  signed: "Signed off",
+}
+
+export const WORKSHEET_MODE_LABEL: Record<WorksheetMode, string> = {
+  client: "Client-filled",
+  interview: "From interview",
+  portal: "Portal intake",
 }
 
 export const CADENCE_LABEL: Record<Cadence, string> = {

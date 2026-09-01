@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The US campaign — build and comparison plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#F4F2EC;--surface:#FFF;--surface-2:#EDE9DE;--ink:#0F1615;--ink-2:#3D4947;--muted:#6E7A77;--line:rgba(15,22,21,.13);--line-soft:rgba(15,22,21,.07);--accent:#006965;--accent-ink:#00504D;--accent-soft:rgba(0,105,101,.10);--warn:#A45A1E;--warn-soft:rgba(164,90,30,.12);--crit:#8E3521;--crit-soft:rgba(142,53,33,.12);--good:#2E7D57;--good-soft:rgba(46,125,87,.12);--display:"Archivo",ui-sans-serif,system-ui,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:ui-sans-serif,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6}
+.wrap{max-width:880px;margin:0 auto;padding:0 32px}
+@media(max-width:720px){.wrap{padding:0 20px}}
+h1,h2,h3,h4,.eyebrow,.chip,.num,th,.ui{font-family:var(--display)}
+h1{font-size:clamp(28px,4.2vw,40px);line-height:1.08;letter-spacing:-.02em;font-weight:700;margin:0 0 10px}
+h2{font-size:20px;line-height:1.2;letter-spacing:-.01em;font-weight:600;margin:0 0 12px}
+h3{font-size:15px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 14px}p:last-child{margin-bottom:0}
+code,.mono{font-family:var(--mono);font-size:.85em;background:var(--surface-2);padding:.1em .34em;border-radius:3px}
+.small{font-size:13.5px;line-height:1.5}.muted{color:var(--muted)}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 14px}
+header.rpt{padding:56px 0 28px;border-bottom:2px solid var(--ink)}
+section{padding:34px 0;border-bottom:1px solid var(--line)}
+.sec-label{display:flex;align-items:baseline;gap:10px;margin:0 0 16px}
+.sec-label .n{font-family:var(--mono);font-size:12px;color:var(--accent-ink)}
+.metastrip{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;margin-top:22px}
+.metastrip>div{flex:1 1 160px;padding:12px 16px;border-right:1px solid var(--line-soft)}
+.metastrip>div:last-child{border-right:0}
+.metastrip .k{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px}
+.metastrip .v{font-family:var(--display);font-size:14px;font-weight:500}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:720px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g2{grid-template-columns:1fr}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.stat .num{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block;font-variant-numeric:tabular-nums}
+.stat .lbl{font-family:var(--ui);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:5px;display:block}
+.stat .sub{font-size:12.5px;color:var(--ink-2);margin-top:5px;display:block;line-height:1.35}
+.stat.good .num{color:var(--good)}.stat.warn .num{color:var(--warn)}.stat.crit .num{color:var(--crit)}.stat.accent .num{color:var(--accent-ink)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+.tablecard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 10px 6px;overflow-x:auto}
+th{text-align:left;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);font-family:var(--ui);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12px}
+.r{text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);font-family:var(--ui)}
+.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.accent{background:var(--accent-soft);color:var(--accent-ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.card.tint{background:var(--surface-2);border-color:var(--line-soft)}
+.rail{border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.rail.crit{border-left-color:var(--crit)}.rail.good{border-left-color:var(--good)}
+.up{color:var(--good);font-weight:600}.down{color:var(--crit);font-weight:600}
+.empty{border:1px dashed var(--line);border-radius:8px;padding:18px 20px;background:rgba(255,255,255,.6)}
+.illus{border:1px dashed rgba(0,105,101,.4);border-radius:8px;background:var(--accent-soft);padding:6px 12px;font-family:var(--ui);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);display:inline-block;margin-bottom:10px}
+ul.tight{margin:0;padding-left:19px}ul.tight li{margin-bottom:5px}
+footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(--ui)}
+@media print{body{background:#fff;font-size:12pt}section{page-break-inside:avoid}header.rpt{padding-top:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="rpt">
+  <p class="eyebrow">Mineralife Nutraceuticals &middot; mycustommanufacturer.com</p>
+  <h1>The US campaign</h1>
+  <p class="small muted" style="font-family:var(--ui);font-size:14px">What to build, what it lands on, and how it gets judged against the campaign already running &middot; 30 August 2026</p>
+  <div class="metastrip">
+    <div><span class="k">Build</span><span class="v">4 ad groups &middot; 4 landing pages</span></div>
+    <div><span class="k">Addressable</span><span class="v">4,230 US searches/mo</span></div>
+    <div><span class="k">Judged against</span><span class="v">B2B &ndash; Search &ndash; Competitors</span></div>
+    <div><span class="k">Answer by</span><span class="v">late November</span></div>
+  </div>
+</header>
+
+<section>
+  <div class="sec-label"><span class="n">01</span><h2>Why this is one plan, not two</h2></div>
+  <p style="max-width:66ch">
+    Two questions were open: build a campaign that matches what the business sells now, and find out
+    whether American leads cost less or convert better. They have the same answer, because the only
+    way to get meaningful American traffic <em>is</em> to build that campaign &mdash; the existing one
+    has drawn 13 US visits in three months, so there is nothing there to test.
+  </p>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail">
+      <h3>What exists today</h3>
+      <p class="small">One campaign, <strong>B2B &ndash; Search &ndash; Competitors</strong>, bidding
+        on rival brand names with no geographic restriction. It has produced five enquiries at an 11%
+        conversion rate &mdash; genuinely good &mdash; but 96.6% of its traffic is non-US, and nothing
+        in the account catches somebody searching for the service itself.</p>
+    </div>
+    <div class="card rail good">
+      <h3>What this adds</h3>
+      <p class="small">A US-targeted campaign on the terms buyers actually type, landing on pages
+        built for those terms. It fills the positioning gap and, by running alongside the incumbent on
+        its own budget, answers the geography question as a by-product.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">02</span><h2>The campaign</h2></div>
+  <p class="small" style="max-width:66ch">Four ad groups, each tight enough that one ad and one
+    landing page can answer every term in it. Volumes and click prices are live US figures pulled on
+    30 August.</p>
+
+  <div class="tablecard" style="margin-top:16px">
+    <table>
+      <thead><tr><th>Ad group &amp; keywords</th><th class="r">Searches/mo</th><th class="r">Cost/click</th><th class="r">Comp</th><th>Lands on</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1. Contract manufacturing</strong></td><td class="r mono"><strong>2,480</strong></td><td class="r mono">$7.95–31.03</td><td class="r"></td><td class="small"><strong>Contract manufacturing</strong></td></tr>
+        <tr><td class="mono small">nutraceutical contract manufacturer</td><td class="r mono">720</td><td class="r mono">$7.95</td><td class="r mono">10</td><td><span class="chip ok">start here</span></td></tr>
+        <tr><td class="mono small">contract supplement manufacturer</td><td class="r mono">1,600</td><td class="r mono">$31.03</td><td class="r mono">7</td><td></td></tr>
+        <tr><td class="mono small muted">supplement contract manufacturer</td><td class="r mono muted">dup</td><td class="r mono muted">—</td><td class="r mono muted">—</td><td class="small muted">same term, word order</td></tr>
+        <tr><td class="mono small">dietary supplement manufacturer usa</td><td class="r mono">90</td><td class="r mono">$19.26</td><td class="r mono">21</td><td></td></tr>
+        <tr><td class="mono small">best supplement manufacturer usa</td><td class="r mono">70</td><td class="r mono">$13.00</td><td class="r mono">83</td><td class="small">high competition</td></tr>
+
+        <tr><td><strong>2. White label / catalog</strong></td><td class="r mono"><strong>790</strong></td><td class="r mono">$16.65–28.23</td><td class="r"></td><td class="small"><strong>White label</strong></td></tr>
+        <tr><td class="mono small">private label supplement manufacturer</td><td class="r mono">590</td><td class="r mono">$24.30</td><td class="r mono">13</td><td><span class="chip warn">your call — see 05</span></td></tr>
+        <tr><td class="mono small">white label supplement manufacturer</td><td class="r mono">170</td><td class="r mono">$28.23</td><td class="r mono">58</td><td></td></tr>
+        <tr><td class="mono small">white label supplements usa</td><td class="r mono">30</td><td class="r mono">$16.65</td><td class="r mono">69</td><td></td></tr>
+
+        <tr><td><strong>3. Certifications</strong></td><td class="r mono"><strong>550</strong></td><td class="r mono">$10.83–34.10</td><td class="r"></td><td class="small"><strong>Certifications</strong></td></tr>
+        <tr><td class="mono small">gmp certified supplement manufacturer</td><td class="r mono">210</td><td class="r mono">$13.27</td><td class="r mono">2</td><td class="small">lowest competition on the board</td></tr>
+        <tr><td class="mono small">sports nutrition manufacturer</td><td class="r mono">210</td><td class="r mono">$34.10</td><td class="r mono">8</td><td></td></tr>
+        <tr><td class="mono small">organic supplement manufacturer</td><td class="r mono">90</td><td class="r mono">$21.72</td><td class="r mono">35</td><td></td></tr>
+        <tr><td class="mono small">halal supplement manufacturer</td><td class="r mono">40</td><td class="r mono">$10.83</td><td class="r mono">5</td><td></td></tr>
+
+        <tr><td><strong>4. Custom manufacturing</strong></td><td class="r mono"><strong>410</strong></td><td class="r mono">$38.28</td><td class="r"></td><td class="small"><strong>Custom manufacturing</strong></td></tr>
+        <tr><td class="mono small">custom supplement manufacturer</td><td class="r mono">320</td><td class="r mono">$38.28</td><td class="r mono">14</td><td class="small">most expensive click</td></tr>
+        <tr><td class="mono small">turnkey supplement manufacturing</td><td class="r mono">90</td><td class="r mono">—</td><td class="r mono">4</td><td></td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:10px 10px 6px">
+      <strong>4,230 searches a month</strong> once the word-order duplicate is removed. Note the
+      ordering: ad group 1 is not first because it has the most volume, but because
+      <code>nutraceutical contract manufacturer</code> is 720 searches at $7.95 &mdash; a quarter the
+      price of the term beneath it, at similar competition. It is the cheapest real demand on the
+      board and it should be switched on before anything else.
+    </p>
+  </div>
+
+  <div class="card rail warn" style="margin-top:16px">
+    <h3>What is deliberately not here</h3>
+    <p class="small"><strong>Toll filling by name.</strong> Fifteen terms, 30 searches a month between
+      them, and all 30 belong to <code>toll blending services</code> which is not supplements. It is
+      the flagship service and the highest-margin division and there is no paid demand for the words.
+      It gets sold on the contract manufacturing page instead.</p>
+    <p class="small" style="margin-top:10px"><strong>Anything geographic.</strong> All seven regional
+      terms return zero &mdash; Colorado, Colorado Springs, Denver, and the rest. The 14
+      <code>/serving</code> pages may still earn their keep organically; there is nothing to bid
+      on.</p>
+    <p class="small" style="margin-top:10px">Both of these feel like they should work. Neither has
+      demand behind it, and finding that out cost $0.09 rather than a month of budget.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">03</span><h2>Landing pages</h2></div>
+  <p style="max-width:66ch">
+    Four pages, one per ad group, assembled from sections the site already publishes and given a form.
+    Cheap to build, and worth more than the geography question itself &mdash; every campaign benefits.
+  </p>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card rail good">
+      <h3>Worth doing regardless</h3>
+      <p class="small">Every paid visit currently lands on the homepage, which has no form on it, and
+        the widest step in the funnel is between clicking a button and starting to fill anything in.
+        A page that answers the query it was clicked from, with the first field visible, addresses
+        that directly. Google also scores landing-page relevance and that feeds the cost per click, so
+        a purpose-built page is usually cheaper to advertise than a homepage.</p>
+    </div>
+    <div class="card rail warn">
+      <h3>Two rules when building them</h3>
+      <p class="small"><strong>Keep the copy page-sourced.</strong> Assemble from sentences already
+        published &mdash; the MOQs, capsule sizes, fill range, the NSF 455-2 line. Nothing new to
+        approve and nothing that can drift from what is signed off.</p>
+      <p class="small" style="margin-top:10px"><strong>Mark them <code>noindex, follow</code>.</strong>
+        They deliberately overlap the service pages; left indexable they would compete with those
+        pages for the same searches, fixing one channel by damaging another.</p>
+    </div>
+  </div>
+  <div class="card rail crit" style="margin-top:16px">
+    <h3>Build the contract manufacturing page first, and point the old campaign at it too</h3>
+    <p class="small">Otherwise the comparison breaks before it starts. If the new campaign gets
+      purpose-built pages and the competitors campaign stays on the homepage, a better US result tells
+      you nothing &mdash; it could be geography, keywords, or simply that one arm had a landing page
+      and the other did not.</p>
+    <p class="small" style="margin-top:10px">Both arms on real landing pages keeps the comparison
+      about audience. The cost is that the competitors campaign's own before-and-after breaks on that
+      date, so record it.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">04</span><h2>How it gets judged</h2></div>
+  <div class="card rail crit">
+    <h3>Not as an A/B test — that is not affordable</h3>
+    <p class="small">To <em>prove</em> one audience converts better needs about <strong>390 clicks in
+      each arm</strong>, and only to detect a gap as crude as 11% against 5.5% &mdash; roughly
+      $20,000&ndash;24,000 at US click prices. A realistic gap of 11% against 9% costs
+      $181,000&ndash;219,000. Real differences are small and small differences are the expensive ones
+      to prove.</p>
+    <p class="small" style="margin-top:10px">You did not ask for proof. You asked what an American
+      lead costs, which needs far less data &mdash; and whether they are better, which is Ethan
+      looking at ten enquiries and saying which he would rather have. At this sample size his
+      judgement beats any significance test you could buy.</p>
+  </div>
+
+  <div class="tablecard" style="margin-top:16px">
+    <table>
+      <thead><tr><th>&nbsp;</th><th>Control — running</th><th>New — this plan</th></tr></thead>
+      <tbody>
+        <tr><td class="small"><strong>Campaign</strong></td><td class="small">B2B – Search – Competitors</td><td class="small">US – Search – Contract manufacturing</td></tr>
+        <tr><td class="small"><strong>Targeting</strong></td><td class="small">Unrestricted (3.4% US)</td><td class="small">United States only</td></tr>
+        <tr><td class="small"><strong>Keywords</strong></td><td class="small">Competitor brand names</td><td class="small">The four ad groups above</td></tr>
+        <tr><td class="small"><strong>Budget</strong></td><td class="small">Its own, unchanged</td><td class="small">Its own, separate</td></tr>
+        <tr><td class="small"><strong>Landing page</strong></td><td class="small">Contract manufacturing page</td><td class="small">One per ad group</td></tr>
+        <tr><td class="small"><strong>Judged on</strong></td><td class="small" colspan="2">Cost per enquiry · cost per <em>qualified</em> enquiry · Ethan's read on quality</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:8px 10px 4px">
+      The two arms differ in geography <em>and</em> keyword type, so a US win will not tell us which
+      caused it. For the decision in front of you that does not matter — you would fund the better
+      campaign either way. It would matter if you later wanted head terms run internationally.
+    </p>
+  </div>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h3>What the budget buys</h3>
+      <table style="margin-top:8px">
+        <tr><td class="small mono">$2,000/mo</td><td class="small r">64–78 clicks</td><td class="small r">2–5 enquiries</td></tr>
+        <tr><td class="small mono">$3,000/mo</td><td class="small r">97–117 clicks</td><td class="small r">3–8 enquiries</td></tr>
+        <tr><td class="small mono">$5,000/mo</td><td class="small r">161–195 clicks</td><td class="small r">5–13 enquiries</td></tr>
+      </table>
+      <p class="small muted" style="margin-top:8px">At published B2B manufacturing rates of 3–6.5%, not this account's.</p>
+    </div>
+    <div class="card">
+      <h3>When the cost figure becomes usable</h3>
+      <table style="margin-top:8px">
+        <tr><td class="small">5 leads</td><td class="small r mono">$400 each</td><td class="small muted">directional only</td></tr>
+        <tr><td class="small"><strong>10 leads</strong></td><td class="small r mono">$200 each</td><td class="small muted">usable: $123–$526</td></tr>
+        <tr><td class="small">20 leads</td><td class="small r mono">$100 each</td><td class="small muted">solid: $70–$178</td></tr>
+      </table>
+      <p class="small muted" style="margin-top:8px">$2,000/mo reaches ten enquiries in ~90 days; $5,000/mo in ~45.</p>
+    </div>
+  </div>
+
+  <div class="callout warn" style="margin-top:16px">
+    <h4>None of this measures anything without Google Ads access</h4>
+    <p class="small" style="margin-top:6px">Every figure here is a cost and we cannot currently see
+      costs. Without read access there is no spend, no cost per click and therefore no cost per lead
+      &mdash; the comparison reduces to counting enquiries and guessing what they cost. It is the
+      precondition for the whole exercise.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">05</span><h2>Order of work, and the one open decision</h2></div>
+  <div class="card" style="margin-top:6px">
+    <div class="step"><div class="n">1</div><div class="c">
+      <h4>Get Ads account access</h4>
+      <p class="small">Read access for reporting, or a 90-day export of campaign, keyword and
+        search-terms reports. Everything else can proceed without it; nothing can be judged without
+        it.</p></div></div>
+    <div class="step"><div class="n">2</div><div class="c">
+      <h4>Build the contract manufacturing page, point both campaigns at it</h4>
+      <p class="small">One page, page-sourced copy, form above the fold, <code>noindex</code>. This
+        alone should move the incumbent campaign's numbers.</p></div></div>
+    <div class="step"><div class="n">3</div><div class="c">
+      <h4>Launch ad group 1 only</h4>
+      <p class="small"><code>nutraceutical contract manufacturer</code> at $7.95, US-only, own budget.
+        Cheapest real demand, so the first month of learning is the least expensive it will ever
+        be.</p></div></div>
+    <div class="step"><div class="n">4</div><div class="c">
+      <h4>Add the other three pages and ad groups</h4>
+      <p class="small">White label, certifications, custom — each switched on with its page, not
+        before it.</p></div></div>
+    <div class="step"><div class="n">5</div><div class="c">
+      <h4>Qualify with Ethan monthly, and re-run the review</h4>
+      <p class="small">First checkpoint 30 September, real cost-per-lead answer by late
+        November.</p></div></div>
+  </div>
+
+  <div class="card rail" style="margin-top:18px">
+    <h3>The open decision: do we buy &ldquo;private label&rdquo;?</h3>
+    <p class="small">590 searches a month at $24.30 &mdash; the second-largest block in the whole plan
+      and larger than the entire custom manufacturing ad group. The keyword sheet marks it
+      <code>DO NOT TARGET</code> on terminology grounds, which is right for organic, where you cannot
+      rank a page on a word your copy refuses to use.</p>
+    <p class="small" style="margin-top:10px"><strong>Paid is different:</strong> the keyword is what
+      the buyer types, and the ad and the page still answer in your words. <strong>My call:</strong>
+      buy it, phrase match, in its own ad group so it can be judged and switched off cleanly. If it is
+      out, ad group 2 drops from 790 searches a month to 200 and stops being worth its own landing
+      page.</p>
+  </div>
+</section>
+
+<footer>
+  Tall Karol &middot; US campaign build and comparison plan &middot; Mineralife Nutraceuticals, LLC
+  &middot; keyword volumes and click prices from DataForSEO, US, 30 August 2026 &middot;
+  conversion benchmarks are published category figures, not this account &middot;
+  supersedes the separate geography-test note
+</footer>
+
+</div>
+</body>
+</html>

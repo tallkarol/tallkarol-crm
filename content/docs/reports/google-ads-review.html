@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Google Ads review and campaign plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#F4F2EC;--surface:#FFF;--surface-2:#EDE9DE;--ink:#0F1615;--ink-2:#3D4947;--muted:#6E7A77;--line:rgba(15,22,21,.13);--line-soft:rgba(15,22,21,.07);--accent:#006965;--accent-ink:#00504D;--accent-soft:rgba(0,105,101,.10);--warn:#A45A1E;--warn-soft:rgba(164,90,30,.12);--crit:#8E3521;--crit-soft:rgba(142,53,33,.12);--good:#2E7D57;--good-soft:rgba(46,125,87,.12);--display:"Archivo",ui-sans-serif,system-ui,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:ui-sans-serif,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6}
+.wrap{max-width:880px;margin:0 auto;padding:0 32px}
+@media(max-width:720px){.wrap{padding:0 20px}}
+h1,h2,h3,h4,.eyebrow,.chip,.num,th,.ui{font-family:var(--display)}
+h1{font-size:clamp(28px,4.2vw,40px);line-height:1.08;letter-spacing:-.02em;font-weight:700;margin:0 0 10px}
+h2{font-size:20px;line-height:1.2;letter-spacing:-.01em;font-weight:600;margin:0 0 12px}
+h3{font-size:15px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 14px}p:last-child{margin-bottom:0}
+code,.mono{font-family:var(--mono);font-size:.85em;background:var(--surface-2);padding:.1em .34em;border-radius:3px}
+.small{font-size:13.5px;line-height:1.5}.muted{color:var(--muted)}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 14px}
+header.rpt{padding:56px 0 28px;border-bottom:2px solid var(--ink)}
+section{padding:34px 0;border-bottom:1px solid var(--line)}
+.sec-label{display:flex;align-items:baseline;gap:10px;margin:0 0 16px}
+.sec-label .n{font-family:var(--mono);font-size:12px;color:var(--accent-ink)}
+.metastrip{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;margin-top:22px}
+.metastrip>div{flex:1 1 160px;padding:12px 16px;border-right:1px solid var(--line-soft)}
+.metastrip>div:last-child{border-right:0}
+.metastrip .k{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px}
+.metastrip .v{font-family:var(--display);font-size:14px;font-weight:500}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:720px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g2{grid-template-columns:1fr}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.stat .num{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block;font-variant-numeric:tabular-nums}
+.stat .lbl{font-family:var(--ui);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:5px;display:block}
+.stat .sub{font-size:12.5px;color:var(--ink-2);margin-top:5px;display:block;line-height:1.35}
+.stat.good .num{color:var(--good)}.stat.warn .num{color:var(--warn)}.stat.crit .num{color:var(--crit)}.stat.accent .num{color:var(--accent-ink)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+.tablecard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 10px 6px;overflow-x:auto}
+th{text-align:left;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);font-family:var(--ui);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12px}
+.r{text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);font-family:var(--ui)}
+.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.accent{background:var(--accent-soft);color:var(--accent-ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.card.tint{background:var(--surface-2);border-color:var(--line-soft)}
+.rail{border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.rail.crit{border-left-color:var(--crit)}.rail.good{border-left-color:var(--good)}
+.up{color:var(--good);font-weight:600}.down{color:var(--crit);font-weight:600}
+.empty{border:1px dashed var(--line);border-radius:8px;padding:18px 20px;background:rgba(255,255,255,.6)}
+.illus{border:1px dashed rgba(0,105,101,.4);border-radius:8px;background:var(--accent-soft);padding:6px 12px;font-family:var(--ui);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);display:inline-block;margin-bottom:10px}
+ul.tight{margin:0;padding-left:19px}ul.tight li{margin-bottom:5px}
+footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(--ui)}
+@media print{body{background:#fff;font-size:12pt}section{page-break-inside:avoid}header.rpt{padding-top:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="rpt">
+  <p class="eyebrow">Mineralife Nutraceuticals &middot; mycustommanufacturer.com</p>
+  <h1>Google Ads review &amp; campaign plan</h1>
+  <p class="small muted" style="font-family:var(--ui);font-size:14px">Follow-up to the August 2026 report &middot; prepared by Tall Karol &middot; 30 August 2026</p>
+  <div class="metastrip">
+    <div><span class="k">Leads from Ads</span><span class="v">5</span></div>
+    <div><span class="k">Cost per lead</span><span class="v">$88.25</span></div>
+    <div><span class="k">Spend, 17 Jul–30 Aug</span><span class="v">$441.26</span></div>
+    <div><span class="k">Decision point</span><span class="v">30 Sep 2026</span></div>
+  </div>
+</header>
+
+<section>
+  <div class="sec-label"><span class="n">01</span><h2>The answer, up front</h2></div>
+  <p style="max-width:66ch">
+    <strong>Google Ads has produced 5 enquiries at $88.25 each.</strong> Every one arrived after 21
+    July, every one is a custom-manufacturing enquiry, and every one came from
+    <strong>B2B &ndash; Search &ndash; Competitors</strong> (campaign 20436468427), which spent
+    <strong>$441.26</strong> in that window.
+  </p>
+  <p style="max-width:66ch">
+    $88 a lead is well under the $250&ndash;500 that published benchmarks put on a qualified B2B
+    manufacturing lead, so on cost alone this looks cheap. Two things complicate it: the campaign is
+    buying clicks at <strong>43 cents</strong>, which is not what serious buyers cost, and Google has
+    recorded <strong>zero conversions</strong> for it because no working conversion action exists.
+  </p>
+  <div class="grid g4" style="margin-top:20px">
+    <div class="stat good"><span class="num">$88</span><span class="lbl">per enquiry</span>
+      <span class="sub">$441.26 spent, 5 enquiries. $147 each for the 3 still live.</span></div>
+    <div class="stat crit"><span class="num">0.49%</span><span class="lbl">click → enquiry</span>
+      <span class="sub">1,026 paid clicks produced 5. Not the 11% I reported before.</span></div>
+    <div class="stat accent"><span class="num">$0.43</span><span class="lbl">average click</span>
+      <span class="sub">Head terms cost $8–38. This is buying something else.</span></div>
+    <div class="stat crit"><span class="num">0</span><span class="lbl">conversions in Google Ads</span>
+      <span class="sub">No working conversion action exists for this business.</span></div>
+  </div>
+  <div class="callout warn" style="margin-top:16px">
+    <h4>Correcting an earlier number in this report</h4>
+    <p class="small" style="margin-top:6px">I previously put this campaign's conversion rate at 11.1%.
+      That divided 5 enquiries by <strong>45 Analytics sessions</strong>. The account actually paid for
+      <strong>1,026 clicks</strong> in the same window, so the real click-to-enquiry rate is
+      <strong>0.49%</strong>. Analytics only ever saw about 4% of the traffic that was paid for.</p>
+    <p class="small" style="margin-top:10px">That gap is itself a finding &mdash; a thousand paid
+      clicks that never became a measurable visit is either people leaving before the page loads or
+      clicks that were never really people. It does not change the cost per lead, which comes from
+      spend and is $88.25 either way.</p>
+  </div>
+  <div class="card rail" style="margin-top:16px">
+    <h3>Why the window starts on 17 July</h3>
+    <p class="small">The code that records a Google click ID against an enquiry shipped with the new
+      site on 17 July. Before that date an ad click could produce an enquiry and leave no trace, which
+      is why June looks like 325 paid visits and zero leads &mdash; the leads may well have happened
+      and simply were not recorded. Everything in this report is measured from the cutover forward, on
+      the 45 visits we can actually account for.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">02</span><h2>The five enquiries</h2></div>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Date</th><th>Type</th><th>Landed on</th><th>Campaign</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">21 Jul</td><td class="small">Custom manufacturing</td><td class="mono">/</td><td class="mono">20436468427</td><td><span class="chip">New</span></td></tr>
+        <tr><td class="mono">22 Jul</td><td class="small">Custom manufacturing</td><td class="mono">/</td><td class="mono">20436468427</td><td><span class="chip">New</span></td></tr>
+        <tr><td class="mono">24 Jul</td><td class="small">Custom manufacturing</td><td class="mono">/</td><td class="mono">20436468427</td><td><span class="chip">New</span></td></tr>
+        <tr><td class="mono">2 Aug</td><td class="small">Custom manufacturing</td><td class="mono">/</td><td class="mono">20436468427</td><td><span class="chip">New</span></td></tr>
+        <tr><td class="mono">17 Aug</td><td class="small">Custom manufacturing</td><td class="mono">/</td><td class="mono">20436468427</td><td><span class="chip">New</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card rail good">
+      <h3>What this tells us</h3>
+      <p class="small">One campaign, one landing page, one enquiry type. The traffic is reaching the
+        right kind of buyer &mdash; nobody arrived asking about a 250-unit catalog order. And the
+        campaign kept producing after its volume collapsed: August sent 28 visits and still returned
+        two enquiries.</p>
+    </div>
+    <div class="card rail warn">
+      <h3>All five still read as New, and that is a tooling gap</h3>
+      <p class="small">Every lead sits in the first pipeline stage. That is not neglect &mdash; the CRM
+        is an internal tool nobody is working out of yet, and Ethan runs these enquiries from the
+        Smartsheet, where four of the five do have stages and probabilities against them.</p>
+      <p class="small" style="margin-top:8px">The consequence is real but it is not a reason to wait:
+        until stage history flows back automatically, a good ad click and a bad one look identical to
+        Google. The approach for September is to tighten everything that can be tightened now, and
+        let the optimisation get sharper as leads actually move through the funnel. Section 05.</p>
+    </div>
+  </div>
+  <div class="callout warn" style="margin-top:16px">
+    <h4>Analytics saw 2 of these. The CRM has 5.</h4>
+    <p class="small" style="margin-top:6px">Google Analytics recorded two paid enquiries in this
+      period; the CRM recorded five. The CRM is right &mdash; it stores the click ID server-side when
+      the form is submitted, while Analytics loses anyone who declines the cookie banner. Judging this
+      campaign on the Analytics number alone would have undercounted it by 60%, and it is the number
+      most reporting would have used.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">03</span><h2>Campaign analysis</h2></div>
+  <p class="small" style="max-width:66ch">The account is
+    <strong>&ldquo;Zemvelo &ndash; Mineralife&rdquo; (6243702566)</strong> &mdash; one account serving
+    both brands. Three campaigns are enabled; the rest were removed or paused years ago. Figures below
+    are from the Google Ads API for 17 July to 30 August, the window in which enquiries can be
+    attributed.</p>
+
+  <div class="tablecard" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Enabled campaign</th><th class="r">Budget/day</th><th class="r">Clicks</th><th class="r">Spend</th><th class="r">Avg CPC</th><th class="r">Conv (Ads)</th><th class="r">Leads (CRM)</th></tr></thead>
+      <tbody>
+        <tr><td><strong>B2B – Search – Competitors</strong><br><span class="small muted">id 20436468427 · search</span></td>
+          <td class="r mono">$10.00</td><td class="r mono">1,026</td><td class="r mono">$441.26</td>
+          <td class="r mono">$0.43</td><td class="r mono">0</td><td class="r mono">5</td></tr>
+        <tr><td><strong>B2B – Search – Regional</strong><br><span class="small muted">id 20429788230 · search</span></td>
+          <td class="r mono">$5.00</td><td class="r mono">0</td><td class="r mono">$0.00</td>
+          <td class="r mono">—</td><td class="r mono">0</td><td class="r mono">0</td></tr>
+        <tr><td><strong>2023 – Performance Max</strong><br><span class="small muted">id 19568494235 · Zemvelo retail, not B2B</span></td>
+          <td class="r mono">$15.93</td><td class="r mono">267</td><td class="r mono">$676.93</td>
+          <td class="r mono">$2.54</td><td class="r mono">10</td><td class="r mono">n/a</td></tr>
+        <tr><td><strong>LinkedIn paid social</strong><br><span class="small muted">separate platform — no cost data</span></td>
+          <td class="r mono">—</td><td class="r mono">—</td><td class="r mono">—</td>
+          <td class="r mono">—</td><td class="r mono">—</td><td class="r mono">0</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:8px 10px 4px">
+      17 July &ndash; 30 August. Two-thirds of the account's spend goes to a Performance Max campaign
+      selling Zemvelo retail products, which is not this engagement but shares the budget and the
+      conversion settings. LinkedIn runs on its own platform, so no cost is visible from here.
+    </p>
+  </div>
+
+  <h3 style="margin-top:26px">Four things wrong with the current setup</h3>
+  <div class="grid g2" style="margin-top:12px">
+    <div class="card rail crit">
+      <span class="chip crit">costing you leads</span>
+      <h3 style="margin-top:10px">Every ad points at the homepage</h3>
+      <p class="small">518 of 566 paid visits landed on <code>/</code>, which has no enquiry form on
+        it &mdash; eleven buttons that lead somewhere else, but nothing to fill in. Across the whole
+        site, 145 people clicked a call-to-action in August and only 22 began a form. Paid traffic is
+        paying for that gap at full price.</p>
+    </div>
+    <div class="card rail crit">
+      <span class="chip crit">wasting spend</span>
+      <h3 style="margin-top:10px">77% of the clicks are mobile, at a fifth of the price</h3>
+      <p class="small">792 mobile clicks for $163.53 &mdash; 21 cents each &mdash; against 217 desktop
+        clicks for $272.27, at $1.25. A contract-manufacturing buyer researches at a desk, and desktop
+        is where the real cost per click sits because that is where the real competition is. The
+        campaign is buying four cheap mobile clicks for every expensive desktop one.</p>
+    </div>
+    <div class="card rail crit" style="grid-column:1/-1">
+      <span class="chip crit">the biggest single problem</span>
+      <h3 style="margin-top:10px">The campaign is not bidding on competitors</h3>
+      <p class="small">It is called &ldquo;Competitors&rdquo; and the search terms it actually paid for
+        are almost all generic, and several are for things Mineralife does not make:</p>
+      <div class="tablecard" style="margin-top:10px">
+        <table>
+          <thead><tr><th>Search term that cost money</th><th class="r">Clicks</th><th class="r">Spend</th><th>Problem</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">custom gummy vitamin manufacturer</td><td class="r mono">130</td><td class="r mono">$32.24</td><td class="small"><strong>Mineralife does not make gummies</strong></td></tr>
+            <tr><td class="mono">best supplement supplier</td><td class="r mono">74</td><td class="r mono">$18.48</td><td class="small">not a manufacturing query</td></tr>
+            <tr><td class="mono">food supplements manufacturers</td><td class="r mono">53</td><td class="r mono">$1.80</td><td class="small">generic</td></tr>
+            <tr><td class="mono">supplement industry</td><td class="r mono">23</td><td class="r mono">$4.07</td><td class="small">pure research intent</td></tr>
+            <tr><td class="mono">nutrascience labs</td><td class="r mono">17</td><td class="r mono">$22.59</td><td class="small">an actual competitor — one of very few</td></tr>
+            <tr><td class="mono">soft gelatin capsules manufacturing process</td><td class="r mono">11</td><td class="r mono">$1.71</td><td class="small">wrong format, research intent</td></tr>
+            <tr><td class="mono">pharmaceutical manufacturing</td><td class="r mono">10</td><td class="r mono">$1.29</td><td class="small">wrong industry</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small" style="margin-top:10px">Gummies alone took 130 clicks &mdash; more than any
+        other term &mdash; for a format that is not in the published capabilities. This is what a
+        broad-matched campaign with no negative keyword list does, and it explains both the 43-cent
+        click and the 0.49% conversion rate: the campaign is buying a lot of very cheap attention from
+        people asking for something else.</p>
+    </div>
+    <div class="card rail warn">
+      <span class="chip warn">stale</span>
+      <h3 style="margin-top:10px">Ads still point at pre-migration addresses</h3>
+      <p class="small">Paid traffic arrives at <code>/request-a-quote/</code>, <code>/quality/</code>
+        and <code>/about/</code> &mdash; pages from the old WordPress site. They all redirect
+        correctly, so nothing is broken, but every click takes an extra hop and the ad copy is
+        pointing at a site that no longer exists in that shape.</p>
+    </div>
+    <div class="card rail warn">
+      <span class="chip crit">still broken in Ads</span>
+      <h3 style="margin-top:10px">Google has no way to count a Mineralife lead</h3>
+      <p class="small">The account has sixteen conversion actions. Every enabled one belongs to
+        Zemvelo's shop &mdash; purchase, add to cart, begin checkout. The only lead-shaped action,
+        <em>Form Submission (All Web Site Data)</em>, is <code>HIDDEN</code> and is a
+        <strong>Universal Analytics goal</strong>, a system Google retired. The Mineralife GA4 action
+        that does exist is a <code>purchase</code> event, also hidden.</p>
+      <p class="small" style="margin-top:8px">So the campaign's 0 conversions is not a reporting
+        quirk &mdash; there is genuinely nothing for it to count. Marking
+        <code>generate_lead</code> as a key event in Analytics on 30 August was the necessary first
+        step; it still has to be imported into Ads as a conversion action and set as the primary goal
+        before any bidding can respond to it.</p>
+    </div>
+  </div>
+
+  <div class="card rail" style="margin-top:16px">
+    <h3>One more source worth naming</h3>
+    <p class="small">70 visits came from <code>syndicatedsearch.goog</code>, an automated Google
+      search-syndication service. It produced <strong>116 call-to-action clicks and zero form
+      starts</strong> &mdash; more button clicks than any real channel and no human behaviour behind
+      any of them. It is not costing you money, but it is inflating the click figures that a
+      conversion rate gets divided by. It should be filtered out of reporting.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">04</span><h2>What I recommend</h2></div>
+  <p style="max-width:66ch">
+    Keep the competitors campaign &mdash; it is the only thing in the account producing enquiries, and
+    at 11% it is producing them well. Fix what surrounds it, retire LinkedIn, and put the unspent
+    budget into a campaign that matches what the business actually sells now.
+  </p>
+
+  <div class="stack" style="margin-top:20px">
+    <div class="card rail good">
+      <span class="chip ok">keep and fix</span>
+      <h3 style="margin-top:10px">1. B2B &ndash; Search &ndash; Competitors</h3>
+      <p class="small">Five enquiries at $88 each, all custom manufacturing. It is the only thing in
+        the account producing B2B leads and it is worth keeping. But it is not working the way the name
+        suggests, and the fixes are now specific:</p>
+      <ul class="tight small" style="margin-top:8px">
+        <li><strong>Add negative keywords first.</strong> <code>gummy</code>, <code>gummies</code>,
+          <code>pharmaceutical</code>, <code>soft gel</code>, <code>softgel</code>,
+          <code>industry</code>, <code>jobs</code>, <code>salary</code>. Gummies alone is 130 clicks
+          of the last six weeks.</li>
+        <li><strong>Import the conversion action</strong> so Ads can count an enquiry at all.</li>
+        <li><strong>Cut mobile bids.</strong> 77% of clicks, and the desktop click costs six times as
+          much because that is where the real buyers are.</li>
+        <li><strong>Send it to a page with a form</strong> and update the stale final URLs.</li>
+      </ul>
+      <p class="small" style="margin-top:8px"><strong>Expected effect:</strong> the same traffic
+        producing more enquiries, before a penny more is spent. That is the correct order.</p>
+      <p class="small" style="margin-top:8px"><strong>Reviewed 30 September.</strong> This campaign is
+        the one on trial. The question it has to answer is not &ldquo;did it produce enquiries&rdquo;
+        &mdash; it did &mdash; but whether those enquiries are worth having, which needs the
+        qualification loop in section 06.</p>
+    </div>
+
+    <div class="card rail">
+      <span class="chip">keep as the control</span>
+      <h3 style="margin-top:10px">2. LinkedIn paid social &mdash; runs until Google Ads has proved itself</h3>
+      <p class="small">The numbers are poor: 303 visits, 8% engagement, an average visit of 6.4
+        seconds, zero recorded enquiries. My instinct was to stop it. <strong>Your call is to keep it
+        until Google Ads is proven, and that is the more careful position</strong> &mdash; turning off
+        the only other source of paid traffic at the same moment as rebuilding the search side would
+        leave nothing to compare against, and any change in enquiries would be unattributable.</p>
+      <p class="small" style="margin-top:8px">So it stays as the control, and the 30 September review
+        judges both together. One caveat worth holding: LinkedIn's zero is measured the same way
+        Google's five is, so it is a fair comparison &mdash; but it is a comparison between a channel
+        we are about to improve and one we are leaving alone, which is not a level test of the
+        channels themselves.</p>
+    </div>
+
+    <div class="card rail">
+      <span class="chip new">build</span>
+      <h3 style="margin-top:10px">3. A campaign for what the business is now</h3>
+      <p class="small">You are right that nothing in the account matches the new positioning. And
+        there is budget sitting idle to do it with: <strong>B2B &ndash; Search &ndash; Regional</strong>
+        has a $5 daily budget and has served <strong>zero impressions</strong> &mdash; which the
+        keyword data explains exactly, because all seven regional terms have no search volume at all.
+        That campaign should be retired and its budget moved. Live pricing puts the real demand
+        here:</p>
+      <div class="tablecard" style="margin-top:12px">
+        <table>
+          <thead><tr><th>Search term</th><th class="r">Searches/mo</th><th class="r">Cost per click</th><th>Send to</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">contract supplement manufacturer</td><td class="r mono">1,600</td><td class="r mono">$31.03</td><td class="small">toll filling</td></tr>
+            <tr><td class="mono">nutraceutical contract manufacturer</td><td class="r mono">720</td><td class="r mono">$7.95</td><td class="small">custom manufacturing</td></tr>
+            <tr><td class="mono">custom supplement manufacturer</td><td class="r mono">320</td><td class="r mono">$38.28</td><td class="small">custom manufacturing</td></tr>
+            <tr><td class="mono">gmp certified supplement manufacturer</td><td class="r mono">210</td><td class="r mono">$13.27</td><td class="small">certifications</td></tr>
+            <tr><td class="mono">white label supplement manufacturer</td><td class="r mono">170</td><td class="r mono">$28.23</td><td class="small">white label</td></tr>
+          </tbody>
+        </table>
+        <p class="small muted" style="padding:8px 10px 4px">
+          Live figures, 30 August 2026. Note the second row: <code>nutraceutical contract
+          manufacturer</code> has 720 searches a month at a quarter of the cost per click of the term
+          above it. It is the cheapest real demand on the board and should be the first ad group.
+        </p>
+      </div>
+      <p class="small" style="margin-top:12px">Deliberately <em>not</em> in the plan: toll filling by
+        name (30 searches a month across fifteen terms) and anything geographic (zero searches, across
+        all seven terms tested). Both feel like they should work and neither has demand behind it.</p>
+    </div>
+
+    <div class="card rail">
+      <span class="chip accent">measure</span>
+      <h3 style="margin-top:10px">4. Before the budget goes up, not after</h3>
+      <ul class="tight small" style="margin-top:8px">
+        <li><s>Mark <code>generate_lead</code> as the key event</s> &mdash; done 30 August. Still to
+          do: import it into Google Ads as a conversion action and make it the primary goal, which is
+          the half that actually changes bidding.</li>
+        <li>Filter out the syndication traffic and the developer machine, so rates are real</li>
+        <li>Qualify the five open leads with Ethan and record the outcome &mdash; without that, a
+          second enquiry from the same campaign teaches us nothing</li>
+        <li>Send those outcomes back to Google, so bidding learns which clicks became business rather
+          than which became form fills</li>
+      </ul>
+      <div class="card tint" style="margin-top:12px">
+        <h4>Which event is the enquiry: <code>generate_lead</code></h4>
+        <p class="small" style="margin-top:6px">Of the nine events in the property, that is the one
+          that means &ldquo;somebody asked us to get in touch&rdquo;. <code>form_submit</code> is its
+          mechanical twin and <strong>should not also be marked</strong> &mdash; marking both counts
+          every enquiry twice, and Google would then bid toward a number that is double the truth.
+          <code>cta_click</code>, <code>form_start</code> and <code>form_step</code> are funnel steps,
+          useful to watch and wrong to optimise toward.</p>
+        <p class="small" style="margin-top:10px"><strong>Why July's numbers do not tie out.</strong>
+          <code>generate_lead</code> fired 16 times in July against 10 <code>form_submit</code>s and 6
+          CRM enquiries. That is test leads being created and deleted while the CRM was being set up,
+          not a tracking fault. August is already tighter &mdash; 8, 8 and 10 &mdash; and will keep
+          tightening as the CRM settles. The practical rule: <strong>treat August as the first usable
+          baseline and ignore July</strong>, and revisit these reconciliations in 30 to 60 days rather
+          than chasing them now.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card tint" style="margin-top:20px">
+    <h3>On raising the budget — and the question that is now answered</h3>
+    <p class="small">I said earlier that we could not tell whether this campaign was limited by its
+      budget or by how few people search those terms. <strong>Now we can: it is the budget.</strong>
+      The campaign holds a 10.0% impression share and loses a further
+      <strong>27.2% of available impressions to running out of money</strong>. There is roughly a
+      third more of this traffic available at today's prices.</p>
+    <p class="small" style="margin-top:10px">Whether you want a third more of it is the harder
+      question, because of what section 03 shows it is buying. <strong>My call: fix the negatives and
+      the conversion action first, then raise it.</strong> Raising the budget on the campaign as it
+      stands would buy 27% more gummy searches.</p>
+    <p class="small" style="margin-top:10px">Expect the new US campaign to look worse per click and
+      better per lead. This one buys clicks at $0.43 and converts 0.49% of them. Head terms cost
+      $8&ndash;38 and convert at a published 3&ndash;6.5% &mdash; a cost per enquiry in the hundreds
+      rather than $88, but from people actually describing the service. Cheap leads and good leads are
+      not the same purchase, and the September comparison is really between those two things.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">05</span><h2>The 30 September review</h2></div>
+  <p style="max-width:66ch">
+    Everything above is a change made on five enquiries. That is enough to act on and not enough to
+    conclude from, so the decision is dated rather than taken now: this report runs again at the end
+    of September, against a month in which the fixes are live and both channels are still running.
+  </p>
+  <div class="tablecard" style="margin-top:18px">
+    <table>
+      <thead><tr><th>By 30 September, we should be able to say</th><th>Measured from</th></tr></thead>
+      <tbody>
+        <tr><td class="small">How many enquiries each channel produced, in a month where both ran</td><td class="small">CRM click IDs</td></tr>
+        <tr><td class="small">Whether the landing-page fix moved the visit-to-enquiry rate off 11%</td><td class="small">GA4 + CRM</td></tr>
+        <tr><td class="small"><strong>How many of those enquiries were real</strong> &mdash; qualified, quoted, or dead</td><td class="small">Ethan, recorded</td></tr>
+        <tr><td class="small">What the budget actually bought, per enquiry and per qualified enquiry</td><td class="small">Google Ads access</td></tr>
+        <tr><td class="small">Whether LinkedIn produced anything once it could be measured properly</td><td class="small">CRM + GA4</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:8px 10px 4px">
+      The fourth row is the only one that still depends on someone else &mdash; see section 06.
+    </p>
+  </div>
+
+  <div class="card rail good" style="margin-top:18px">
+    <h3>The qualification loop, and why it is the important part</h3>
+    <p class="small">The CRM is an internal tool and nobody is working out of it yet, so lead status
+      lives with Ethan. The plan for September is that you and he go through the enquiries together,
+      decide which were real, and record that judgement &mdash; qualified, quoted, or not a fit.</p>
+    <p class="small" style="margin-top:10px">That sounds like admin and it is actually the thing that
+      makes the advertising improve. Right now Google is told a form was filled in and nothing more,
+      so it optimises toward whoever fills in forms. Once outcomes go back, it optimises toward the
+      kind of person who turns into a quote. That is the difference between buying traffic and buying
+      customers, and it needs roughly one conversation a month to keep running.</p>
+    <p class="small" style="margin-top:10px">Five enquiries is a small enough number to do by hand
+      this month. It is worth building the habit while it still is.</p>
+  </div>
+
+  <div class="callout" style="margin-top:18px">
+    <h4>Between now and then</h4>
+    <ul class="tight small" style="margin-top:6px">
+      <li><strong>This week</strong> &mdash; mark <code>generate_lead</code> as the key event; send
+        paid traffic to a page with a form on it; reduce mobile bids; update the stale final
+        URLs.</li>
+      <li><strong>Early September</strong> &mdash; start the new campaign on its own budget, first ad
+        group <code>nutraceutical contract manufacturer</code>. Leave the competitors campaign and
+        LinkedIn alone so the comparison holds.</li>
+      <li><strong>Through the month</strong> &mdash; qualify enquiries with Ethan as they arrive
+        rather than in a batch at the end.</li>
+      <li><strong>30 September</strong> &mdash; this report again, with cost figures if account access
+        has been granted by then.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">06</span><h2>Sources, and a correction</h2></div>
+  <div class="card rail crit">
+    <h3>An earlier version of this report said we had no Google Ads access</h3>
+    <p class="small">That was wrong. The CRM has had a working Google Ads integration all along
+      &mdash; a developer token, a client in <code>lib/insights/google.ts</code>, an
+      <code>adsSource</code> adapter, and customer id <code>6243702566</code> already stored against
+      the site. Everything in this version comes from that API directly.</p>
+    <p class="small" style="margin-top:10px">Three conclusions changed as a result: the campaign is
+      <strong>budget-limited, not demand-limited</strong>; the conversion rate is
+      <strong>0.49% of clicks paid for</strong>, not 11% of sessions Analytics happened to see; and
+      the cost per lead is a measured <strong>$88.25</strong> rather than an estimate. The direction of
+      the recommendations did not change. The reasons behind them did.</p>
+  </div>
+  <ul class="tight small" style="max-width:70ch;margin-top:16px">
+    <li><strong>Enquiries</strong> are counted from the CRM, where the Google click ID is stored when
+      the form is submitted. 46 enquiries all-time, 5 carrying a click ID.</li>
+    <li><strong>Visits and engagement</strong> come from Google Analytics, property 395780153.</li>
+    <li><strong>Search volumes and costs per click</strong> are live third-party estimates pulled on
+      30 August 2026, not figures from your account.</li>
+    <li><strong>Campaign attribution on enquiries</strong> is by Google's automatic tagging. No UTM
+      campaign names are recorded on any lead, so enquiries can be traced to Google Ads and to a
+      campaign id, but not to an ad group or keyword.</li>
+  </ul>
+</section>
+
+<footer>
+  Tall Karol &middot; Google Ads review &middot; Mineralife Nutraceuticals, LLC &middot;
+  CRM leads read 30 August 2026 &middot; Google Analytics 4 property 395780153 &middot;
+  keyword pricing from DataForSEO, 30 August 2026 &middot; no Google Ads account access
+</footer>
+
+</div>
+</body>
+</html>

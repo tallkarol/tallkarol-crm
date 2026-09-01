@@ -66,6 +66,21 @@ export const IDS = {
     mineralifeBlogCadence: "a4000000-0000-4000-8000-000000000015",
     mineralifeBlogReview: "a4000000-0000-4000-8000-000000000016",
   },
+  reports: {
+    mineralifeMonthlyAug: "a7000000-0000-4000-8000-000000000001",
+    mineralifeTracking: "a7000000-0000-4000-8000-000000000002",
+    mineralifeAdsReview: "a7000000-0000-4000-8000-000000000003",
+    mineralifeUsCampaign: "a7000000-0000-4000-8000-000000000004",
+    mineralifeGscAug: "a7000000-0000-4000-8000-000000000005",
+  },
+  proposals: {
+    pageToClaim: "a7200000-0000-4000-8000-000000000001",
+    queryToLead: "a7200000-0000-4000-8000-000000000002",
+    pullToReport: "a7200000-0000-4000-8000-000000000003",
+  },
+  worksheets: {
+    tkSearchPriorities: "a7300000-0000-4000-8000-000000000001",
+  },
   invoices: {
     gdiJuly: "a6000000-0000-4000-8000-000000000001",
     gdiAugust: "a6000000-0000-4000-8000-000000000005",

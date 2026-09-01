@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monthly performance report — August 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#F4F2EC;--surface:#FFF;--surface-2:#EDE9DE;--ink:#0F1615;--ink-2:#3D4947;--muted:#6E7A77;--line:rgba(15,22,21,.13);--line-soft:rgba(15,22,21,.07);--accent:#006965;--accent-ink:#00504D;--accent-soft:rgba(0,105,101,.10);--warn:#A45A1E;--warn-soft:rgba(164,90,30,.12);--crit:#8E3521;--crit-soft:rgba(142,53,33,.12);--good:#2E7D57;--good-soft:rgba(46,125,87,.12);--display:"Archivo",ui-sans-serif,system-ui,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:ui-sans-serif,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6}
+.wrap{max-width:880px;margin:0 auto;padding:0 32px}
+@media(max-width:720px){.wrap{padding:0 20px}}
+h1,h2,h3,h4,.eyebrow,.chip,.num,th,.ui{font-family:var(--display)}
+h1{font-size:clamp(28px,4.2vw,40px);line-height:1.08;letter-spacing:-.02em;font-weight:700;margin:0 0 10px}
+h2{font-size:20px;line-height:1.2;letter-spacing:-.01em;font-weight:600;margin:0 0 12px}
+h3{font-size:15px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 14px}p:last-child{margin-bottom:0}
+code,.mono{font-family:var(--mono);font-size:.85em;background:var(--surface-2);padding:.1em .34em;border-radius:3px}
+.small{font-size:13.5px;line-height:1.5}.muted{color:var(--muted)}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 14px}
+header.rpt{padding:56px 0 28px;border-bottom:2px solid var(--ink)}
+section{padding:34px 0;border-bottom:1px solid var(--line)}
+.sec-label{display:flex;align-items:baseline;gap:10px;margin:0 0 16px}
+.sec-label .n{font-family:var(--mono);font-size:12px;color:var(--accent-ink)}
+.metastrip{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;margin-top:22px}
+.metastrip>div{flex:1 1 160px;padding:12px 16px;border-right:1px solid var(--line-soft)}
+.metastrip>div:last-child{border-right:0}
+.metastrip .k{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px}
+.metastrip .v{font-family:var(--display);font-size:14px;font-weight:500}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:720px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g2{grid-template-columns:1fr}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.stat .num{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block;font-variant-numeric:tabular-nums}
+.stat .lbl{font-family:var(--ui);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:5px;display:block}
+.stat .sub{font-size:12.5px;color:var(--ink-2);margin-top:5px;display:block;line-height:1.35}
+.stat.good .num{color:var(--good)}.stat.warn .num{color:var(--warn)}.stat.crit .num{color:var(--crit)}.stat.accent .num{color:var(--accent-ink)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+.tablecard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 10px 6px;overflow-x:auto}
+th{text-align:left;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);font-family:var(--ui);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12px}
+.r{text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);font-family:var(--ui)}
+.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.accent{background:var(--accent-soft);color:var(--accent-ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.card.tint{background:var(--surface-2);border-color:var(--line-soft)}
+.rail{border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.rail.crit{border-left-color:var(--crit)}.rail.good{border-left-color:var(--good)}
+.up{color:var(--good);font-weight:600}.down{color:var(--crit);font-weight:600}
+.empty{border:1px dashed var(--line);border-radius:8px;padding:18px 20px;background:rgba(255,255,255,.6)}
+.illus{border:1px dashed rgba(0,105,101,.4);border-radius:8px;background:var(--accent-soft);padding:6px 12px;font-family:var(--ui);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);display:inline-block;margin-bottom:10px}
+ul.tight{margin:0;padding-left:19px}ul.tight li{margin-bottom:5px}
+footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(--ui)}
+@media print{body{background:#fff;font-size:12pt}section{page-break-inside:avoid}header.rpt{padding-top:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="rpt">
+  <p class="eyebrow">Mineralife Nutraceuticals &middot; mycustommanufacturer.com</p>
+  <h1>Monthly performance report</h1>
+  <p class="small muted" style="font-family:var(--ui);font-size:14px">August 2026 &middot; prepared by Tall Karol</p>
+  <div class="metastrip">
+    <div><span class="k">Period</span><span class="v">1&ndash;27 August 2026</span></div>
+    <div><span class="k">Enquiries</span><span class="v">7</span></div>
+    <div><span class="k">Search clicks</span><span class="v">131</span></div>
+    <div><span class="k">Pages indexed</span><span class="v">59 of 63</span></div>
+  </div>
+</header>
+
+<section>
+  <div class="sec-label"><span class="n">01</span><h2>The month in short</h2></div>
+  <p style="max-width:66ch">
+    Seven enquiries came through the website in August. Visits fell sharply &mdash; but almost all of
+    that fall is advertising that stopped running, not the website losing ground. Search visibility
+    actually improved: the site appeared more often and ranked three places higher on average.
+  </p>
+  <p style="max-width:66ch">
+    The finding worth your attention is underneath those numbers. The site was shown in Google
+    <strong>32,878 times</strong> in August. Almost none of those turned into a visit, and of the
+    clicks Google can attribute to a search term, <strong>88% were people typing your company
+    name</strong>. In other words the site is being seen by people looking for supplement
+    manufacturing, and picked by people already looking for Mineralife.
+  </p>
+  <div class="grid g4" style="margin-top:20px">
+    <div class="stat"><span class="num">137</span><span class="lbl">visits</span>
+      <span class="sub">Down from 725 in July &mdash; see section 02.</span></div>
+    <div class="stat good"><span class="num">7</span><span class="lbl">enquiries</span>
+      <span class="sub">From 21 people who started the form.</span></div>
+    <div class="stat accent"><span class="num">12.9</span><span class="lbl">average position</span>
+      <span class="sub">Improved from 16.1 &mdash; 3.2 places better.</span></div>
+    <div class="stat warn"><span class="num">0.40%</span><span class="lbl">click-through rate</span>
+      <span class="sub">Seen 32,878 times, clicked 131 times.</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">02</span><h2>Visits</h2></div>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>&nbsp;</th><th class="r">Aug 1&ndash;27</th><th class="r">Jul 1&ndash;27</th><th class="r">Change</th></tr></thead>
+      <tbody>
+        <tr><td>Visits</td><td class="r mono">137</td><td class="r mono">725</td><td class="r"><span class="down">&minus;81%</span></td></tr>
+        <tr><td>People</td><td class="r mono">105</td><td class="r mono">646</td><td class="r"><span class="down">&minus;84%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card rail crit" style="margin-top:16px">
+    <h3>Where the drop came from</h3>
+    <p class="small">July carried <strong>358 visits from paid advertising</strong> &mdash; 209 from a
+      Google Ads campaign named &ldquo;B2B &ndash; Search &ndash; Competitors&rdquo; and 149 from
+      LinkedIn. In August that was 25 visits from Google Ads and none from LinkedIn.</p>
+    <p class="small" style="margin-top:10px">That accounts for 333 of the 566 lost visits. Most of the
+      rest is knock-on: paid visitors who return directly later show up as direct traffic the
+      following month, and July had 189 direct visits against August's 47.</p>
+    <p class="small" style="margin-top:10px"><strong>This needs confirming with you</strong> &mdash; we
+      can see the advertising in the analytics but we do not run it, and we do not know whether it was
+      paused deliberately, ran out of budget, or stopped for another reason.</p>
+  </div>
+  <div class="tablecard" style="margin-top:16px">
+    <table>
+      <thead><tr><th>Where visits came from</th><th class="r">Aug</th><th class="r">Jul</th></tr></thead>
+      <tbody>
+        <tr><td>Google &amp; Bing search (unpaid)</td><td class="r mono">61</td><td class="r mono">154</td></tr>
+        <tr><td>Other sites linking in</td><td class="r mono">2</td><td class="r mono">13</td></tr>
+        <tr><td>Typed in or bookmarked</td><td class="r mono">47</td><td class="r mono">189</td></tr>
+        <tr><td>Google Ads</td><td class="r mono">24</td><td class="r mono">209</td></tr>
+        <tr><td>LinkedIn ads</td><td class="r mono">1</td><td class="r mono">149</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">03</span><h2>Search visibility</h2></div>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>&nbsp;</th><th class="r">31 Jul &ndash; 27 Aug</th><th class="r">3 &ndash; 30 Jul</th><th class="r">Change</th></tr></thead>
+      <tbody>
+        <tr><td>Times shown in Google</td><td class="r mono">32,878</td><td class="r mono">29,542</td><td class="r"><span class="up">+11.3%</span></td></tr>
+        <tr><td>Clicks</td><td class="r mono">131</td><td class="r mono">157</td><td class="r"><span class="down">&minus;16.6%</span></td></tr>
+        <tr><td>Click-through rate</td><td class="r mono">0.40%</td><td class="r mono">0.53%</td><td class="r"><span class="down">&minus;0.13pt</span></td></tr>
+        <tr><td>Average position</td><td class="r mono">12.9</td><td class="r mono">16.1</td><td class="r"><span class="up">3.2 better</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card rail crit" style="margin-top:16px">
+    <h3>Almost every click is someone already looking for you</h3>
+    <p class="small">Google attributes 68 of August's clicks to a specific search term; it withholds
+      the rest to protect rare or personal searches. Of those 68:</p>
+    <div class="grid g2" style="margin-top:12px">
+      <div class="stat"><span class="num">60</span><span class="lbl">clicks on your name</span>
+        <span class="sub">7 search terms, all variations of &ldquo;Mineralife&rdquo;. 219 times shown.</span></div>
+      <div class="stat crit"><span class="num">8</span><span class="lbl">clicks on everything else</span>
+        <span class="sub">1,108 search terms. 28,964 times shown.</span></div>
+    </div>
+    <p class="small" style="margin-top:12px">Everything that is not your company name converts at
+      <strong>0.03%</strong>. That is the single number this site turns on, and it is not a ranking
+      problem in the usual sense &mdash; the pages are being found.</p>
+  </div>
+
+  <p class="small" style="max-width:66ch;margin-top:20px">These are the searches where the site is
+    shown most and clicked least. Positions between 8 and 12 are the bottom of page one and the top of
+    page two &mdash; seen by people scrolling, chosen by almost nobody.</p>
+  <div class="tablecard" style="margin-top:12px">
+    <table>
+      <thead><tr><th>Search term</th><th class="r">Times shown</th><th class="r">Clicks</th><th class="r">Position</th></tr></thead>
+      <tbody>
+        <tr><td>supplement manufacturer</td><td class="r mono">654</td><td class="r mono">0</td><td class="r mono">9.3</td></tr>
+        <tr><td>supplement manufacturers</td><td class="r mono">513</td><td class="r mono">0</td><td class="r mono">11.4</td></tr>
+        <tr><td>nutraceutical manufacturing</td><td class="r mono">475</td><td class="r mono">0</td><td class="r mono">12.3</td></tr>
+        <tr><td>custom supplement manufacturer</td><td class="r mono">473</td><td class="r mono">0</td><td class="r mono">8.7</td></tr>
+        <tr><td>nutraceutical</td><td class="r mono">383</td><td class="r mono">0</td><td class="r mono">3.1</td></tr>
+        <tr><td>probiotic manufacturer</td><td class="r mono">315</td><td class="r mono">0</td><td class="r mono">4.6</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:8px 10px 4px">
+      Two of these are worth a conversation rather than a fix. &ldquo;Nutraceutical&rdquo; on its own
+      is mostly people looking up the word. &ldquo;Probiotic manufacturer&rdquo; is a category the FAQ
+      says you decline &mdash; being visible for it costs nothing, but it will never convert.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">04</span><h2>Enquiries</h2></div>
+  <p class="small" style="max-width:66ch">Seven enquiries from 137 real visits &mdash; a 5.1% enquiry
+    rate, which is strong for business-to-business manufacturing.</p>
+  <div class="tablecard" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Step</th><th class="r">Count</th><th class="r">Continued</th><th>&nbsp;</th></tr></thead>
+      <tbody>
+        <tr><td>Clicked a call-to-action</td><td class="r mono">84</td><td class="r mono">25%</td>
+          <td><span class="chip warn">the widest step</span></td></tr>
+        <tr><td>Started the enquiry form</td><td class="r mono">21</td><td class="r mono">33%</td><td></td></tr>
+        <tr><td>Submitted it</td><td class="r mono">7</td><td class="r mono">&mdash;</td>
+          <td><span class="chip ok">enquiries</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card rail" style="margin-top:16px">
+    <h3>84 people asked to get in touch. 21 started.</h3>
+    <p class="small">Once someone starts the form, a third finish it &mdash; that part is working
+      well. The widest step is between clicking a button and beginning to fill anything in: 63 people
+      took an action that says &ldquo;I am interested&rdquo; and then did not begin.</p>
+    <p class="small" style="margin-top:10px">Some of that is normal &mdash; a call-to-action click
+      includes people browsing to the contact page to read it. But a quarter of them starting the form
+      is a number worth trying to move.</p>
+    <p class="small" style="margin-top:10px"><strong>Recommendation:</strong> put the first field of
+      the form on the page the button leads to, rather than asking for a second click. It is a small
+      change and this is the step with the most people standing on it.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">05</span><h2>Site health</h2></div>
+  <div class="grid g4">
+    <div class="stat good"><span class="num">59/63</span><span class="lbl">pages indexed</span>
+      <span class="sub">93.7% of the sitemap.</span></div>
+    <div class="stat warn"><span class="num">4</span><span class="lbl">issues open</span>
+      <span class="sub">All the same: never crawled by Google.</span></div>
+    <div class="stat"><span class="num">0</span><span class="lbl">issues fixed</span>
+      <span class="sub">First month of scanning.</span></div>
+    <div class="stat accent"><span class="num">0</span><span class="lbl">sitemap errors</span>
+      <span class="sub">63 submitted, no errors or warnings.</span></div>
+  </div>
+  <div class="tablecard" style="margin-top:16px">
+    <table>
+      <thead><tr><th>Page</th><th>Issue</th><th>Recommendation</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">/blog/mineralife-is-hiring-…</td>
+          <td class="small">Never crawled</td>
+          <td class="small">The web address contains an emoji left over from the old site. Republish at a clean address and redirect. ~15 minutes.</td></tr>
+        <tr><td class="mono">/serving/colorado/boulder</td><td class="small">Never crawled</td>
+          <td class="small" rowspan="3">Google knows the site well &mdash; it has crawled 59 other pages recently &mdash; so skipping these is a judgement about their strength. Either link to them from pages Google visits often, or remove them from the sitemap.</td></tr>
+        <tr><td class="mono">/serving/nevada/las-vegas</td><td class="small">Never crawled</td></tr>
+        <tr><td class="mono">/blog/glutathione-reduced-vs-liposomal</td><td class="small">Never crawled</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small muted" style="margin-top:12px;max-width:66ch">
+    A note for the record: your homepage still appears in Google under both
+    <code>mycustommanufacturer.com</code> and <code>www.mycustommanufacturer.com</code>. The redirect
+    between them is correctly in place, and Google merges the two on its own over the months after a
+    site move. Nothing to do; we will keep watching it.
+  </p>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">06</span><h2>What we recommend next</h2></div>
+  <div class="grid g2">
+    <div class="card rail crit">
+      <h3>1. Close the gap between the button and the form</h3>
+      <p class="small">123 of 145 people who clicked a call-to-action never started the enquiry form.
+        Nothing else on this list is worth as much.</p>
+    </div>
+    <div class="card rail">
+      <h3>2. Decide what the advertising is doing</h3>
+      <p class="small">Paid traffic dropped from 358 visits to 25 between July and August. Whether that
+        was deliberate changes what this report should be measuring next month.</p>
+    </div>
+    <div class="card rail">
+      <h3>3. Fix the hiring post's address</h3>
+      <p class="small">Fifteen minutes, and it removes the only genuine technical defect the scan
+        found.</p>
+    </div>
+    <div class="card rail">
+      <h3>4. Talk about the 28,964</h3>
+      <p class="small">Being shown constantly for &ldquo;supplement manufacturer&rdquo; and never
+        clicked is either a titles-and-descriptions problem or a positioning one. It deserves its own
+        session rather than a line in a report.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">07</span><h2>About these numbers</h2></div>
+  <ul class="tight small" style="max-width:70ch">
+    <li><strong>Two different tools, two different counts.</strong> Google Search Console recorded 131
+      clicks from search; Google Analytics recorded 54 visits from unpaid search. The gap is the
+      cookie consent banner &mdash; visitors who decline are counted by Google's search tools but not
+      by the site's analytics. Both numbers are correct; they measure different things.</li>
+    <li><strong>Dates are not identical.</strong> Search figures run 31 July &ndash; 27 August, the
+      window Google reports as final. Visit figures run 1 &ndash; 27 August.</li>
+    <li><strong>Search terms are incomplete by design.</strong> Google withholds the terms behind
+      roughly half of the clicks to protect rare searches, which is why the brand split is given as a
+      share of the 68 attributed clicks rather than all 131.</li>
+    <li><strong>Automated traffic has been removed.</strong> 49 August visits came from Google's
+      search-syndication network and 8 from a developer machine. Between them they produced 74
+      call-to-action clicks and never started a single form, so leaving them in would have understated
+      the enquiry rate by roughly half. They are excluded from every figure in this report; the raw
+      totals were 203 visits and 158 call-to-action clicks.</li>
+  </ul>
+</section>
+
+<footer>
+  Tall Karol &middot; monthly performance report &middot; Mineralife Nutraceuticals, LLC &middot;
+  Google Search Console and Google Analytics 4, read 30 August 2026 &middot;
+  site scan of 63 URLs, 30 August 2026 &middot; no advertising data available for this period
+</footer>
+
+</div>
+</body>
+</html>

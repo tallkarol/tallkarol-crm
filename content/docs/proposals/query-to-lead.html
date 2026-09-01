@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Query to Lead</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#F4F2EC;--surface:#FFF;--surface-2:#EDE9DE;--ink:#0F1615;--ink-2:#3D4947;--muted:#6E7A77;--line:rgba(15,22,21,.13);--line-soft:rgba(15,22,21,.07);--accent:#006965;--accent-ink:#00504D;--accent-soft:rgba(0,105,101,.10);--warn:#A45A1E;--warn-soft:rgba(164,90,30,.12);--crit:#8E3521;--crit-soft:rgba(142,53,33,.12);--good:#2E7D57;--good-soft:rgba(46,125,87,.12);--display:"Archivo",ui-sans-serif,system-ui,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:ui-sans-serif,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.62}
+.wrap{max-width:1080px;margin:0 auto;padding:0 32px}
+@media(max-width:720px){.wrap{padding:0 20px}body{font-size:16px}}
+h1,h2,h3,h4,.eyebrow,.chip,.num,th,.ui,.sec-num{font-family:var(--display)}
+h1{font-size:clamp(34px,5.4vw,58px);line-height:1.04;letter-spacing:-.02em;font-weight:700;margin:0 0 20px}
+h2{font-size:clamp(25px,3vw,34px);line-height:1.14;letter-spacing:-.015em;font-weight:600;margin:0 0 14px}
+h3{font-size:19px;line-height:1.3;font-weight:600;margin:0 0 7px}
+h4{font-size:15px;line-height:1.35;font-weight:600;margin:0 0 5px}
+p{margin:0 0 16px}p:last-child{margin-bottom:0}
+code,.mono{font-family:var(--mono);font-size:.86em;background:var(--surface-2);padding:.12em .38em;border-radius:3px}
+.lede{font-size:clamp(18px,2.1vw,22px);line-height:1.5;color:var(--ink-2)}
+.muted{color:var(--muted)}.small{font-size:14px;line-height:1.5}
+.eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 20px}
+.sec-num{display:flex;align-items:center;gap:12px;margin:0 0 8px;font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.sec-num::after{content:"";flex:1;height:1px;background:var(--line)}
+section{padding:56px 0;border-top:1px solid var(--line)}
+.hero{padding:72px 0 52px}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:860px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.stack>*+*{margin-top:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px 20px}
+.card.tint{background:var(--surface-2);border-color:var(--line-soft)}
+.rail{border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.rail.warn{border-left-color:var(--warn)}.rail.crit{border-left-color:var(--crit)}.rail.good{border-left-color:var(--good)}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.stat .num{font-size:31px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block}
+.stat .lbl{font-family:var(--ui);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:6px;display:block}
+.stat .sub{font-size:13.5px;color:var(--ink-2);margin-top:7px;display:block;line-height:1.4}
+.stat.crit .num{color:var(--crit)}.stat.warn .num{color:var(--warn)}.stat.good .num{color:var(--good)}.stat.accent .num{color:var(--accent-ink)}
+.metastrip{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;margin-top:34px}
+.metastrip>div{flex:1 1 200px;padding:14px 18px;border-right:1px solid var(--line-soft)}
+.metastrip>div:last-child{border-right:0}
+.metastrip .k{font-family:var(--ui);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.metastrip .v{font-family:var(--display);font-size:14.5px;font-weight:500;line-height:1.35}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2.5px 8px;border-radius:4px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);font-family:var(--ui)}
+.chip.new{background:var(--accent);color:#fff}.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.accent{background:var(--accent-soft);color:var(--accent-ink)}.chip.mono{font-family:var(--mono);font-weight:400}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:left;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);font-family:var(--ui)}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12.5px}.r{text-align:right}
+.tablecard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 10px 8px}
+.mock{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.mock-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface-2);font-family:var(--ui);font-size:12.5px;color:var(--ink-2);flex-wrap:wrap}
+.mock-bar .t{font-family:var(--display);font-weight:600;font-size:13.5px;color:var(--ink)}
+.mock-bar .sp{flex:1}
+.band{padding:6px 14px;background:var(--surface-2);border-bottom:1px solid var(--line-soft);font-family:var(--ui);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.frow{display:flex;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line-soft);align-items:flex-start}
+.frow:last-child{border-bottom:0}
+.frow .id{font-family:var(--mono);font-size:11.5px;color:var(--accent-ink);flex:0 0 76px;padding-top:2px}
+.frow .body{flex:1;min-width:0}
+.frow .txt{font-size:15px;line-height:1.45}
+.frow .prov{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:4px;word-break:break-word}
+.frow .side{flex:0 0 auto;display:flex;flex-direction:column;gap:4px;align-items:flex-end;padding-top:2px}
+pre{margin:0;background:#0F1615;color:#E6E4DC;border-radius:8px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.62}
+pre .c{color:#7E8C89}pre .k{color:#7FD8CE}pre .s{color:#D9C48A}pre .n{color:#C8A2C8}
+.filepath{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding:0 0 7px}
+ul.tight{margin:0;padding-left:20px}ul.tight li{margin-bottom:5px}
+.callout{background:var(--accent-soft);border:1px solid rgba(0,105,101,.22);border-radius:8px;padding:16px 20px}
+.callout.warn{background:var(--warn-soft);border-color:rgba(164,90,30,.24)}
+blockquote{margin:0;padding:12px 0 12px 18px;border-left:3px solid var(--accent);font-size:17px;line-height:1.5}
+.step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line-soft)}
+.step:last-child{border-bottom:0}
+.step .n{flex:0 0 30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:13.5px;font-weight:600}
+.step .c{flex:1}
+.ships{font-size:13.5px;color:var(--accent-ink);margin-top:8px;font-style:italic}
+footer{padding:34px 0 60px;color:var(--muted);font-size:13px;font-family:var(--ui);text-align:center}
+.bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+@media print{body{background:#fff}section{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">TALLKAROL &middot; mycustommanufacturer.com &middot; proposal, part two of three</p>
+  <h1>Query to Lead</h1>
+  <p class="lede">
+    The keyword bank on disk promises 21,725 searches a month. Priced against live Google Ads data it
+    is 6,410, and 84% of the bank has no volume at all &mdash; including every toll-filling term, which
+    is the flagship service, and every geo term, which is fourteen pages of the site. What demand
+    exists sits in four head terms written in the vocabulary the pack tells us to avoid. One of them
+    is the sentence you approved yesterday.
+  </p>
+  <div class="metastrip">
+    <div><span class="k">Scope</span><span class="v">3 campaigns &middot; 1 conversion loop &middot; 1 migration</span></div>
+    <div><span class="k">Touches</span><span class="v">mineralife-crm &middot; mineralife-frontend &middot; tallkarol/crm</span></div>
+    <div><span class="k">Figures</span><span class="v">DataForSEO live, 178 keywords, 30 Aug 2026</span></div>
+    <div><span class="k">Status</span><span class="v">proposal &mdash; nothing built</span></div>
+  </div>
+</header>
+
+<section style="border-top:0">
+  <p class="sec-num">01 &mdash; the read</p>
+  <h2>The bank is priced, and most of it is worth nothing</h2>
+  <p style="max-width:70ch">
+    <code>docs/keyword-research.xlsx</code> holds 183 keywords across 18 clusters with estimated
+    volume ranges, competition and a target page for each. It is good work and it was never priced.
+    I sent all of it to DataForSEO's Google Ads endpoint &mdash; 178 queryable, 5 rejected for
+    exceeding Google's ten-word keyword limit &mdash; and the answer came back for $0.09.
+  </p>
+  <div class="grid g4" style="margin-top:24px">
+    <div class="stat crit"><span class="num">84%</span><span class="lbl">zero volume</span>
+      <span class="sub">149 of 178 keywords return no searches at all.</span></div>
+    <div class="stat warn"><span class="num">3.4&times;</span><span class="lbl">overstated</span>
+      <span class="sub">21,725 estimated per month against 6,410 live.</span></div>
+    <div class="stat crit"><span class="num">30</span><span class="lbl">toll filling, per month</span>
+      <span class="sub">All 15 toll keywords combined. The flagship division.</span></div>
+    <div class="stat accent"><span class="num">$31</span><span class="lbl">cost per click, head term</span>
+      <span class="sub">One click on the one term that has real volume.</span></div>
+  </div>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail crit">
+      <h3>The flagship service has no paid demand</h3>
+      <p class="small">Fifteen toll-filling keywords return 30 searches a month between them, and all
+        30 belong to <code>toll blending services</code> &mdash; a term that isn't supplements and
+        isn't Mineralife. <em>toll filling services for supplements</em>, <em>supplement tolling</em>,
+        <em>toll encapsulation services</em>, <em>liquid toll filling services</em>: zero, zero, zero,
+        zero. The eleven long-tail toll questions the blog plan is built on return zero between
+        them.</p>
+      <p class="small" style="margin-top:10px">Toll filling is the highest-leverage page on the site
+        and the highest-margin division. Nobody searches for it by name. That is a finding about the
+        channel, not about the business.</p>
+    </div>
+    <div class="card rail crit">
+      <h3>Fourteen geo pages, zero geo searches</h3>
+      <p class="small">Every regional keyword is zero: <code>colorado supplement manufacturer</code>,
+        <code>supplement manufacturer colorado springs</code>, <code>supplement manufacturer denver</code>,
+        <code>contract manufacturer colorado</code> &mdash; all of them, 0/mo. The site carries 14
+        <code>/serving</code> pages and 15,357 words built on that set. As an SEO long-tail net that
+        may still earn its keep. As a paid-search target it is nothing, and no geo campaign should be
+        built on it.</p>
+    </div>
+    <div class="card rail warn">
+      <h3>The demand is in the vocabulary the pack avoids</h3>
+      <p class="small">The one term with real volume is
+        <strong>contract supplement manufacturer</strong> &mdash; 1,600/mo, $31.03 &mdash; which the
+        keyword sheet annotates &ldquo;use sparingly&rdquo; and the positioning doc treats as
+        off-terminology. Underneath it: <em>nutraceutical contract manufacturer</em> 720 at $7.95,
+        <em>custom supplement manufacturer</em> 320 at $38.28.</p>
+      <p class="small" style="margin-top:10px">Yesterday you approved &ldquo;award-winning contract
+        manufacturer for established brands&rdquo; as the assertable identity. That is the same
+        phrase. The identity decision and the only paid demand on the board are the same words, which
+        is convenient, and the campaign should be built on them.</p>
+    </div>
+    <div class="card rail warn">
+      <h3>Nothing can write a campaign, but the token is days, not weeks</h3>
+      <p class="small">No Google Ads code exists in any repo &mdash; zero matches for
+        <code>uploadClickConversions</code>, <code>conversionAction</code>, or any Ads client, in
+        <code>mineralife-crm</code>, <code>mineralife-frontend</code> or <code>tallkarol/crm</code>.
+        I had this down as the longest-lead item and it isn't: the token issues instantly from the
+        API Center in a manager account, and the tier above it &mdash; Basic, 15,000 operations a
+        day &mdash; targets two business days, with Google acknowledging backlogs past that.</p>
+      <p class="small" style="margin-top:10px">Two details that do matter. Explorer access, the tier
+        granted automatically, <strong>cannot create accounts or reach Keyword Planner</strong> and
+        caps at 2,880 operations a day, so increment 4 needs Basic. And the token belongs to
+        TALLKAROL's manager account, not to Mineralife &mdash; agency-token-over-linked-sub-account
+        is the standard arrangement, so this is not a thing to ask the client for.</p>
+    </div>
+  </div>
+  <div class="callout warn" style="margin-top:20px">
+    <h4>Two of the head terms are the same term</h4>
+    <p class="small" style="margin-top:6px"><code>supplement contract manufacturer</code> and
+      <code>contract supplement manufacturer</code> both return 1,600/mo at $31.03 with competition
+      index 7 &mdash; identical on every field, because Google normalises word order and reports one
+      number twice. Summed naively, the commercial pool reads 5,580/mo. Deduplicated it is
+      <strong>3,980</strong>. Any budget model built on the raw sum starts 40% optimistic, and this is
+      the sort of thing a spreadsheet of estimates cannot catch.</p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">02 &mdash; the reconciliation</p>
+  <h2>Cluster by cluster, estimate against live</h2>
+  <p style="max-width:70ch">
+    The sheet's estimates are not random &mdash; the head terms are close. They fail in a specific
+    direction: the more specific and more on-brand a cluster is, the more the estimate exceeds
+    reality. Eighty keywords carry a non-zero estimate and a zero live volume, 6,365 searches a month
+    that do not exist.
+  </p>
+  <div class="tablecard" style="margin-top:20px">
+    <table>
+      <thead><tr><th>Cluster</th><th class="r">Keywords</th><th class="r">Estimated</th><th class="r">Live</th><th>Gap</th><th class="r">Avg CPC</th></tr></thead>
+      <tbody>
+        <tr><td>Seed &mdash; head terms</td><td class="r mono">15</td><td class="r mono">13,805</td><td class="r mono">5,410</td>
+          <td><div class="bar"><i style="width:39%;background:var(--good)"></i><i style="width:61%;background:var(--line)"></i></div></td><td class="r mono">$32.11</td></tr>
+        <tr><td>Audience intent</td><td class="r mono">10</td><td class="r mono">1,075</td><td class="r mono">280</td>
+          <td><div class="bar"><i style="width:26%;background:var(--good)"></i><i style="width:74%;background:var(--line)"></i></div></td><td class="r mono">$23.55</td></tr>
+        <tr><td>Powder &amp; capsule</td><td class="r mono">14</td><td class="r mono">1,670</td><td class="r mono">240</td>
+          <td><div class="bar"><i style="width:14%;background:var(--warn)"></i><i style="width:86%;background:var(--line)"></i></div></td><td class="r mono">$14.80</td></tr>
+        <tr><td>Full-service workflow</td><td class="r mono">8</td><td class="r mono">1,010</td><td class="r mono">180</td>
+          <td><div class="bar"><i style="width:18%;background:var(--warn)"></i><i style="width:82%;background:var(--line)"></i></div></td><td class="r mono">$9.98</td></tr>
+        <tr><td>Certifications</td><td class="r mono">12</td><td class="r mono">605</td><td class="r mono">50</td>
+          <td><div class="bar"><i style="width:8%;background:var(--crit)"></i><i style="width:92%;background:var(--line)"></i></div></td><td class="r mono">$10.83</td></tr>
+        <tr><td>White label</td><td class="r mono">11</td><td class="r mono">1,020</td><td class="r mono">40</td>
+          <td><div class="bar"><i style="width:4%;background:var(--crit)"></i><i style="width:96%;background:var(--line)"></i></div></td><td class="r mono">$16.65</td></tr>
+        <tr><td><strong>Toll filling</strong></td><td class="r mono">15</td><td class="r mono">620</td><td class="r mono">30</td>
+          <td><div class="bar"><i style="width:5%;background:var(--crit)"></i><i style="width:95%;background:var(--line)"></i></div></td><td class="r mono">&mdash;</td></tr>
+        <tr><td>Liquid tincture</td><td class="r mono">13</td><td class="r mono">1,100</td><td class="r mono">10</td>
+          <td><div class="bar"><i style="width:1%;background:var(--crit)"></i><i style="width:99%;background:var(--line)"></i></div></td><td class="r mono">$11.65</td></tr>
+        <tr><td>Regional &mdash; 14 <code>/serving</code> pages</td><td class="r mono">7</td><td class="r mono">295</td><td class="r mono">0</td>
+          <td><div class="bar"><i style="width:100%;background:var(--line)"></i></div></td><td class="r mono">&mdash;</td></tr>
+        <tr><td class="muted">8 long-tail clusters, combined</td><td class="r mono">73</td><td class="r mono">525</td><td class="r mono">170</td>
+          <td><div class="bar"><i style="width:32%;background:var(--warn)"></i><i style="width:68%;background:var(--line)"></i></div></td><td class="r mono">$7.41</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:10px 10px 6px">
+      DataForSEO <code>keywords_data/google_ads/search_volume/live</code>, US, English, search
+      partners off, 30 Aug 2026. Live volume is Google's own twelve-month average, the same number the
+      Ads auction is priced from. Averaged CPC covers only the keywords Google returns a bid estimate
+      for.
+    </p>
+  </div>
+
+  <h3 style="margin-top:34px">Everything worth bidding on, in one table</h3>
+  <p class="small" style="max-width:70ch">Twenty-four commercial-intent keywords carry live volume.
+    Deduplicated, that is the entire paid-search opportunity for this client.</p>
+  <div class="tablecard" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Keyword</th><th class="r">Vol/mo</th><th class="r">CPC</th><th class="r">Comp</th><th>Landing page</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">contract supplement manufacturer</td><td class="r mono">1,600</td><td class="r mono">$31.03</td><td class="r mono">7</td><td class="small">/services/toll-filling</td></tr>
+        <tr><td class="mono muted">supplement contract manufacturer</td><td class="r mono muted">dup</td><td class="r mono muted">&mdash;</td><td class="r mono muted">&mdash;</td><td class="small muted">same term, word order</td></tr>
+        <tr><td class="mono">nutraceutical contract manufacturer</td><td class="r mono">720</td><td class="r mono">$7.95</td><td class="r mono">10</td><td class="small">/services/custom-manufacturing</td></tr>
+        <tr><td class="mono">private label supplement manufacturer</td><td class="r mono">590</td><td class="r mono">$24.30</td><td class="r mono">13</td><td class="small"><span class="chip warn">sheet says do not target</span></td></tr>
+        <tr><td class="mono">custom supplement manufacturer</td><td class="r mono">320</td><td class="r mono">$38.28</td><td class="r mono">14</td><td class="small">/services/custom-manufacturing</td></tr>
+        <tr><td class="mono">gmp certified supplement manufacturer</td><td class="r mono">210</td><td class="r mono">$13.27</td><td class="r mono">2</td><td class="small">/certifications</td></tr>
+        <tr><td class="mono">sports nutrition manufacturer</td><td class="r mono">210</td><td class="r mono">$34.10</td><td class="r mono">8</td><td class="small">/certifications</td></tr>
+        <tr><td class="mono">white label supplement manufacturer</td><td class="r mono">170</td><td class="r mono">$28.23</td><td class="r mono">58</td><td class="small">/services/white-label</td></tr>
+        <tr><td class="mono">stick pack manufacturer</td><td class="r mono">140</td><td class="r mono">$32.86</td><td class="r mono">61</td><td class="small">/services/outsourced</td></tr>
+        <tr><td class="mono">organic supplement manufacturer</td><td class="r mono">90</td><td class="r mono">$21.72</td><td class="r mono">35</td><td class="small">/certifications</td></tr>
+        <tr><td class="mono">dietary supplement manufacturer usa</td><td class="r mono">90</td><td class="r mono">$19.26</td><td class="r mono">21</td><td class="small">homepage</td></tr>
+        <tr><td class="mono">turnkey supplement manufacturing</td><td class="r mono">90</td><td class="r mono">&mdash;</td><td class="r mono">4</td><td class="small">/services/custom-manufacturing</td></tr>
+        <tr><td class="muted small" colspan="5">&hellip; 13 more between 10 and 70 searches a month, listed in <code>keywords-live.json</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail crit">
+      <h4>The most expensive click on the board costs $106.08</h4>
+      <p class="small" style="margin-top:8px"><code>cgmp certified supplement manufacturer</code>:
+        $106.08 a click, 20 searches a month. Priced like a term that converts into a manufacturing
+        contract, which it probably does, and rationed at twenty impressions of demand. It is not a
+        campaign. It is one keyword to sit on with a capped bid and watch.</p>
+    </div>
+    <div class="card rail warn">
+      <h4>The banned term is the third-biggest opportunity</h4>
+      <p class="small" style="margin-top:8px"><code>private label supplement manufacturer</code> is
+        590/mo at $24.30 &mdash; more volume than <em>custom supplement manufacturer</em> &mdash; and
+        the sheet marks it <code>DO NOT TARGET</code> as off-terminology. In organic that call is
+        right: you can't rank a page on a word your copy refuses to use. In paid it is a different
+        decision, because a keyword is what the buyer types, not what the ad says. Buying the query
+        and answering it in Mineralife's own words is a legitimate move. It is also a decision only
+        you can make, so it is in section 09.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">03 &mdash; the shift</p>
+  <h2>Three objects, one of them new</h2>
+  <p style="max-width:70ch">
+    Part one ends with a Claim: a verbatim sentence with a page behind it. An ad cannot hold a
+    verbatim sentence &mdash; a headline is thirty characters. So there has to be something between a
+    claim and a headline, and it has to be reviewable, or the whole citation chain breaks at exactly
+    the point where the assertion becomes public.
+  </p>
+  <div class="grid g3" style="margin-top:24px">
+    <div class="card tint"><span class="chip">exists &mdash; gains a price</span>
+      <h3 style="margin-top:10px">A Keyword</h3>
+      <p class="small">Already in the sheet with an estimate. Gains live volume, a CPC, a competition
+        index and a fetch date, so a term that dies stays visible as a term that died rather than
+        disappearing from the plan. Priced the same way facts are dated: from a run, not from
+        judgement.</p>
+      <p class="filepath" style="margin-top:10px">data/mineralife/keywords.json</p>
+    </div>
+    <div class="card"><span class="chip new">new</span>
+      <h3 style="margin-top:10px">An Assertion</h3>
+      <p class="small">One ad-ready string &mdash; a 30-character headline, a 90-character description
+        &mdash; carrying the ID of the fact it compresses and the compression itself as a reviewable
+        act. &ldquo;NSF 455-2 cGMP Certified&rdquo; is not a quote of anything on the site. It is
+        MIN-C-01 squeezed into 24 characters, and somebody has to have agreed that the squeeze is
+        still true.</p>
+      <p class="filepath" style="margin-top:10px">data/mineralife/assertions.json</p>
+    </div>
+    <div class="card"><span class="chip new">new</span>
+      <h3 style="margin-top:10px">A Conversion</h3>
+      <p class="small">Not a form submit. A Lead crossing a pipeline stage, with a value attached and
+        a <code>gclid</code> to send it back on. A form fill and a PO are both &ldquo;conversions&rdquo;
+        to a tag manager; they are three orders of magnitude apart to the business, and Google bids
+        on whichever number you hand it.</p>
+      <p class="filepath" style="margin-top:10px">mineralife-crm &mdash; Lead.stage &rarr; offline import</p>
+    </div>
+  </div>
+  <div class="card tint" style="margin-top:20px">
+    <h3>Why an Assertion is not just a shorter Claim</h3>
+    <p class="small">Because compression is where a true sentence becomes a false one, and it happens
+      silently. &ldquo;Toll projects publish a 5,000-unit MOQ&rdquo; is 39 characters and sourced.
+      &ldquo;Low MOQ toll filling&rdquo; is 20 characters, fits, sounds better, and is not what the
+      site says &mdash; 5,000 units is not a low MOQ in this market, and the claim bank has no row
+      that says it is. Nothing in a claims table catches that, because the claim it descends from is
+      still perfectly true.</p>
+    <p class="small" style="margin-top:10px">So the assertion records both strings and the fact ID, an
+      approval date, and which campaign it is live in. When a fact goes stale in part one's decay
+      check, every assertion built on it is flagged in the same pass &mdash; which is the only reason
+      a page-sourced ad is safe to run for a year.</p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">04 &mdash; the copy problem</p>
+  <h2>None of the facts fit</h2>
+  <p style="max-width:70ch">
+    Part one promised verbatim sentences with a URL behind each. Google's responsive search ad wants
+    up to fifteen headlines of thirty characters and four descriptions of ninety. I measured the eight
+    promotable facts against both limits.
+  </p>
+  <div class="grid g3" style="margin-top:24px">
+    <div class="stat crit"><span class="num">0/8</span><span class="lbl">fit a headline</span>
+      <span class="sub">Shortest fact is 39 characters. The limit is 30.</span></div>
+    <div class="stat warn"><span class="num">4/8</span><span class="lbl">fit a description</span>
+      <span class="sub">The other four run 91 to 132 characters.</span></div>
+    <div class="stat good"><span class="num">12</span><span class="lbl">headlines derivable</span>
+      <span class="sub">Compressed from the same eight facts. Google wants 8+.</span></div>
+  </div>
+  <div class="tablecard" style="margin-top:20px">
+    <table>
+      <thead><tr><th>Fact</th><th class="r">Chars</th><th>Headline (30)</th><th>Description (90)</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">MIN-A-01</td><td class="r mono">61</td><td><span class="chip crit">over</span></td><td><span class="chip ok">fits</span></td></tr>
+        <tr><td class="mono">MIN-C-01</td><td class="r mono">60</td><td><span class="chip crit">over</span></td><td><span class="chip ok">fits</span></td></tr>
+        <tr><td class="mono">MIN-M-01</td><td class="r mono">39</td><td><span class="chip crit">over</span></td><td><span class="chip ok">fits</span></td></tr>
+        <tr><td class="mono">MIN-M-02</td><td class="r mono">84</td><td><span class="chip crit">over</span></td><td><span class="chip ok">fits</span></td></tr>
+        <tr><td class="mono">MIN-P-01</td><td class="r mono">91</td><td><span class="chip crit">over</span></td><td><span class="chip crit">over</span></td></tr>
+        <tr><td class="mono">MIN-P-02</td><td class="r mono">132</td><td><span class="chip crit">over</span></td><td><span class="chip crit">over</span></td></tr>
+        <tr><td class="mono">MIN-S-01</td><td class="r mono">103</td><td><span class="chip crit">over</span></td><td><span class="chip crit">over</span></td></tr>
+        <tr><td class="mono">MIN-M-03</td><td class="r mono">122</td><td><span class="chip crit">over</span></td><td><span class="chip crit">over</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:30px">What the assertion layer produces</h3>
+  <div class="mock" style="margin-top:14px">
+    <div class="mock-bar">
+      <span class="t">Assertions &mdash; mineralife</span>
+      <span class="chip mono">from 8 facts</span>
+      <span class="sp"></span>
+      <span>12 headlines &middot; 4 descriptions &middot; all under limit</span>
+    </div>
+    <div class="band">Headlines &middot; 30 character limit</div>
+    <div class="frow"><span class="id">24 ch</span><div class="body"><div class="txt">NSF 455-2 cGMP Certified</div>
+      <div class="prov">from MIN-C-01 &middot; page:/why-choose-mineralife</div></div>
+      <div class="side"><span class="chip ok">exact term</span></div></div>
+    <div class="frow"><span class="id">21 ch</span><div class="body"><div class="txt">Toll MOQ: 5,000 units</div>
+      <div class="prov">from MIN-M-01 &middot; page:/faq &middot; number preserved, framing dropped</div></div>
+      <div class="side"><span class="chip ok">figure intact</span></div></div>
+    <div class="frow"><span class="id">26 ch</span><div class="body"><div class="txt">White label from 250 units</div>
+      <div class="prov">from MIN-M-02 &middot; page:/faq</div></div>
+      <div class="side"><span class="chip ok">figure intact</span></div></div>
+    <div class="frow"><span class="id">26 ch</span><div class="body"><div class="txt">Capsules #1, #0, #00, #00E</div>
+      <div class="prov">from MIN-P-01 &middot; page:/faq &middot; sizes verbatim, bottling dropped</div></div>
+      <div class="side"><span class="chip ok">figure intact</span></div></div>
+    <div class="frow"><span class="id">25 ch</span><div class="body"><div class="txt">Liquid fills 1 oz &ndash; 64 oz</div>
+      <div class="prov">from MIN-P-02 &middot; page:/faq</div></div>
+      <div class="side"><span class="chip ok">figure intact</span></div></div>
+    <div class="frow"><span class="id">26 ch</span><div class="body"><div class="txt">Award-Winning Manufacturer</div>
+      <div class="prov">from MIN-A-01 &middot; page:/ (h1) &middot; substantiation on 3 pages, award dated 2022</div></div>
+      <div class="side"><span class="chip warn">superlative &mdash; needs review</span></div></div>
+    <div class="frow"><span class="id">22 ch</span><div class="body"><div class="txt">For established brands</div>
+      <div class="prov">from MIN-A-01 &middot; corroborated on 23 pages</div></div>
+      <div class="side"><span class="chip ok">exact term</span></div></div>
+    <div class="band">Descriptions &middot; 90 character limit</div>
+    <div class="frow"><span class="id">74 ch</span><div class="body"><div class="txt">Toll projects publish a 5,000-unit MOQ. NSF 455-2 cGMP certified facility.</div>
+      <div class="prov">MIN-M-01 + MIN-C-01 &middot; first sentence verbatim</div></div>
+      <div class="side"><span class="chip ok">2 facts</span></div></div>
+    <div class="frow"><span class="id">67 ch</span><div class="body"><div class="txt">We say no to what we can't do well. Honest scope before you commit.</div>
+      <div class="prov">MIN-S-01 &middot; compressed from a 103-character sentence</div></div>
+      <div class="side"><span class="chip warn">tone, not fact</span></div></div>
+  </div>
+  <p class="small muted" style="margin-top:10px">
+    Static visual &mdash; no ad written or uploaded. Every character count measured; every fact ID is
+    a real row from part one's bank.
+  </p>
+  <div class="callout warn" style="margin-top:20px">
+    <h4>Google reviews this separately, and the award is the casualty</h4>
+    <p class="small" style="margin-top:6px">The good news first: Google's healthcare and medicines
+      policy does not prohibit this business model. It regulates promotion of supplements to
+      consumers; a B2B manufacturing service isn't that, and no LegitScript-style certification
+      applies. The scanners still read the landing page, so ad copy and pages must stay off consumer
+      health outcomes &mdash; which Mineralife's copy already does.</p>
+    <p class="small" style="margin-top:10px">Three of the twelve headlines carry risk that has nothing
+      to do with whether they are true.</p>
+    <ul class="tight small" style="margin-top:8px">
+      <li><strong>Award-Winning Manufacturer</strong> &mdash; superlatives are enforced under the
+        misrepresentation policy, and what passes review is landing-page evidence carrying the
+        awarding body, the category, and <em>a visible date, typically inside 12&ndash;24 months</em>.
+        The Manufacturing Outlook listing is 2022. Four years old is a legacy claim, and a legacy date
+        is specifically what triggers the automated disapproval &mdash; so putting the award on the
+        page, which was my recommendation yesterday, does not rescue this headline. It is the wrong
+        fix. See section 09.</li>
+      <li><strong>NSF Certified for Sport&reg;</strong> and <strong>NSF 455-2 cGMP</strong> &mdash;
+        registered certification marks in a headline flag under the trademark policy unless
+        authorisation is on file with Google or the use is strictly descriptive. Descriptive use is
+        arguable here and worth arguing, but not worth arguing inside the account's only campaign.</li>
+      <li><strong>FDA Registered</strong> &mdash; not in my twelve, and it is in the homepage trust
+        bar, which is where the reviewer looks. &ldquo;FDA Approved&rdquo; is a permanent
+        disapproval; &ldquo;FDA Registered&rdquo; is accurate and survives, but only with the
+        registration visible on the page it points at. Never let this one drift in an edit.</li>
+    </ul>
+    <p class="small" style="margin-top:10px">The structural answer is the same: the flagged headlines
+      launch in their own ad group, so a disapproval takes down one group rather than the account.</p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">05 &mdash; architecture</p>
+  <h2>Three campaigns, and one of them is a listening post</h2>
+  <p style="max-width:70ch">
+    3,980 deduplicated searches a month at an average $25.67 does not support a wide account. It
+    supports a narrow one, run tight, with the budget concentrated on the terms that exist.
+  </p>
+  <div class="tablecard" style="margin-top:20px">
+    <table>
+      <thead><tr><th>Campaign</th><th>Ad group</th><th class="r">Vol/mo</th><th>Match</th><th>Landing page</th><th>Job</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="3"><strong>Core &mdash; contract manufacturing</strong></td>
+          <td>Contract manufacturer</td><td class="r mono">1,600</td><td class="mono">phrase + exact</td><td class="small">/services/toll-filling</td><td class="small">the whole budget's centre of gravity</td></tr>
+        <tr><td>Nutraceutical / custom</td><td class="r mono">1,130</td><td class="mono">phrase</td><td class="small">/services/custom-manufacturing</td><td class="small">cheaper clicks, same buyer</td></tr>
+        <tr><td>Certifications</td><td class="r mono">510</td><td class="mono">exact</td><td class="small">/certifications</td><td class="small">carries the flagged headlines, alone</td></tr>
+        <tr><td><strong>Catalog &mdash; white label</strong></td><td>White label / low MOQ</td><td class="r mono">210</td><td class="mono">phrase</td><td class="small">/services/white-label</td><td class="small">different buyer, 250-unit entry, own budget</td></tr>
+        <tr><td><strong>Listening post</strong></td><td>Long-tail, capped</td><td class="r mono">&lt;100</td><td class="mono">broad + audience</td><td class="small">/faq</td><td class="small">finds the queries the bank never guessed</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:10px 10px 6px">
+      No geo campaign &mdash; every regional keyword is zero. No toll-filling campaign by name &mdash;
+      the term has no demand, so toll filling is sold on the contract-manufacturer query and the
+      landing page does the translating.
+    </p>
+  </div>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail">
+      <h3>The listening post is the point, not the leftovers</h3>
+      <p class="small">A bank of 183 guesses produced 29 keywords with volume. The reliable way to find
+        the other queries is to buy a small amount of broad match, cap it hard, and read the search
+        terms report &mdash; which returns what people actually typed rather than what a sheet
+        predicted. It is the only part of this plan that produces new information, and it should
+        outlive the campaign that hosts it.</p>
+    </div>
+    <div class="card rail crit" style="grid-column:1/-1">
+      <h3>Every competitor puts the form above the fold. Mineralife has no form at all.</h3>
+      <p class="small">Checked across the five competitors in the teardown tab &mdash; Makers
+        Nutrition, Superior Supplement Manufacturing, Bactolac, Paragon Laboratories, Summit Rx
+        &mdash; all five land paid traffic on a page with a quote-request form above the fold.
+        Mineralife's homepage has no form on it; eleven CTAs point at <code>/contact</code>. Organically
+        that is a defensible choice. At $31.03 a click it is a tax on every visit, paid in the gap
+        between landing and the form.</p>
+      <p class="small" style="margin-top:10px">This does not need a redesign. It needs the paid
+        traffic to land somewhere with the form already on it &mdash; which is a landing-page
+        decision for part two's build, not a change to the site's architecture.</p>
+    </div>
+    <div class="card rail warn" style="grid-column:1/-1">
+      <h3>Negatives are the ICP, written as a filter</h3>
+      <p class="small">Every click costs $25 and up, so the negative list is the budget-protection
+        instrument, not housekeeping. The ICP doc and part one's scope-limit facts already say who is
+        wrong for this business &mdash; the same sentences, inverted, become the list.</p>
+      <table style="margin-top:10px">
+        <tr><td class="small">from MIN-S-01, verbatim scope limits</td><td class="mono small r">delta-8, kratom, dmsa, probiotic, flavor</td></tr>
+        <tr><td class="small">wrong buyer size</td><td class="mono small r">diy, homemade, small batch, sample, single bottle</td></tr>
+        <tr><td class="small">wrong intent</td><td class="mono small r">jobs, salary, careers, wholesale, buy, near me</td></tr>
+        <tr><td class="small">wrong industry &mdash; the earlier draft's mistake</td><td class="mono small r">cnc, injection molding, metal, plastics</td></tr>
+      </table>
+      <p class="small" style="margin-top:10px">That last row is in the list because an earlier plan for
+        this client had the industry wrong. A negative list is a good place to keep a mistake from
+        recurring.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">06 &mdash; the conversion loop</p>
+  <h2>Three quarters built, and the last quarter is the one that matters</h2>
+  <p style="max-width:70ch">
+    The click-to-CRM half of the loop is already working in code, and better than most
+    implementations. What is missing is everything after the Lead row.
+  </p>
+  <div class="grid g4" style="margin-top:24px">
+    <div class="stat good"><span class="num">4</span><span class="lbl">capture points wired</span>
+      <span class="sub">gclid, gbraid, wbraid and UTMs, first- and last-touch.</span></div>
+    <div class="stat warn"><span class="num">90d</span><span class="lbl">first-touch TTL</span>
+      <span class="sub">Right for gclid. 6.4&times; too generous for gbraid/wbraid, which expire at 14.</span></div>
+    <div class="stat good"><span class="num">12</span><span class="lbl">pipeline stages</span>
+      <span class="sub">New through Won — PO Received. The value ladder already exists.</span></div>
+    <div class="stat crit"><span class="num">0</span><span class="lbl">conversions uploaded</span>
+      <span class="sub">No Ads client in any repo. Google sees none of it.</span></div>
+  </div>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail good">
+      <h3>What already works</h3>
+      <ul class="tight small" style="margin-top:8px">
+        <li><code>AttributionCapture.tsx</code> writes on mount and on every client navigation, so a
+          click that lands on <code>/</code> and converts on <code>/contact</code> keeps its gclid.</li>
+        <li><code>attribution.ts</code> stores first- <em>and</em> last-touch with a 90-day TTL, and
+          handles <code>gbraid</code>/<code>wbraid</code> &mdash; the consent-mode variants most
+          implementations drop, which is where iOS and consent-limited clicks go.</li>
+        <li><code>LeadForm.tsx:50</code> and <code>LeadIntakeWizard.tsx:688</code> both call
+          <code>getAttributionForSubmit()</code> and spread it into the POST body.</li>
+        <li><code>/api/leads</code> runs it through <code>pickAttributionFields</code> and
+          <code>attributionToPrismaData</code>; Prisma has <code>gclid</code>, <code>gbraid</code>,
+          <code>wbraid</code> with <code>@@index([gclid])</code>. Same on
+          <code>CatalogDownload</code>.</li>
+      </ul>
+      <p class="small" style="margin-top:10px">It is also independent of the consent gate, because it
+        is localStorage rather than GTM &mdash; so a gclid survives a visitor who never accepts
+        <code>GTM-5B83HMG</code>. Worth knowing deliberately rather than by accident.</p>
+    </div>
+    <div class="card rail crit">
+      <h3>What is missing</h3>
+      <ul class="tight small" style="margin-top:8px">
+        <li>No Ads API client anywhere. Zero matches for <code>uploadClickConversions</code> or
+          <code>conversionAction</code> across all three repos.</li>
+        <li>No conversion value. Every lead is worth the same to Google, so it optimises toward
+          whoever fills in a form &mdash; which for a manufacturer is mostly the wrong buyer.</li>
+        <li>No <code>AW-</code> conversion id in the site's HTML, so even an online conversion has
+          nowhere to land today.</li>
+        <li>Nobody has watched a real click carry a gclid from ad to Lead row on production. The code
+          is right; the end-to-end has never been observed. That is a fifteen-minute test with a
+          tagged URL, and it belongs before spend, not after.</li>
+        <li>No hashed first-party data in the upload. Google's current guidance is Enhanced
+          Conversions for Leads &mdash; gclid <em>plus</em> hashed email and phone in the same
+          payload, which recovers cross-device journeys and clicks whose id was cleared. The Lead
+          model already holds both fields; it is a hashing step, not a schema change.</li>
+      </ul>
+      <p class="small" style="margin-top:10px">One implementation note for whoever builds it: direct
+        offline-conversion uploads migrated toward the Data Manager API framework during 2026, so the
+        integration target should be confirmed against current docs on the day rather than copied from
+        an older example.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:30px">Four signals, no prices &mdash; optimise for leads, learn the rest</h3>
+  <p class="small" style="max-width:70ch">Twelve stages already exist in
+    <code>src/lib/crm/pipeline/defaults.ts</code>. Your call is to optimise for leads in general and
+    set target ROAS next year off real data, so none of these carry a dollar value yet. What they do
+    carry is a <strong>primary or secondary</strong> designation: Google bids on the primary and
+    merely records the rest. That is the whole difference, and it means the deeper stages accumulate
+    a year of history in the account without steering anything until you decide they should.</p>
+  <div class="tablecard" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Stage</th><th>Conversion action</th><th>Role</th><th>Why this one</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">new</td><td>Lead submitted</td><td><span class="chip new">primary</span></td><td class="small">what Google bids toward. Fires immediately, so the account starts learning from week one</td></tr>
+        <tr><td class="mono">qualified</td><td>Qualified lead</td><td><span class="chip">secondary</span></td><td class="small">first point a human agreed it is a real buyer &mdash; the ratio to become next year's target</td></tr>
+        <tr><td class="mono">quote_sent</td><td>Quote sent</td><td><span class="chip">secondary</span></td><td class="small">strongest mid-funnel signal that reliably lands inside 90 days</td></tr>
+        <tr><td class="mono">won</td><td>PO received</td><td><span class="chip">secondary</span></td><td class="small">the revenue truth, recorded from day one so it is there when you want to bid on it</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:10px 10px 6px">
+      <code>discovery_call</code>, <code>formulation_spec</code>, <code>sample_requested</code> and
+      <code>negotiation</code> stay internal &mdash; more upload traffic, no extra signal.
+      <code>lost</code> matters too, but only once there is enough volume for it to mean anything.
+      Bidding starts on Maximize Conversions with no target: a target CPA set before there is data to
+      set it from is a guess that throttles delivery, which is the opposite of getting traffic
+      moving.
+    </p>
+  </div>
+  <div class="callout warn" style="margin-top:20px">
+    <h4>The sales cycle is longer than Google's memory, and now we can size it</h4>
+    <p class="small" style="margin-top:6px">Offline conversion import matches on gclid for
+      <strong>90 days</strong> from the click; past that the upload is rejected outright. Contract
+      manufacturing runs a <strong>60&ndash;180 day</strong> cycle &mdash; custom formulation,
+      stability, contract terms. Spread evenly across that range, only about a quarter of won deals
+      would land inside the window; the other three quarters happen, and Google never hears about
+      them. <span class="muted">(Illustrative &mdash; it assumes an even spread across the cited
+      range, which nobody has measured for this client. The real distribution is something the CRM
+      will know after a year.)</span></p>
+    <p class="small" style="margin-top:10px"><strong>Optimising for leads sidesteps most of this for
+      now.</strong> A lead submission happens at the click, so it is never near the window; only the
+      deeper stages are exposed, and those are secondary &mdash; recorded, not bid on. The window
+      problem arrives in full the day you switch to bidding on quotes or POs, which is the point of
+      recording them from the start. Until then <code>quote_sent</code> is the signal to watch, and
+      <code>expired</code> stays a first-class state in the schema below rather than an error:
+      counting the wins that land too late is how you learn whether the channel works better than
+      Google can see.</p>
+    <p class="small" style="margin-top:10px"><strong>gbraid and wbraid are 14 days, not 90</strong>
+      &mdash; and <code>attribution.ts</code> gives everything the same 90-day TTL. Nothing breaks,
+      but a stored gbraid older than a fortnight is a row the uploader will always be rejected on. The
+      outbox should carry the window per click-id kind and expire those early rather than posting them
+      and reading the error.</p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">07 &mdash; the data layer</p>
+  <h2>One migration, two files</h2>
+  <div class="filepath" style="margin-top:16px">mineralife-crm &mdash; prisma/migrations/</div>
+  <pre><span class="c">-- Conversion uploads are an outbox, not a column on Lead: one row per</span>
+<span class="c">-- (lead, action) so a re-run is idempotent and a rejection is inspectable.</span>
+<span class="k">CREATE TABLE</span> conversion_upload (
+  id            uuid <span class="k">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  lead_id       uuid <span class="k">NOT NULL REFERENCES</span> "Lead"(id) <span class="k">ON DELETE CASCADE</span>,
+  action        text <span class="k">NOT NULL</span>,        <span class="c">-- lead_submitted | qualified | quote_sent | po_received</span>
+  click_id      text <span class="k">NOT NULL</span>,        <span class="c">-- gclid, gbraid or wbraid, whichever the lead carries</span>
+  click_id_kind text <span class="k">NOT NULL</span>,        <span class="c">-- gclid = 90d window; gbraid/wbraid = 14d</span>
+  expires_at    timestamptz <span class="k">NOT NULL</span>,  <span class="c">-- click time + the window for THIS kind, not a flat 90</span>
+  email_sha256  text,                <span class="c">-- enhanced conversions for leads: sent alongside the</span>
+  phone_sha256  text,                <span class="c">-- click id, recovers cross-device and cleared ids</span>
+  value_usd     numeric(10,2),       <span class="c">-- left null in 2026; the column exists so the</span>
+                                     <span class="c">-- tROAS switch next year is a backfill, not a migration</span>
+  occurred_at   timestamptz <span class="k">NOT NULL</span>,  <span class="c">-- when the STAGE changed, not when we uploaded</span>
+  uploaded_at   timestamptz,
+  status        text <span class="k">NOT NULL DEFAULT</span> <span class="s">'pending'</span>,  <span class="c">-- pending | uploaded | rejected | expired</span>
+  error         text,
+  <span class="k">UNIQUE</span> (lead_id, action)
+);
+<span class="k">CREATE INDEX</span> conversion_upload_pending <span class="k">ON</span> conversion_upload (status, occurred_at)
+  <span class="k">WHERE</span> status = <span class="s">'pending'</span>;</pre>
+  <p class="small muted" style="margin-top:10px;max-width:74ch">
+    <code>expired</code> is a real state, not an error state: it records a deal that closed after
+    Google's window shut. Counting those is how you find out whether the sales cycle is outrunning the
+    attribution, which is a fact about the business worth knowing on its own.
+  </p>
+  <div class="filepath" style="margin-top:24px">daedalus-insights/data/mineralife/</div>
+  <pre><span class="c">// keywords.json — the bank, priced and dated</span>
+{
+  <span class="k">"keyword"</span>: <span class="s">"contract supplement manufacturer"</span>,
+  <span class="k">"cluster"</span>: <span class="s">"Seed"</span>, <span class="k">"intent"</span>: <span class="s">"commercial"</span>,
+  <span class="k">"volume"</span>: <span class="n">1600</span>, <span class="k">"cpc"</span>: <span class="n">31.03</span>, <span class="k">"competitionIndex"</span>: <span class="n">7</span>,
+  <span class="k">"estimatedWas"</span>: <span class="n">2100</span>,        <span class="c">// what the sheet claimed, kept for the record</span>
+  <span class="k">"canonical"</span>: <span class="s">"contract supplement manufacturer"</span>,  <span class="c">// word-order duplicates fold here</span>
+  <span class="k">"pricedOn"</span>: <span class="s">"2026-08-30"</span>, <span class="k">"source"</span>: <span class="s">"dataforseo:google_ads/search_volume"</span>
+}
+
+<span class="c">// assertions.json — what an ad is allowed to say</span>
+{
+  <span class="k">"id"</span>: <span class="s">"ASR-014"</span>,
+  <span class="k">"text"</span>: <span class="s">"Toll MOQ: 5,000 units"</span>, <span class="k">"chars"</span>: <span class="n">21</span>, <span class="k">"slot"</span>: <span class="s">"headline"</span>,
+  <span class="k">"from"</span>: <span class="s">"MIN-M-01"</span>,               <span class="c">// the fact it compresses</span>
+  <span class="k">"compression"</span>: <span class="s">"figure preserved, framing dropped"</span>,
+  <span class="k">"approvedBy"</span>: <span class="s">"karol"</span>, <span class="k">"approvedOn"</span>: <span class="s">"2026-09-xx"</span>,
+  <span class="k">"liveIn"</span>: [<span class="s">"core/contract-manufacturer"</span>],
+  <span class="k">"policyRisk"</span>: <span class="s">"none"</span>        <span class="c">// none | superlative | certification-mark</span>
+}</pre>
+</section>
+
+<section>
+  <p class="sec-num">08 &mdash; sequence</p>
+  <h2>Build order</h2>
+  <p style="max-width:70ch">
+    Five increments. The first one is a form to fill in, and it should happen today, because
+    everything after increment three waits on it.
+  </p>
+  <div class="card" style="margin-top:22px">
+    <div class="step"><div class="n">1</div><div class="c">
+      <h4>Generate the token, apply for Basic</h4>
+      <p class="small">The token issues immediately from the API Center in TALLKAROL's manager account
+        &mdash; no client action needed, the agency token works over a linked sub-account. Explorer
+        access arrives with it but cannot create accounts, so apply for Basic the same day: two
+        business days is the target, longer when Google is backlogged. It gates increments 4 and 5
+        and nothing else.</p>
+      <p class="ships">Ships: the only third-party dependency starts clearing on day one.</p></div></div>
+    <div class="step"><div class="n">2</div><div class="c">
+      <h4>Prove one gclid end to end</h4>
+      <p class="small">Load a production URL with a test <code>gclid</code>, submit the real
+        <code>/contact</code> form, read the Lead row. The code path is correct on inspection; nobody
+        has watched it work. Fifteen minutes, before any money is spent.</p>
+      <p class="ships">Ships: the attribution assumption becomes an observation.</p></div></div>
+    <div class="step"><div class="n">3</div><div class="c">
+      <h4>Assertions, approved and stored</h4>
+      <p class="small">Compress the eight facts into the twelve headlines and four descriptions, each
+        carrying its fact ID and its compression note, and get them approved in one pass. Flag the
+        superlative and the certification mark for their own ad group.</p>
+      <p class="ships">Ships: every string an ad can say, with a page behind it.</p></div></div>
+    <div class="step"><div class="n">4</div><div class="c">
+      <h4>The conversion outbox &mdash; before the traffic, not after</h4>
+      <p class="small">The migration, the stage-change hook that writes a pending row, and the uploader
+        that drains it, with Lead submitted as the primary action and the other three recorded as
+        secondary. Feeding conversions back is the point of the whole exercise, so it should be
+        working before the first click rather than chased afterwards.</p>
+      <p class="ships">Ships: the feedback loop exists before there is anything to feed into it.</p>
+      <p class="small muted" style="margin-top:8px">Safety net if it does slip: the gclid is already
+        persisted on every Lead row, so anything captured in the first 90 days can be backfilled. The
+        data is not lost, only late &mdash; which is a reason not to panic, not a reason to reorder.</p></div></div>
+    <div class="step"><div class="n">5</div><div class="c">
+      <h4>Campaigns written paused, then you enable them</h4>
+      <p class="small">Three campaigns, five ad groups, the negative list, budgets, and the RSAs built
+        from increment 3 &mdash; created through the API in <strong>paused</strong> state. You review
+        in the Ads UI and enable. Nothing here enables a campaign.</p>
+      <p class="ships">Ships: traffic starts flowing, into a loop that is already listening.</p></div></div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">09 &mdash; before building</p>
+  <h2>One thing left, and two now settled</h2>
+  <p style="max-width:70ch">Two of the four are answered: optimise for leads, and the budget is the
+    budget. What they changed is recorded below the open one.</p>
+  <div class="stack" style="margin-top:22px">
+    <div class="card rail">
+      <h3>The only open question: do we buy &ldquo;private label&rdquo;?</h3>
+      <p class="small"><strong>What I need:</strong> yes or no on bidding a term Mineralife's copy
+        refuses to use.</p>
+      <p class="small" style="margin-top:10px"><strong>Why I'm asking:</strong>
+        <code>private label supplement manufacturer</code> is 590/mo at $24.30 &mdash; nearly twice
+        the volume of <em>custom supplement manufacturer</em> &mdash; and the sheet marks it
+        <code>DO NOT TARGET</code> on terminology grounds. In organic that is correct. In paid, the
+        keyword is what the buyer types; the ad and the page still answer in your words.</p>
+      <p class="small" style="margin-top:10px"><strong>My call:</strong> buy it, phrase match, in its
+        own ad group with its own budget so it can be judged on its own numbers and switched off
+        cleanly. The risk is a buyer arriving with the wrong model in mind, which is a landing-page
+        problem, and <code>/services/white-label</code> already exists to solve it. Your stated goal
+        &mdash; traffic with intent, flowing now &mdash; points the same way: somebody typing
+        &ldquo;private label supplement manufacturer&rdquo; is looking for exactly this business,
+        using a word it prefers not to use about itself.</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">Optimise for leads. No conversion values this year.</h3>
+      <p class="small">Google bids on Lead submitted; Qualified, Quote sent and PO received are
+        uploaded as secondary actions, recorded but not steering anything. Bidding starts on Maximize
+        Conversions with no target CPA, because a target set before there is data to set it from
+        throttles delivery. The <code>value_usd</code> column exists and stays null, so switching to
+        target ROAS next year is a backfill rather than a migration &mdash; and by then the account
+        holds a year of qualified-to-quote-to-PO ratios to set the target from.</p>
+      <p class="small" style="margin-top:10px">A useful side effect: optimising on a signal that fires
+        at the click means the 90-day attribution window barely bites this year. It bites the day you
+        switch to bidding on quotes, which is exactly why they get recorded from day one.</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">The budget is the budget. Get traffic moving.</h3>
+      <p class="small">So the arithmetic in section 09's earlier draft stops being a decision and
+        becomes an expectation-setter: at $25&ndash;31 a click, a couple of thousand a month is a
+        couple of thousand clicks a year, single-digit leads a month, and a sample too thin to
+        optimise on for a while. None of that is a reason to wait &mdash; it is the reason the first
+        month runs narrow, on the core campaign only, exact and phrase, no broad. The listening post
+        gets switched on once the conversion loop is confirmed to be reporting.</p>
+      <p class="small" style="margin-top:10px">One thing worth spending on ahead of clicks: paid
+        traffic should land on a page that has the form on it. All five competitors do this and the
+        homepage does not. At these prices it is the cheapest conversion-rate improvement available.</p>
+    </div>
+    <div class="card rail">
+      <h3>Standing recommendation: drop &ldquo;award-winning&rdquo; unless something newer exists</h3>
+      <p class="small"><strong>What I need:</strong> either a recognition from the last year or two, or
+        a decision to stop saying &ldquo;award-winning&rdquo; in ads.</p>
+      <p class="small" style="margin-top:10px"><strong>Why I'm asking:</strong> yesterday I said put the
+        award on the landing page and the headline would run. <strong>That was wrong, and I'm
+        correcting it.</strong> What passes a superlative review is landing-page evidence with a
+        visible date, and the reviewer expects that date to be recent &mdash; roughly the last 12 to
+        24 months. Manufacturing Outlook named Mineralife in 2022. Publishing it with the year makes
+        the claim honest and makes the disapproval more likely, not less, because a legacy date is
+        exactly the pattern the automated check looks for. Publishing it without the year is the
+        thing I would not do.</p>
+      <p class="small" style="margin-top:10px"><strong>My call:</strong> drop &ldquo;Award-Winning
+        Manufacturer&rdquo; from the headline set. It costs one headline of twelve and removes the
+        single most likely cause of a disapproval on a brand-new account, which is the worst moment to
+        have one. The award stays on the site and stays in the fact bank &mdash; it is true, and it is
+        good sales material in a call. It is just not an ad headline in 2026. If a 2025 or 2026
+        recognition exists that I haven't found, this reverses immediately and the headline goes back
+        in.</p>
+    </div>
+  </div>
+  <div class="callout warn" style="margin-top:24px">
+    <h4>Where the benchmark numbers come from</h4>
+    <p class="small" style="margin-top:6px">The conversion rates, CPLs, close rates and cycle lengths
+      in this section are published category benchmarks for B2B industrial and manufacturing search,
+      gathered in a separate research pass on 30 August 2026 &mdash; not measurements of this client,
+      who has never run a paid campaign. They are load-bearing for the budget question and for the
+      90-day window argument, so they should be replaced with Mineralife's own numbers as soon as
+      there are any. Everything else in this proposal is measured: the keyword figures are a live
+      DataForSEO pull, and the code citations were read from the repos.</p>
+  </div>
+  <div class="callout" style="margin-top:20px">
+    <h4>Still outstanding from part one</h4>
+    <p class="small" style="margin-top:6px">The Search Console grant for
+      <code>tk-crm@tallkarol-analytics-bridge.iam.gserviceaccount.com</code>. It does not block
+      anything here &mdash; paid search reports through Google Ads, not Search Console &mdash; but
+      part three cannot compare paid against organic without it.</p>
+    <p class="small" style="margin-top:10px"><strong>It does not need DNS.</strong> The property in
+      <code>config/sites/mineralife.json</code> is a URL-prefix property,
+      <code>https://www.mycustommanufacturer.com/</code>, not a <code>sc-domain:</code> one &mdash;
+      only the domain form requires a DNS record. If the property already exists and somebody holds
+      Owner on it, adding a user is a settings change and no verification happens at all. If it has to
+      be verified from scratch, a URL-prefix property takes an HTML file in
+      <code>mineralife-frontend/public/</code>, a meta tag through
+      <code>buildDefaultMetadata()</code>, or the <code>GTM-5B83HMG</code> container that is already
+      live on the site. Any of the three is a deploy, not a DNS change.</p>
+  </div>
+</section>
+
+<footer>
+  Tall Karol &middot; <span class="mono">mycustommanufacturer.com</span> &middot; proposal, part two of three
+  &middot; keyword figures from a live DataForSEO pull of 178 keywords on 30 August 2026 ($0.09)
+  &middot; code citations verified by reading the repos &middot; nothing built
+</footer>
+
+</div>
+</body>
+</html>

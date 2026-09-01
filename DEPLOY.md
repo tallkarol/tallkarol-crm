@@ -23,13 +23,14 @@ Set these variables on the **web** service:
 | `RESEND_API_KEY` | same key as the marketing site / demos |
 | `RESEND_FROM_EMAIL` | `hello@tallkarol.com` |
 | `APP_URL` | `https://crm.tallkarol.com` |
-| `ADMIN_EMAILS` | `hello@tallkarol.com,karolzbuczek@gmail.com` |
+| `ADMIN_EMAILS` | `karol@tallkarol.com,agent@tallkarol.com,karolzbuczek@gmail.com` |
 | `SESSION_SECRET` | `openssl rand -hex 32` |
 | `INGEST_SECRET` | `openssl rand -hex 32` (copy this for Vercel too) |
 | `NODE_ENV` | `production` |
 | `UPTIMEROBOT_API_KEY` | UptimeRobot **read-only** key (never the main key) |
 | `SWEEP_SECRET` | `openssl rand -hex 32` — the cron tick's bearer |
 | `WIDGET_TOKEN` | `openssl rand -hex 32` — the macOS widgets' bearer |
+| `VAULT_SECRET` | `openssl rand -hex 32` — encrypts `/vault`. Falls back to `SESSION_SECRET` if unset. Do not rotate it once entries exist unless you re-save them. |
 
 ## 3. Custom domain
 

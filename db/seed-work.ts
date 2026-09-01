@@ -1,4 +1,4 @@
-import { inArray, sql } from "drizzle-orm"
+import { eq, inArray, sql } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
 import { loadLocalEnv } from "../lib/load-env"
@@ -10,11 +10,14 @@ import {
   productStudios,
   products,
   projects,
+  proposals,
+  reports,
   retainers,
   taskItems,
   tasks,
   timeEntries,
   workstreams,
+  worksheets,
 } from "./schema"
 import { ARTIST_HOUSE_TERMS } from "./agreements/artist-house"
 import { DQS_TERMS } from "./agreements/dqs"
@@ -1221,6 +1224,194 @@ async function main() {
         updatedAt: new Date(),
       },
     })
+
+  await db
+    .insert(reports)
+    .values([
+      {
+        id: IDS.reports.mineralifeMonthlyAug,
+        title: "Monthly performance report — August 2026",
+        slug: "monthly-performance-august-2026",
+        bodyPath: "reports/monthly-performance-august-2026.html",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        cadence: "monthly",
+        periodLabel: "August 2026",
+        status: "filed",
+        notes: "Sample monthly for mycustommanufacturer.com. Relocated from proposals/wip/client-report-sample.html.",
+      },
+      {
+        id: IDS.reports.mineralifeTracking,
+        title: "Tracking review & full-funnel analysis",
+        slug: "tracking-funnel-review",
+        bodyPath: "reports/tracking-funnel-review.html",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        cadence: "none",
+        periodLabel: "August 2026",
+        status: "filed",
+        notes: "Attribution, forms, and the paid-to-enquiry gap. Relocated from proposals/wip/tracking-funnel-review.html.",
+      },
+      {
+        id: IDS.reports.mineralifeAdsReview,
+        title: "Google Ads review and campaign plan",
+        slug: "google-ads-review",
+        bodyPath: "reports/google-ads-review.html",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        cadence: "none",
+        periodLabel: "30 August 2026",
+        status: "filed",
+        notes: "Account 624-370-2566. Competitors campaign diagnosis. Relocated from proposals/wip/google-ads-review.html.",
+      },
+      {
+        id: IDS.reports.mineralifeUsCampaign,
+        title: "The US campaign — build and comparison plan",
+        slug: "us-campaign-plan",
+        bodyPath: "reports/us-campaign-plan.html",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        cadence: "none",
+        periodLabel: "30 August 2026",
+        status: "filed",
+        notes: "Four ad groups, four landing pages, judged against Competitors. Relocated from proposals/wip/us-campaign-plan.html.",
+      },
+      {
+        id: IDS.reports.mineralifeGscAug,
+        title: "Search Console maintenance — August 2026",
+        slug: "search-console-maintenance-august-2026",
+        bodyPath: "reports/search-console-maintenance-august-2026.html",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        cadence: "monthly",
+        periodLabel: "August 2026",
+        status: "filed",
+        notes: "Index coverage sample. Relocated from proposals/wip/maintenance-report-sample.html.",
+      },
+    ])
+    .onConflictDoUpdate({
+      target: reports.id,
+      set: {
+        title: sql`excluded.title`,
+        slug: sql`excluded.slug`,
+        bodyPath: sql`excluded.body_path`,
+        periodLabel: sql`excluded.period_label`,
+        status: sql`excluded.status`,
+        notes: sql`excluded.notes`,
+        updatedAt: new Date(),
+      },
+    })
+
+  await db
+    .insert(proposals)
+    .values([
+      {
+        id: IDS.proposals.pageToClaim,
+        title: "Page to Claim",
+        slug: "page-to-claim",
+        bodyPath: "proposals/page-to-claim.html",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        series: "Page to Report",
+        seriesPart: 1,
+        seriesOf: 3,
+        status: "draft",
+        notes: "Part 1 of 3. Relocated from proposals/wip/page-to-claim.html.",
+      },
+      {
+        id: IDS.proposals.queryToLead,
+        title: "Query to Lead",
+        slug: "query-to-lead",
+        bodyPath: "proposals/query-to-lead.html",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        series: "Page to Report",
+        seriesPart: 2,
+        seriesOf: 3,
+        status: "draft",
+        notes: "Part 2 of 3. Relocated from proposals/wip/query-to-lead.html.",
+      },
+      {
+        id: IDS.proposals.pullToReport,
+        title: "Pull to Report",
+        slug: "pull-to-report",
+        bodyPath: "proposals/pull-to-report.html",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        series: "Page to Report",
+        seriesPart: 3,
+        seriesOf: 3,
+        status: "draft",
+        notes: "Part 3 of 3. Relocated from proposals/wip/pull-to-report.html.",
+      },
+    ])
+    .onConflictDoUpdate({
+      target: proposals.id,
+      set: {
+        title: sql`excluded.title`,
+        slug: sql`excluded.slug`,
+        bodyPath: sql`excluded.body_path`,
+        series: sql`excluded.series`,
+        seriesPart: sql`excluded.series_part`,
+        seriesOf: sql`excluded.series_of`,
+        status: sql`excluded.status`,
+        notes: sql`excluded.notes`,
+        updatedAt: new Date(),
+      },
+    })
+
+  // The house client is not a seed fixture — it was created in the app — so the
+  // worksheet is only seeded when that row is actually present.
+  const house = await db
+    .select({ id: clients.id })
+    .from(clients)
+    .where(eq(clients.slug, "tallkarol"))
+    .limit(1)
+
+  if (house.length === 0) {
+    console.log("No tallkarol client row — skipped the Search Priorities Workbook.")
+  } else {
+    await db
+      .insert(worksheets)
+      .values([
+        {
+          id: IDS.worksheets.tkSearchPriorities,
+          title: "Search Priorities Workbook",
+          slug: "search-priorities-workbook",
+          bodyPath: "worksheets/search-priorities-workbook.html",
+          clientId: house[0].id,
+          instrument: "Search Priorities Workbook",
+          version: "v1",
+          mode: "interview",
+          status: "review",
+          filledOn: "2026-08-30",
+          questionCount: 45,
+          openCount: 4,
+          internal: true,
+          notes:
+            "Filled for tallkarol.com as the proof of concept. Four answers still need Karol: W3, W4a, E4b, R4. Contains internal-only answers (Q1 client briefs, C1a hiring history) — scrub before showing anyone outside the studio.",
+        },
+      ])
+      .onConflictDoUpdate({
+        target: worksheets.id,
+        set: {
+          title: sql`excluded.title`,
+          slug: sql`excluded.slug`,
+          bodyPath: sql`excluded.body_path`,
+          clientId: sql`excluded.client_id`,
+          instrument: sql`excluded.instrument`,
+          version: sql`excluded.version`,
+          mode: sql`excluded.mode`,
+          status: sql`excluded.status`,
+          filledOn: sql`excluded.filled_on`,
+          questionCount: sql`excluded.question_count`,
+          openCount: sql`excluded.open_count`,
+          internal: sql`excluded.internal`,
+          notes: sql`excluded.notes`,
+          updatedAt: new Date(),
+        },
+      })
+  }
 
   console.log("Work seed complete.")
   await client.end()

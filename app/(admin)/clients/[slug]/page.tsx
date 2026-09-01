@@ -31,7 +31,10 @@ import {
   formatMoney,
   PRODUCT_STATUS_LABEL,
   PROJECT_STATUS_LABEL,
+  PROPOSAL_STATUS_LABEL,
   RETAINER_STATUS_LABEL,
+  WORKSHEET_MODE_LABEL,
+  WORKSHEET_STATUS_LABEL,
 } from "@/lib/work"
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
@@ -105,9 +108,17 @@ export default async function ClientDetailPage({
   const sortedContracts = [...client.contracts].sort((a, b) =>
     (b.effectiveOn ?? "") > (a.effectiveOn ?? "") ? 1 : -1
   )
-  const sortedReports = [...client.reports]
-    .sort((a, b) => (a.status === b.status ? 0 : a.status === "due" ? -1 : 1))
-    .slice(0, 6)
+  const sortedReports = [...client.reports].sort((a, b) =>
+    a.status === b.status ? 0 : a.status === "due" ? -1 : 1
+  )
+  const sortedProposals = [...client.proposals].sort((a, b) => {
+    if (a.series !== b.series) return a.series.localeCompare(b.series)
+    return (a.seriesPart ?? 99) - (b.seriesPart ?? 99)
+  })
+  // Open answers first — a worksheet is chased for what it still does not say.
+  const sortedWorksheets = [...client.worksheets].sort(
+    (a, b) => b.openCount - a.openCount
+  )
 
   const hasWork =
     client.retainers.length > 0 || client.projects.length > 0 || client.products.length > 0
@@ -122,6 +133,10 @@ export default async function ClientDetailPage({
       ? { id: "tickets", label: "Tickets" }
       : null,
     sortedReports.length > 0 ? { id: "reports", label: "Reports" } : null,
+    sortedProposals.length > 0 ? { id: "proposals", label: "Proposals" } : null,
+    sortedWorksheets.length > 0
+      ? { id: "worksheets", label: "Worksheets" }
+      : null,
   ].filter((item): item is { id: string; label: string } => item != null)
 
   return (
@@ -757,9 +772,111 @@ export default async function ClientDetailPage({
                           .join(" · ") || "One-off"}
                       </p>
                     </div>
-                    <StatusPill tone={report.status === "due" ? "warn" : "good"}>
-                      {report.status === "due" ? "Due" : "Filed"}
-                    </StatusPill>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <StatusPill tone={report.status === "due" ? "warn" : "good"}>
+                        {report.status === "due" ? "Due" : "Filed"}
+                      </StatusPill>
+                      {report.slug && report.bodyPath ? (
+                        <a
+                          href={ROUTES.reportDoc(report.slug)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[11px] font-semibold text-tk-teal hover:underline"
+                        >
+                          View
+                        </a>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Block>
+          ) : null}
+
+          {sortedProposals.length > 0 ? (
+            <Block id="proposals" title="Proposals">
+              <div className="divide-y divide-tk-slate/10 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+                {sortedProposals.map((proposal) => (
+                  <div
+                    key={proposal.id}
+                    className="flex items-center justify-between gap-4 px-5 py-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-[13.5px] font-semibold text-tk-onyx">
+                        {proposal.title}
+                      </p>
+                      <p className="mt-0.5 text-xs text-tk-slate/60">
+                        {[
+                          proposal.seriesPart && proposal.seriesOf
+                            ? `${proposal.series} · ${proposal.seriesPart} of ${proposal.seriesOf}`
+                            : proposal.series || null,
+                          PROPOSAL_STATUS_LABEL[proposal.status],
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                    {proposal.slug && proposal.bodyPath ? (
+                      <a
+                        href={ROUTES.proposalDoc(proposal.slug)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="shrink-0 text-[11px] font-semibold text-tk-teal hover:underline"
+                      >
+                        View
+                      </a>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </Block>
+          ) : null}
+
+          {/* ------------------------------------------------ worksheets */}
+          {sortedWorksheets.length > 0 ? (
+            <Block id="worksheets" title="Worksheets">
+              <div className="divide-y divide-tk-slate/10 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+                {sortedWorksheets.map((worksheet) => (
+                  <div
+                    key={worksheet.id}
+                    className="flex items-center justify-between gap-4 px-5 py-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-[13.5px] font-semibold text-tk-onyx">
+                        {worksheet.title}
+                      </p>
+                      <p className="mt-0.5 text-xs text-tk-slate/60">
+                        {[
+                          worksheet.instrument
+                            ? `${worksheet.instrument}${worksheet.version ? ` ${worksheet.version}` : ""}`
+                            : null,
+                          WORKSHEET_MODE_LABEL[worksheet.mode],
+                          WORKSHEET_STATUS_LABEL[worksheet.status],
+                          worksheet.questionCount
+                            ? `${worksheet.questionCount} questions`
+                            : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {worksheet.openCount > 0 ? (
+                        <StatusPill tone="warn">
+                          {worksheet.openCount} open
+                        </StatusPill>
+                      ) : null}
+                      {worksheet.slug && worksheet.bodyPath ? (
+                        <a
+                          href={ROUTES.worksheetDoc(worksheet.slug)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[11px] font-semibold text-tk-teal hover:underline"
+                        >
+                          View
+                        </a>
+                      ) : null}
+                    </div>
                   </div>
                 ))}
               </div>

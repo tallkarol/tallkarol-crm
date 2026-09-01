@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pull to Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#F4F2EC;--surface:#FFF;--surface-2:#EDE9DE;--ink:#0F1615;--ink-2:#3D4947;--muted:#6E7A77;--line:rgba(15,22,21,.13);--line-soft:rgba(15,22,21,.07);--accent:#006965;--accent-ink:#00504D;--accent-soft:rgba(0,105,101,.10);--warn:#A45A1E;--warn-soft:rgba(164,90,30,.12);--crit:#8E3521;--crit-soft:rgba(142,53,33,.12);--good:#2E7D57;--good-soft:rgba(46,125,87,.12);--display:"Archivo",ui-sans-serif,system-ui,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:ui-sans-serif,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.62}
+.wrap{max-width:1080px;margin:0 auto;padding:0 32px}
+@media(max-width:720px){.wrap{padding:0 20px}body{font-size:16px}}
+h1,h2,h3,h4,.eyebrow,.chip,.num,th,.ui,.sec-num{font-family:var(--display)}
+h1{font-size:clamp(34px,5.4vw,58px);line-height:1.04;letter-spacing:-.02em;font-weight:700;margin:0 0 20px}
+h2{font-size:clamp(25px,3vw,34px);line-height:1.14;letter-spacing:-.015em;font-weight:600;margin:0 0 14px}
+h3{font-size:19px;line-height:1.3;font-weight:600;margin:0 0 7px}
+h4{font-size:15px;line-height:1.35;font-weight:600;margin:0 0 5px}
+p{margin:0 0 16px}p:last-child{margin-bottom:0}
+code,.mono{font-family:var(--mono);font-size:.86em;background:var(--surface-2);padding:.12em .38em;border-radius:3px}
+.lede{font-size:clamp(18px,2.1vw,22px);line-height:1.5;color:var(--ink-2)}
+.muted{color:var(--muted)}.small{font-size:14px;line-height:1.5}
+.eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 20px}
+.sec-num{display:flex;align-items:center;gap:12px;margin:0 0 8px;font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.sec-num::after{content:"";flex:1;height:1px;background:var(--line)}
+section{padding:56px 0;border-top:1px solid var(--line)}
+.hero{padding:72px 0 52px}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:860px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.stack>*+*{margin-top:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px 20px}
+.card.tint{background:var(--surface-2);border-color:var(--line-soft)}
+.rail{border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.rail.warn{border-left-color:var(--warn)}.rail.crit{border-left-color:var(--crit)}.rail.good{border-left-color:var(--good)}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.stat .num{font-size:31px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block}
+.stat .lbl{font-family:var(--ui);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:6px;display:block}
+.stat .sub{font-size:13.5px;color:var(--ink-2);margin-top:7px;display:block;line-height:1.4}
+.stat.crit .num{color:var(--crit)}.stat.warn .num{color:var(--warn)}.stat.good .num{color:var(--good)}.stat.accent .num{color:var(--accent-ink)}
+.metastrip{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;margin-top:34px}
+.metastrip>div{flex:1 1 200px;padding:14px 18px;border-right:1px solid var(--line-soft)}
+.metastrip>div:last-child{border-right:0}
+.metastrip .k{font-family:var(--ui);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.metastrip .v{font-family:var(--display);font-size:14.5px;font-weight:500;line-height:1.35}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2.5px 8px;border-radius:4px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);font-family:var(--ui)}
+.chip.new{background:var(--accent);color:#fff}.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.accent{background:var(--accent-soft);color:var(--accent-ink)}.chip.mono{font-family:var(--mono);font-weight:400}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:left;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);font-family:var(--ui)}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12.5px}.r{text-align:right}
+.tablecard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 10px 8px}
+.mock{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.mock-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface-2);font-family:var(--ui);font-size:12.5px;color:var(--ink-2);flex-wrap:wrap}
+.mock-bar .t{font-family:var(--display);font-weight:600;font-size:13.5px;color:var(--ink)}
+.mock-bar .sp{flex:1}
+.band{padding:6px 14px;background:var(--surface-2);border-bottom:1px solid var(--line-soft);font-family:var(--ui);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.frow{display:flex;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line-soft);align-items:flex-start}
+.frow:last-child{border-bottom:0}
+.frow .id{font-family:var(--mono);font-size:11.5px;color:var(--accent-ink);flex:0 0 76px;padding-top:2px}
+.frow .body{flex:1;min-width:0}
+.frow .txt{font-size:15px;line-height:1.45}
+.frow .prov{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:4px;word-break:break-word}
+.frow .side{flex:0 0 auto;display:flex;flex-direction:column;gap:4px;align-items:flex-end;padding-top:2px}
+pre{margin:0;background:#0F1615;color:#E6E4DC;border-radius:8px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.62}
+pre .c{color:#7E8C89}pre .k{color:#7FD8CE}pre .s{color:#D9C48A}pre .n{color:#C8A2C8}
+.filepath{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding:0 0 7px}
+ul.tight{margin:0;padding-left:20px}ul.tight li{margin-bottom:5px}
+.callout{background:var(--accent-soft);border:1px solid rgba(0,105,101,.22);border-radius:8px;padding:16px 20px}
+.callout.warn{background:var(--warn-soft);border-color:rgba(164,90,30,.24)}
+blockquote{margin:0;padding:12px 0 12px 18px;border-left:3px solid var(--accent);font-size:17px;line-height:1.5}
+.step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line-soft)}
+.step:last-child{border-bottom:0}
+.step .n{flex:0 0 30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:13.5px;font-weight:600}
+.step .c{flex:1}
+.ships{font-size:13.5px;color:var(--accent-ink);margin-top:8px;font-style:italic}
+footer{padding:34px 0 60px;color:var(--muted);font-size:13px;font-family:var(--ui);text-align:center}
+.bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+@media print{body{background:#fff}section{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">TALLKAROL &middot; mycustommanufacturer.com &middot; proposal, part three of three</p>
+  <h1>Pull to Report</h1>
+  <p class="lede">
+    Sixteen months of Search Console history is now archived, GA4 is wired on both sides, and the
+    index scan runs end to end. None of it runs on its own. There is no cron anywhere in any repo,
+    the monthly client report is only written if a human clicks Refresh during the month, and three
+    of the four data sources have never been read on a schedule. This is the clock, and what it
+    should carry.
+  </p>
+  <div class="metastrip">
+    <div><span class="k">Scope</span><span class="v">1 ticker &middot; 5 jobs &middot; 3 cadences</span></div>
+    <div><span class="k">Touches</span><span class="v">tallkarol/crm &middot; daedalus-insights</span></div>
+    <div><span class="k">Figures</span><span class="v">live archive + repo state, 30 Aug 2026</span></div>
+    <div><span class="k">Status</span><span class="v">a third already built</span></div>
+  </div>
+</header>
+
+<section style="border-top:0">
+  <p class="sec-num">01 &mdash; the read</p>
+  <h2>Everything works and nothing runs</h2>
+  <p style="max-width:70ch">
+    Part three was going to argue for a reporting layer. Over the last day most of the argument
+    became code instead, so this is shorter than its siblings and it lands on one decision you have
+    already made. What follows is only what is still missing.
+  </p>
+  <div class="grid g4" style="margin-top:24px">
+    <div class="stat crit"><span class="num">0</span><span class="lbl">scheduled jobs</span>
+      <span class="sub">No cron in <code>railway.json</code>, no workflows, in any repo.</span></div>
+    <div class="stat crit"><span class="num">3</span><span class="lbl">jobs awaiting a caller</span>
+      <span class="sub"><code>monitors/sweep</code>, <code>insights/gsc-scan</code>, the monthly freeze.</span></div>
+    <div class="stat warn"><span class="num">1 of 4</span><span class="lbl">sources on a cadence</span>
+      <span class="sub">GA4, Google Ads and DataForSEO are read by nothing, ever.</span></div>
+    <div class="stat accent"><span class="num">16</span><span class="lbl">months archived</span>
+      <span class="sub">2,514 clicks, 338,190 impressions &mdash; and it sits on a laptop.</span></div>
+  </div>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail crit">
+      <h3>The monthly report only exists if somebody visits the page</h3>
+      <p class="small"><code>ensureMonthlyArchive()</code> writes the frozen
+        <code>snapshot_archive</code> row and its <code>reports</code> record. It is called from
+        exactly one place &mdash; <code>lib/insights/actions.ts:29</code>, inside the Refresh action.
+        So a month in which nobody opens the insights page produces no archived snapshot, and the
+        month cannot be reconstructed afterwards because the APIs have moved on.</p>
+      <p class="small" style="margin-top:10px">The object is right, the table is right, the unique
+        constraint on <code>(site_id, period)</code> is right. The trigger is a human remembering.</p>
+      <p class="filepath" style="margin-top:10px">lib/insights/actions.ts:29 &mdash; the only caller</p>
+    </div>
+    <div class="card rail crit">
+      <h3>Two endpoints exist purely to be called by something that does not exist</h3>
+      <p class="small"><code>/api/monitors/sweep</code> has been waiting since it was written.
+        <code>/api/insights/gsc-scan</code> joined it yesterday. Both are correct, both are
+        authenticated, both do nothing until something invokes them. An earlier proposal asked who
+        would and never got an answer; that answer is now
+        <strong>Railway cron on the CRM</strong>, which is what this proposal builds around.</p>
+    </div>
+    <div class="card rail warn">
+      <h3>Three of the four sources are unread</h3>
+      <p class="small">Search Console is live in both the CRM and the archive. GA4 is configured on
+        both sides &mdash; property <code>395780153</code> &mdash; and read only when a page loads.
+        <code>DATAFORSEO_API_KEY</code> is set and used by nothing;
+        <code>lib/insights/sources.ts:27</code> names DataForSEO as the next source to add, which is
+        the seam it should be added at. Google Ads has no client in any repo at all.</p>
+      <p class="small" style="margin-top:10px">Part two's campaigns produce numbers no reporting layer
+        can currently see.</p>
+    </div>
+    <div class="card rail warn">
+      <h3>The archive I just built lives on your laptop</h3>
+      <p class="small">Sixteen months of Search Console history &mdash; ninety files in
+        <code>daedalus-insights/data/</code> &mdash; is the only copy of data Google deletes after
+        sixteen months. It is a local git repo. It is not on Railway, it is not backed up anywhere
+        the CRM can reach, and the CLI that maintains it runs on your machine.</p>
+      <p class="small" style="margin-top:10px">Putting the clock in the CRM does not reach it. That is
+        the one part of your decision that leaves a gap, and it is section 06.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">02 &mdash; the inventory</p>
+  <h2>What is already built</h2>
+  <p style="max-width:70ch">
+    A proposal that argues for things that exist is a waste of your time, so here is the line between
+    them. Everything in the left column shipped in the last day and is running against live data.
+  </p>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail good">
+      <span class="chip ok">built and running</span>
+      <h3 style="margin-top:10px">The index-scan half</h3>
+      <ul class="tight small" style="margin-top:8px">
+        <li><code>gsc_scans</code> and <code>gsc_findings</code>, migration 0032 applied</li>
+        <li>The scanner: 63 URL inspections in 58 seconds, 3% of the daily quota</li>
+        <li>Seven rules, findings with a lifecycle &mdash; a fix is recorded by the first scan that
+          stops seeing the problem</li>
+        <li>One monthly task per site carrying <code>clientId</code>, so the work bills</li>
+        <li>The Health tab section, and a client-facing report sample</li>
+        <li><code>/api/insights/gsc-scan</code>, authenticated, waiting for the clock</li>
+      </ul>
+    </div>
+    <div class="card rail">
+      <span class="chip">exists, unused</span>
+      <h3 style="margin-top:10px">The parts already in the CRM</h3>
+      <ul class="tight small" style="margin-top:8px">
+        <li><code>snapshot_archive</code> &mdash; one frozen month per site, unique on
+          <code>(site_id, period)</code></li>
+        <li><code>reports</code> &mdash; cadence, period label, <code>due</code> or
+          <code>filed</code></li>
+        <li><code>/api/events/run</code> &mdash; a job reports in; a failure opens or escalates a
+          ticket, a success stands it down</li>
+        <li><code>monitors.sweepEveryMinutes</code> &mdash; each monitor declares its own interval and
+          the sweeper honours it</li>
+        <li><code>/insights-report/[site]</code>, <code>/portal/reports</code>,
+          <code>/api/insights/export</code> &mdash; the delivery surfaces</li>
+      </ul>
+      <p class="small" style="margin-top:10px">The reporting spine is there. Nothing turns it.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">03 &mdash; the shift</p>
+  <h2>Three objects, one of them new</h2>
+  <div class="grid g3" style="margin-top:24px">
+    <div class="card tint"><span class="chip">exists &mdash; gains a schedule</span>
+      <h3 style="margin-top:10px">A Job</h3>
+      <p class="small">Something that runs, reports in through
+        <code>/api/events/run</code>, and opens a ticket when it fails. Monitors already model this
+        and already carry their own interval. A scheduled job is a monitor that also knows what to
+        execute, which is one field, not a subsystem.</p>
+    </div>
+    <div class="card tint"><span class="chip">exists &mdash; gains a writer</span>
+      <h3 style="margin-top:10px">A Period</h3>
+      <p class="small">A frozen month: <code>snapshot_archive</code> plus its <code>reports</code>
+        row. Unchanged in shape. What changes is that a clock closes it on the first of the month
+        rather than a person happening to open a page in the last week of it.</p>
+    </div>
+    <div class="card"><span class="chip new">new</span>
+      <h3 style="margin-top:10px">A Digest</h3>
+      <p class="small">The short thing a person actually reads. Not a dashboard and not the archive
+        &mdash; a handful of sentences saying what changed, what broke, and what needs a decision.
+        Daily it is exceptions only and usually empty; weekly it is internal; monthly it is the
+        client report, which already has a sample.</p>
+      <p class="filepath" style="margin-top:10px">the only object here that does not exist yet</p>
+    </div>
+  </div>
+  <div class="card tint" style="margin-top:20px">
+    <h3>One ticker, not five cron entries</h3>
+    <p class="small">Railway can schedule a service directly, and the obvious shape is one cron entry
+      per job. The better shape is the one this codebase already uses: a single ticker every fifteen
+      minutes that asks each job whether it is due, exactly as <code>monitors:sweep</code> asks each
+      monitor whether its <code>sweepEveryMinutes</code> has elapsed.</p>
+    <p class="small" style="margin-top:10px">It means changing a cadence is a database update rather
+      than a redeploy, a job that overruns cannot collide with its own next start, and there is one
+      place to look when something did not run &mdash; which matters more than it sounds, because the
+      failure mode of scheduled work is silence.</p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">04 &mdash; the cadence</p>
+  <h2>What runs when, and who reads it</h2>
+  <div class="tablecard" style="margin-top:20px">
+    <table>
+      <thead><tr><th>Cadence</th><th>Job</th><th>Reads</th><th>Produces</th><th>Read by</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="2"><strong>Daily</strong><br><span class="small muted">06:00</span></td>
+          <td>Exception digest</td><td class="small">GA4, GSC, Ads, uptime</td>
+          <td class="small">Nothing, on a normal day</td><td class="small">You &mdash; only when it speaks</td></tr>
+        <tr><td>Monitor sweep</td><td class="small">jobs that never reported</td>
+          <td class="small">A ticket per silent job</td><td class="small">You</td></tr>
+        <tr><td rowspan="2"><strong>Weekly</strong><br><span class="small muted">Mon 07:00</span></td>
+          <td>Search Console pull</td><td class="small">GSC &rarr; the archive</td>
+          <td class="small">A new window in <code>data/</code></td><td class="small">nothing directly &mdash; it feeds the rest</td></tr>
+        <tr><td>Weekly digest</td><td class="small">the archive + CRM leads</td>
+          <td class="small">What moved, what broke, what to do</td><td class="small">You</td></tr>
+        <tr><td rowspan="3"><strong>Monthly</strong><br><span class="small muted">1st, 08:00</span></td>
+          <td>Index scan</td><td class="small">63 URL inspections</td>
+          <td class="small">Findings, and one maintenance task</td><td class="small">You, then the client</td></tr>
+        <tr><td>Freeze the period</td><td class="small">last month's snapshot</td>
+          <td class="small"><code>snapshot_archive</code> + a <code>reports</code> row marked due</td>
+          <td class="small">the client report</td></tr>
+        <tr><td>Client report</td><td class="small">the frozen period + findings</td>
+          <td class="small">The document you saw the sample of</td><td class="small">The client</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:10px 10px 6px">
+      Five distinct jobs. The ticker runs every fifteen minutes and starts whichever of them is due,
+      which is why the times above are intentions rather than guarantees &mdash; a job that is due at
+      06:00 starts by 06:15.
+    </p>
+  </div>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail">
+      <h3>Daily should be silent</h3>
+      <p class="small">A daily report that arrives every day gets filtered within a fortnight. This one
+        sends nothing unless something crosses a line: the site is down, a campaign got disapproved,
+        spend moved sharply, clicks fell off a cliff, or a scheduled job did not report in. On a
+        normal Tuesday it produces no output at all, and that silence is the signal.</p>
+    </div>
+    <div class="card rail">
+      <h3>Weekly is for you, monthly is for the client</h3>
+      <p class="small">They are different documents with different jobs. The weekly one is allowed to
+        be blunt &mdash; a keyword died, a page slipped, a lead came in through a term you did not
+        expect. The monthly one is the record: what was found, what was fixed, what it earned, what
+        carries forward. The sample already shows the shape, including the part where it reports
+        clicks falling.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">05 &mdash; the digest</p>
+  <h2>What the weekly one says</h2>
+  <p style="max-width:70ch">
+    Drawn with real figures from the archive, so the shape is honest about how much there is to say
+    about a site with 130 clicks a month.
+  </p>
+  <div class="mock" style="margin-top:20px">
+    <div class="mock-bar">
+      <span class="t">Weekly digest &mdash; Mineralife</span>
+      <span class="chip mono">week of 24 Aug 2026</span>
+      <span class="sp"></span>
+      <span>3 items &middot; 1 needs you</span>
+    </div>
+    <div class="band">Search &middot; from the archive</div>
+    <div class="frow"><span class="id">&darr; 16.6%</span>
+      <div class="body"><div class="txt">Clicks fell to 131 from 157, while impressions rose 11.3% to 32,878.</div>
+        <div class="prov">gsc:primary@2026-08-27 &middot; average position improved 16.1 &rarr; 12.9</div></div>
+      <div class="side"><span class="chip warn">watch</span></div></div>
+    <div class="frow"><span class="id">pattern</span>
+      <div class="body"><div class="txt">Sixteenth consecutive window with impressions up and clicks flat. CTR is now 0.40%, down from 1.29% in May 2025.</div>
+        <div class="prov">derived from 18 archived windows &middot; not a one-week move</div></div>
+      <div class="side"><span class="chip crit">needs you</span></div></div>
+    <div class="band">Index &middot; from the monthly scan</div>
+    <div class="frow"><span class="id">4 open</span>
+      <div class="body"><div class="txt">Four sitemap URLs Google has never crawled. Unchanged since the 30 Aug scan.</div>
+        <div class="prov">task: Search Console maintenance &mdash; August 2026</div></div>
+      <div class="side"><span class="chip">no change</span></div></div>
+    <div class="band">Paid &middot; not yet reporting</div>
+    <div class="frow"><span class="id">&mdash;</span>
+      <div class="body"><div class="txt muted"><em>No Google Ads source connected. Nothing to report until part two runs.</em></div>
+        <div class="prov">absence is stated, not omitted &mdash; a silent section reads as zero</div></div>
+      <div class="side"><span class="chip">n/a</span></div></div>
+  </div>
+  <p class="small muted" style="margin-top:10px">
+    Static visual. Every figure is from the archive built on 30 August; the layout is a proposal.
+  </p>
+  <div class="callout" style="margin-top:20px">
+    <h4>A section with nothing in it still says so</h4>
+    <p class="small" style="margin-top:6px">The paid row above is the important convention. A digest
+      that silently omits a source it could not read is indistinguishable from one reporting that the
+      source had nothing to say, and the two are opposite facts. Every cadence names every source,
+      including the ones that are absent, broken, or not built yet.</p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">06 &mdash; the clock</p>
+  <h2>Railway cron, on the CRM</h2>
+  <p style="max-width:70ch">
+    Your call, and the right one: one project, one place to look. A cron service in the same Railway
+    project as the CRM, sharing its repo and its database, running one command.
+  </p>
+  <div class="filepath" style="margin-top:16px">tallkarol/crm &mdash; a second service in the same project</div>
+  <pre><span class="c"># Railway service "crm-cron" — same repo, same env, no web process</span>
+startCommand:  npm run cron:tick
+cronSchedule:  <span class="s">"*/15 * * * *"</span>
+
+<span class="c"># scripts/cron-tick.ts — asks what is due, runs it, reports in</span>
+<span class="k">for</span> (<span class="k">const</span> job <span class="k">of</span> dueJobs(now)) {
+  <span class="k">await</span> report(job, <span class="s">"running"</span>, runId)          <span class="c">// /api/events/run</span>
+  <span class="k">try</span> {
+    <span class="k">const</span> stats = <span class="k">await</span> job.run()
+    <span class="k">await</span> report(job, <span class="s">"succeeded"</span>, runId, stats)  <span class="c">// stands down any ticket</span>
+  } <span class="k">catch</span> (err) {
+    <span class="k">await</span> report(job, <span class="s">"failed"</span>, runId, err)     <span class="c">// opens or escalates one</span>
+  }
+}</pre>
+  <p class="small" style="margin-top:14px;max-width:74ch">
+    Every job reports through the endpoint that already exists, so a failure raises a ticket without
+    any new alerting, and <code>monitors:sweep</code> catches the case the endpoint structurally
+    cannot see &mdash; a job that never starts at all. That pairing is already built and currently
+    guards nothing.
+  </p>
+  <div class="card rail crit" style="margin-top:20px">
+    <h3>The one thing the decision does not reach</h3>
+    <p class="small">Four of the five jobs are pure CRM work and move to Railway cleanly. The fifth is
+      the Search Console pull into <code>daedalus-insights/data/</code>, and that CLI runs on your
+      laptop against a local git repo. Railway cron on the CRM cannot call it.</p>
+    <p class="small" style="margin-top:10px">This matters more than it looks. That archive is the only
+      copy of history Google deletes at sixteen months &mdash; the fourteen months of pre-cutover
+      baseline that made migration analysis possible at all exist nowhere else. A weekly pull that
+      depends on you remembering is the same failure mode as the monthly report that depends on you
+      clicking Refresh, which is the bug this whole proposal exists to fix.</p>
+    <p class="small" style="margin-top:10px">Three ways out, in section 08. It is the only real
+      decision left.</p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">07 &mdash; sequence</p>
+  <h2>Build order</h2>
+  <p style="max-width:70ch">
+    Four increments. The first is an afternoon and immediately makes two already-built things start
+    working.
+  </p>
+  <div class="card" style="margin-top:22px">
+    <div class="step"><div class="n">1</div><div class="c">
+      <h4>The ticker, driving what already exists</h4>
+      <p class="small">A <code>scheduled_jobs</code> table with an interval per job, the cron service,
+        and <code>cron:tick</code>. Wire the two endpoints that are already sitting there &mdash;
+        <code>monitors/sweep</code> and <code>insights/gsc-scan</code> &mdash; and nothing else.</p>
+      <p class="ships">Ships: the index scan and the sweeper run without you, and every run is visible.</p></div></div>
+    <div class="step"><div class="n">2</div><div class="c">
+      <h4>Close the month on its own</h4>
+      <p class="small">Lift <code>ensureMonthlyArchive()</code> out of the Refresh action into a job
+        that runs on the first. Backfill the periods that have data but were never frozen.</p>
+      <p class="ships">Ships: the client report stops depending on somebody opening a page.</p></div></div>
+    <div class="step"><div class="n">3</div><div class="c">
+      <h4>The digests</h4>
+      <p class="small">Daily exceptions with thresholds set with you, and the weekly digest from the
+        archive plus CRM leads. Delivered by email; the monthly one renders at
+        <code>/insights-report/[site]</code>, which exists.</p>
+      <p class="ships">Ships: the reporting cadence the engagement is actually sold on.</p></div></div>
+    <div class="step"><div class="n">4</div><div class="c">
+      <h4>The missing sources</h4>
+      <p class="small">DataForSEO at the seam <code>lib/insights/sources.ts:27</code> already names,
+        for monthly keyword re-pricing &mdash; part two's figures go stale and nothing currently
+        notices. Then Google Ads, once the token clears, so paid and organic sit in one report.</p>
+      <p class="ships">Ships: all four sources in one place, on one clock.</p></div></div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">08 &mdash; before building</p>
+  <h2>One decision, and two numbers</h2>
+  <div class="stack" style="margin-top:22px">
+    <div class="card rail">
+      <h3>1. What happens to the archive on your laptop?</h3>
+      <p class="small"><strong>What I need:</strong> a choice between three, none of them wrong.</p>
+      <p class="small" style="margin-top:10px"><strong>A &mdash; the CRM absorbs the pull.</strong>
+        Port the Search Console archiving into <code>tallkarol/crm</code> and write windows to
+        Postgres instead of files. One system, one clock, one backup. Costs a port, and
+        <code>daedalus-insights</code> becomes an analysis tool over data it no longer owns.</p>
+      <p class="small" style="margin-top:10px"><strong>B &mdash; insights gets deployed too.</strong>
+        A second Railway service running the CLI on its own cron, keeping the file archive as a
+        committed repo. Truest to the existing split, and it is a second thing to deploy and watch.</p>
+      <p class="small" style="margin-top:10px"><strong>C &mdash; leave it manual, honestly.</strong>
+        You run <code>insights pull</code> when you think of it. Cheapest today, and it is the
+        failure mode this proposal is about.</p>
+      <p class="small" style="margin-top:10px"><strong>My call: A.</strong> You have decided the clock
+        lives in one spot, and an archive the clock cannot reach is not really scheduled. The pull is
+        one API call and a write &mdash; it is far less code than keeping two deployments in step, and
+        the sixteen months already collected import once and never need moving again.</p>
+    </div>
+    <div class="card rail">
+      <h3>2. What counts as an exception worth waking you for?</h3>
+      <p class="small"><strong>What I need:</strong> the lines the daily job checks against.</p>
+      <p class="small" style="margin-top:10px">Site down and job-did-not-run are obvious. The rest
+        need a number: how far clicks can fall week on week before it is worth a message, what daily
+        ad spend is abnormal, and whether a single disapproved ad is a same-day alert or a weekly
+        line. Set them too tight and the daily digest becomes noise and gets ignored; too loose and it
+        never speaks and gets ignored anyway.</p>
+      <p class="small" style="margin-top:10px"><strong>My call:</strong> start deliberately quiet
+        &mdash; site down, job silent, campaign disapproved, spend more than double the daily average.
+        Nothing about ranking or traffic, because at 130 clicks a month the week-to-week noise is
+        larger than any signal a daily check could find.</p>
+    </div>
+    <div class="card rail">
+      <h3>3. Does the client see the monthly report, or do you?</h3>
+      <p class="small"><strong>What I need:</strong> whether the first of the month sends anything
+        outward, or files it for you to send.</p>
+      <p class="small" style="margin-top:10px">The <code>reports</code> table already models this
+        &mdash; <code>due</code> then <code>filed</code> &mdash; and
+        <code>/portal/reports</code> already exists as a client surface. So both are cheap; the
+        question is whether a report reaches a client without you reading it first.</p>
+      <p class="small" style="margin-top:10px"><strong>My call:</strong> file it as
+        <code>due</code>, notify you, and let you release it. The sample report says clicks fell 16.6%
+        &mdash; a true, useful sentence you would want to have read before the client does. Same
+        reasoning as the claim-promotion gate in part one: the machine prepares, you publish.</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:24px">
+    <h4>Carried over from part two, still open</h4>
+    <p class="small" style="margin-top:6px">Whether to bid on <code>private label supplement
+      manufacturer</code> &mdash; 590 searches a month at $24.30, marked off-terminology by the
+      keyword sheet. That decision belongs to part two, but it changes what part three has to report
+      on, so it is worth closing before the first paid month rather than during it.</p>
+  </div>
+</section>
+
+<footer>
+  Tall Karol &middot; <span class="mono">mycustommanufacturer.com</span> &middot; proposal, part three of three
+  &middot; archive figures from 18 windows pulled 30 August 2026 &middot; repo state read the same day
+  &middot; the index-scan section is built and running; everything else is proposed
+</footer>
+
+</div>
+</body>
+</html>

@@ -21,10 +21,12 @@ import type {
   NotionLink,
   Product,
   Project,
+  Proposal,
   Report,
   Retainer,
   Site,
   TimeEntry,
+  Worksheet,
 } from "@/db/schema"
 import { ATTENTION_RULES } from "@/lib/attention"
 import { clientColor } from "@/lib/client-colors"
@@ -403,6 +405,8 @@ export type ClientHub = {
     invoices: Invoice[]
     contracts: Contract[]
     reports: Report[]
+    proposals: Proposal[]
+    worksheets: Worksheet[]
     notionLinks: NotionLink[]
   }
   month: string
@@ -447,6 +451,8 @@ export async function loadClientHub(
       invoices: true,
       contracts: true,
       reports: true,
+      proposals: true,
+      worksheets: true,
       notionLinks: true,
     },
   })

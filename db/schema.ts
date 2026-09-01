@@ -122,6 +122,29 @@ export const deliverableStatusEnum = pgEnum("deliverable_status", [
 export const taskStatusEnum = pgEnum("task_status", ["open", "done"])
 export const boardStageEnum = pgEnum("board_stage", ["queue", "doing", "waiting"])
 export const reportStatusEnum = pgEnum("report_status", ["due", "filed"])
+export const proposalStatusEnum = pgEnum("proposal_status", [
+  "draft",
+  "sent",
+  "accepted",
+])
+/**
+ * A worksheet is an instrument, not a deliverable: a numbered question set the
+ * studio fills in *about* an engagement. It moves blank → filled → review (the
+ * client is reading it) → signed, which is why it shares no status enum with
+ * reports (due/filed) or proposals (draft/sent/accepted).
+ */
+export const worksheetStatusEnum = pgEnum("worksheet_status", [
+  "blank",
+  "filled",
+  "review",
+  "signed",
+])
+/** How the answers got there — the three intake modes the instruments define. */
+export const worksheetModeEnum = pgEnum("worksheet_mode", [
+  "client",
+  "interview",
+  "portal",
+])
 export const cadenceEnum = pgEnum("cadence", [
   "none",
   "weekly",
@@ -452,29 +475,129 @@ export type TaskItem = typeof taskItems.$inferSelect
 export type TaskView = typeof taskViews.$inferSelect
 export type TaskCompletion = typeof taskCompletions.$inferSelect
 
-export const reports = pgTable("reports", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  title: text("title").notNull(),
-  clientId: uuid("client_id").references(() => clients.id, {
-    onDelete: "cascade",
-  }),
-  retainerId: uuid("retainer_id").references(() => retainers.id, {
-    onDelete: "cascade",
-  }),
-  projectId: uuid("project_id").references(() => projects.id, {
-    onDelete: "cascade",
-  }),
-  cadence: cadenceEnum("cadence").notNull().default("none"),
-  periodLabel: text("period_label").notNull().default(""),
-  status: reportStatusEnum("status").notNull().default("due"),
-  notes: text("notes").notNull().default(""),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-})
+export const reports = pgTable(
+  "reports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    title: text("title").notNull(),
+    /** Set when the report has a readable HTML body under content/docs. */
+    slug: text("slug"),
+    /** Path relative to content/docs — e.g. reports/google-ads-review.html */
+    bodyPath: text("body_path").notNull().default(""),
+    clientId: uuid("client_id").references(() => clients.id, {
+      onDelete: "cascade",
+    }),
+    retainerId: uuid("retainer_id").references(() => retainers.id, {
+      onDelete: "cascade",
+    }),
+    projectId: uuid("project_id").references(() => projects.id, {
+      onDelete: "cascade",
+    }),
+    cadence: cadenceEnum("cadence").notNull().default("none"),
+    periodLabel: text("period_label").notNull().default(""),
+    status: reportStatusEnum("status").notNull().default("due"),
+    notes: text("notes").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    slug: uniqueIndex("reports_slug_unique")
+      .on(table.slug)
+      .where(sql`${table.slug} is not null`),
+  })
+)
+
+/**
+ * Client-facing proposals — the documents you send, not the Notion scan
+ * actionables in `notion_proposals`.
+ */
+export const proposals = pgTable(
+  "proposals",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    title: text("title").notNull(),
+    slug: text("slug").notNull(),
+    bodyPath: text("body_path").notNull().default(""),
+    clientId: uuid("client_id").references(() => clients.id, {
+      onDelete: "cascade",
+    }),
+    retainerId: uuid("retainer_id").references(() => retainers.id, {
+      onDelete: "cascade",
+    }),
+    projectId: uuid("project_id").references(() => projects.id, {
+      onDelete: "cascade",
+    }),
+    /** Shared name for a multi-part set — e.g. "Page to Report". */
+    series: text("series").notNull().default(""),
+    seriesPart: smallint("series_part"),
+    seriesOf: smallint("series_of"),
+    status: proposalStatusEnum("status").notNull().default("draft"),
+    notes: text("notes").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    slug: uniqueIndex("proposals_slug_unique").on(table.slug),
+    byClient: index("proposals_client_idx").on(table.clientId, table.status),
+  })
+)
+
+/**
+ * Filled-in instruments — the Search Priorities Workbook and friends. Same
+ * body-on-disk contract as reports and proposals, but the row tracks what a
+ * worksheet is actually judged on: which instrument and version it is, how it
+ * was filled, and how many questions are still unanswered.
+ */
+export const worksheets = pgTable(
+  "worksheets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    title: text("title").notNull(),
+    slug: text("slug").notNull(),
+    bodyPath: text("body_path").notNull().default(""),
+    clientId: uuid("client_id").references(() => clients.id, {
+      onDelete: "cascade",
+    }),
+    retainerId: uuid("retainer_id").references(() => retainers.id, {
+      onDelete: "cascade",
+    }),
+    projectId: uuid("project_id").references(() => projects.id, {
+      onDelete: "cascade",
+    }),
+    /** The instrument this is an instance of — the same one is filled per client. */
+    instrument: text("instrument").notNull().default(""),
+    /** Instrument version, not document revision — "v1". */
+    version: text("version").notNull().default(""),
+    mode: worksheetModeEnum("mode").notNull().default("interview"),
+    status: worksheetStatusEnum("status").notNull().default("blank"),
+    filledOn: date("filled_on"),
+    questionCount: smallint("question_count"),
+    /** Questions still waiting on a human — what the worksheet is chased for. */
+    openCount: smallint("open_count").notNull().default(0),
+    /** Worksheets hold raw client answers, so they stay off the portal by default. */
+    internal: boolean("internal").notNull().default(true),
+    notes: text("notes").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    slug: uniqueIndex("worksheets_slug_unique").on(table.slug),
+    byClient: index("worksheets_client_idx").on(table.clientId, table.status),
+    byInstrument: index("worksheets_instrument_idx").on(table.instrument),
+  })
+)
 
 export const invoices = pgTable("invoices", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -700,6 +823,8 @@ export const clientsRelations = relations(clients, ({ many }) => ({
   productStudios: many(productStudios),
   tasks: many(tasks),
   reports: many(reports),
+  proposals: many(proposals),
+  worksheets: many(worksheets),
   invoices: many(invoices),
   timeEntries: many(timeEntries),
   contracts: many(contracts),
@@ -714,6 +839,8 @@ export const retainersRelations = relations(retainers, ({ one, many }) => ({
   projects: many(projects),
   tasks: many(tasks),
   reports: many(reports),
+  proposals: many(proposals),
+  worksheets: many(worksheets),
   invoices: many(invoices),
   timeEntries: many(timeEntries),
 }))
@@ -730,6 +857,8 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   deliverables: many(deliverables),
   tasks: many(tasks),
   reports: many(reports),
+  proposals: many(proposals),
+  worksheets: many(worksheets),
   invoices: many(invoices),
   contracts: many(contracts),
   workstreams: many(workstreams),
@@ -854,6 +983,30 @@ export const reportsRelations = relations(reports, ({ one }) => ({
   }),
 }))
 
+export const proposalsRelations = relations(proposals, ({ one }) => ({
+  client: one(clients, { fields: [proposals.clientId], references: [clients.id] }),
+  retainer: one(retainers, {
+    fields: [proposals.retainerId],
+    references: [retainers.id],
+  }),
+  project: one(projects, {
+    fields: [proposals.projectId],
+    references: [projects.id],
+  }),
+}))
+
+export const worksheetsRelations = relations(worksheets, ({ one }) => ({
+  client: one(clients, { fields: [worksheets.clientId], references: [clients.id] }),
+  retainer: one(retainers, {
+    fields: [worksheets.retainerId],
+    references: [retainers.id],
+  }),
+  project: one(projects, {
+    fields: [worksheets.projectId],
+    references: [projects.id],
+  }),
+}))
+
 export type Client = typeof clients.$inferSelect
 export type Retainer = typeof retainers.$inferSelect
 export type Project = typeof projects.$inferSelect
@@ -865,6 +1018,11 @@ export type ProductStatus = (typeof productStatusEnum.enumValues)[number]
 export type Deliverable = typeof deliverables.$inferSelect
 export type Task = typeof tasks.$inferSelect
 export type Report = typeof reports.$inferSelect
+export type Proposal = typeof proposals.$inferSelect
+export type ProposalStatus = (typeof proposalStatusEnum.enumValues)[number]
+export type Worksheet = typeof worksheets.$inferSelect
+export type WorksheetStatus = (typeof worksheetStatusEnum.enumValues)[number]
+export type WorksheetMode = (typeof worksheetModeEnum.enumValues)[number]
 export type RetainerStatus = (typeof retainerStatusEnum.enumValues)[number]
 export type ProjectStatus = (typeof projectStatusEnum.enumValues)[number]
 export type FeeStatus = (typeof feeStatusEnum.enumValues)[number]
@@ -1934,3 +2092,51 @@ export const experimentReadingsRelations = relations(experimentReadings, ({ one 
 
 export type Experiment = typeof experiments.$inferSelect
 export type ExperimentReading = typeof experimentReadings.$inferSelect
+
+/**
+ * Logins, API keys, and host passwords for work in flight.
+ * The secret itself is AES-256-GCM (`lib/vault-data.ts`); everything else is
+ * searchable plaintext so a title or username can be found without decrypting.
+ */
+export const vaultEntries = pgTable(
+  "vault_entries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    title: text("title").notNull(),
+    /** login | api | ssh | other */
+    kind: text("kind").notNull().default("login"),
+    url: text("url").notNull().default(""),
+    username: text("username").notNull().default(""),
+    secretBlob: text("secret_blob").notNull().default(""),
+    notes: text("notes").notNull().default(""),
+    clientId: uuid("client_id").references(() => clients.id, {
+      onDelete: "set null",
+    }),
+    createdBy: uuid("created_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    clientIdx: index("vault_entries_client_idx").on(table.clientId),
+    updatedIdx: index("vault_entries_updated_idx").on(table.updatedAt),
+  })
+)
+
+export const vaultEntriesRelations = relations(vaultEntries, ({ one }) => ({
+  client: one(clients, {
+    fields: [vaultEntries.clientId],
+    references: [clients.id],
+  }),
+  author: one(users, {
+    fields: [vaultEntries.createdBy],
+    references: [users.id],
+  }),
+}))
+
+export type VaultEntry = typeof vaultEntries.$inferSelect

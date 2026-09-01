@@ -21,7 +21,8 @@ export type InvoiceSender = { lines: string[]; email: string }
 
 const SENDER_FALLBACK: InvoiceSender = {
   lines: ["Karol Buczek"],
-  email: "hello@tallkarol.com",
+  // Billing address, not the outbound one — Resend still sends as hello@.
+  email: "invoices@tallkarol.com",
 }
 
 export async function getInvoiceSender(): Promise<InvoiceSender> {

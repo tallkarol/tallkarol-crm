@@ -2,6 +2,8 @@ import { and, asc, eq, isNull, lte, or } from "drizzle-orm"
 import { db } from "@/db"
 import { clients, supportTickets, tasks, timeEntries } from "@/db/schema"
 import type { Cadence } from "@/db/schema"
+import { clientColor } from "@/lib/client-colors"
+import { ensureClientColors } from "@/lib/client-colors-store"
 import { loadDelivery } from "@/lib/delivery"
 import { ROUTES } from "@/lib/nav"
 import {
@@ -49,6 +51,8 @@ export type WidgetTask = {
   badgeTone: BadgeTone | null
   /** How many further repeating tasks this row stands in for. */
   moreRepeating: number
+  /** The client's accent, so a widget row can be scanned by whose work it is. */
+  color: string
   href: string
 }
 
@@ -75,6 +79,7 @@ export type WidgetTicket = {
   overdueDays: number | null
   badge: string | null
   badgeTone: BadgeTone | null
+  color: string
   href: string
 }
 
@@ -177,7 +182,7 @@ type TaskRow = {
   createdAt: Date
   client: { name: string; slug: string } | null
   project: { name: string } | null
-  product: { name: string } | null
+  product: { name: string; slug: string } | null
 }
 
 async function openTaskRows(today: string, clientId?: string) {
@@ -199,7 +204,7 @@ async function openTaskRows(today: string, clientId?: string) {
     with: {
       client: { columns: { name: true, slug: true } },
       project: { columns: { name: true } },
-      product: { columns: { name: true } },
+      product: { columns: { name: true, slug: true } },
     },
     orderBy: [asc(tasks.createdAt)],
   }) as unknown as Promise<TaskRow[]>
@@ -280,12 +285,15 @@ function shapeTasks(rows: TaskRow[], now: Date): WidgetTask[] {
       badge,
       badgeTone,
       moreRepeating: row.id === keptRepeat ? moreRepeating : 0,
+      // A product-only task (Spectramotus, Jive) has an accent of its own.
+      color: clientColor(row.client?.slug ?? row.product?.slug ?? ""),
       href: `${ROUTES.tasks}/${row.id}`,
     }
   })
 }
 
 export async function widgetTasks(now = new Date(), clientId?: string) {
+  await ensureClientColors()
   const rows = await openTaskRows(isoDay(now), clientId)
   const tasks = shapeTasks(rows, now)
 
@@ -455,7 +463,7 @@ type TicketRowish = {
   submittedOn: string | null
   firstResponseAt: Date | null
   createdAt: Date
-  client: { name: string } | null
+  client: { name: string; slug: string } | null
 }
 
 /**
@@ -508,6 +516,7 @@ function shapeTickets(rows: TicketRowish[], now: Date): WidgetTicket[] {
         overdueDays,
         badge,
         badgeTone,
+        color: clientColor(row.client?.slug ?? ""),
         href: `${ROUTES.support}/${ticketSlug(row)}`,
       }
     })
@@ -519,6 +528,7 @@ function shapeTickets(rows: TicketRowish[], now: Date): WidgetTicket[] {
 }
 
 export async function widgetTickets(now = new Date(), clientId?: string) {
+  await ensureClientColors()
   const rows = (await db.query.supportTickets.findMany({
     columns: {
       id: true,
@@ -534,7 +544,7 @@ export async function widgetTickets(now = new Date(), clientId?: string) {
       createdAt: true,
       clientId: true,
     },
-    with: { client: { columns: { name: true } } },
+    with: { client: { columns: { name: true, slug: true } } },
     where: clientId ? eq(supportTickets.clientId, clientId) : undefined,
   })) as unknown as TicketRowish[]
 
@@ -571,6 +581,7 @@ export async function widgetClients() {
 }
 
 export async function widgetClient(slug: string, now = new Date()) {
+  await ensureClientColors()
   const client = await db.query.clients.findFirst({
     where: eq(clients.slug, slug),
     columns: { id: true, name: true, slug: true },
@@ -597,7 +608,12 @@ export async function widgetClient(slug: string, now = new Date()) {
   ).projects.filter((p) => p.status === "in_progress").length
 
   return {
-    client: { id: client.id, name: client.name, slug: client.slug },
+    client: {
+      id: client.id,
+      name: client.name,
+      slug: client.slug,
+      color: clientColor(client.slug),
+    },
     tasks: taskData.tasks,
     openTasks: taskData.open,
     deferredTasks: taskData.deferred,

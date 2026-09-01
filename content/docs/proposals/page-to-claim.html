@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Page to Claim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#F4F2EC;--surface:#FFF;--surface-2:#EDE9DE;--ink:#0F1615;--ink-2:#3D4947;--muted:#6E7A77;--line:rgba(15,22,21,.13);--line-soft:rgba(15,22,21,.07);--accent:#006965;--accent-ink:#00504D;--accent-soft:rgba(0,105,101,.10);--warn:#A45A1E;--warn-soft:rgba(164,90,30,.12);--crit:#8E3521;--crit-soft:rgba(142,53,33,.12);--good:#2E7D57;--good-soft:rgba(46,125,87,.12);--display:"Archivo",ui-sans-serif,system-ui,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:ui-sans-serif,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.62}
+.wrap{max-width:1080px;margin:0 auto;padding:0 32px}
+@media(max-width:720px){.wrap{padding:0 20px}body{font-size:16px}}
+h1,h2,h3,h4,.eyebrow,.chip,.num,th,.ui,.sec-num{font-family:var(--display)}
+h1{font-size:clamp(34px,5.4vw,58px);line-height:1.04;letter-spacing:-.02em;font-weight:700;margin:0 0 20px}
+h2{font-size:clamp(25px,3vw,34px);line-height:1.14;letter-spacing:-.015em;font-weight:600;margin:0 0 14px}
+h3{font-size:19px;line-height:1.3;font-weight:600;margin:0 0 7px}
+h4{font-size:15px;line-height:1.35;font-weight:600;margin:0 0 5px}
+p{margin:0 0 16px}p:last-child{margin-bottom:0}
+code,.mono{font-family:var(--mono);font-size:.86em;background:var(--surface-2);padding:.12em .38em;border-radius:3px}
+.lede{font-size:clamp(18px,2.1vw,22px);line-height:1.5;color:var(--ink-2)}
+.muted{color:var(--muted)}.small{font-size:14px;line-height:1.5}
+.eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 20px}
+.sec-num{display:flex;align-items:center;gap:12px;margin:0 0 8px;font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.sec-num::after{content:"";flex:1;height:1px;background:var(--line)}
+section{padding:56px 0;border-top:1px solid var(--line)}
+.hero{padding:72px 0 52px}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:860px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.stack>*+*{margin-top:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px 20px}
+.card.tint{background:var(--surface-2);border-color:var(--line-soft)}
+.rail{border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.rail.warn{border-left-color:var(--warn)}.rail.crit{border-left-color:var(--crit)}.rail.good{border-left-color:var(--good)}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.stat .num{font-size:31px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block}
+.stat .lbl{font-family:var(--ui);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:6px;display:block}
+.stat .sub{font-size:13.5px;color:var(--ink-2);margin-top:7px;display:block;line-height:1.4}
+.stat.crit .num{color:var(--crit)}.stat.warn .num{color:var(--warn)}.stat.good .num{color:var(--good)}.stat.accent .num{color:var(--accent-ink)}
+.metastrip{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;margin-top:34px}
+.metastrip>div{flex:1 1 200px;padding:14px 18px;border-right:1px solid var(--line-soft)}
+.metastrip>div:last-child{border-right:0}
+.metastrip .k{font-family:var(--ui);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.metastrip .v{font-family:var(--display);font-size:14.5px;font-weight:500;line-height:1.35}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2.5px 8px;border-radius:4px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);font-family:var(--ui)}
+.chip.new{background:var(--accent);color:#fff}.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.accent{background:var(--accent-soft);color:var(--accent-ink)}.chip.mono{font-family:var(--mono);font-weight:400}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:left;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);font-family:var(--ui)}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12.5px}.r{text-align:right}
+.tablecard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 10px 8px}
+.mock{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.mock-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface-2);font-family:var(--ui);font-size:12.5px;color:var(--ink-2);flex-wrap:wrap}
+.mock-bar .t{font-family:var(--display);font-weight:600;font-size:13.5px;color:var(--ink)}
+.mock-bar .sp{flex:1}
+.band{padding:6px 14px;background:var(--surface-2);border-bottom:1px solid var(--line-soft);font-family:var(--ui);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.frow{display:flex;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line-soft);align-items:flex-start}
+.frow:last-child{border-bottom:0}
+.frow .id{font-family:var(--mono);font-size:11.5px;color:var(--accent-ink);flex:0 0 76px;padding-top:2px}
+.frow .body{flex:1;min-width:0}
+.frow .txt{font-size:15px;line-height:1.45}
+.frow .prov{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:4px;word-break:break-word}
+.frow .side{flex:0 0 auto;display:flex;flex-direction:column;gap:4px;align-items:flex-end;padding-top:2px}
+pre{margin:0;background:#0F1615;color:#E6E4DC;border-radius:8px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.62}
+pre .c{color:#7E8C89}pre .k{color:#7FD8CE}pre .s{color:#D9C48A}pre .n{color:#C8A2C8}
+.filepath{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding:0 0 7px}
+ul.tight{margin:0;padding-left:20px}ul.tight li{margin-bottom:5px}
+.callout{background:var(--accent-soft);border:1px solid rgba(0,105,101,.22);border-radius:8px;padding:16px 20px}
+.callout.warn{background:var(--warn-soft);border-color:rgba(164,90,30,.24)}
+blockquote{margin:0;padding:12px 0 12px 18px;border-left:3px solid var(--accent);font-size:17px;line-height:1.5}
+.step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line-soft)}
+.step:last-child{border-bottom:0}
+.step .n{flex:0 0 30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:13.5px;font-weight:600}
+.step .c{flex:1}
+.ships{font-size:13.5px;color:var(--accent-ink);margin-top:8px;font-style:italic}
+footer{padding:34px 0 60px;color:var(--muted);font-size:13px;font-family:var(--ui);text-align:center}
+.bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+@media print{body{background:#fff}section{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">TALLKAROL &middot; mycustommanufacturer.com &middot; proposal, part one of three</p>
+  <h1>Page to Claim</h1>
+  <p class="lede">
+    The claim bank for this client is empty &mdash; 0 approved, 31 pending, every row blocked on a
+    document nobody has gone to fetch. Meanwhile the client's own live site says 28 of those things
+    out loud, on pages they signed off and shipped. This turns the site into the source it already
+    is, and finds the single row it genuinely cannot carry.
+  </p>
+  <div class="metastrip">
+    <div><span class="k">Scope</span><span class="v">1 crawler &middot; 3 artifacts &middot; 2 commands</span></div>
+    <div><span class="k">Touches</span><span class="v">daedalus-insights &middot; daedalus-client-packs</span></div>
+    <div><span class="k">Figures</span><span class="v">live crawl, 63/63 pages, 29 Aug 2026</span></div>
+    <div><span class="k">Status</span><span class="v">proposal &mdash; nothing built</span></div>
+  </div>
+</header>
+
+<section style="border-top:0">
+  <p class="sec-num">01 &mdash; the read</p>
+  <h2>Where it breaks</h2>
+  <p style="max-width:70ch">
+    Nothing about the site is broken. It has a meta description on every page, exactly one
+    <code>h1</code> on every page, and JSON-LD on all 63. The break is that none of it is readable
+    by the systems that need it &mdash; and the one document that <em>is</em> machine-readable says
+    the client can't be written about at all.
+  </p>
+  <div class="grid g4" style="margin-top:24px">
+    <div class="stat crit"><span class="num">0</span><span class="lbl">approved claims</span>
+      <span class="sub">31 pending. The approved table in <code>claims.md</code> is one empty row.</span></div>
+    <div class="stat accent"><span class="num">63</span><span class="lbl">pages, all 200 OK</span>
+      <span class="sub">45,386 words of copy the client shipped and stands behind.</span></div>
+    <div class="stat warn"><span class="num">4</span><span class="lbl">drafts blocked</span>
+      <span class="sub">Finished, unpublished, in <code>mineralife-frontend/docs/</code>.</span></div>
+    <div class="stat warn"><span class="num">0</span><span class="lbl">runs, ever</span>
+      <span class="sub"><code>daedalus-insights/data/</code> is an empty directory.</span></div>
+  </div>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail crit">
+      <h3>The claim bank blocks everything and unblocks nothing</h3>
+      <p class="small">Every certification, MOQ, capability and lead-time row sits in
+        <code>PENDING</code>, each blocking on a primary document &mdash; the NSF certificate, a
+        signed capability sheet. The rule that put them there is sound. The effect is that no agent
+        can write a sentence about this client, including sentences the client has already
+        published.</p>
+      <p class="filepath" style="margin-top:10px">clients/mineralife/claims.md &mdash; approved table: one empty row</p>
+    </div>
+    <div class="card rail crit">
+      <h3>The one approved artifact is ruled inadmissible</h3>
+      <p class="small">The pack and the demand-scout skill both say live copy cannot source a claim
+        &mdash; a page is an observation of an artifact. That rule exists to stop an agent laundering
+        its own prose back in as fact, and it is right to exist. It also throws away 45,386 words
+        that went through the client's own review.</p>
+      <p class="filepath" style="margin-top:10px">skills/demand-scout/SKILL.md &mdash; &ldquo;Live copy is not a claim source.&rdquo;</p>
+    </div>
+    <div class="card rail warn">
+      <h3>Nothing has ever read the site mechanically</h3>
+      <p class="small">The insights config has named <code>contentSources.sitemap</code> since 14
+        August. No crawler consumes it. So every task needing to know what the site says &mdash; an
+        ad headline, a brief, a REFRESH diff &mdash; re-reads pages by hand, at a few thousand tokens
+        each, and re-derives the same answer slightly differently every time.</p>
+      <p class="filepath" style="margin-top:10px">config/sites/mineralife.json &mdash; <code>contentSources.sitemap</code>, unused</p>
+    </div>
+    <div class="card rail warn">
+      <h3>63 pages is three corpora wearing one coat</h3>
+      <p class="small">36 migrated WordPress posts (21,646 words), 14 templated <code>/serving</code>
+        geo pages (15,357), and 13 hand-authored pages (8,383). You've confirmed every word of all
+        three is read and approved, so all three go in the bank &mdash; but a bank that forgets which
+        one a sentence came from can't tell a 2022 hiring post from the <code>/faq</code> spec table
+        when both mention 21 CFR 111. Provenance has to be a field, not a folder.</p>
+      <p class="filepath" style="margin-top:10px">36 inherited &middot; 14 templated &middot; 13 authored &mdash; recorded per fact as <code>origin</code></p>
+    </div>
+  </div>
+  <div class="callout warn" style="margin-top:20px">
+    <h4>And the pull side still can't see this client</h4>
+    <p class="small" style="margin-top:6px"><code>doctor</code> runs now. It was throwing before it
+      ever reached Google: <code>src/io/auth.ts:37</code> reads
+      <code>GOOGLE_SA_CLIENT_EMAIL</code> and <code>GOOGLE_SA_PRIVATE_KEY_B64</code>, and
+      <code>.env.local</code> carried the CRM's names with a raw escaped PEM. Renamed, key
+      re-encoded, it now reports three visible properties &mdash;
+      <code>sc-domain:karolbuczek.com</code>, <code>sc-domain:tallkarol.com</code>,
+      <code>sc-domain:zemvelo.com</code> &mdash; and <strong>neither Mineralife property is among
+      them</strong>. Two blocking, two warnings.</p>
+    <p class="small" style="margin-top:10px">So there is no Search Console data for this client until
+      <code>tk-crm@tallkarol-analytics-bridge.iam.gserviceaccount.com</code> is added as a Restricted
+      user on <code>https://www.mycustommanufacturer.com/</code>, and no GA4 numeric
+      <code>propertyId</code> is configured either. That doesn't block this proposal &mdash; the fact
+      bank is built from the site, not from Google &mdash; but it blocks part three, and it leaves the
+      legacy question open: if the WP Engine property was never verified, the 17 July cutover has no
+      pre-migration baseline and before/after has to come from GA4.</p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">02 &mdash; the finding</p>
+  <h2>What the crawl actually says</h2>
+  <p style="max-width:70ch">
+    I crawled all 63 URLs and tested every publishable pending row in <code>claims.md</code> against
+    the text. This is the result, and it is the reason to build the thing rather than keep arguing
+    about it.
+  </p>
+  <div class="grid g3" style="margin-top:24px">
+    <div class="stat good"><span class="num">28</span><span class="lbl">already on the site</span>
+      <span class="sub">Sourceable today, verbatim, with a URL. No new document needed.</span></div>
+    <div class="stat warn"><span class="num">1</span><span class="lbl">the site can never source</span>
+      <span class="sub">Toll's 2,500-unit small run. The other miss closed itself &mdash; see below.</span></div>
+    <div class="stat crit"><span class="num">1</span><span class="lbl">pack rule the site overturns</span>
+      <span class="sub">The NSF possessive form: 0 pages use it, 63 use the other one.</span></div>
+  </div>
+  <div class="tablecard" style="margin-top:20px">
+    <table>
+      <thead><tr><th>Pending section</th><th class="r">Tested</th><th class="r">Found</th><th>Coverage</th><th>The exception</th></tr></thead>
+      <tbody>
+        <tr><td>Certifications and compliance</td><td class="r mono">6</td><td class="r mono">5</td>
+          <td><div class="bar"><i style="width:83%;background:var(--good)"></i><i style="width:17%;background:var(--crit)"></i></div></td>
+          <td class="small">&ldquo;Third-party manufacturer, no own consumer brand&rdquo; &mdash; <span class="chip warn">unsourced as written</span></td></tr>
+        <tr><td>Capabilities</td><td class="r mono">9</td><td class="r mono">9</td>
+          <td><div class="bar"><i style="width:100%;background:var(--good)"></i></div></td>
+          <td class="small muted">none &mdash; every spec is published</td></tr>
+        <tr><td>Commercial terms</td><td class="r mono">8</td><td class="r mono">7</td>
+          <td><div class="bar"><i style="width:87%;background:var(--good)"></i><i style="width:13%;background:var(--warn)"></i></div></td>
+          <td class="small">Toll small run &ldquo;2,500 units&rdquo; &mdash; <span class="chip warn">absent</span></td></tr>
+        <tr><td>Scope limits</td><td class="r mono">4</td><td class="r mono">4</td>
+          <td><div class="bar"><i style="width:100%;background:var(--good)"></i></div></td>
+          <td class="small muted">all four, in a single <code>/faq</code> sentence</td></tr>
+        <tr><td>Positioning</td><td class="r mono">3</td><td class="r mono">3</td>
+          <td><div class="bar"><i style="width:100%;background:var(--good)"></i></div></td>
+          <td class="small muted">none</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:10px 10px 6px">
+      30 signatures against 26 publishable rows &mdash; several rows carry more than one spec, so
+      fill sizes and packaging materials were tested separately. The other 5 of the 31 are the
+      internal-only figures, permanently unpublishable, and were not tested.
+    </p>
+  </div>
+
+  <h3 style="margin-top:34px">The five things a bank would have caught on day one</h3>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card rail crit">
+      <span class="chip ok">resolved</span>
+      <h3 style="margin-top:10px">The brand row was a tense problem, and the homepage already fixed it</h3>
+      <p class="small">The pending row asserts a third-party manufacturer that doesn't sell its own
+        consumer brand. As written it is unsourced &mdash; that idea appears on 0 of 63 pages and
+        &ldquo;Zemvelo&rdquo; appears zero times. The only nearby sentence, <code>/our-story</code>'s
+        &ldquo;Starting from our own brand&hellip;&rdquo;, describes the origin: Mineralife began as a
+        liquid-minerals consumer brand, that brand became Zemvelo, and the Mineralife name now carries
+        the manufacturing arm. Both sentences are true at different times.</p>
+      <p class="small" style="margin-top:8px">You've since approved the present-tense form &mdash; an
+        award-winning contract manufacturer for established brands. It turns out the site says that
+        already, as the <code>h1</code> of the homepage:</p>
+      <blockquote class="small" style="margin-top:8px">&ldquo;Award-winning supplement manufacturing for established brands&rdquo;</blockquote>
+      <p class="small" style="margin-top:8px">So the row promotes on page authority after all, once
+        it's rewritten to what the site actually claims &mdash; and the award behind
+        &ldquo;award-winning&rdquo; is substantiated on three further pages, though not consistently
+        (below). The finding worth keeping is the mechanism:
+        an extractor that matched on topic rather than on the exact sentence would have promoted the
+        <code>/our-story</code> line and sourced the opposite of what the row means. Verbatim text and
+        a first-seen date are what stop that.</p>
+    </div>
+    <div class="card rail warn">
+      <span class="chip warn">absent</span>
+      <h3 style="margin-top:10px">&ldquo;2,500 units&rdquo; appears nowhere on the site</h3>
+      <p class="small">The positioning doc gives toll filling a 2,500-unit small run. Zero
+        occurrences across 45,386 words. What the site publishes instead, on
+        <code>/services/toll-filling</code>, is a flat <code>MOQ 5,000 units</code> &mdash; and
+        <code>/services/custom-manufacturing</code> shows &ldquo;SMALL RUN (ADDITIONAL FEE IF
+        ACCEPTED) 5,000 units&rdquo;.</p>
+      <p class="small" style="margin-top:8px">So the internal doc and the public site disagree about
+        the cheapest way into a toll project. That's a sales-facing discrepancy, and it's exactly the
+        class of thing that gets into an ad headline and then into a contract argument.</p>
+    </div>
+    <div class="card rail warn">
+      <span class="chip warn">vocabulary conflict</span>
+      <h3 style="margin-top:10px">The possessive rule is wrong, not the site</h3>
+      <p class="small"><code>CLIENT.md</code> is emphatic: always <em>NSF's Certified for
+        Sport&reg;</em>, with the possessive, and never &ldquo;NSF Certified for Sport&rdquo; in copy
+        that asserts the certification.</p>
+      <table style="margin-top:10px">
+        <tr><td class="small">&ldquo;NSF's Certified for Sport&rdquo;</td><td class="r mono">0 pages</td></tr>
+        <tr><td class="small">&ldquo;NSF Certified for Sport&rdquo;</td><td class="r mono">63 pages</td></tr>
+      </table>
+      <p class="small" style="margin-top:10px">The live site uses the non-possessive form
+        universally, including in the site-wide meta description. Under your ruling that the site is
+        approved copy, the pack's VOCABULARY slot is the thing that needs correcting.</p>
+    </div>
+    <div class="card rail">
+      <span class="chip accent">precision gap</span>
+      <h3 style="margin-top:10px">The site is more specific than the claim</h3>
+      <p class="small">The pending row says &ldquo;NSF cGMP certified&rdquo;. The site names the
+        actual standard on 19 pages. <code>/why-choose-mineralife</code>:</p>
+      <blockquote class="small" style="margin-top:8px">&ldquo;Mineralife operates under NSF 455-2 cGMP Certified standard.&rdquo;</blockquote>
+      <p class="small" style="margin-top:8px">A bank sourced from pages inherits that precision for
+        free. A claim bank sourced from a positioning doc rounds it off &mdash; and &ldquo;NSF
+        cGMP&rdquo; is the weaker line to take into a market where the buyer knows what 455-2 is.</p>
+    </div>
+    <div class="card rail crit" style="grid-column:1/-1">
+      <span class="chip crit">conflict</span>
+      <h3 style="margin-top:10px">Two pages name the award, and they name it differently</h3>
+      <p class="small">The homepage says &ldquo;award-winning&rdquo; and never says which award. Three
+        other pages do &mdash; and two of them give it a different title.</p>
+      <table style="margin-top:10px">
+        <tr><td class="small"><code>/blog/mineralife-named-top-10-contract-manufacturer</code>, 22 Sep 2022
+          &mdash; &ldquo;named a Top 10 <strong>Contract Manufacturer</strong> by Manufacturing Outlook&rdquo;</td></tr>
+        <tr><td class="small"><code>/certifications</code>, authored
+          &mdash; &ldquo;recognized Mineralife among its Top 10 <strong>Contract Packaging Services
+          Companies</strong>&rdquo;</td></tr>
+      </table>
+      <p class="small" style="margin-top:10px">Contract manufacturing and contract packaging are not
+        the same category, and the second is the weaker of the two for a manufacturer's ad. Both are
+        client-approved copy, so both are assertable under your ruling &mdash; which is precisely the
+        situation the bank has a <code>conflict</code> state for. Nobody was going to notice this by
+        reading; it needs two sentences put side by side.</p>
+      <p class="small" style="margin-top:10px"><strong>Your call:</strong> ads use Top 10 Contract
+        Manufacturer, and <code>/certifications</code> stays as written. That is the case the design
+        has to handle properly, because the conflict is now permanent: the site will keep saying both
+        things, so a crawler that re-raises the disagreement every run is noise, and one that quietly
+        drops the losing sentence is lying about what the site says. Neither is acceptable. The
+        resolution is a third thing &mdash; a dated decision recorded against the pair, keeping both
+        facts, marking one <code>preferred</code> and the other <code>superseded</code>, so the next
+        crawl recognises a settled conflict instead of discovering a new one.</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:24px">
+    <h4>What this does to part two</h4>
+    <p class="small" style="margin-top:6px">Google Ads copy is an assertion in a paid placement to a
+      B2B buyer, which is the most exposed surface in the engagement. With a page-sourced bank, 28 of
+      the 30 specs become writable with a URL behind each &mdash; the MOQs, the capsule sizes, the
+      fill range, the certification. Without it, every headline is either vague or a pending row.</p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">03 &mdash; the shift</p>
+  <h2>Three objects, two of them new</h2>
+  <p style="max-width:70ch">
+    The current model has one object &mdash; a Claim &mdash; and one rule about pages, which is that
+    they don't count. Splitting the middle out is what lets the rule stay true and the site still be
+    useful.
+  </p>
+  <div class="grid g3" style="margin-top:24px">
+    <div class="card"><span class="chip new">new</span>
+      <h3 style="margin-top:10px">A Page</h3>
+      <p class="small">A crawled artifact with a fetch date. URL, canonical, title, meta, heading
+        tree, main-content blocks, image list, JSON-LD types. Asserts nothing. It's a photograph of
+        the site on a given day, and its only job is to be diffable against the next one.</p>
+      <p class="filepath" style="margin-top:10px">data/mineralife/pages/&lt;date&gt;/</p>
+    </div>
+    <div class="card"><span class="chip new">new</span>
+      <h3 style="margin-top:10px">A Fact</h3>
+      <p class="small">One quotable assertion, verbatim, with the page and block it came from, a
+        first-seen and a last-seen date. Not a summary &mdash; the actual sentence. A fact whose
+        sentence disappears on a later crawl doesn't vanish; it goes stale, which is a state you can
+        act on.</p>
+      <p class="filepath" style="margin-top:10px">data/mineralife/facts.json</p>
+    </div>
+    <div class="card tint"><span class="chip">exists &mdash; gains a source type</span>
+      <h3 style="margin-top:10px">A Claim</h3>
+      <p class="small">Unchanged in shape, still the only thing an agent may assert. What changes is
+        that <code>Source</code> gains a machine-checkable form &mdash;
+        <code>page:&lt;url&gt;@&lt;date&gt;</code> &mdash; alongside the human ones.
+        Certificate-backed and page-backed claims sit in one table and are told apart by their
+        source, not by living in different files.</p>
+      <p class="filepath" style="margin-top:10px">clients/mineralife/claims.md</p>
+    </div>
+  </div>
+  <div class="card tint" style="margin-top:20px">
+    <h3>Why a Fact isn't just a Claim with a URL</h3>
+    <p class="small">Because the two have different failure modes, and collapsing them hides both. A
+      claim goes wrong when it was never true &mdash; the fix is a document. A fact goes wrong when
+      the page changed underneath it &mdash; the fix is a re-crawl. Keeping them separate is what
+      buys the decay check: the crawler can say &ldquo;<code>MIN-C-07</code> cites a sentence on
+      <code>/services/toll-filling</code> that is no longer there&rdquo; without anyone having to
+      remember the claim was page-sourced in the first place.</p>
+    <p class="small" style="margin-top:10px">It also keeps the original rule intact where it matters.
+      A fact is still an observation of an artifact. Promoting one to a claim is a decision with a
+      date on it, not a side effect of reading a page.</p>
+  </div>
+  <blockquote style="margin-top:24px;max-width:74ch">
+    A page is evidence that the client said it. A certificate is evidence that it's true.
+    For most sentences the first is the bar; for six rows in this pack it isn't.
+  </blockquote>
+  <p class="small muted" style="margin-top:12px;max-width:74ch">
+    The six are the certification rows. Your ruling promotes them on page authority, and that's your
+    call &mdash; but the bank should still mark them <code>gated:document</code>, so the day a
+    certificate lands the row upgrades rather than being rediscovered. Certification is the one
+    category where a buyer's contract, not Google's ad review, is the thing on the line.
+  </p>
+</section>
+
+<section>
+  <p class="sec-num">04 &mdash; the extractor</p>
+  <h2>Chrome is not a fact</h2>
+  <p style="max-width:70ch">
+    The naive version of this &mdash; regex the page text, keep the sentences mentioning a spec
+    &mdash; produces something worse than nothing. Here's what it produced on the real crawl.
+  </p>
+  <div class="grid g3" style="margin-top:24px">
+    <div class="stat"><span class="num">417</span><span class="lbl">raw matches</span>
+      <span class="sub">Sentences mentioning a certification, MOQ, size or scope limit.</span></div>
+    <div class="stat"><span class="num">279</span><span class="lbl">unique</span>
+      <span class="sub">138 of the matches were the same sentences seen again.</span></div>
+    <div class="stat warn"><span class="num">34</span><span class="lbl">pages, one sentence</span>
+      <span class="sub">The site-wide meta description, counted 34 times as 34 findings.</span></div>
+  </div>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail crit">
+      <h4>What the naive pass thinks it found</h4>
+      <p class="mono" style="margin-top:8px;font-size:12px;line-height:1.55;color:var(--ink-2)">
+        &ldquo;Services &#9662; Certifications Who we work with Why Mineralife &#9662; Contact
+        Knowledge hub Mineralife is Hiring &#128226; June 30, 2022 &middot; Mineralife Nutraceuticals
+        is looking to hire a Soft Gel Manufacturing Expert with experience in food or cGMP dietary
+        supplement manufacturing&mdash;21 CFR 111 or 21 CFR 117.&rdquo;</p>
+      <p class="small" style="margin-top:10px">That is the first &ldquo;sentence&rdquo; of
+        <code>/blog/mineralife-is-hiring</code>, verbatim from the crawl: the nav, the page title, a
+        2022 date and a real 21 CFR reference glued together because the tags between them were
+        stripped without inserting a boundary. It matches on <code>cgmp</code> and on
+        <code>21 cfr</code>, and it would enter the bank as a compliance fact. Every page produces
+        its own variant.</p>
+    </div>
+    <div class="card rail good">
+      <h4>Four rules that make the output usable</h4>
+      <ul class="tight small" style="margin-top:8px">
+        <li><strong>Scope to main content.</strong> Strip header, nav, footer and the consent banner
+          before extracting. The site is Next.js with consistent landmarks, so this is a selector
+          list, not a heuristic.</li>
+        <li><strong>Dedupe by normalised text, keep every location.</strong> One fact, N pages. A
+          sentence on more than about a third of the site is chrome, and is recorded as chrome rather
+          than as a finding.</li>
+        <li><strong>Attribute to the most specific page.</strong> A spec appearing on
+          <code>/faq</code> and on twelve <code>/serving</code> pages belongs to <code>/faq</code>;
+          the rest are echoes.</li>
+        <li><strong>Never join across a tag boundary.</strong> Insert a separator when flattening, so
+          a heading and the paragraph under it stay two things.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:20px">
+    <h4>Search for the word and you miss it; search for the thing and you find it</h4>
+    <p class="small" style="margin-top:6px">Checking whether the site substantiates
+      &ldquo;award-winning&rdquo; by searching for <code>award</code> returns exactly 1 page &mdash;
+      the homepage, which is the page making the claim. The site never uses that word for it.
+      Searching for the entity instead &mdash; <code>Manufacturing Outlook</code>,
+      <code>Top 10</code> &mdash; returns 3 pages, including a dedicated post and a paragraph on
+      <code>/certifications</code>. Same corpus, same question, opposite answer.</p>
+    <p class="small" style="margin-top:10px">This is why the extractor keys on named entities, figures
+      and units rather than on the claim's own vocabulary: the page that proves a claim is rarely the
+      page that phrases it the way the claim does.</p>
+  </div>
+  <div class="callout warn" style="margin-top:20px">
+    <h4>The densest page on the site is 414 words long</h4>
+    <p class="small" style="margin-top:6px"><code>/faq</code> is among the shortest pages on the site
+      &mdash; shorter than every <code>/serving</code> page and most of the blog &mdash; and carries
+      the most fact payload: published MOQs for all three divisions, the full capsule size list, the
+      bottle count range, the fill range, and all four scope limits in one sentence. Weighting
+      extraction by word count would rank it near the bottom. Fact density is the useful signal, and
+      here it's nearly the inverse of length.</p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">05 &mdash; the artifact</p>
+  <h2>What the bank looks like</h2>
+  <p style="max-width:70ch">
+    Insights has no database and shouldn't get one for this &mdash; it's a CLI that writes files and
+    hands bounded reads to agents. So the deliverable is three files and two commands. Rows below are
+    real facts from the crawl, with their real sources.
+  </p>
+  <div class="mock" style="margin-top:24px">
+    <div class="mock-bar">
+      <span class="t">Fact bank &mdash; mineralife</span>
+      <span class="chip mono">crawl 2026-08-29</span>
+      <span class="sp"></span>
+      <span>63 pages &middot; 279 facts &middot; 28 promotable</span>
+    </div>
+    <div class="band">Commercial terms &middot; 7 promotable</div>
+    <div class="frow"><span class="id">MIN-M-01</span>
+      <div class="body"><div class="txt">&ldquo;Toll projects publish a 5,000-unit MOQ.&rdquo;</div>
+        <div class="prov">page:/faq@2026-08-29 &middot; verbatim on 13 pages &middot; first seen 2026-08-29</div></div>
+      <div class="side"><span class="chip ok">promotable</span><span class="chip">public</span></div></div>
+    <div class="frow"><span class="id">MIN-M-02</span>
+      <div class="body"><div class="txt">&ldquo;White label / catalog lines begin at 250 units with price breaks up to 10,000 units.&rdquo;</div>
+        <div class="prov">page:/faq@2026-08-29 &middot; verbatim on 13 pages &middot; covers 2 pending rows</div></div>
+      <div class="side"><span class="chip ok">promotable</span><span class="chip">public</span></div></div>
+    <div class="frow"><span class="id">MIN-M-03</span>
+      <div class="body"><div class="txt">&ldquo;Production slots, storage needs, release expectations, and any scheduling discount opportunities are confirmed in writing.&rdquo;</div>
+        <div class="prov">page:/services/toll-filling@2026-08-29 &middot; sole source</div></div>
+      <div class="side"><span class="chip ok">promotable</span><span class="chip">public</span></div></div>
+    <div class="frow"><span class="id">MIN-M-04</span>
+      <div class="body"><div class="txt muted"><em>Toll filling small run &mdash; 2,500 units</em></div>
+        <div class="prov">no page carries this &middot; positioning doc only &middot; 0/63 pages</div></div>
+      <div class="side"><span class="chip warn">unsourced</span></div></div>
+    <div class="band">Capabilities &middot; 9 promotable</div>
+    <div class="frow"><span class="id">MIN-P-01</span>
+      <div class="body"><div class="txt">&ldquo;Capsules are powder-only in sizes #1, #0, #00, and #00E, bottled from 15 ct through 180 ct.&rdquo;</div>
+        <div class="prov">page:/faq@2026-08-29 &middot; sole verbatim source &middot; covers 3 pending rows</div></div>
+      <div class="side"><span class="chip ok">promotable</span><span class="chip">public</span></div></div>
+    <div class="frow"><span class="id">MIN-P-02</span>
+      <div class="body"><div class="txt">&ldquo;Liquids &mdash; including tinctures, oil-based products, and liposomes &mdash; in 1 oz through 64 oz formats with glass, PET, or HDPE packaging.&rdquo;</div>
+        <div class="prov">page:/faq@2026-08-29 &middot; sole verbatim source &middot; /services carries the same specs as a table, not a sentence</div></div>
+      <div class="side"><span class="chip ok">promotable</span><span class="chip">public</span></div></div>
+    <div class="band">Scope limits &middot; 4 promotable &mdash; the safest rows in the bank</div>
+    <div class="frow"><span class="id">MIN-S-01</span>
+      <div class="body"><div class="txt">&ldquo;We decline projects that require services we do not offer &mdash; for example stand-alone flavor formulation &mdash; or categories that violate our compliance guardrails, such as spore-forming probiotics or high-regulatory-risk ingredients like Delta-8, Kratom, or DMSA.&rdquo;</div>
+        <div class="prov">page:/faq@2026-08-29 &middot; sole source &middot; covers all 4 pending scope rows</div></div>
+      <div class="side"><span class="chip ok">promotable</span><span class="chip">public</span></div></div>
+    <div class="band">Recognition &middot; 1 preferred, 1 superseded &mdash; a resolved conflict, both sentences kept</div>
+    <div class="frow"><span class="id">MIN-A-01</span>
+      <div class="body"><div class="txt">&ldquo;Mineralife Nutraceuticals was named a Top 10 Contract Manufacturer by Manufacturing Outlook.&rdquo;</div>
+        <div class="prov">page:/blog/mineralife-named-top-10-contract-manufacturer@2026-08-29 &middot; origin inherited &middot; published 2022-09-22 &middot; substantiates the homepage superlative</div></div>
+      <div class="side"><span class="chip ok">preferred</span><span class="chip">public</span></div></div>
+    <div class="frow"><span class="id">MIN-A-02</span>
+      <div class="body"><div class="txt">&ldquo;The Manufacturing Outlook recognized Mineralife among its Top 10 Contract Packaging Services Companies&hellip;&rdquo;</div>
+        <div class="prov">page:/certifications@2026-08-29 &middot; origin authored &middot; conflicts with MIN-A-01 &middot; resolved 2026-08-30, page copy left as-is</div></div>
+      <div class="side"><span class="chip warn">superseded</span><span class="chip">public</span></div></div>
+    <div class="band">Certifications &middot; 5 found, 1 unsourced</div>
+    <div class="frow"><span class="id">MIN-C-01</span>
+      <div class="body"><div class="txt">&ldquo;Mineralife operates under NSF 455-2 cGMP Certified standard.&rdquo;</div>
+        <div class="prov">page:/why-choose-mineralife@2026-08-29 &middot; exact sentence on 8 pages &middot; 455-2 named on 19</div></div>
+      <div class="side"><span class="chip accent">gated:document</span><span class="chip">public</span></div></div>
+    <div class="frow"><span class="id">MIN-C-05</span>
+      <div class="body"><div class="txt">&ldquo;Award-winning supplement manufacturing for established brands&rdquo;</div>
+        <div class="prov">page:/@2026-08-29 &middot; homepage h1 &middot; sole source, 1/63 pages &middot; replaces the unsourced &ldquo;no consumer brand&rdquo; wording</div></div>
+      <div class="side"><span class="chip ok">promotable</span><span class="chip warn">superlative</span></div></div>
+  </div>
+  <p class="small muted" style="margin-top:10px">
+    Static visual &mdash; no code written yet. Every quote, path and count above is from the 29 Aug crawl.
+  </p>
+
+  <h3 style="margin-top:34px">Three files</h3>
+  <div class="filepath" style="margin-top:10px">daedalus-insights/data/mineralife/</div>
+  <p class="small muted" style="margin-bottom:12px;max-width:74ch">The bank lives in your archive.
+    That's settled for Mineralife &mdash; you wrote the site &mdash; but the crawler carries a
+    <code>_ownership</code> note in each site config, so the first time this points at a site you
+    inherited, the question of whose material is being copied gets asked before the crawl runs rather
+    than after.</p>
+  <pre><span class="c">// pages/2026-08-29/&lt;slug&gt;.json — one per URL, the photograph</span>
+{
+  <span class="k">"path"</span>: <span class="s">"/services/toll-filling"</span>,
+  <span class="k">"status"</span>: <span class="n">200</span>,
+  <span class="k">"canonical"</span>: <span class="s">"https://www.mycustommanufacturer.com/services/toll-filling"</span>,
+  <span class="k">"title"</span>: <span class="s">"Toll Filling for Established Supplement Brands…"</span>,
+  <span class="k">"h1"</span>: [<span class="s">"Toll Filling for Established Supplement Brands"</span>],
+  <span class="k">"words"</span>: <span class="n">730</span>,
+  <span class="k">"ldTypes"</span>: [<span class="s">"Organization"</span>, <span class="s">"WebSite"</span>, <span class="s">"BreadcrumbList"</span>],
+  <span class="k">"images"</span>: [{ <span class="k">"src"</span>: <span class="s">"…"</span>, <span class="k">"alt"</span>: <span class="s">"…"</span>, <span class="k">"w"</span>: <span class="n">1600</span>, <span class="k">"h"</span>: <span class="n">900</span> }],
+  <span class="k">"blocks"</span>: [{ <span class="k">"tag"</span>: <span class="s">"h2"</span>, <span class="k">"text"</span>: <span class="s">"MOQs &amp; guardrails"</span> }, …]
+}
+
+<span class="c">// facts.json — the bank. Verbatim, located, dated.</span>
+{
+  <span class="k">"id"</span>: <span class="s">"MIN-M-01"</span>,
+  <span class="k">"text"</span>: <span class="s">"Toll projects publish a 5,000-unit MOQ."</span>,
+  <span class="k">"kind"</span>: <span class="s">"commercial"</span>,
+  <span class="k">"source"</span>: { <span class="k">"page"</span>: <span class="s">"/faq"</span>, <span class="k">"block"</span>: <span class="n">14</span>, <span class="k">"crawl"</span>: <span class="s">"2026-08-29"</span> },
+  <span class="k">"origin"</span>: <span class="s">"authored"</span>,   <span class="c">// authored | templated | inherited</span>
+  <span class="k">"echoes"</span>: [<span class="s">"/services/toll-filling"</span>, <span class="s">"/serving/colorado"</span>, …],
+  <span class="k">"firstSeen"</span>: <span class="s">"2026-08-29"</span>, <span class="k">"lastSeen"</span>: <span class="s">"2026-08-29"</span>,
+  <span class="k">"covers"</span>: [<span class="s">"claims:commercial/toll-moq"</span>],
+  <span class="k">"state"</span>: <span class="s">"promotable"</span>
+}
+
+<span class="c">// a settled conflict — both sentences stay, the decision is the third object</span>
+{
+  <span class="k">"conflict"</span>: [<span class="s">"MIN-A-01"</span>, <span class="s">"MIN-A-02"</span>],
+  <span class="k">"about"</span>: <span class="s">"award title"</span>,
+  <span class="k">"prefer"</span>: <span class="s">"MIN-A-01"</span>,
+  <span class="k">"decidedBy"</span>: <span class="s">"karol"</span>, <span class="k">"decidedOn"</span>: <span class="s">"2026-08-30"</span>,
+  <span class="k">"note"</span>: <span class="s">"ads use Top 10 Contract Manufacturer; /certifications copy left unchanged"</span>
+}
+
+<span class="c">// assets.json — the image bank, part two's input</span>
+{
+  <span class="k">"src"</span>: <span class="s">"/_next/image?url=…&amp;w=1920"</span>,
+  <span class="k">"alt"</span>: <span class="s">"Encapsulation line, Colorado Springs facility"</span>,
+  <span class="k">"native"</span>: { <span class="k">"w"</span>: <span class="n">1920</span>, <span class="k">"h"</span>: <span class="n">1280</span> },
+  <span class="k">"usedOn"</span>: [<span class="s">"/"</span>, <span class="s">"/services"</span>],
+  <span class="k">"adCrops"</span>: { <span class="k">"1.91:1"</span>: <span class="s">"ok"</span>, <span class="k">"1:1"</span>: <span class="s">"ok"</span>, <span class="k">"4:5"</span>: <span class="s">"tight"</span> },
+  <span class="k">"review"</span>: <span class="s">"clear"</span>   <span class="c">// clear | names-a-brand | needs-karol</span>
+}</pre>
+
+  <h3 style="margin-top:30px">Two commands, same discipline as the rest</h3>
+  <p class="small" style="max-width:70ch"><code>docs/output-contract.md</code> currently freezes the
+    snapshot and queue shapes. The bank needs one more frozen shape and one more bounded read, so
+    agents get facts the way they get opportunities &mdash; capped, cited, and never by opening a
+    file.</p>
+  <pre>insights crawl   --site mineralife [--cadence daily|weekly] [--force] [--dry-run]
+                                   <span class="c"># fetch, extract, diff against the last crawl</span>
+insights facts   --site mineralife [--kind commercial|capability|certification|scope]
+                                   [--state promotable|unsourced|conflict|superseded|stale]
+                                   [--origin authored|templated|inherited] [--limit 20]</pre>
+  <p class="small muted" style="margin-top:10px"><code>facts</code> defaults to a hard limit like
+    every other command, because 279 facts is already past the point where dumping them into context
+    is safe.</p>
+  <p class="small" style="margin-top:14px;max-width:74ch"><code>--cadence</code> is the re-crawl
+    interval, not a scheduler: it sets how old the last crawl has to be before this one does any
+    network work, so the same command is safe to run daily or hourly and only fetches when the
+    interval has elapsed. <code>--force</code> overrides it. The per-site default lives in
+    <code>config/sites/mineralife.json</code> as <code>contentSources.cadence</code>, so switching
+    Mineralife from weekly to daily is a one-word config edit and no code change &mdash; and when
+    something does eventually run on a clock, it calls the same command with no new flags.</p>
+</section>
+
+<section>
+  <p class="sec-num">06 &mdash; the asset bank</p>
+  <h2>699 image tags, 53 actual images</h2>
+  <p style="max-width:70ch">
+    You asked for ad assets drawn from the site's own photography. The crawl says that pool is smaller
+    than it looks, and that the binding constraint is compliance rather than resolution.
+  </p>
+  <div class="grid g4" style="margin-top:24px">
+    <div class="stat"><span class="num">699</span><span class="lbl">&lt;img&gt; tags</span>
+      <span class="sub">Across 63 pages &mdash; mostly the same logos and icons repeated.</span></div>
+    <div class="stat accent"><span class="num">53</span><span class="lbl">unique sources</span>
+      <span class="sub">The real pool. 48 served locally, 5 external.</span></div>
+    <div class="stat warn"><span class="num">58%</span><span class="lbl">alt coverage</span>
+      <span class="sub">408 of 699. Alt text is the only description of what a photo shows.</span></div>
+    <div class="stat"><span class="num">3</span><span class="lbl">crops needed</span>
+      <span class="sub">1.91:1, 1:1 and 4:5 for image assets and Performance Max.</span></div>
+  </div>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail crit">
+      <h3>Every candidate needs a compliance pass, not a crop</h3>
+      <p class="small">COMPLIANCE line 2 in <code>CLIENT.md</code> is a hard line: never name or imply
+        a customer brand, and no photos of labeled finished goods that identify one. A contract
+        manufacturer's photo library is full of exactly that &mdash; filled bottles with labels on
+        them. So the asset bank carries a review state per image, and anything showing a labeled
+        product is <code>needs-karol</code> until you say otherwise, however good it looks in a
+        1.91:1 frame.</p>
+    </div>
+    <div class="card rail warn">
+      <h3>58% alt coverage is the selection problem</h3>
+      <p class="small">Nothing in a crawl knows what a photograph depicts except its alt text and the
+        page it sits on. With 42% of tags unlabelled, roughly half the pool can only be described as
+        &ldquo;an image on <code>/services</code>&rdquo;. Enough to build the inventory, not enough to
+        pick assets from it &mdash; so the bank records the gap rather than guessing, and filling it
+        is a cheap job across 53 files that also improves the site.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">07 &mdash; sequence</p>
+  <h2>Build order</h2>
+  <p style="max-width:70ch">
+    Four increments. Each lands on its own, and the first two are worth having even if you never build
+    the rest.
+  </p>
+  <div class="card" style="margin-top:22px">
+    <div class="step"><div class="n">1</div><div class="c">
+      <h4>The crawler and the page store</h4>
+      <p class="small">Sitemap in, one JSON per URL out, main-content scoping and block boundaries
+        done properly. Written under <code>data/&lt;slug&gt;/pages/&lt;date&gt;/</code> so a second
+        crawl diffs against the first. The config already names the sitemap.</p>
+      <p class="ships">Ships: the site becomes readable by anything, at a bounded token cost.</p></div></div>
+    <div class="step"><div class="n">2</div><div class="c">
+      <h4>Extraction, dedupe, and the coverage report</h4>
+      <p class="small">Facts out of blocks, chrome separated from findings, and every pending
+        <code>claims.md</code> row tested against the corpus &mdash; the table in section 02,
+        generated rather than hand-made. Conflicts and absences are output, not exceptions.</p>
+      <p class="ships">Ships: the 28 / 1 / 1 answer, repeatable, on any client with a pack.</p></div></div>
+    <div class="step"><div class="n">3</div><div class="c">
+      <h4>Promotion into the claim bank</h4>
+      <p class="small">The <code>page:&lt;url&gt;@&lt;date&gt;</code> source type, the promotion write
+        into <code>claims.md</code>, and <code>insights facts</code> as the bounded read. Promotion
+        stays a reviewed step &mdash; the command proposes a diff, you merge it.</p>
+      <p class="ships">Ships: agents can write about this client, with a citation per sentence.</p></div></div>
+    <div class="step"><div class="n">4</div><div class="c">
+      <h4>The decay check</h4>
+      <p class="small">Re-crawl on the interval set by <code>--cadence</code>, mark facts whose
+        sentence has gone, flag any claim whose page source is stale, and stay quiet about conflicts
+        that already carry a decision &mdash; a settled disagreement only re-raises if one of the two
+        sentences actually changes. This is the increment that keeps the bank honest twelve months
+        from now, and the one that makes the whole thing safe to trust.</p>
+      <p class="ships">Ships: a page-sourced claim can go stale instead of going wrong quietly.</p></div></div>
+  </div>
+  <p class="small muted" style="margin-top:16px;max-width:74ch">
+    The asset bank falls out of step 1 as a by-product &mdash; the crawler already collects every
+    <code>img</code> &mdash; but its review pass is a human job and belongs with part two, where the
+    assets are actually needed.
+  </p>
+</section>
+
+<section>
+  <p class="sec-num">08 &mdash; before building</p>
+  <h2>Six decisions on record</h2>
+  <p style="max-width:70ch">All six open questions are answered. This is what each one settled and
+    what it changed in the plan above &mdash; recorded here so the build doesn't re-derive them, and
+    so nobody has to remember which thread they were decided in.</p>
+  <div class="stack" style="margin-top:22px">
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">1. What Mineralife is today: an award-winning contract manufacturer for established brands</h3>
+      <p class="small">That replaces &ldquo;third-party manufacturer that does not sell its own
+        consumer brand&rdquo;, which nothing on the site can source and which invites a Zemvelo
+        question in a due-diligence call. The site already carries the approved form as the homepage
+        <code>h1</code> &mdash; &ldquo;Award-winning supplement manufacturing for established
+        brands&rdquo; &mdash; so the row promotes page-sourced rather than on verbal approval, and
+        &ldquo;established brands&rdquo; is corroborated on 23 pages.</p>
+      <p class="small" style="margin-top:10px"><strong>The award, since you named it:</strong>
+        Top 10 Contract Manufacturer, Manufacturing Outlook. The site already carries it &mdash;
+        <code>/blog/mineralife-named-top-10-contract-manufacturer</code> (22 Sep 2022),
+        <code>/certifications</code>, and <code>/blog/mineralife-nutraceuticals-thanks-you</code>
+        &mdash; so the substantiation an ad reviewer would ask for is page-sourced too, not something
+        you have to attest to. Two caveats carried into part two: the award is from 2022, which is
+        fine to state and misleading to imply is current; and <code>/certifications</code> calls it a
+        different award (below).</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">2. Ads say Top 10 Contract Manufacturer; the website copy stays as it is</h3>
+      <p class="small"><code>/certifications</code> keeps &ldquo;Top 10 Contract Packaging Services
+        Companies&rdquo;. So the disagreement between the two pages is permanent by design, and the
+        bank resolves it with a dated decision rather than a copy fix: both sentences stay, MIN-A-01
+        is <code>preferred</code>, MIN-A-02 is <code>superseded</code>, and the decay check in step 4
+        stops re-raising it unless one of the two sentences changes. Ad copy reads the preferred one;
+        anyone auditing can still see the site says both.</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">3. Promotion waits for you</h3>
+      <p class="small">Step 3 writes a diff; you read it and merge. Nothing enters
+        <code>claims.md</code> on its own. 28 rows is one sitting of reading, once &mdash; every later
+        run shows only what changed. Keeping the gate means a copy edit on the website can never
+        silently change what an agent is allowed to assert in an ad. The build effort goes into making
+        the diff quick to read instead.</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">4. All 63 pages go in the bank, blog included</h3>
+      <p class="small">Every word is read and approved, so all 45,386 are bankable &mdash; not just
+        the authored 8,383. Each fact records <code>origin: authored | templated | inherited</code>
+        and <code>insights facts</code> takes <code>--origin</code>, so a brief can prefer an authored
+        sentence over a 2022 post without anything being excluded from the bank.</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">5. The bank lives in your archive</h3>
+      <p class="small"><code>daedalus-insights/data/</code>. Settled for Mineralife &mdash; you wrote
+        the site. Each site config carries an <code>_ownership</code> note the crawler prints on a
+        first run, so the question surfaces on the first inherited site rather than being
+        rediscovered then.</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">6. Cadence is a flag</h3>
+      <p class="small"><code>--cadence daily|weekly</code>, with the per-site default in
+        <code>config/sites/mineralife.json</code>. The command no-ops until the interval has elapsed,
+        so it is safe to run as often as you like; <code>--force</code> is there for the day you push
+        a copy change and want the bank current before an ad goes out.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:34px">One thing still needs you &mdash; and it isn't a decision</h3>
+  <div style="margin-top:14px">
+    <div class="card tint">
+      <span class="chip crit">blocks part three</span>
+      <h4 style="margin-top:10px">Search Console access</h4>
+      <p class="small">Add
+        <code>tk-crm@tallkarol-analytics-bridge.iam.gserviceaccount.com</code> as a Restricted user on
+        <code>https://www.mycustommanufacturer.com/</code>, and confirm whether the legacy WP Engine
+        property was ever verified. Part one needs neither &mdash; the bank comes from the site. Part
+        three needs both, and every week without the grant is a week of Search Console history that
+        ages out of Google's 16-month window and cannot be recovered.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Tall Karol &middot; <span class="mono">mycustommanufacturer.com</span> &middot; proposal, part one of three
+  &middot; every figure re-derived from a live crawl of 63 URLs on 29 August 2026, plus one
+  <code>insights doctor</code> run the same day &middot; nothing built
+</footer>
+
+</div>
+</body>
+</html>

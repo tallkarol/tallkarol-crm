@@ -13,6 +13,7 @@ export type NavIconName =
   | "activity"
   | "emails"
   | "proposals"
+  | "worksheets"
   | "contracts"
   | "invoices"
   | "expenses"
@@ -35,6 +36,7 @@ export type NavIconName =
   | "team"
   | "email-settings"
   | "integrations"
+  | "vault"
 
 export type NavLink = {
   href: string
@@ -64,6 +66,7 @@ export const ROUTES = {
   activity: "/activity",
   emails: "/emails",
   proposals: "/proposals",
+  worksheets: "/worksheets",
   contracts: "/contracts",
   invoices: "/invoices",
   expenses: "/expenses",
@@ -81,7 +84,9 @@ export const ROUTES = {
   support: "/support",
   uptime: "/uptime",
   notebooks: "/notebooks",
+  vault: "/vault",
   settings: "/settings",
+  settingsColors: "/settings/colors",
   settingsPortals: "/settings/portals",
   settingsTeam: "/settings/team",
   settingsEmail: "/settings/email",
@@ -98,6 +103,9 @@ export const ROUTES = {
   timesheetFor: (client: string, month: string) =>
     `/timesheet/${encodeURIComponent(client)}/${encodeURIComponent(month)}`,
   contract: (slug: string) => `/contracts/${slug}`,
+  reportDoc: (slug: string) => `/doc/reports/${slug}`,
+  proposalDoc: (slug: string) => `/doc/proposals/${slug}`,
+  worksheetDoc: (slug: string) => `/doc/worksheets/${slug}`,
   inquiry: (id: string) => `/inquiries/${id}`,
 } as const
 
@@ -159,6 +167,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
       { href: ROUTES.clients, label: "Clients", icon: "clients" },
       { href: ROUTES.notebooks, label: "Notebooks", icon: "notebooks" },
       { href: ROUTES.proposals, label: "Proposals", icon: "proposals" },
+      { href: ROUTES.worksheets, label: "Worksheets", icon: "worksheets" },
       { href: ROUTES.contracts, label: "Contracts", icon: "contracts" },
       { href: ROUTES.expenses, label: "Expenses", icon: "expenses" },
       { href: ROUTES.invoices, label: "Invoices", icon: "invoices" },
@@ -167,12 +176,14 @@ export const ADMIN_NAV: readonly NavSection[] = [
   {
     title: "Workspace",
     items: [
+      { href: ROUTES.vault, label: "Vault", icon: "vault" },
       { href: ROUTES.activity, label: "Activity", icon: "activity" },
       {
         href: ROUTES.settings,
         label: "Settings",
         icon: "settings",
         children: [
+          { href: ROUTES.settingsColors, label: "Colours", icon: "clients" },
           { href: ROUTES.settingsPortals, label: "Client Portals", icon: "clients" },
           { href: ROUTES.settingsTeam, label: "Team", icon: "team" },
           { href: ROUTES.settingsEmail, label: "Email", icon: "email-settings" },

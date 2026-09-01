@@ -7,6 +7,7 @@ import {
   CheckSquare,
   Clock,
   ClipboardCheck,
+  ClipboardList,
   Rows3,
   Smartphone,
   Table2,
@@ -32,6 +33,7 @@ import {
   MonitorCheck,
   NotebookText,
   Package,
+  KeyRound,
   ScrollText,
 } from "lucide-react"
 import type { NavIconName } from "@/lib/nav"
@@ -51,6 +53,7 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   activity: Activity,
   emails: Mail,
   proposals: FileText,
+  worksheets: ClipboardList,
   contracts: FileSignature,
   invoices: Receipt,
   expenses: Wallet,
@@ -68,6 +71,7 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   support: LifeBuoy,
   uptime: MonitorCheck,
   notebooks: NotebookText,
+  vault: KeyRound,
   product: Package,
   settings: Settings,
   team: UserCog,

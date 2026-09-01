@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Search Priorities Workbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ground: #F1EADC;
+    --surface: #FFFFFF;
+    --surface-2: #EBE3D3;
+    --ink: #0F1615;
+    --body: #1F2C2B;
+    --body-soft: rgba(31, 44, 43, 0.72);
+    --rule: rgba(31, 44, 43, 0.16);
+    --rule-soft: rgba(31, 44, 43, 0.09);
+    --accent: #006965;
+    --accent-ink: #F1EADC;
+    --flag: #6F5200;
+    --flag-soft: rgba(111, 82, 0, 0.10);
+    --band: #0F1615;
+    --band-ink: #F1EADC;
+    --band-ink-soft: rgba(241, 234, 220, 0.68);
+    --band-accent: #2A9D8F;
+
+    --display: "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+    --text: "Inter", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F1615;
+      --surface: #17211F;
+      --surface-2: #1E2A28;
+      --ink: #F1EADC;
+      --body: #E4DCCC;
+      --body-soft: rgba(241, 234, 220, 0.70);
+      --rule: rgba(241, 234, 220, 0.18);
+      --rule-soft: rgba(241, 234, 220, 0.10);
+      --accent: #2A9D8F;
+      --accent-ink: #0F1615;
+      --flag: #E0B155;
+      --flag-soft: rgba(224, 177, 85, 0.12);
+      --band: #05100F;
+      --band-ink: #F1EADC;
+      --band-ink-soft: rgba(241, 234, 220, 0.66);
+      --band-accent: #2A9D8F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0F1615;
+    --surface: #17211F;
+    --surface-2: #1E2A28;
+    --ink: #F1EADC;
+    --body: #E4DCCC;
+    --body-soft: rgba(241, 234, 220, 0.70);
+    --rule: rgba(241, 234, 220, 0.18);
+    --rule-soft: rgba(241, 234, 220, 0.10);
+    --accent: #2A9D8F;
+    --accent-ink: #0F1615;
+    --flag: #E0B155;
+    --flag-soft: rgba(224, 177, 85, 0.12);
+    --band: #05100F;
+    --band-ink: #F1EADC;
+    --band-ink-soft: rgba(241, 234, 220, 0.66);
+    --band-accent: #2A9D8F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--body);
+    font-family: var(--text);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+
+  h1, h2, h3, h4 { font-family: var(--display); color: var(--ink); text-wrap: balance; margin: 0; }
+
+  p { margin: 0; }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--surface-2);
+    padding: 0.1em 0.34em;
+    border-radius: 2px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    background: var(--band);
+    color: var(--band-ink);
+    padding: 64px 0 52px;
+    border-bottom: 3px solid var(--band-accent);
+  }
+  .masthead h1 {
+    color: var(--band-ink);
+    font-size: clamp(34px, 5.4vw, 54px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-top: 14px;
+    max-width: 16ch;
+  }
+  .masthead .eyebrow { color: var(--band-accent); }
+  .masthead .lede {
+    color: var(--band-ink-soft);
+    font-size: 17px;
+    max-width: 62ch;
+    margin-top: 20px;
+  }
+  .masthead .lede strong { color: var(--band-ink); font-weight: 500; }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 40px;
+    margin-top: 34px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(241, 234, 220, 0.16);
+  }
+  .facts div { display: flex; flex-direction: column; gap: 3px; }
+  .facts dt {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(241, 234, 220, 0.5);
+  }
+  .facts dd {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--band-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- nav ---------- */
+
+  .stagenav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--ground);
+    border-bottom: 1px solid var(--rule);
+  }
+  .stagenav .wrap {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-height: 52px;
+    flex-wrap: wrap;
+  }
+  .stagenav-links { display: flex; gap: 2px; flex-wrap: wrap; flex: 1; }
+  .stagenav a {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--body-soft);
+    text-decoration: none;
+    padding: 6px 9px;
+    border-radius: 2px;
+  }
+  .stagenav a:hover { color: var(--accent); background: var(--surface-2); }
+  .stagenav a .k { color: var(--accent); font-weight: 600; }
+
+  .toolbtn {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--body);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 7px 11px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .toolbtn:hover { border-color: var(--accent); color: var(--accent); }
+  .toolbtn[aria-pressed="true"] {
+    background: var(--flag-soft);
+    border-color: var(--flag);
+    color: var(--flag);
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- sections ---------- */
+
+  section { padding: 56px 0; border-bottom: 1px solid var(--rule-soft); }
+  section:last-of-type { border-bottom: 0; }
+
+  .sechead { max-width: 66ch; }
+  .sechead h2 {
+    font-size: clamp(23px, 3vw, 30px);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin-top: 10px;
+  }
+  .sechead p { color: var(--body-soft); margin-top: 12px; }
+
+  .prose { max-width: 66ch; display: flex; flex-direction: column; gap: 16px; margin-top: 22px; }
+  .prose strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- evidence panel ---------- */
+
+  .evidence {
+    margin-top: 30px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .evidence-head {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .evidence-head h3 { font-size: 15px; font-weight: 600; }
+  .evidence-head .src {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--body-soft);
+    letter-spacing: 0.04em;
+  }
+  .bars { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .bar { display: grid; grid-template-columns: 190px 1fr 78px; gap: 14px; align-items: center; }
+  .bar-label { font-size: 13.5px; color: var(--body); }
+  .bar-label span { display: block; color: var(--body-soft); font-size: 11.5px; }
+  .bar-track { height: 10px; background: var(--surface-2); border-radius: 1px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--accent); }
+  .bar-fill.muted { background: var(--body-soft); }
+  .bar-fill.flag { background: var(--flag); }
+  .bar-num {
+    font-family: var(--mono);
+    font-size: 13px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .evidence-note {
+    padding: 14px 20px;
+    border-top: 1px solid var(--rule);
+    font-size: 13.5px;
+    color: var(--body-soft);
+    background: var(--surface-2);
+  }
+  .evidence-note strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- modes ---------- */
+
+  .modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 30px; background: var(--rule); border: 1px solid var(--rule); }
+  .mode { background: var(--surface); padding: 22px 20px; display: flex; flex-direction: column; gap: 9px; }
+  .mode .n { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.1em; }
+  .mode h4 { font-size: 15.5px; font-weight: 600; }
+  .mode p { font-size: 13.5px; color: var(--body-soft); }
+
+  /* ---------- stage bands ---------- */
+
+  .stage { scroll-margin-top: 60px; }
+  .stage-band {
+    background: var(--band);
+    color: var(--band-ink);
+    padding: 26px 0;
+    margin-bottom: 4px;
+  }
+  .stage-band .wrap { display: flex; align-items: flex-start; gap: 24px; }
+  .stage-letter {
+    font-family: var(--display);
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 0.9;
+    color: var(--band-accent);
+    min-width: 44px;
+  }
+  .stage-band h3 { color: var(--band-ink); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .stage-band p { color: var(--band-ink-soft); font-size: 14px; margin-top: 6px; max-width: 62ch; }
+
+  /* ---------- questions ---------- */
+
+  .qlist { display: flex; flex-direction: column; }
+  .q {
+    display: grid;
+    grid-template-columns: 108px 1fr;
+    gap: 22px;
+    padding: 26px 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .q:last-child { border-bottom: 0; }
+  .qrail { display: flex; flex-direction: column; gap: 9px; align-items: flex-start; }
+  .qid {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 6px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .chip.stated { background: var(--accent); color: var(--accent-ink); }
+  .chip.derived { background: transparent; color: var(--body-soft); border: 1px solid var(--rule); }
+  .chip.assumed { background: var(--flag-soft); color: var(--flag); border: 1px dashed var(--flag); }
+  .chip.internal { background: var(--band); color: var(--band-accent); border: 1px solid var(--band-accent); }
+  .answer .warn {
+    font-size: 13px;
+    color: var(--flag);
+    border-top: 1px dashed var(--flag);
+    padding-top: 9px;
+  }
+  .answer .warn b { font-weight: 600; }
+  .brief { display: flex; flex-direction: column; gap: 4px; padding: 11px 0; border-bottom: 1px solid var(--rule-soft); }
+  .brief:last-of-type { border-bottom: 0; }
+  .brief .who { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+  .brief .said { color: var(--ink); }
+  .brief .means { font-size: 13px; color: var(--body-soft); }
+
+  .qbody { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .qtext { font-size: 17px; font-weight: 500; color: var(--ink); font-family: var(--display); line-height: 1.4; }
+  .qwhy { font-size: 13px; color: var(--body-soft); max-width: 68ch; }
+  .qwhy b { font-weight: 600; color: var(--body); }
+
+  .answer {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+    padding: 15px 18px;
+    font-size: 14.5px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .answer.needs { border-left-color: var(--flag); }
+  .answer ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+  .answer li::marker { color: var(--accent); }
+  .answer .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--body-soft);
+  }
+
+  /* ---------- routing table ---------- */
+
+  .tablewrap { overflow-x: auto; margin-top: 26px; border: 1px solid var(--rule); border-radius: 3px; }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; background: var(--surface); }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--rule-soft); font-size: 13.5px; vertical-align: top; }
+  thead th {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--body-soft);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--rule);
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .k { font-family: var(--mono); color: var(--accent); font-weight: 600; }
+
+  /* ---------- phases ---------- */
+
+  .phases { display: flex; flex-direction: column; gap: 1px; margin-top: 28px; background: var(--rule); border: 1px solid var(--rule); }
+  .phase { background: var(--surface); padding: 20px 22px; display: grid; grid-template-columns: 116px 1fr 132px; gap: 20px; align-items: start; }
+  .phase .pn { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); padding-top: 2px; }
+  .phase h4 { font-size: 16px; font-weight: 600; }
+  .phase p { font-size: 13.5px; color: var(--body-soft); margin-top: 6px; }
+  .phase .out { font-family: var(--mono); font-size: 11.5px; color: var(--body-soft); line-height: 1.5; }
+  .phase .out b { display: block; color: var(--ink); font-weight: 600; }
+
+  /* ---------- corrections ---------- */
+
+  .corrections { margin-top: 26px; display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .corr { background: var(--surface); padding: 16px 20px; display: grid; grid-template-columns: 74px 1fr; gap: 18px; }
+  .corr .cid { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--flag); }
+  .corr p { font-size: 14px; }
+  .corr p span { display: block; color: var(--body-soft); font-size: 13px; margin-top: 4px; }
+
+  .callout {
+    margin-top: 26px;
+    background: var(--flag-soft);
+    border: 1px solid var(--flag);
+    border-radius: 3px;
+    padding: 18px 20px;
+    font-size: 14px;
+    max-width: 72ch;
+  }
+  .callout h4 { font-size: 14px; font-weight: 600; color: var(--flag); margin-bottom: 8px; font-family: var(--mono); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  footer { padding: 44px 0 60px; color: var(--body-soft); font-size: 13px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 28px; justify-content: space-between; }
+  footer .mono { font-family: var(--mono); font-size: 11.5px; }
+
+  /* filter mode */
+  body.filtering .q:not(.needs-karol) { display: none; }
+  body.filtering .stage:not(:has(.needs-karol)) { display: none; }
+
+  @media (max-width: 800px) {
+    .modes { grid-template-columns: 1fr; }
+    .phase { grid-template-columns: 1fr; gap: 10px; }
+    .bar { grid-template-columns: 1fr 60px; }
+    .bar-track { grid-column: 1 / -1; order: 3; }
+  }
+  @media (max-width: 620px) {
+    .wrap { padding: 0 18px; }
+    .q { grid-template-columns: 1fr; gap: 12px; }
+    .qrail { flex-direction: row; align-items: center; gap: 10px; }
+    .stage-band .wrap { gap: 14px; }
+    .stage-letter { font-size: 30px; min-width: 30px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Instrument · v1 · Tall Karol</p>
+    <h1>Search Priorities Workbook</h1>
+    <p class="lede">The intake that decides what search research is worth doing. Eight stages, forty-five questions, answered <strong>before</strong> anyone looks at a keyword tool — because a ranking plan built without them optimizes for traffic that never buys. Filled in here for Tall Karol as the proof of concept.</p>
+    <dl class="facts">
+      <div><dt>Filled for</dt><dd>tallkarol.com</dd></div>
+      <div><dt>Date</dt><dd>2026-08-30</dd></div>
+      <div><dt>Questions</dt><dd>45 across 8 stages</dd></div>
+      <div><dt>Needs Karol</dt><dd>4 answers</dd></div>
+      <div><dt>Feeds</dt><dd>insights → demand-scout</dd></div>
+    </dl>
+  </div>
+</header>
+
+<nav class="stagenav" aria-label="Stages">
+  <div class="wrap">
+    <div class="stagenav-links">
+      <a href="#why">Why</a>
+      <a href="#stage-m"><span class="k">M</span>&nbsp;Money</a>
+      <a href="#stage-w"><span class="k">W</span>&nbsp;Work</a>
+      <a href="#stage-x"><span class="k">X</span>&nbsp;Exclusions</a>
+      <a href="#stage-q"><span class="k">Q</span>&nbsp;Queries</a>
+      <a href="#stage-c"><span class="k">C</span>&nbsp;Comparison</a>
+      <a href="#stage-e"><span class="k">E</span>&nbsp;Evidence</a>
+      <a href="#stage-v"><span class="k">V</span>&nbsp;Conversion</a>
+      <a href="#stage-r"><span class="k">R</span>&nbsp;Reporting</a>
+      <a href="#plan">The plan</a>
+    </div>
+    <button class="toolbtn" id="filter" aria-pressed="false">Show only what needs Karol</button>
+    <button class="toolbtn" id="copy">Copy blank workbook</button>
+  </div>
+</nav>
+
+<main>
+
+<section id="why">
+  <div class="wrap">
+    <div class="sechead">
+      <p class="eyebrow">The gap this closes</p>
+      <h2>The pipeline already mines demand. Nothing tells it which demand is worth money.</h2>
+      <p>Three tools are live: <code>daedalus-insights</code> pulls Search Console and GA4 into a ranked opportunity queue, <code>demand-scout</code> turns queue items into content briefs, and the client pack governs what may be claimed. Every one of them ranks by <em>opportunity</em> — impressions, position, striking distance. None of them knows what an hour of the resulting work is worth, or which winnable queries are the wrong ones to win.</p>
+    </div>
+
+    <div class="prose">
+      <p>That gap has a shape, and it is already visible in Tall Karol's own published knowledge base. Fifty-one posts are live, each registered with a <code>targetQuery</code> — the query it was written to win. Sorted by who actually types those phrases:</p>
+    </div>
+
+    <div class="evidence">
+      <div class="evidence-head">
+        <h3>Who searches the 51 published target queries</h3>
+        <span class="src">source: dev/data/posts.ts · classification by search intent, not by cluster</span>
+      </div>
+      <div class="bars">
+        <div class="bar">
+          <div class="bar-label">Practitioner<span>developers solving their own problem</span></div>
+          <div class="bar-track"><div class="bar-fill flag" style="width:57%"></div></div>
+          <div class="bar-num">29 · 57%</div>
+        </div>
+        <div class="bar">
+          <div class="bar-label">Mixed<span>could be either, usually isn't a buyer</span></div>
+          <div class="bar-track"><div class="bar-fill muted" style="width:22%"></div></div>
+          <div class="bar-num">11 · 22%</div>
+        </div>
+        <div class="bar">
+          <div class="bar-label">Buyer<span>a person with a budget and a problem</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:22%"></div></div>
+          <div class="bar-num">11 · 22%</div>
+        </div>
+      </div>
+      <div class="evidence-note"><strong>Read it carefully.</strong> The practitioner posts are not waste — they are the strongest writing on the site, they earn citations, and they are why the domain has any technical authority at all. The problem is proportion and intent, against a stated goal of <strong>$80/hr now, $120/hr by April 2028</strong>. One live target query is <code>cheapest way to host a side project</code>. It will rank. It will bring in exactly the reader who cannot afford the floor.</div>
+    </div>
+
+    <div class="prose">
+      <p>Nothing in the current stack would have flagged that, because nothing in the current stack has been told what the studio is trying to be paid. This workbook is that missing statement — and its most valuable stage is the one that says what to <strong>refuse</strong>. The archetype: a supplement client who does not sell CBD, whose organic traffic will fill with CBD queries the moment a research tool is left to optimize freely.</p>
+    </div>
+
+    <div class="modes">
+      <div class="mode">
+        <span class="n">Mode 1</span>
+        <h4>The client fills it in</h4>
+        <p>Sent ahead of kickoff. Twenty minutes. Works when the client has opinions and time — rarer than it sounds.</p>
+      </div>
+      <div class="mode">
+        <span class="n">Mode 2</span>
+        <h4>Filled from an interview, then corrected</h4>
+        <p>The default. Every answer carries a provenance chip, so the client's review is a scan for the dashed ones rather than a re-read. That is the mode demonstrated on this page.</p>
+      </div>
+      <div class="mode">
+        <span class="n">Mode 3</span>
+        <h4>An onboarding portal</h4>
+        <p>Selections and short fields, exported in the same ID-prefixed format. Same contract, no re-typing — the pattern already proven by the Website Planning Workbook.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <p><strong>The IDs are load-bearing.</strong> Answers export as <code>M2. …</code> line-prefixed blocks, the same contract the planning workbook keeps, so a returned workbook parses by ID into a research brief. Reword a question freely when asking it out loud; never renumber one.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STAGE M ============ -->
+<div class="stage" id="stage-m">
+  <div class="stage-band">
+    <div class="wrap">
+      <div class="stage-letter">M</div>
+      <div>
+        <h3>The money</h3>
+        <p>What the work is worth, and what it needs to be worth. Every later stage is ranked against this one — a query is only an opportunity if the work behind it clears the floor.</p>
+      </div>
+    </div>
+  </div>
+  <section><div class="wrap"><div class="qlist">
+
+    <div class="q">
+      <div class="qrail"><span class="qid">M1</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">What does a good engagement look like — size, shape, and how long it lasts?</p>
+        <p class="qwhy">Sets the unit the whole plan is measured in. <b>A plan that produces the wrong shape of lead is a failed plan even if traffic triples.</b></p>
+        <div class="answer">
+          <p>A monthly retainer, not a one-off build. Projects are the entry point and most should convert — a scoped project with a finish line, then an hours bank. Three bank sizes are already defined internally: Maintain (~10–20 hrs/mo), Build (~40–60), Embedded (~80+). Build and Embedded are the target.</p>
+          <p class="tag">Source: Karol, 2026-08-29 · strategy doc §7</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">M2</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">What is the effective hourly rate today, what should it be, and by when?</p>
+        <p class="qwhy">The single number that ranks every opportunity later. <b>Ask for the effective rate — what the work actually earned after overrun — not the quoted rate.</b></p>
+        <div class="answer">
+          <p>Today: around $60/hr effective across the book, and that is acceptable for current work.</p>
+          <ul>
+            <li><strong>$80/hr</strong> — the floor on all new work from now on.</li>
+            <li><strong>$120/hr</strong> — the target for all new work as of April 2028.</li>
+            <li>A two-year phase-in. Some $80/hr clients will still be on the books in April 2028; the target governs <em>new</em> work only.</li>
+            <li>Older, cheaper clients get phased out as new retainers replace the revenue — not before.</li>
+          </ul>
+          <p class="tag">Source: Karol, 2026-08-29</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">M3</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">Which work in flight would you not take again at the price you took it?</p>
+        <p class="qwhy">Finds the gap between what was sold and what was delivered. <b>Usually names a service line to stop marketing, not a bad client.</b></p>
+        <div class="answer">
+          <p>Artist House will land closer to $55/hr against an $80 target — the UI got built past the scope that was priced. The pattern is understood and accepted: a strong artifact creates a pipeline of small high-value improvements (an $800 UI feature that takes three hours), which pulls the average back up. Acceptable at ~$60 for now, not repeatable as a pricing model.</p>
+          <p>New Axvor work is the correction in progress — targeting $75+.</p>
+          <p class="tag">Source: Karol, 2026-08-29</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">M4</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">What do you want to be doing much more of in twelve months that you barely do now?</p>
+        <p class="qwhy">Names the service line the content plan has to <b>create demand for</b>, as opposed to the ones it merely harvests.</p>
+        <div class="answer">
+          <p>Engagements with a delivered intelligence layer: reports that arrive on their own, dashboards, client portals, automated data pulls, monitored uptime and health. The CRM and daedalus work exists to make that a productized part of every retainer rather than a favour.</p>
+          <p>This is the rate justification. It is also the least-marketed thing the studio does — no page currently sells it.</p>
+          <p class="tag">Source: Karol, 2026-08-29</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">M5</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">What is the smallest engagement you will still say yes to?</p>
+        <p class="qwhy">Becomes the disqualifier line in the plan — the point below which a page should actively <b>repel</b> rather than convert.</p>
+        <div class="answer">
+          <p>There is no single figure. There are three tiers, and the thing that stays fixed across all of them is the rate:</p>
+          <ul>
+            <li><strong>~$500 · small work for people I know.</strong> A straightforward business site where the scope is genuinely easy. Not a discount — the rate is the rate, and every minute at the keyboard is billed. These stay welcome.</li>
+            <li><strong>$800 · the absolute minimum for anything else</strong> — and only when there is follow-on work behind it.</li>
+            <li><strong>$1,200–$1,600 · a WordPress business site. $2,200 · a modern Next.js build.</strong> The real entry price for a new relationship with nothing behind it.</li>
+          </ul>
+          <p>Priced the way DQS-001 was: a deposit at kickoff against a named deliverable, every line visible. Fair and transparent, not negotiated down.</p>
+          <p class="tag">Source: Karol, 2026-08-30 · deposit structure verified in CRM</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">M5a</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">So what is the page actually supposed to refuse?</p>
+        <p class="qwhy">The follow-up that turns a price into a filter. <b>Most sites get this wrong by publishing a minimum, which repels the wrong half of the market.</b></p>
+        <div class="answer">
+          <p><strong>Not small projects — discounted ones.</strong> A $500 build at the $80/hr floor is roughly six clean hours; it is perfectly consistent with M2. What gets refused is a rate that moves, and a scope too vague to bill honestly.</p>
+          <p>So the disqualifier the plan writes for is not a number on a page. It is two questions a page can ask on your behalf: <em>is the scope clear enough to price</em>, and <em>is there anything behind it</em>. A published minimum would turn away the easy six-hour job that pays at rate while doing nothing to deter the vague $3,000 one that loses money.</p>
+          <p class="tag">Derived from M5 + M2 · confirm the framing</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">M6</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">Who is the client that pays that way?</p>
+        <p class="qwhy">The rate floor says what work is worth; this says who is willing to pay it. <b>Together they are what makes a search query "qualified" — neither does it alone.</b></p>
+        <div class="answer">
+          <p>Someone building a <strong>specific digital product</strong>: a customer-facing app, a custom internal tool, or a premium website that integrates with other systems and apps — ideally systems the studio also built.</p>
+          <p>They have a budget. They understand that good development is a premium purchase. They appreciate quality, and they do not haggle over a reasonable estimate or over retainer hours.</p>
+          <p><strong>Company stage does not filter them.</strong> All four segments are live on the books right now and all four fit:</p>
+          <ul>
+            <li>Specialty boutique — Artist House</li>
+            <li>Early growth — Mineralife, Zemvelo</li>
+            <li>Mid-stage — DQS</li>
+            <li>Enterprise — GDI</li>
+          </ul>
+          <p>The reason stage does not filter is the forward-deployed posture: the studio blends into whatever team needs it, so the shape of the company matters far less than what it is trying to build and how it treats price.</p>
+          <p class="tag">Source: Karol, 2026-08-30</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">M6a</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">How should the content be organized, given who that is?</p>
+        <p class="qwhy">An audience definition that does not change the site's structure has not been used. <b>Turn the buyer into an information architecture.</b></p>
+        <div class="answer">
+          <p><strong>Do not segment by company size.</strong> The reflex is a page for startups and a page for enterprise. That would split an audience M6 says is unified — boutique through enterprise, all paying for the same posture. Size-based pages would divide the traffic and halve the authority of each.</p>
+          <p><strong>Segment by what is being built instead</strong> — an app, a custom tool, a premium website with integrations. That matches the vocabulary the five briefs in Q1 actually used, and it matches the W1 ordering. One axis, used consistently.</p>
+          <p><strong>The highest-value page is the combined offer:</strong> the website <em>and</em> the system it talks to, built by the same person. That is the one version of the website line that cannot be commoditized, and it is the mechanism behind every escalation in Q1 — a site becomes a CRM, a portal, an integration layer.</p>
+          <p><strong>One thing search cannot do.</strong> No query separates a buyer who haggles from one who does not — budget posture is invisible in a keyword. That filter has to live in the copy, in the absence of published prices, and in the two qualifying questions from M5a. The plan can bring the right topic; only the page can turn away the wrong buyer.</p>
+          <p class="tag">Derived from M6 + Q1 + W1 · confirm the single-axis decision</p>
+        </div>
+      </div>
+    </div>
+
+  </div></div></section>
+</div>
+
+<!-- ============ STAGE W ============ -->
+<div class="stage" id="stage-w">
+  <div class="stage-band">
+    <div class="wrap">
+      <div class="stage-letter">W</div>
+      <div>
+        <h3>The work</h3>
+        <p>The service lines, ranked by what they earn rather than by how much of them there is. This ordering becomes the priority order of the content plan.</p>
+      </div>
+    </div>
+  </div>
+  <section><div class="wrap"><div class="qlist">
+
+    <div class="q">
+      <div class="qrail"><span class="qid">W1</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">List what you sell. Rank by margin, not by volume.</p>
+        <p class="qwhy">Most sites are organized by what the business does most of. <b>The plan should be organized by what pays best.</b></p>
+        <div class="answer">
+          <ul>
+            <li><strong>1 · Fractional retainer</strong> — the anchor offer, the thing to be found for.</li>
+            <li><strong>2 · Web apps &amp; custom tools</strong> — the Artist House pattern; highest-value project work.</li>
+            <li><strong>3 · High-end websites</strong> — motion work, AI-driven scroll experiences, multisite builds. Not the commodity business site (that is the funding tier in M5); the version worth building well and charging for.</li>
+            <li><strong>4 · Automations &amp; integrations</strong> — still sold, still real work: Zapier builds, VPS and cloud integration layers, the migration off per-task pricing onto flat-cost infrastructure.</li>
+            <li><strong>5 · Multi-brand consolidation</strong> — specialty, pattern proven twice, public once DQS signs. Closely related to the multisite work in tier 3.</li>
+          </ul>
+          <p>The ordering is a preference as much as a margin calculation, and it was stated that way: building a better, more expensive website beats running someone's Zapiers — without giving up the Zapier work.</p>
+          <p class="tag">Source: Karol, 2026-08-30 · supersedes the strategy doc §3 ordering</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">W2</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">For each line: is it what you want to be found for, or what pays for the thing you want?</p>
+        <p class="qwhy">Separates the <b>hero</b> lines from the <b>funding</b> lines. Both need pages; only one needs a content engine behind it.</p>
+        <div class="answer">
+          <p><strong>Found for:</strong> the retainer, custom tools, <strong>high-end websites</strong> — the genuinely cool ones — and the reporting layer (M4). These get the content engine.</p>
+          <p><strong>Pays for it:</strong> the small business site at the lower M5 tiers, and integration work. Both stay on the menu and both need pages that convert the traffic already arriving — neither needs forty more posts.</p>
+          <p>The split runs <em>through</em> the websites line rather than around it, which is the part that changes the plan: the same service is a hero offer at one end and a funding line at the other, so it needs two different pages, not one. The dividing line is the buyer's expectation — $2,000–3,000 is the hero tier; $500 is the favour tier.</p>
+          <p>And the hero tier is not only a margin line. It is the <strong>acquisition path</strong>: the client who pays $3,000 for a site is the client who later wants the portal, the integrations and the monitoring. Content aimed at that buyer is doing double duty, which is why it outranks its position in W1.</p>
+          <p class="tag">Source: Karol, 2026-08-30 · high-end websites named explicitly</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q needs-karol">
+      <div class="qrail"><span class="qid">W3</span><span class="chip assumed">Decision</span></div>
+      <div class="qbody">
+        <p class="qtext">What is the entry offer — the small, obvious thing that becomes the big thing?</p>
+        <p class="qwhy">The highest-converting content targets the <b>entry</b> offer, not the anchor. Nobody searches for a retainer.</p>
+        <div class="answer">
+          <p>The scoped project with a defined finish line. The sharpest named version is the economics trigger: every scaling company hits the month its Zapier or Workato bill outgrows a server bill, and migrating high-volume automations onto flat-cost infrastructure is a clean, priceable project that converts naturally into a retainer.</p>
+          <p>That is a <em>search-shaped</em> pain — someone types it the week the invoice lands.</p>
+          <p><strong>There is now a second candidate, and it is probably the better one.</strong> W4 describes the premium website build as automated, high-margin, priced where the buyer already expects to pay, and the natural first step into portals, integrations and monitoring. That is the definition of an entry offer — and unlike the iPaaS trigger, people search for it constantly.</p>
+          <p>The iPaaS wedge stays sharp: it is a specific pain someone types the week the invoice lands, and it converts straight to a retainer. But it is a narrow door into a service line that ranks fourth by preference.</p>
+          <p><strong>Q1 settles most of this.</strong> Three of the last five clients entered through a website; none entered through an automation bill. And the volume argument is yours: far more people need a website than need a custom app or a complex integration, which makes it the easiest thing to enter with.</p>
+          <p><strong>Needs Karol:</strong> confirmation, not deliberation. The recommendation is to lead with the premium website build and keep the iPaaS migration as a named secondary wedge on the systems page. Say yes and the content plan has its spine.</p>
+          <p class="tag">Source: tallkarol-strategy.md §3</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">W4</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">What would you stop selling tomorrow if the pipeline were full?</p>
+        <p class="qwhy">The clearest signal of what to stop writing for. <b>An answer here saves more effort than any keyword.</b></p>
+        <div class="answer">
+          <p><strong>Nothing.</strong> No service line gets dropped — the filter is the rate, not the type of work. Website building in particular is now heavily automated and largely hands-off, which changes its economics entirely: at $100–120/hr on a build that takes around eighteen hours, it clears the floor comfortably and is worth taking.</p>
+          <p>The distinction is the client, not the service. The target is the buyer who <strong>expects to pay $2,000–3,000</strong> for a site — not the one shopping at $500. And that buyer is the one who escalates: a site, then a portal, then integrations, then optimizations, then monitoring. The website is the front door to everything in M4.</p>
+          <p>What gets phased out is work priced below the rate, and the older cheap clients — as new retainers replace the revenue, not before.</p>
+          <p class="tag">Source: Karol, 2026-08-30 · supersedes two earlier inferences</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q needs-karol">
+      <div class="qrail"><span class="qid">W4a</span><span class="chip assumed">Finding</span></div>
+      <div class="qbody">
+        <p class="qtext">Does the delivered work carry a link back — and is that link actually there?</p>
+        <p class="qwhy">A credit link on every site shipped is a link-building programme that runs off delivery instead of outreach. <b>It is also the easiest claim in this workbook to believe without checking.</b></p>
+        <div class="answer needs">
+          <p>The intent is stated: every site built is tagged, so delivery compounds domain authority and each build keeps working as a business card.</p>
+          <p><strong>It is not currently running.</strong> Four reachable client sites were fetched and searched for any link to tallkarol.com and for any developer credit at all — "built by", "designed by", "developed by". Nothing on any of them:</p>
+          <ul>
+            <li><code>artisthouse.world</code> · no link, no credit</li>
+            <li><code>dqstaff.com</code> · no link, no credit</li>
+            <li><code>greatdayimprovements.com</code> · no link, no credit</li>
+            <li><code>zemvelo.com</code> · no link, no credit</li>
+          </ul>
+          <p>Homepage HTML only, and two other sites were unreachable — so this is a strong signal rather than a complete audit. But the mechanism believed to be compounding authority is not visibly deployed on the four biggest named builds.</p>
+          <p><strong>Needs Karol:</strong> is the credit link something clients have refused, something that quietly stopped, or something never actually implemented? It is close to free, it is the cheapest link acquisition available, and it changes the plan — an existing programme gets measured, an absent one gets built.</p>
+          <p class="tag">Verified 2026-08-30 · homepage HTML, 4 of 6 sites reachable</p>
+        </div>
+      </div>
+    </div>
+
+  </div></div></section>
+</div>
+
+<!-- ============ STAGE X ============ -->
+<div class="stage" id="stage-x">
+  <div class="stage-band">
+    <div class="wrap">
+      <div class="stage-letter">X</div>
+      <div>
+        <h3>The exclusions</h3>
+        <p>What must never be optimized for. The highest-value stage in the workbook and the one clients answer fastest — people know what they are not far better than they know what they are.</p>
+      </div>
+    </div>
+  </div>
+  <section><div class="wrap"><div class="qlist">
+
+    <div class="q">
+      <div class="qrail"><span class="qid">X1</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">What do you not do, no matter who asks?</p>
+        <p class="qwhy">Hard exclusions. <b>The CBD rule: a supplement client who does not sell CBD will still get a research queue full of CBD unless the tool is told.</b></p>
+        <div class="answer">
+          <ul>
+            <li>Work below the rate floor, however interesting.</li>
+            <li>Buyers who haggle a reasonable estimate or argue retainer hours down. The behaviour is the disqualifier, not the number — it predicts every later conversation.</li>
+            <li>Engagements structured around an account manager and a ticket queue — the studio's whole pitch is their absence.</li>
+            <li>Positioning as an "AI studio." AI appears only where a specific capability meets a specific noun; "AI-powered solutions" is a banned phrase, not a missed keyword.</li>
+            <li>Publishing prices. Every CTA is a booked call.</li>
+          </ul>
+          <p class="tag">Source: tallkarol-strategy.md §2, §5.5, §7</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">X2</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">What are you regularly mistaken for, that you would rather not be found as?</p>
+        <p class="qwhy">Catches the queries a tool will happily hand you because they are <b>adjacent and cheap to win</b>.</p>
+        <div class="answer">
+          <ul>
+            <li>A freelance WordPress developer.</li>
+            <li>A cheap website shop.</li>
+            <li>An AI agency.</li>
+          </ul>
+          <p>There is also a live brand-SERP problem: the August audit found "tallkarol" losing its own name to old GitHub bootcamp repositories and Facebook, and "tall karol" swamped by Karol G height queries. That is an entity fix, not a content fix.</p>
+          <p class="tag">Source: Aug 2026 audit · strategy doc §2</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">X3</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">Which topics are commercially wrong for you even though you could write them credibly?</p>
+        <p class="qwhy">The trap this workbook exists to catch: <b>the topics you are best at are often the ones your buyers never search.</b></p>
+        <div class="answer">
+          <p>Developer-craft tutorials. Twenty-nine of the fifty-one published target queries are aimed at practitioners — <code>cursor rules performance</code>, <code>next build cannot find module dev server</code>, <code>lighthouse color contrast fails randomly</code>, <code>cheapest way to host a side project</code>. Excellent posts; a reader who will never buy.</p>
+          <p><strong>Not a delete list.</strong> They carry technical authority and AI-answer citations, and the domain needs both. But they should stop being the majority, and the ones that actively contradict the rate floor should be re-angled or retired.</p>
+          <p>One group is now clearly exempt: the motion, performance and layout-shift posts are the proof behind the high-end website line in W1. A buyer shopping for a site built well reads them as evidence, not as a tutorial. They earn their place twice.</p>
+          <p class="tag">Measured from dev/data/posts.ts · goal from Karol, 2026-08-29</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">X4</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">Which clients, industries, or claims are off-limits — contract, NDA, or judgment?</p>
+        <p class="qwhy">Governs what the content engine may cite. <b>A named client in a post that the client never approved is the failure this question prevents.</b></p>
+        <div class="answer">
+          <ul>
+            <li>DQS stays anonymous until signed — currently "an automotive staffing firm."</li>
+            <li>Any client named in Tall Karol content is governed by <em>that</em> client's pack and blocklist, never this one.</li>
+            <li>Named use is automatic only for Tall Karol's own property.</li>
+          </ul>
+          <p class="tag">Source: daedalus-client-packs · tallkarol/CLIENT.md DISCLOSURE</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">X5</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">What price and status signals must never appear?</p>
+        <p class="qwhy">Premium positioning is destroyed by vocabulary faster than by design. <b>Collect the banned words now; they become a lint rule.</b></p>
+        <div class="answer">
+          <p>Never: cheap, affordable, budget, "starting at", discount, hourly rates on any public page — and no published minimum project value either, for the reason in M5a. Never state headcount, never "one-person," never a false "we." "Team" only ever means the client's team.</p>
+          <p>Also banned as house style: "brands" as a word for the audience, soul, journey, "what's missing," "disconnected" as poetry.</p>
+          <p class="tag">Source: dev/CLAUDE.md voice rules · strategy doc §9</p>
+        </div>
+      </div>
+    </div>
+
+  </div></div></section>
+</div>
+
+<!-- ============ STAGE Q ============ -->
+<div class="stage" id="stage-q">
+  <div class="stage-band">
+    <div class="wrap">
+      <div class="stage-letter">Q</div>
+      <div>
+        <h3>The queries</h3>
+        <p>What buyers actually type — in their words, not the studio's. Answered before any tool is opened, so the tool is used to test a hypothesis instead of generating one.</p>
+      </div>
+    </div>
+  </div>
+  <section><div class="wrap"><div class="qlist">
+
+    <div class="q">
+      <div class="qrail"><span class="qid">Q1</span><span class="chip stated">Stated</span><span class="chip internal">Internal</span></div>
+      <div class="qbody">
+        <p class="qtext">What did your last five good clients say they were looking for, in their own words?</p>
+        <p class="qwhy">The highest-value question in the workbook. <b>Verbatim buyer language beats any keyword tool, because it is demand that already converted.</b></p>
+        <div class="answer">
+          <div class="brief">
+            <span class="who">Mineralife</span>
+            <p class="said">"A B2B website redesign with a modern feel — it doesn't need to be WordPress. The form has to qualify leads without creating friction; UX is very important." Plus a CRM built on Smartsheet that integrates with the new site and with Mailchimp for automated email.</p>
+            <p class="means">Entered as a website. Became a retainer with a CRM and an integration layer. The buyer explicitly released the CMS constraint — they wanted an outcome, not a platform.</p>
+          </div>
+          <div class="brief">
+            <span class="who">Artist House</span>
+            <p class="said">"Build a tool that helps A&amp;R find artists — pull several APIs together into a functional UI."</p>
+            <p class="means">Entered as a tool. Overdelivery turned into demand for more features and more APIs. Never used the words "web app."</p>
+          </div>
+          <div class="brief">
+            <span class="who">DQS / AXVOR / AIS</span>
+            <p class="said">"Build some websites and redesign some others" — three to start, probably four more as near-identical rebuilds inside the DQS core system.</p>
+            <p class="means">Entered as websites. Seven sites that all need managing is a retainer waiting to happen, and the consolidation pattern proving itself a third time.</p>
+          </div>
+          <div class="brief">
+            <span class="who">Bliss CB</span>
+            <p class="said">"A secure document portal with role-based access control, on AWS, all living in the cloud."</p>
+            <p class="means">Entered as a portal, and named the architecture unprompted. A technical buyer with the solution already half-specified.</p>
+          </div>
+          <div class="brief">
+            <span class="who">Domy Nova</span>
+            <p class="said">A high-budget Elementor project, paid at a premium on the understanding that real time goes into experimenting.</p>
+            <p class="means">Entered as one website, which has already produced two more — each priced higher than the last. This one lands near $2,000 and hits the $80–85/hr target.</p>
+          </div>
+          <p><strong>Three of the five entered through a website.</strong> Two entered as a tool or portal. Every one of them either escalated or is escalating — into a CRM, into more APIs, into a management retainer, into more sites at rising prices. The pattern in W4 is not a theory; it is what four of these five clients actually did.</p>
+          <p class="warn"><b>Internal only.</b> These are live client briefs and commercial terms. Scrub this answer before the workbook is shown to anyone outside the studio — the question stays, the answers go.</p>
+          <p class="tag">Source: Karol, 2026-08-30 · near-verbatim recall</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">Q1a</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">Does the published library speak that language back?</p>
+        <p class="qwhy">The test Q1 exists to make possible. <b>Compare the words that won real work against the words the content actually targets.</b></p>
+        <div class="answer">
+          <p>The five briefs are built from a small, consistent vocabulary: <em>website redesign · B2B · form that qualifies leads · UX · CRM · Smartsheet · Mailchimp · a tool · APIs · document portal · role-based access control · AWS · Elementor · rebuilds inside one core system</em>.</p>
+          <p>Searching the 51 published target queries for that vocabulary:</p>
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th>Term the briefs used</th><th>Target queries covering it</th></tr></thead>
+              <tbody>
+                <tr><td>Smartsheet · Mailchimp · CRM</td><td class="k">0</td></tr>
+                <tr><td>portal · document · role-based access</td><td class="k">0</td></tr>
+                <tr><td>B2B · redesign · lead · form</td><td class="k">0</td></tr>
+                <tr><td>multisite · core system rebuild</td><td class="k">0</td></tr>
+                <tr><td>AWS</td><td class="k">1 — a developer hosting comparison</td></tr>
+                <tr><td>Elementor</td><td class="k">3 — all about AI coding rules, not websites</td></tr>
+                <tr><td>fractional · forward deployed</td><td class="k">8 — used by none of the five</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p><strong>Eight posts target vocabulary that appears in zero of the five briefs. Zero posts target the vocabulary that appears in all five.</strong> The four Elementor and AWS hits are false comfort — they are practitioner posts that happen to contain the word.</p>
+          <p>The honest caveat: a client describing a brief in a scoping call is not the same as a stranger typing into a search box, so this is a proxy rather than a measurement. But the gap is far too wide to be an artifact of that difference, and it is the clearest single finding in this workbook.</p>
+          <p><strong>One qualification, added after C1a.</strong> The eight fractional posts are not stranded. The evidenced competitor is an unfilled headcount req, and the fractional-versus-full-time-hire comparison speaks directly to the person holding it. So the cluster keeps a defensible job — it argues against the hire — while the buyer vocabulary above gets built out alongside it. Fewer of the practitioner posts survive that test than the fractional ones do.</p>
+          <p class="tag">Measured 2026-08-30 against dev/data/posts.ts</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">Q2</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">What happens the week someone decides to go looking for you?</p>
+        <p class="qwhy">Trigger events are where commercial intent lives. <b>Write for the week of the trigger, not the topic in general.</b></p>
+        <div class="answer">
+          <ul>
+            <li>The senior developer resigned and the roadmap has no owner.</li>
+            <li>An agency quote came back at three times the expected number.</li>
+            <li>The automation bill jumped a tier and someone asked why.</li>
+            <li>A launch got blocked by performance or accessibility.</li>
+            <li>An acquisition left the company holding six websites on five hosts.</li>
+          </ul>
+          <p><strong>Confirmed against Q1.</strong> The five real briefs add two triggers the list was missing, both more mundane than the dramatic ones above: <em>the site looks dated next to competitors</em>, and <em>a manual process has outgrown the people doing it</em>. Neither is a crisis. Both are the moment someone starts searching.</p>
+          <p class="tag">Derived from strategy doc §3–4 · checked against Q1, 2026-08-30</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">Q3</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">Which phrases would you be embarrassed not to rank for?</p>
+        <p class="qwhy">Propose from the client's own service names first, then let them cut. <b>Clients edit better than they author.</b></p>
+        <div class="answer">
+          <p>Already bet on and live: the fractional definitional cluster, <code>fractional engineer vs agency</code>, <code>fractional engineer cost</code>, <code>fractional web developer for agencies</code> — the last of which the August audit named the single most winnable query.</p>
+          <p>Not yet written for, and closest to M4: the reporting-and-portals layer. There is currently no page and no post targeting a buyer looking for a developer who delivers dashboards and monitoring as part of a retainer.</p>
+          <p><strong>The vein Q1 opened, and the most concrete output of this workbook so far.</strong> Every one of these is named by a paying client, specific enough to rank for, and covered by nothing on the site today: a B2B website redesign off WordPress · a lead-qualification form that does not add friction · a Smartsheet-based CRM wired to a website and Mailchimp · a secure document portal with role-based access on AWS · several marketing sites rebuilt into one core system. Those are five briefs and five uncontested queries.</p>
+          <p class="tag">Derived from posts.ts ledger + Aug 2026 audit</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">Q4</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">Which high-volume phrases are a trap — big numbers, wrong people?</p>
+        <p class="qwhy">Volume is the most seductive wrong metric in this exercise. <b>Name the traps before the data does.</b></p>
+        <div class="answer">
+          <ul>
+            <li>Head terms owned by marketplaces — "fractional CTO", "hire developers." The audit already ruled these uncontestable; the SERP belongs to Toptal-class directories.</li>
+            <li><code>woocommerce vs shopify</code> and <code>gutenberg vs elementor</code> — very large volume, overwhelmingly a DIY audience.</li>
+            <li>Anything phrased around cheapness.</li>
+          </ul>
+          <p class="tag">Source: Aug 2026 audit · posts.ts ledger</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">Q5</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">What do you call the thing that the market calls something else?</p>
+        <p class="qwhy">Vocabulary mismatch is the quietest ranking failure there is. <b>The brand's word and the buyer's word are rarely the same word.</b></p>
+        <div class="answer">
+          <p>The studio's words: fractional, embedded, forward-deployed. <strong>None of the five clients in Q1 used any of them.</strong> They said: a website redesign, a tool, a document portal, a CRM. They named products and outcomes, never an engagement model.</p>
+          <p>That does not make the fractional cluster worthless — it is definitional content that captures people <em>researching</em> the model, and it feeds AI answers. But it is written in a vocabulary that the people who actually signed did not use, and it is eight of the fifty-one bets.</p>
+          <p><strong>Confirmed:</strong> use the market's nouns as needed on the pages that have to be found, without watering down the fractional angle. So a page is titled for what the buyer types — a B2B website redesign, a document portal, a Smartsheet integration — and the fractional model does its work in the copy, on the service pages, and on the call. The vocabulary meets the market; the positioning does not move.</p>
+          <p>Practical consequence for the plan: the eight fractional posts stay and keep their language. New buyer-facing pages get named for the product, not the engagement model.</p>
+          <p class="tag">Source: Karol, 2026-08-30 · evidenced by Q1</p>
+        </div>
+      </div>
+    </div>
+
+  </div></div></section>
+</div>
+
+<!-- ============ STAGE C ============ -->
+<div class="stage" id="stage-c">
+  <div class="stage-band">
+    <div class="wrap">
+      <div class="stage-letter">C</div>
+      <div>
+        <h3>The comparison set</h3>
+        <p>Who the buyer is really choosing between. Competitive research aimed at the wrong set produces a plan to beat companies you never lose to.</p>
+      </div>
+    </div>
+  </div>
+  <section><div class="wrap"><div class="qlist">
+
+    <div class="q">
+      <div class="qrail"><span class="qid">C1</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">Who do you actually lose deals to — by name where you can?</p>
+        <p class="qwhy">Ask about losses, not competitors. <b>The named loser list is specific; the competitor list is a category.</b></p>
+        <div class="answer">
+          <p><strong>There is no competitive-bid loss history, because there is barely a competitive-bid pipeline.</strong> No named studio, agency or freelancer has taken work off the table. Every client in Q1 arrived through a relationship or escalated out of existing work.</p>
+          <p>That is not a gap in the record — it is the finding. Acquisition today is referral-shaped, which means the studio has never really been <em>in</em> a market, which is precisely the condition this plan exists to change. It also explains why competitive SERP research has little to bite on yet: there is no incumbent to displace, because there has been no contest.</p>
+          <p>Consequence for the plan: competitor analysis drops down the priority list for Phase 2. The gap is demand capture, not displacement. Revisit C1 after two quarters of inbound, when losses start to exist and can finally be named.</p>
+          <p class="tag">Source: Karol, 2026-08-30 · supersedes the inferred category list</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">C1a</span><span class="chip stated">Stated</span><span class="chip internal">Internal</span></div>
+      <div class="qbody">
+        <p class="qtext">Where have you actually been beaten, then?</p>
+        <p class="qwhy">A loss in an adjacent market still names a competitor. <b>Ask where else the same capability was up for sale.</b></p>
+        <div class="answer">
+          <p>In hiring, not in bidding — nine times:</p>
+          <ul>
+            <li><strong>5 ×</strong> solutions architect roles</li>
+            <li><strong>3 ×</strong> enterprise integration engineer roles</li>
+            <li><strong>1 ×</strong> application development role</li>
+          </ul>
+          <p>All full-time positions. Karol's own read: he does not present well as a full-time hire, and the fit is better as an agency of one — fractional, retainer, or 1099.</p>
+          <p><strong>The competitor is a job requisition.</strong> That is the one opponent with evidence behind it, and it reframes C2: the studio is not usually being compared to an agency, it is being compared to a req that a company is struggling to fill. Nine companies had the budget and the need for exactly this capability and chose to hire for it.</p>
+          <p>A company that has been trying to fill a solutions-architect seat for six months is a fractional buyer who does not know it yet — the same trigger as "the senior developer resigned and the roadmap has no owner" in Q2, seen from the other side.</p>
+          <p><strong>The honest limit:</strong> these were lost as a candidate, not as a vendor. Losing an interview says nothing about whether the same company would buy the work on contract. What it evidences is that the demand is real and funded — not that it converts.</p>
+          <p class="warn"><b>Internal only.</b> Personal hiring history. Never appears in client-facing material.</p>
+          <p class="tag">Source: Karol, 2026-08-30</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">C2</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">Who do you want to be shortlisted next to?</p>
+        <p class="qwhy">Sets the quality bar for the pages, and often reveals the <b>real</b> keyword set — the one that names the peer group.</p>
+        <div class="answer">
+          <p>Senior independent consultancies and boutique product studios — the tier where the buyer has already decided not to hire a big agency and is choosing between serious individuals. <strong>Confirmed outright</strong>, with fractional and forward-deployed carried alongside it for the buyers who already know the terms.</p>
+          <p><strong>Corrected by C1a.</strong> That is the aspiration; the evidenced comparison is different. The thing actually competing for this budget is an open headcount req — solutions architect, integration engineer. The page that matters most is therefore not "why me over that agency" but "why this instead of the hire you cannot close."</p>
+          <p class="tag">Source: Karol, 2026-08-30 · corrected against C1a</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">C3</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">Who ranks for your money terms today who is not really a competitor?</p>
+        <p class="qwhy">Stops the plan from trying to outrank a directory. <b>Some SERPs are channels to get listed on, not opponents to beat.</b></p>
+        <div class="answer">
+          <p>Marketplaces and listicle directories own the head terms. They are not competitors for the work — they are competitors for the click, and a different tactic entirely: get listed, get cited, or go around them via the definitional and comparison queries where a real practitioner outranks a directory.</p>
+          <p class="tag">Source: Aug 2026 audit finding</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">C4</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">What can you claim that none of them can?</p>
+        <p class="qwhy">The differentiators that survive this question become the <b>recurring argument</b> in every page the plan produces.</p>
+        <div class="answer">
+          <ul>
+            <li>Forward-deployed: the work happens inside the client's Slack, standups and repos. Agencies structurally cannot offer it.</li>
+            <li>One brain from architecture to production — the person who scopes it ships it.</li>
+            <li>Enterprise credentials without enterprise overhead: WordPress VIP multisite, AWS serverless.</li>
+            <li>Retention through a merger and an acquisition — when contractors get cut, this one got re-hired.</li>
+            <li>The site itself is the proof: near-perfect Lighthouse across categories, in production.</li>
+            <li>Bilingual delivery — technical and business in the same conversation. No longer self-asserted: three of the five recommendations in E3 name it independently, including a CMO who managed the work.</li>
+          </ul>
+          <p class="tag">Source: tallkarol-strategy.md §4</p>
+        </div>
+      </div>
+    </div>
+
+  </div></div></section>
+</div>
+
+<!-- ============ STAGE E ============ -->
+<div class="stage" id="stage-e">
+  <div class="stage-band">
+    <div class="wrap">
+      <div class="stage-letter">E</div>
+      <div>
+        <h3>The evidence</h3>
+        <p>What can be proven, named, and quoted. Content that cannot cite anything ranks badly and converts worse; this stage is what stops the plan from promising posts the claim bank cannot support.</p>
+      </div>
+    </div>
+  </div>
+  <section><div class="wrap"><div class="qlist">
+
+    <div class="q">
+      <div class="qrail"><span class="qid">E1</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">What can you prove with a number?</p>
+        <p class="qwhy">Numbers are the difference between a post that ranks and a post that gets cited. <b>Collect them before planning, not during writing.</b></p>
+        <div class="answer">
+          <ul>
+            <li>The site's own Lighthouse scores in production, and 3/3 on agentic browsing.</li>
+            <li>An SEO score taken from 61 to 100 on a client build.</li>
+            <li>Three custom systems running in production on Railway.</li>
+            <li>Measured token costs and real build numbers already published in the knowledge base.</li>
+          </ul>
+          <p class="tag">Source: strategy doc §8 · published KB posts</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">E2</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">Who may be named, who is anonymous, and who is off-limits?</p>
+        <p class="qwhy">Determines which case studies can exist at all. <b>Answer per client, never in general.</b></p>
+        <div class="answer">
+          <p><strong>All three case-study clients are cleared to be named</strong> — DQS, Mineralife and Artist House, confirmed 2026-08-30. Nothing about the Mineralife or DQS engagements is proprietary. The client packs have been updated to match; Mineralife and Artist House were both still recorded as <em>anonymized</em> while the live site already named them.</p>
+          <p><strong>Naming a client is not the same permission as publishing their tool.</strong> Artist House is cleared by name only: artist data stays internal, Soundcharts stays blocklisted, and the pack's case-study gate has not moved (E4b).</p>
+          <p><strong>Two records still out of step:</strong> Zemvelo is named on the live site but its pack still reads <em>anonymized</em>, and DQS has no client pack at all — it will be named in a published case study with no claim bank, blocklist or disclosure record behind it.</p>
+          <p class="tag">Source: Karol, 2026-08-30 · packs updated same day</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">E3</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">Which testimonials and quotes are cleared for use, verbatim?</p>
+        <p class="qwhy">A quote you cannot paste is not an asset. <b>"Permission granted" needs the actual text attached.</b></p>
+        <div class="answer">
+          <p>Five LinkedIn recommendations, now on file with full text, names, titles, dates and the working relationship behind each. Open since August; closed 2026-08-30.</p>
+          <div class="brief">
+            <span class="who">Christopher Jarvis · managed Karol directly · Mar 2026</span>
+            <p class="said">"Highly technical, incredibly quick to learn new workflows, and remarkably dynamic when it comes to evolving project requirements… I highly recommend Karol for any role that requires technical expertise paired with a strong business mindset."</p>
+            <p class="means">API and integration projects across sales, marketing and operations.</p>
+          </div>
+          <div class="brief">
+            <span class="who">Anne-Marie Colant · Director of Social Media, Great Day Improvements · Mar 2026</span>
+            <p class="said">"He played a key role in ensuring our lead generation systems worked seamlessly, helping implement and manage integrations using tools like Zapier to ensure leads flowed accurately from our platforms into the CRM… willingness to explain things in a way that was easy for someone who isn't as tech-savvy to understand."</p>
+            <p class="means">The single most on-message quote in the set — it describes the exact work Q1's biggest brief asks for.</p>
+          </div>
+          <div class="brief">
+            <span class="who">John Kosmides · CMO, managed Karol directly · Dec 2025</span>
+            <p class="said">"One of the rare professionals who can bridge the gap between deep technical capability and real business understanding… He never just built a solution, he understood the business case behind it… His integration work, in particular, created a lasting impact across multiple systems and departments."</p>
+            <p class="means">Third-party proof of the "I speak stakeholder" differentiator, from a CMO.</p>
+          </div>
+          <div class="brief">
+            <span class="who">David Bendoly · Senior Software Engineer, Nationwide · Nov 2025</span>
+            <p class="said">"Whether it's marketing, software development, or creative direction, Karol brings a unique blend of strategic thinking, technical skill, and artistic talent."</p>
+            <p class="means">Peer-engineer validation rather than stakeholder validation.</p>
+          </div>
+          <div class="brief">
+            <span class="who">Julian Quesada · reported to Karol directly · Oct 2025</span>
+            <p class="said">"An incredible mentor… his skillset allows him to operate as an expert in nearly every aspect of a business."</p>
+            <p class="means">Speaks to seniority and leadership rather than delivery.</p>
+          </div>
+          <p><strong>Three of the five independently name the technical-plus-business bridge</strong>, which is the differentiator the strategy doc holds back as a call-stage weapon. It is no longer a self-description — three people said it unprompted, one of them a CMO.</p>
+          <p><strong>Client quotes are being sourced to sit alongside them</strong> — Artist House and DQS, both engagements the studio actually delivered. Tasks are open in the CRM against each client. Once those land, the LinkedIn set becomes the supporting layer rather than the whole proof.</p>
+          <p class="warn"><b>One framing constraint.</b> Every one of these is an <em>employment</em> relationship — managed Karol, reported to Karol, worked alongside him at UWD and Perfect Power Wash. They are credibility for the person, not case studies for the studio, and two of them end on "recommend Karol for any role," which reads as a reference for a job. Deployed unframed on a sales page they read as a résumé. Framed as "the people who ran the departments this work served," they are strong.</p>
+          <p class="tag">Source: Karol, 2026-08-30 · full text on file</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">E4</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">What proof is missing that would close deals if it existed?</p>
+        <p class="qwhy">Turns a content plan into a <b>proof</b> plan. Often the highest-value item is not a post at all.</p>
+        <div class="answer">
+          <p>The gap is real and blocking: <code>/case-studies</code> is still placeholder content and noindexed, so the site has no long-form proof surface at the exact moment a buyer wants one. Also missing: hours-saved numbers for the custom tools, a before/after Search Console story for a client, and the "N systems → 1 tool" count that has been a placeholder since August.</p>
+          <p><strong>In motion:</strong> client testimonial quotes from Artist House and DQS are now tasked in the CRM (E3). Those close the quote gap, not the case-study gap.</p>
+          <p><strong>Resolved:</strong> three case studies are specified and in production. They are in E4a; what each still needs is in E4b.</p>
+          <p class="tag">Verified in repo · open</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">E4a</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">Which ones, and what does each one show?</p>
+        <p class="qwhy">A case study is a landing page with a story attached. <b>Pick for what the plan needs to sell, not for what was hardest to build.</b></p>
+        <div class="answer">
+          <div class="brief">
+            <span class="who">1 · DQS — the consolidation system</span>
+            <p class="said">Three fully built sites to look at. Screenshots of each, GIFs of the good sections and transitions. wp-admin shots of the custom theme, the custom plugin and the interface changes — and proof that pages stay editable in Elementor. PageSpeed scores. Client quotes. Plus the diagram: sites scattered across agencies, builders and systems, pulled into one system on one builder that the existing staff already prefer.</p>
+            <p class="means">The most differentiated story in the set, and the only one that shows three finished artifacts at once. It is also the specialty line the strategy doc has been holding for exactly this moment.</p>
+          </div>
+          <div class="brief">
+            <span class="who">2 · Mineralife — the B2B site and the system behind it</span>
+            <p class="said">Site performance. Lead intake for the weeks live — weekly average and quality ratio, pulled from an export. The keyword research, the Google Ads campaign, and the measurement and upkeep plan that protects traffic through the change. Then the CRM as part of the site: leads arriving, manual lead entry, the Smartsheet integration, the Mailchimp integration, the admin portal.</p>
+            <p class="means">The combined offer from M6a made visible — the website and the systems it talks to, same hands. It covers more of the uncovered vocabulary from Q1a than anything else on the site could.</p>
+          </div>
+          <div class="brief">
+            <span class="who">3 · Artist House — the product built without a spec</span>
+            <p class="said">A specific request with little initial guidance, developed into a full product by iterating alongside the client, with features and integrations added as they earned their place. Screenshots across the screens (pending Joe's permission), database flow diagrams, and the admin / developer / employee role differences.</p>
+            <p class="means">The custom-tool tier, and the only one that sells the <em>working relationship</em> rather than a deliverable — which is the forward-deployed claim demonstrated instead of asserted.</p>
+          </div>
+          <p><strong>The three-way split is the part worth protecting.</strong> One consolidation story, one website-plus-integration story, one custom-product story — three different service lines from W1, three different buyer vocabularies from Q1. Three studies of the same shape would have proved one thing three times.</p>
+          <p>Volume proof lives separately: a websites-built section carrying Domy Nova, Zemvelo, Caps Fieldhouse and the rest. That is a portfolio grid, not a case study, and keeping the two formats apart is what stops the three deep stories from being diluted.</p>
+          <p class="tag">Source: Karol, 2026-08-30 · supersedes the earlier recommendation</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q needs-karol">
+      <div class="qrail"><span class="qid">E4b</span><span class="chip assumed">Open</span></div>
+      <div class="qbody">
+        <p class="qtext">What does each one still need before it can be published?</p>
+        <p class="qwhy">Case studies stall on permissions and numbers, never on writing. <b>List the dependencies before the drafting starts.</b></p>
+        <div class="answer needs">
+          <p><strong>DQS — cleared.</strong> Naming confirmed 2026-08-30; nothing about the engagement is proprietary. The page is unblocked. Two practical notes: screenshot production rather than staging (a staging PageSpeed carries a noindex SEO penalty that reads as a real score), and DQS has no client pack, so the study will name a client with no claim bank or blocklist behind it. Worth scaffolding one before publishing.</p>
+          <p><strong>Mineralife — two claims to handle carefully.</strong></p>
+          <ul>
+            <li><em>Lead numbers at low n.</em> A few weeks of data makes a weekly average volatile, and publishing one sets an expectation the next quarter has to meet. Publish the qualified share with the window and the count stated — "X of Y inquiries qualified over Z weeks" — rather than a leads-per-week figure. The ratio survives a slow month; the average does not.</li>
+            <li><em>"Traffic rebounds immediately."</em> A replatform usually dips before it recovers, and organic attribution does not exist on the site yet. Describe the method — redirect map, parity checks, monitoring — not the outcome. Claim the discipline, not the rebound.</li>
+            <li><em>Keep paid separate.</em> The Google Ads campaign is proof of full-funnel ownership, not proof of the organic work. Mixed together they make both unprovable.</li>
+          </ul>
+          <p><strong>Artist House — the name is cleared; the screenshots are a different question, and the blocker is not Joe.</strong> The client pack records an <em>executed AR Intelligence Agreement</em> whose terms have never been read into it, and carries a standing instruction: until they are, no public content may derive from Soundcharts data, the ingestion flow, or the agreement. "Soundcharts" is also on the blocklist. So:</p>
+          <ul>
+            <li>Read the agreement in <code>~/Work/artist-house/docs/</code> and summarise its terms into the pack. Twenty minutes, and it settles the question permanently.</li>
+            <li>Screenshots use synthetic or obscured records regardless of what Joe says — live artist rows are third-party data, not the client's to hand over.</li>
+            <li>The case study describes the capability without naming the data spine, since the source is blocklisted.</li>
+          </ul>
+          <p>Joe sharing the tool informally is a different act from a commercial site publishing it permanently and ranking for it. The quote ask is already tasked; the screenshot ask rides along with it.</p>
+          <p><strong>All three: one number each.</strong> Still the real blocker. PageSpeed scores for DQS, the qualified-share figure for Mineralife, and something countable for Artist House — hours saved, or APIs consolidated.</p>
+          <p><strong>Give each a target query.</strong> Otherwise these are stories rather than landing pages: consolidating multiple agency-built sites into one system · a B2B website redesign that qualifies leads · building a custom internal tool from several APIs. Each is a zero-coverage term from Q1a.</p>
+          <p class="tag">Derived 2026-08-30 · DQS naming is the one blocking item</p>
+        </div>
+      </div>
+    </div>
+
+  </div></div></section>
+</div>
+
+<!-- ============ STAGE V ============ -->
+<div class="stage" id="stage-v">
+  <div class="stage-band">
+    <div class="wrap">
+      <div class="stage-letter">V</div>
+      <div>
+        <h3>The conversion path</h3>
+        <p>What a ranked visitor is supposed to do next. Half of a ranking plan's value is in the pages the traffic lands on, and this stage is what makes the plan a conversion plan rather than a traffic plan.</p>
+      </div>
+    </div>
+  </div>
+  <section><div class="wrap"><div class="qlist">
+
+    <div class="q">
+      <div class="qrail"><span class="qid">V1</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">What is the one action a good visitor should take?</p>
+        <p class="qwhy">Force the singular. <b>Two primary actions means no primary action.</b></p>
+        <div class="answer">
+          <p>Start an intake at <code>/contact#intake</code>. Every Book-a-Call CTA already deep-links there — the intake form was chosen deliberately over a scheduler.</p>
+          <p class="tag">Source: dev repo · Aug 2026 proof/IA pass</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">V2</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">What happens after they take it — and can you see it happen?</p>
+        <p class="qwhy">Establishes whether the plan can ever be measured on <b>revenue</b> instead of sessions.</p>
+        <div class="answer">
+          <p>The form posts to the CRM ingest endpoint, becomes an inquiry, and lands in the unified inbox. That half is live and working.</p>
+          <p>What is not connected: the inquiry does not carry which page or query produced it, so organic cannot yet be credited with a single lead.</p>
+          <p class="tag">Verified · attribution gap is real</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">V3</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">Where do you currently lose people?</p>
+        <p class="qwhy">Names the fixes that beat any new content. <b>Ranking into a broken path is an expensive way to prove a point.</b></p>
+        <div class="answer">
+          <ul>
+            <li>Knowledge base to service page to intake is unproven, and the post mix means most readers were never buyers (X3).</li>
+            <li>No case studies — the proof surface a considering buyer looks for is noindexed placeholder content.</li>
+            <li>The <code>/services</code> hub has no live inbound link on the site.</li>
+          </ul>
+          <p class="tag">Verified in repo · Aug 2026</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">V4</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">What would you rather a visitor did not do?</p>
+        <p class="qwhy">Surfaces the content that succeeds at the wrong thing. <b>A bookmark is not a lead.</b></p>
+        <div class="answer">
+          <p>Read a build note, bookmark it, take the technique, and never identify themselves. Valuable for authority, worth nothing against the rate goal — and currently the most likely outcome for the majority of the published library.</p>
+          <p class="tag">Derived from X3</p>
+        </div>
+      </div>
+    </div>
+
+  </div></div></section>
+</div>
+
+<!-- ============ STAGE R ============ -->
+<div class="stage" id="stage-r">
+  <div class="stage-band">
+    <div class="wrap">
+      <div class="stage-letter">R</div>
+      <div>
+        <h3>The reporting contract</h3>
+        <p>What gets delivered, to whom, how often, and what number decides whether any of it worked. Agreed up front so the report is a decision instrument rather than a monthly performance of activity.</p>
+      </div>
+    </div>
+  </div>
+  <section><div class="wrap"><div class="qlist">
+
+    <div class="q">
+      <div class="qrail"><span class="qid">R1</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">Who reads the report, and what decision do they make with it?</p>
+        <p class="qwhy">A report nobody decides anything from is a status update. <b>Name the decision first, then design the report backwards from it.</b></p>
+        <div class="answer">
+          <p>Karol reads it. The decision each month is small and concrete: what to write next, what to rewrite, and which page to fix first.</p>
+          <p>For client engagements later, the reader is whoever signs the retainer — and the same reporting layer is itself part of what justifies the rate (M4).</p>
+          <p class="tag">Source: Karol, 2026-08-29</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">R2</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">What cadence, and how much of it should arrive on its own?</p>
+        <p class="qwhy">Cadence should match how fast the data actually moves. <b>Weekly rank reporting on a new site reports noise.</b></p>
+        <div class="answer">
+          <p>Monthly for the plan and the review; the weekly digest already exists in the insights CLI for anything urgent. Data pulls, detection and queue-building run unattended — the human step is the decision, not the collection.</p>
+          <p class="tag">Derived from insights CLI · demand-scout cadence</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">R3</span><span class="chip stated">Stated</span></div>
+      <div class="qbody">
+        <p class="qtext">What number, six months out, would make you say this worked?</p>
+        <p class="qwhy">Must be countable and must not be traffic. <b>Get the target in writing before the first pull, or every result becomes arguable afterwards.</b></p>
+        <div class="answer">
+          <p>Answered in <strong>capacity</strong>, not in leads — which is the better unit, and not the one this question proposed:</p>
+          <ul>
+            <li><strong>Floor: 120 billable hours a month.</strong></li>
+            <li><strong>Target: 160–180 hours a month</strong>, with overflow allowed to flex into the following month.</li>
+            <li><strong>The gap to close: another 40–60 hours a month.</strong> One client, or three.</li>
+          </ul>
+          <p>Retainers preferred, projects accepted. Turning projects into retainers is the aim, but a steady supply of projects is a valid outcome — provided everything is charged for.</p>
+          <p><strong>Why the unit is right:</strong> a lead target is a proxy for capacity. Capacity is the actual constraint, it is the thing that pays, and it does not require guessing a conversion rate the site cannot measure yet.</p>
+          <p class="tag">Source: Karol, 2026-08-30</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">R3a</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">What does that target mean in engagements, and can it be measured today?</p>
+        <p class="qwhy">A target that cannot be counted from an existing system is an aspiration. <b>Check the instrument before agreeing the number.</b></p>
+        <div class="answer">
+          <p><strong>The gap is exactly one retainer.</strong> M1 defines the Build bank as 40–60 hrs/month — the same range as the shortfall. So the entire success criterion is one of:</p>
+          <ul>
+            <li>one Build-bank retainer, or</li>
+            <li>three Maintain-bank retainers, or</li>
+            <li>a steady two to three premium website builds a month (W4 puts a build near eighteen hours).</li>
+          </ul>
+          <p><strong>That is a very small number of the right inquiries — not a traffic problem.</strong> It is the strongest argument in this workbook against optimizing for volume.</p>
+          <p>Where the business actually stands, from billed invoices rather than estimate:</p>
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th>Measure</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Billed, 2026 year to date (8 months, 27 invoices)</td><td class="k">$43,333</td></tr>
+                <tr><td>Monthly average, 2026</td><td class="k">$5,417 · range $3,233–$8,429</td></tr>
+                <tr><td>Billed, 2025 (24 invoices)</td><td class="k">$36,091</td></tr>
+                <tr><td>Implied hours at the stated ~$60/hr effective</td><td class="k">~90 hrs/month</td></tr>
+                <tr><td>Floor of 120 hrs at the $80 rate</td><td class="k">$9,600/month</td></tr>
+                <tr><td>Target of 160–180 hrs at the $80 rate</td><td class="k">$12,800–$14,400/month</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>So the plan is chasing <strong>1.8×</strong> current monthly billings to clear the floor at rate, and <strong>2.4–2.7×</strong> to sit inside the target range. The 40–60 hour instinct is close but slightly optimistic against the billing record — the shortfall to the floor alone is around 30 hours, and to the target range nearer 70–90.</p>
+          <p><em>Two caveats on the conversion.</em> The ledger mixes hourly invoices with fixed-price deposits, so billed dollars are not a clean multiple of hours worked; and August is a partial month. The direction is solid, the decimal places are not.</p>
+          <p><strong>The instrument problem.</strong> The timesheet cannot report this yet — it holds 70 entries across one client and five non-contiguous months, because it was only built in August. Billed revenue per month is the reliable series today and has fifteen months of history. Either the timesheet gets adopted properly, or the headline number is measured in dollars. That is a Phase 0 decision, alongside organic attribution.</p>
+          <p class="tag">Measured 2026-08-30 from the CRM invoice ledger · hours conversion uses the stated $60/hr</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qrail"><span class="qid">R3b</span><span class="chip derived">Derived</span></div>
+      <div class="qbody">
+        <p class="qtext">What happens if the plan works better than the target?</p>
+        <p class="qwhy">A capacity target has a ceiling, and a ceiling changes what the plan should optimize for. <b>Ask it before the pipeline fills, not after.</b></p>
+        <div class="answer">
+          <p>The plan should deliberately aim <em>past</em> 180 hours, and this is the reason: <strong>surplus demand is the only honest mechanism for the M2 rate goal.</strong> Nothing else moves $80/hr to $120/hr by April 2028. Not a pricing page, not better positioning copy — only being visibly unable to take every job.</p>
+          <p>That reframes overflow. Demand above capacity is not waste to be avoided; it is the instrument that raises the rate, retires the cheap clients on schedule, and makes the roster scarcity in the strategy doc true rather than theatrical.</p>
+          <p>It also sets the report's escalation rule: the month the pipeline consistently exceeds 180 hours is the month the floor moves, not the month more content gets commissioned.</p>
+          <p class="tag">Derived from R3 + M2 · confirm the escalation rule</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q needs-karol">
+      <div class="qrail"><span class="qid">R4</span><span class="chip assumed">Assumed</span></div>
+      <div class="qbody">
+        <p class="qtext">What would make you kill or rewrite a piece of content?</p>
+        <p class="qwhy">Agreeing the retirement rule up front is what keeps a library from ossifying. <b>Every plan needs an exit condition.</b></p>
+        <div class="answer needs">
+          <p>Proposed rule: a post that ranks but produces no identified buyer within two review cycles gets re-angled toward buyer intent or retired with a redirect — the technique is already documented on the site.</p>
+          <p><strong>Needs Karol:</strong> agreement on the rule, and on whether high-authority practitioner posts are exempt from it. They probably should be — they earn citations rather than leads — but that exemption should be a decision, not a drift.</p>
+          <p class="tag">Proposed · needs sign-off</p>
+        </div>
+      </div>
+    </div>
+
+  </div></div></section>
+</div>
+
+<!-- ============ THE PLAN ============ -->
+<section id="plan">
+  <div class="wrap">
+    <div class="sechead">
+      <p class="eyebrow">What this feeds</p>
+      <h2>The proposal: from a filled workbook to a monthly ranking and conversion plan</h2>
+      <p>Each stage has exactly one job downstream. The workbook is not a preamble to the research — it is the configuration the research runs with.</p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Stage</th><th>What it produces in the research</th><th>Where it lands</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="k">M</span> Money</td><td>The value weight every opportunity is scored against — rate floor and entry prices become ranking inputs</td><td>Queue scoring</td></tr>
+          <tr><td><span class="k">W</span> Work</td><td>Cluster priority: which service line gets an engine, which gets a page</td><td>Content plan order</td></tr>
+          <tr><td><span class="k">X</span> Exclusions</td><td>The negative list — queries, topics and phrasings the research must discard before ranking anything</td><td>Filter, applied first</td></tr>
+          <tr><td><span class="k">Q</span> Queries</td><td>Seed set and trap list, tested against real SERPs rather than generated by a tool</td><td>Research input</td></tr>
+          <tr><td><span class="k">C</span> Comparison</td><td>The competitor footprint actually worth pulling, and the SERPs to route around</td><td>Gap analysis</td></tr>
+          <tr><td><span class="k">E</span> Evidence</td><td>The claim bank each brief may cite; briefs without backing get flagged, not written</td><td>Brief gating</td></tr>
+          <tr><td><span class="k">V</span> Conversion</td><td>The fix list that competes with new content for the same hours</td><td>Plan, ranked alongside posts</td></tr>
+          <tr><td><span class="k">R</span> Reporting</td><td>The report's shape, cadence, and its single success number</td><td>The deliverable itself</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="phases">
+      <div class="phase">
+        <span class="pn">Phase 0</span>
+        <div>
+          <h4>Baseline before opinion</h4>
+          <p>Configure tallkarol in the insights engine, archive all retained Search Console history, and connect organic to the CRM inquiry so a lead can be credited to a page. Today the engine is configured for one site and it is not this one — every claim about current performance is currently unmeasured.</p>
+        </div>
+        <p class="out"><b>Output</b>A real baseline, and attribution that makes R3 answerable</p>
+      </div>
+      <div class="phase">
+        <span class="pn">Phase 1</span>
+        <div>
+          <h4>This workbook, corrected</h4>
+          <p>Four answers still need Karol. The three that most shaped the research are in — the buyer language in Q1, the pricing floor in M5, and the capacity target in R3 — and C1 turned out to have no answer to give, which was itself worth knowing. What remains is two confirmations and one real gap: case studies.</p>
+        </div>
+        <p class="out"><b>Output</b>A signed set of priorities and a negative list</p>
+      </div>
+      <div class="phase">
+        <span class="pn">Phase 2</span>
+        <div>
+          <h4>Research, filtered</h4>
+          <p>Demand pulled against the seed set, and the exclusion filter applied <em>before</em> anything is ranked. Competitive analysis is deliberately light — C1 established there is nothing to displace yet. The output is deliberately a shortlist with reasons, not a spreadsheet of thousands of keywords.</p>
+        </div>
+        <p class="out"><b>Output</b>A ranked, costed opportunity queue</p>
+      </div>
+      <div class="phase">
+        <span class="pn">Phase 3</span>
+        <div>
+          <h4>The plan and the rewrite pass</h4>
+          <p>New content, existing-post re-angles, page fixes and the credit-link programme from W4a compete in one ranked list against the same hours. The 57% practitioner mix gets a decision post by post: keep for authority, re-angle toward the buyer, or retire with a redirect.</p>
+        </div>
+        <p class="out"><b>Output</b>A sequenced plan with an owner and an exit rule per item</p>
+      </div>
+      <div class="phase">
+        <span class="pn">Phase 4</span>
+        <div>
+          <h4>The monthly report</h4>
+          <p>Four pages, arriving on its own: booked and pipelined hours against the 120/180 band, what moved and why, what shipped last month, and the ranked recommendation for next month with the evidence behind each item. The pull, the detection and the queue are automated; the judgment is not.</p>
+        </div>
+        <p class="out"><b>Output</b>The deliverable, and the template for client engagements</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <h4>What is not true yet</h4>
+      <p>Stated plainly so the plan is not built on it: tallkarol has no data in the insights engine, so there is no measured baseline today. Organic cannot currently be credited with a lead. The knowledge base is three weeks old on a domain whose brand SERP it does not yet own. This plan should be judged on inquiries at two quarters, not on rankings at six weeks — and anything that promises otherwise is selling.</p>
+    </div>
+  </div>
+</section>
+
+<section id="corrections">
+  <div class="wrap">
+    <div class="sechead">
+      <p class="eyebrow">Action</p>
+      <h2>Four answers need Karol</h2>
+      <p>Everything else is either stated on the record or derived from the strategy doc, the repo, and the audit. These are the ones a guess would corrupt.</p>
+    </div>
+
+    <div class="corrections">
+      <div class="corr"><span class="cid">W3</span><p>Confirm the plan leads with the premium website build.<span>Three of five clients entered that way. Recommendation made; needs a yes.</span></p></div>
+      <div class="corr"><span class="cid">W4a</span><p>Whether the credit link on delivered sites was refused, stopped, or never built.<span>Four client sites carry no link and no credit. Cheapest available link acquisition.</span></p></div>
+      <div class="corr"><span class="cid">E4b</span><p>Read the Artist House agreement into the pack before that case study publishes.<span>An executed contract nobody has reviewed, and a standing "no case study" rule until they do. Twenty minutes.</span></p></div>
+      <div class="corr"><span class="cid">R4</span><p>Sign-off on the retirement rule, and whether authority posts are exempt.<span>The exemption should be a decision, not a drift.</span></p></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="mono">Search Priorities Workbook · v1 · revised 2026-08-30</p>
+    <p class="mono">Question IDs are load-bearing — reword when asking, never renumber</p>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var filterBtn = document.getElementById("filter");
+    filterBtn.addEventListener("click", function () {
+      var on = document.body.classList.toggle("filtering");
+      filterBtn.setAttribute("aria-pressed", String(on));
+      filterBtn.textContent = on ? "Show all 45 questions" : "Show only what needs Karol";
+    });
+
+    var BLANK = [
+      "SEARCH PRIORITIES WORKBOOK — v1",
+      "Answer in the space under each question. Keep the IDs on the lines; they are how answers are read back.",
+      "",
+      "STAGE M — THE MONEY",
+      "M1. What does a good engagement look like — size, shape, and how long it lasts?",
+      "M2. What is the effective hourly rate today, what should it be, and by when?",
+      "M3. Which work in flight would you not take again at the price you took it?",
+      "M4. What do you want to be doing much more of in twelve months that you barely do now?",
+      "M5. What is the smallest engagement you will still say yes to?",
+      "M5a. So what is the page actually supposed to refuse?",
+      "M6. Who is the client that pays that way?",
+      "M6a. How should the content be organized, given who that is?",
+      "",
+      "STAGE W — THE WORK",
+      "W1. List what you sell. Rank by margin, not by volume.",
+      "W2. For each line: is it what you want to be found for, or what pays for the thing you want?",
+      "W3. What is the entry offer — the small, obvious thing that becomes the big thing?",
+      "W4. What would you stop selling tomorrow if the pipeline were full?",
+      "W4a. Does the delivered work carry a link back — and is that link actually there?",
+      "",
+      "STAGE X — THE EXCLUSIONS",
+      "X1. What do you not do, no matter who asks?",
+      "X2. What are you regularly mistaken for, that you would rather not be found as?",
+      "X3. Which topics are commercially wrong for you even though you could write them credibly?",
+      "X4. Which clients, industries, or claims are off-limits — contract, NDA, or judgment?",
+      "X5. What price and status signals must never appear?",
+      "",
+      "STAGE Q — THE QUERIES",
+      "Q1. What did your last five good clients say they were looking for, in their own words?",
+      "Q1a. Does the published library speak that language back?",
+      "Q2. What happens the week someone decides to go looking for you?",
+      "Q3. Which phrases would you be embarrassed not to rank for?",
+      "Q4. Which high-volume phrases are a trap — big numbers, wrong people?",
+      "Q5. What do you call the thing that the market calls something else?",
+      "",
+      "STAGE C — THE COMPARISON SET",
+      "C1. Who do you actually lose deals to — by name where you can?",
+      "C1a. Where have you actually been beaten, then?",
+      "C2. Who do you want to be shortlisted next to?",
+      "C3. Who ranks for your money terms today who is not really a competitor?",
+      "C4. What can you claim that none of them can?",
+      "",
+      "STAGE E — THE EVIDENCE",
+      "E1. What can you prove with a number?",
+      "E2. Who may be named, who is anonymous, and who is off-limits?",
+      "E3. Which testimonials and quotes are cleared for use, verbatim?",
+      "E4. What proof is missing that would close deals if it existed?",
+      "E4a. Which ones, and what does each one show?",
+      "E4b. What does each one still need before it can be published?",
+      "",
+      "STAGE V — THE CONVERSION PATH",
+      "V1. What is the one action a good visitor should take?",
+      "V2. What happens after they take it — and can you see it happen?",
+      "V3. Where do you currently lose people?",
+      "V4. What would you rather a visitor did not do?",
+      "",
+      "STAGE R — THE REPORTING CONTRACT",
+      "R1. Who reads the report, and what decision do they make with it?",
+      "R2. What cadence, and how much of it should arrive on its own?",
+      "R3. What number, six months out, would make you say this worked?",
+      "R3a. What does that target mean in engagements, and can it be measured today?",
+      "R3b. What happens if the plan works better than the target?",
+      "R4. What would make you kill or rewrite a piece of content?"
+    ].join("\n");
+
+    var copyBtn = document.getElementById("copy");
+    copyBtn.addEventListener("click", function () {
+      var done = function (ok) {
+        copyBtn.textContent = ok ? "Copied — 45 questions" : "Copy failed";
+        setTimeout(function () { copyBtn.textContent = "Copy blank workbook"; }, 2200);
+      };
+      try {
+        navigator.clipboard.writeText(BLANK).then(function () { done(true); }, function () { done(false); });
+      } catch (e) { done(false); }
+    });
+  })();
+</script>
+
+</body>
+</html>

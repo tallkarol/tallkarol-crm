@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tracking review &amp; full-funnel analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#F4F2EC;--surface:#FFF;--surface-2:#EDE9DE;--ink:#0F1615;--ink-2:#3D4947;--muted:#6E7A77;--line:rgba(15,22,21,.13);--line-soft:rgba(15,22,21,.07);--accent:#006965;--accent-ink:#00504D;--accent-soft:rgba(0,105,101,.10);--warn:#A45A1E;--warn-soft:rgba(164,90,30,.12);--crit:#8E3521;--crit-soft:rgba(142,53,33,.12);--good:#2E7D57;--good-soft:rgba(46,125,87,.12);--display:"Archivo",ui-sans-serif,system-ui,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:ui-sans-serif,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6}
+.wrap{max-width:880px;margin:0 auto;padding:0 32px}
+@media(max-width:720px){.wrap{padding:0 20px}}
+h1,h2,h3,h4,.eyebrow,.chip,.num,th,.ui{font-family:var(--display)}
+h1{font-size:clamp(28px,4.2vw,40px);line-height:1.08;letter-spacing:-.02em;font-weight:700;margin:0 0 10px}
+h2{font-size:20px;line-height:1.2;letter-spacing:-.01em;font-weight:600;margin:0 0 12px}
+h3{font-size:15px;font-weight:600;margin:0 0 6px}
+h4{font-size:14px;font-weight:600;margin:0}
+p{margin:0 0 14px}p:last-child{margin-bottom:0}
+code,.mono{font-family:var(--mono);font-size:.85em;background:var(--surface-2);padding:.1em .34em;border-radius:3px}
+.small{font-size:13.5px;line-height:1.5}.muted{color:var(--muted)}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 14px}
+header.rpt{padding:56px 0 28px;border-bottom:2px solid var(--ink)}
+section{padding:34px 0;border-bottom:1px solid var(--line)}
+.sec-label{display:flex;align-items:baseline;gap:10px;margin:0 0 16px}
+.sec-label .n{font-family:var(--mono);font-size:12px;color:var(--accent-ink)}
+.metastrip{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;margin-top:22px}
+.metastrip>div{flex:1 1 160px;padding:12px 16px;border-right:1px solid var(--line-soft)}
+.metastrip>div:last-child{border-right:0}
+.metastrip .k{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px}
+.metastrip .v{font-family:var(--display);font-size:14px;font-weight:500}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:720px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g2{grid-template-columns:1fr}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.stat .num{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block;font-variant-numeric:tabular-nums}
+.stat .lbl{font-family:var(--ui);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:5px;display:block}
+.stat .sub{font-size:12.5px;color:var(--ink-2);margin-top:5px;display:block;line-height:1.35}
+.stat.good .num{color:var(--good)}.stat.warn .num{color:var(--warn)}.stat.crit .num{color:var(--crit)}.stat.accent .num{color:var(--accent-ink)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+.tablecard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 10px 6px;overflow-x:auto}
+th{text-align:left;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);font-family:var(--ui);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12px}
+.r{text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);font-family:var(--ui)}
+.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.accent{background:var(--accent-soft);color:var(--accent-ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.card.tint{background:var(--surface-2);border-color:var(--line-soft)}
+.rail{border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.rail.crit{border-left-color:var(--crit)}.rail.good{border-left-color:var(--good)}.rail.warn{border-left-color:var(--warn)}
+.callout{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;padding:14px 18px}
+.callout.crit{border-left-color:var(--crit)}
+.up{color:var(--good);font-weight:600}.down{color:var(--crit);font-weight:600}
+.stack{display:grid;gap:14px}
+ul.tight{margin:0;padding-left:19px}ul.tight li{margin-bottom:5px}
+footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(--ui)}
+@media print{body{background:#fff;font-size:12pt}section{page-break-inside:avoid}header.rpt{padding-top:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="rpt">
+  <p class="eyebrow">Mineralife Nutraceuticals &middot; mycustommanufacturer.com</p>
+  <h1>Tracking review &amp; full-funnel analysis</h1>
+  <p class="small muted" style="font-family:var(--ui);font-size:14px">Follow-up to the Google Ads review &middot; prepared by Tall Karol &middot; 30 August 2026</p>
+  <div class="metastrip">
+    <div><span class="k">Systems read</span><span class="v">GTM &middot; GA4 &middot; Ads &middot; CRM</span></div>
+    <div><span class="k">Ads spend visible</span><span class="v">yes — first time</span></div>
+    <div><span class="k">Working conversion signals</span><span class="v">0</span></div>
+    <div><span class="k">Verdict</span><span class="v">good plumbing, broken wiring</span></div>
+  </div>
+</header>
+
+<section>
+  <div class="sec-label"><span class="n">01</span><h2>The answer, up front</h2></div>
+  <p style="max-width:66ch">
+    With the access you granted this week I can now read all four systems — the Tag Manager
+    container, Analytics, the Google Ads account, and the CRM — and reconcile them against each
+    other for the first time. The short version: <strong>the site-level tracking built in July is
+    genuinely good, and every connection downstream of it is broken.</strong>
+  </p>
+  <p style="max-width:66ch">
+    The site records the right events with the right detail, and the CRM captures the ad click
+    behind every enquiry. But Analytics is still watching for a conversion event that stopped
+    existing in July; Google Ads imports that same dead event as its only lead conversion, so the
+    ad account has spent years optimising with <em>zero examples of success</em>; and consent
+    settings mean Analytics sees roughly one in twenty of the ad clicks you pay for. Nothing here
+    needs rebuilding. It needs about a dozen configuration changes, listed in section 06 in order.
+  </p>
+  <div class="grid g4" style="margin-top:20px">
+    <div class="stat crit"><span class="num">0</span><span class="lbl">working conversions</span>
+      <span class="sub">Of 32 conversion actions in the Ads account and 2 key events in Analytics, none fires for a real enquiry.</span></div>
+    <div class="stat crit"><span class="num">4.5%</span><span class="lbl">of paid clicks visible</span>
+      <span class="sub">996 clicks billed since 17 July; Analytics recorded 45 paid sessions.</span></div>
+    <div class="stat good"><span class="num">~$88</span><span class="lbl">per enquiry, measured</span>
+      <span class="sub">$438.67 spend since 17 July → 5 enquiries + 3 catalog downloads.</span></div>
+    <div class="stat warn"><span class="num">2 mo</span><span class="lbl">GA4 data retention</span>
+      <span class="sub">Event-level data is deleted after two months. Should be fourteen.</span></div>
+  </div>
+  <div class="callout" style="margin-top:16px">
+    <h4>A correction to the Ads review</h4>
+    <p class="small" style="margin-top:6px">Two days ago, working from Analytics alone, I wrote that
+      the competitors campaign's volume collapsed in August — 28 visits, down from 212. The ad
+      account says the opposite: <strong>clicks rose every month</strong> (418 in June, 533 in July,
+      714 in August). The campaign never slowed down. What collapsed was measurement — the new
+      site asks for cookie consent and most visitors never answer, so Analytics stopped seeing
+      them. The campaign is healthier than I reported, and the tracking is worse.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">02</span><h2>The full funnel, reconciled</h2></div>
+  <p class="small" style="max-width:66ch">Six weeks of the new site (17 July – 30 August), read
+    across all four systems. Where systems disagree, the CRM is ground truth at the bottom of the
+    funnel and the ad account at the top — Analytics, in the middle, undercounts everything for the
+    consent reasons above.</p>
+  <div class="tablecard" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Stage</th><th class="r">Count</th><th>Counted by</th><th>What it says</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Paid clicks billed</strong></td><td class="r mono">996</td><td class="small">Google Ads</td>
+          <td class="small">Google Ads alone billed more clicks than Analytics recorded <em>sessions from every channel combined</em> (~600).</td></tr>
+        <tr><td><strong>Sessions seen by GA4</strong></td><td class="r mono">~600</td><td class="small">Analytics</td>
+          <td class="small">All channels. A floor, not a truth — most visitors decline or ignore the cookie banner and vanish.</td></tr>
+        <tr><td><strong>Call-to-action clicks</strong></td><td class="r mono">263</td><td class="small">Analytics</td>
+          <td class="small">111 of these come from <code>syndicatedsearch.goog</code> bot traffic and 5 from the dev machine. Real figure ≈ 147.</td></tr>
+        <tr><td><strong>Form starts</strong></td><td class="r mono">46</td><td class="small">Analytics</td>
+          <td class="small">39 on <code>/contact</code>. The homepage landed ~1,400 sessions in 90 days and produced 4.</td></tr>
+        <tr><td><strong>Form submits</strong></td><td class="r mono">17</td><td class="small">Analytics</td>
+          <td class="small">A 37% start→submit rate through a multi-step wizard. The form is not the problem.</td></tr>
+        <tr><td><strong>Enquiries recorded</strong></td><td class="r mono">16</td><td class="small">CRM</td>
+          <td class="small">Plus 3 catalog downloads. <strong>August: 10 enquiries — the best month in the CRM's history</strong> (46 all-time since April 2024).</td></tr>
+        <tr><td><strong>Enquiries with a paid-click ID</strong></td><td class="r mono">5 + 3</td><td class="small">CRM</td>
+          <td class="small">5 enquiries and all 3 catalog downloads carry a Google click ID. 2 more enquiries came from ChatGPT.</td></tr>
+        <tr><td><strong>Moved past “New”</strong></td><td class="r mono">0</td><td class="small">CRM</td>
+          <td class="small">None of the 16 has advanced a pipeline stage. Everything below this line is still invisible.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card rail good">
+      <h3>Where the funnel is strong</h3>
+      <p class="small">Once someone starts the form, it works: 46 starts became 16 recorded
+        enquiries — and the enquiry mix is right, mostly custom manufacturing. The paid economics,
+        visible for the first time, are startling: at $438.67 since the cutover, a tracked
+        conversion costs about $55 and an enquiry about $88. The Ads review estimated $400–1,000
+        per enquiry from benchmarks. Reality is five to ten times cheaper.</p>
+    </div>
+    <div class="card rail crit">
+      <h3>Where it leaks</h3>
+      <p class="small">Above the form. Roughly 600 measured sessions produced ~147 real
+        call-to-action clicks, which produced 46 form starts. The homepage takes most of the
+        traffic and hands almost none of it to the form — the same landing-page problem as the Ads
+        review, now with numbers on every step. And below the form, the pipeline is still: no
+        enquiry has moved a stage, so nothing downstream can be judged yet.</p>
+    </div>
+  </div>
+  <div class="card rail" style="margin-top:16px">
+    <h3>One channel worth watching: AI assistants</h3>
+    <p class="small">ChatGPT sent 9 measured sessions in 90 days and 2 of them became CRM
+      enquiries — the best session-to-enquiry rate of any channel, on a tiny sample. This traffic
+      only grows. It costs nothing and asks only that page URLs stay stable and the site keep
+      answering the questions it already answers well.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">03</span><h2>Tag Manager: what is in the container</h2></div>
+  <p class="small" style="max-width:66ch">First direct look at container <code>GTM-5B83HMG</code>
+    (live version, published 17 July). The good news first: the core is clean. Seven GA4 event tags
+    fire from the site's own dataLayer — <code>cta_click</code>, <code>form_start</code>,
+    <code>form_step</code>, <code>form_submit</code>, <code>generate_lead</code>,
+    <code>catalog_download</code>, plus single-page-app page views — each carrying useful detail
+    (which form, which enquiry type, which step, which button). This is better instrumentation than
+    most sites this size ever get.</p>
+  <h3 style="margin-top:22px">Four problems around that core</h3>
+  <div class="grid g2" style="margin-top:12px">
+    <div class="card rail crit">
+      <span class="chip crit">the big one</span>
+      <h3 style="margin-top:10px">There is no Google Ads conversion tag</h3>
+      <p class="small">A Conversion Linker tag dutifully stores the ad-click cookie on every visit —
+        and then nothing ever reports a conversion back to Google Ads. The plumbing for the return
+        signal was never connected. Fixing this (via the Analytics import in section 05) is the
+        highest-value change in this report.</p>
+    </div>
+    <div class="card rail warn">
+      <span class="chip warn">stale config</span>
+      <h3 style="margin-top:10px">The Linker lists the wrong websites</h3>
+      <p class="small">Its cross-domain list names <code>mineralife-frontend.vercel.app</code> and
+        <code>mineralife.wpenginepowered.com</code> — a staging address and the old WordPress host.
+        Neither is the live site. Harmless day to day, but it documents that nobody has looked in
+        here since the migration.</p>
+    </div>
+    <div class="card rail warn">
+      <span class="chip warn">dead weight</span>
+      <h3 style="margin-top:10px">Leftover tags from three eras</h3>
+      <p class="small">A paused Universal Analytics tag (product retired 2023), a paused Hotjar tag,
+        a Facebook pixel that waits for a job-fair page from a past hiring push, and a LinkedIn
+        Insight tag still loading on every page for a LinkedIn campaign the Ads review already
+        showed produces nothing. None of it is measuring anything; all of it is weight and clutter.</p>
+    </div>
+    <div class="card rail">
+      <span class="chip accent">design trade-off</span>
+      <h3 style="margin-top:10px">Tags load late, and only after consent</h3>
+      <p class="small">The site loads Tag Manager after the page finishes rendering (good for the
+        speed scores) and keeps analytics off until the visitor accepts cookies (good for
+        compliance). The cost is the 4.5% visibility figure from section 01. The site partly
+        compensates by sending enquiry events server-side, which is why the CRM out-counts
+        Analytics — the right architecture, with two wiring faults noted in section 04.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">04</span><h2>Analytics: conversions &amp; settings</h2></div>
+  <div class="card rail crit" style="margin-top:4px">
+    <h3>Both “conversions” are ghosts</h3>
+    <p class="small">The property has exactly two key events configured, both from July 2023:
+      <code>form_submission</code> — the old WordPress form's event, which the new site never
+      sends — and <code>purchase</code>, an e-commerce event with no meaning on a
+      business-to-business site. Result: <strong>every channel, campaign, and page in Analytics
+      shows zero conversions, forever</strong>, while the real events
+      (<code>generate_lead</code>, 23 recorded; <code>catalog_download</code>) sit in the event list
+      unmarked. This is the settings change the Ads review asked for, now with the exact event
+      names to use.</p>
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card rail warn">
+      <h3>Data is deleted after two months</h3>
+      <p class="small">Event-level retention is set to the default <strong>2 months</strong> instead
+        of the free maximum of 14. Detailed June data is already gone; every month that passes,
+        history two months back is erased. One dropdown fixes it — for data collected from that day
+        forward, which is why it is urgent.</p>
+    </div>
+    <div class="card rail warn">
+      <h3>The useful detail is collected, then ignored</h3>
+      <p class="small">The site sends eleven descriptive fields — enquiry type, form step, which
+        button, where on the page — but none is registered as a custom dimension, so none can be
+        used in reports. The only two registered dimensions are Universal Analytics leftovers
+        (<code>event_category</code>, <code>event_label</code>) that nothing sends any more.</p>
+    </div>
+    <div class="card rail">
+      <h3>Enquiries are double-counted</h3>
+      <p class="small">When a visitor has accepted cookies, an enquiry fires
+        <code>generate_lead</code> twice — once from the browser, once from the server backstop.
+        Hence 23 recorded against 16 real enquiries. The server copy also carries no session
+        context, so 6 of the 23 float attached to no page and no channel. Small fixes to the server
+        call solve both.</p>
+    </div>
+    <div class="card rail">
+      <h3>Housekeeping</h3>
+      <p class="small">The dev machine (<code>localhost:3000</code>, 23 sessions) and
+        <code>syndicatedsearch.goog</code> bot traffic (67 sessions, 111 fake button clicks) pollute
+        every rate. The web stream's registered URL is
+        <code>mycustommanufacturing.com</code> — a domain that isn't yours (note the spelling). The
+        property's timezone is Los Angeles; the business runs on Mountain time. Each is minutes to
+        fix.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">05</span><h2>Google Ads: conversions &amp; what the spend bought</h2></div>
+  <p class="small" style="max-width:66ch">The account holds <strong>32 conversion actions</strong>
+    accumulated over years — WooCommerce checkout goals, Universal Analytics imports, “local
+    actions”, and a full retail e-commerce set for zemvelo.com, which shares this ad account. Six
+    are enabled <em>and</em> marked primary, meaning they steer bidding:</p>
+  <div class="tablecard" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Primary conversion action</th><th>Belongs to</th><th class="r">Fired in 90 days</th><th>Problem</th></tr></thead>
+      <tbody>
+        <tr><td class="small">Purchase</td><td class="small">Zemvelo retail</td><td class="r mono">31</td><td class="small">Retail signal in a shared account</td></tr>
+        <tr><td class="small">Add to cart</td><td class="small">Zemvelo retail</td><td class="r mono">167</td><td class="small">Not a conversion — a hope</td></tr>
+        <tr><td class="small">Begin checkout</td><td class="small">Zemvelo retail</td><td class="r mono">133</td><td class="small">Same</td></tr>
+        <tr><td class="small">Page view</td><td class="small">Zemvelo retail</td><td class="r mono">—</td><td class="small">A page view, marked as a primary conversion</td></tr>
+        <tr><td class="small">GA4 form_submission import</td><td class="small"><strong>the B2B site</strong></td><td class="r mono crit" style="color:var(--crit)"><strong>0</strong></td><td class="small">Imports the dead key event from section 04</td></tr>
+        <tr><td class="small">Calls from ads</td><td class="small">the B2B site</td><td class="r mono">2</td><td class="small">The only real B2B signal that reached the account</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout crit" style="margin-top:16px">
+    <h4>What this means</h4>
+    <p class="small" style="margin-top:6px">Both B2B campaigns run “maximise conversions” bidding.
+      The only lead conversion they could optimise toward is wired to an event that never fires.
+      <strong>Google has been told to maximise something it has never once observed</strong> — it
+      has been bidding blind the entire time, which goes a long way to explaining the search-term
+      quality below. The five enquiries happened despite the setup, not because of it.</p>
+  </div>
+
+  <h3 style="margin-top:26px">The three live campaigns, with costs at last</h3>
+  <div class="tablecard" style="margin-top:12px">
+    <table>
+      <thead><tr><th>Campaign</th><th class="r">Budget/day</th><th class="r">90-day spend</th><th class="r">Clicks</th><th class="r">Avg CPC</th><th class="r">Conversions</th></tr></thead>
+      <tbody>
+        <tr><td><strong>B2B – Search – Competitors</strong><br><span class="small muted">the one producing enquiries</span></td>
+          <td class="r mono">$10</td><td class="r mono">$900.02</td><td class="r mono">1,665</td><td class="r mono">$0.54</td><td class="r mono">0 recorded<br><span class="small muted">5 + 3 in CRM</span></td></tr>
+        <tr><td><strong>2023 – Performance Max</strong><br><span class="small muted">Zemvelo retail, same account</span></td>
+          <td class="r mono">$15.93</td><td class="r mono">$1,355.37</td><td class="r mono">679</td><td class="r mono">$2.00</td><td class="r mono">31 purchases</td></tr>
+        <tr><td><strong>B2B – Search – Regional</strong><br><span class="small muted">enabled, but…</span></td>
+          <td class="r mono">$5</td><td class="r mono">$0.00</td><td class="r mono">0</td><td class="r mono">—</td><td class="r mono">0</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:8px 10px 4px">The Regional campaign has not shown a single ad
+      in 90 days — its bids lose over 90% of the auctions it enters. It is a zombie: on, budgeted, and
+      producing nothing. The competitors campaign also loses 27% of its possible impressions to its
+      $10 budget cap — it would spend more if allowed, relevant to the raise-the-budget question.</p>
+  </div>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card rail warn">
+      <h3>Where the $900 actually went</h3>
+      <p class="small">One ad group, broad-match competitor keywords. The keyword
+        <code>nutra labs</code> took <strong>$470 — half the spend, two-thirds of the clicks</strong> — and broad match
+        stretched it to searches like “custom gummy vitamin manufacturer” (194 clicks, $58, for a
+        product the site does not offer), “supplement startup”, and “pharmaceutical manufacturing”.
+        72% of clicks were mobile at $0.27 apiece — cheap for a reason. The five enquiries almost
+        certainly came from the genuine competitor searches buried in this; without a conversion
+        signal, Google cannot tell those from the junk.</p>
+    </div>
+    <div class="card rail">
+      <h3>The economics, honestly stated</h3>
+      <p class="small">Since the cutover: $438.67 → 5 enquiries + 3 catalog downloads, all
+        click-verified in the CRM. That is <strong>~$88 per enquiry</strong> for the highest-value
+        enquiry type the business has, against an industry benchmark of $400–1,000. Even if half the
+        spend is junk clicks, the half that works is exceptional. The case for spending more is
+        strong — <em>after</em> the conversion wiring exists, so the extra budget learns from day
+        one. Five enquiries is still a small sample; treat the $88 as a first reading, not a law.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">06</span><h2>What to fix, in order</h2></div>
+  <p class="small" style="max-width:66ch">Everything below is configuration, not construction. First
+    group this week, second when convenient, third is strategy. I can do all of the first two
+    groups; two items need your Google Ads sign-in to approve.</p>
+
+  <div class="stack" style="margin-top:18px">
+    <div class="card rail crit">
+      <span class="chip crit">this week — turns the lights on</span>
+      <ul class="tight small" style="margin-top:10px">
+        <li><strong>Analytics:</strong> mark <code>generate_lead</code> and
+          <code>catalog_download</code> as key events; delete <code>form_submission</code> and
+          <code>purchase</code>. Fifteen minutes, and every report gains a conversions column.</li>
+        <li><strong>Google Ads:</strong> import those two key events as conversions; make
+          <code>generate_lead</code> the primary goal for both B2B campaigns (campaign-level goal
+          settings, so the Zemvelo retail goals stop steering B2B bidding and vice versa). Demote
+          “Page view” from primary regardless — it is noise in anyone's account.</li>
+        <li><strong>Analytics:</strong> retention 2 → 14 months. One dropdown; only affects data
+          from that day forward, so every day of delay is a day lost.</li>
+        <li><strong>Google Ads:</strong> pause the Regional zombie, or rebuild its bids — currently
+          it only reserves budget and attention.</li>
+        <li><strong>Google Ads:</strong> add negatives on the competitors campaign (gummy,
+          pharmaceutical, startup, and friends) and tighten <code>nutra labs</code> to phrase
+          match. Half the budget is riding on that one broad keyword.</li>
+      </ul>
+    </div>
+
+    <div class="card rail warn">
+      <span class="chip warn">next — makes the data trustworthy</span>
+      <ul class="tight small" style="margin-top:10px">
+        <li>Register the event detail as custom dimensions (enquiry type, form id, step name, CTA
+          id/location) so reports can finally answer “which button, which page, which enquiry type”.</li>
+        <li>Fix the double-counted enquiry: send the server-side event only when the browser copy
+          cannot fire, and attach the session id so server events stop floating unattributed.</li>
+        <li>Filter out <code>syndicatedsearch.goog</code>, and the dev machine via an internal
+          traffic rule — together they fake more button clicks than real paid traffic produces.</li>
+        <li>Correct the Conversion Linker's domain list, remove the LinkedIn / Facebook / UA /
+          Hotjar leftovers, fix the stream URL spelling and the timezone.</li>
+      </ul>
+    </div>
+
+    <div class="card rail good">
+      <span class="chip ok">then — makes the data valuable</span>
+      <ul class="tight small" style="margin-top:10px">
+        <li><strong>Close the loop:</strong> the CRM already stores the ad click behind every
+          enquiry. When enquiries start moving through pipeline stages, upload those outcomes back
+          to Google Ads (start manually, monthly) so bidding learns which clicks became
+          <em>business</em>, not just form fills. This is the single biggest long-term lever, and it
+          is blocked today only by the pipeline standing still — all 16 enquiries still sit in
+          “New”.</li>
+        <li>Give paid traffic a landing page with the form on it — the funnel now shows each step
+          of what the homepage detour costs.</li>
+        <li>Revisit budget once conversions flow: the competitors campaign is budget-capped and
+          losing 27% of its impressions; raising it is defensible the day Google can see what a
+          conversion is.</li>
+        <li>Longer term, consider server-side tagging so measurement depends less on the cookie
+          banner. Worth a conversation, not urgent.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">07</span><h2>Sources &amp; what I still cannot see</h2></div>
+  <ul class="tight small" style="max-width:70ch">
+    <li><strong>Tag Manager:</strong> container <code>GTM-5B83HMG</code>, live published version,
+      read via the Tag Manager API on 30 August 2026.</li>
+    <li><strong>Analytics:</strong> GA4 property 395780153 — admin settings, key events, and
+      reports (1 June – 29 August 2026) via the Analytics APIs.</li>
+    <li><strong>Google Ads:</strong> account 624-370-2566, read-only via the Ads API — campaigns,
+      costs, keywords, search terms, and all 32 conversion actions. The “no cost figures” gap from
+      the Ads review is closed.</li>
+    <li><strong>CRM:</strong> all 46 leads and 3 catalog downloads, with click IDs and pipeline
+      stages, read 30 August 2026.</li>
+  </ul>
+  <div class="card tint" style="margin-top:16px">
+    <h3>Remaining blind spots</h3>
+    <p class="small">The cookie banner's acceptance rate is not measured, so “Analytics sees ~5% of
+      paid clicks” is inferred from the click-to-session gap rather than observed directly. LinkedIn
+      campaign spend still lives only in LinkedIn. And the funnel below “enquiry received” — contacted,
+      quoted, won — cannot be analysed until enquiries move through pipeline stages; the tracking
+      work above makes that data collectible, but only the sales process can create it.</p>
+  </div>
+</section>
+
+<footer>
+  Tall Karol &middot; Tracking review &amp; full-funnel analysis &middot; Mineralife Nutraceuticals, LLC &middot;
+  GTM-5B83HMG live version &middot; GA4 property 395780153 &middot; Google Ads 624-370-2566 (read-only API) &middot;
+  CRM read 30 August 2026
+</footer>
+
+</div>
+</body>
+</html>
