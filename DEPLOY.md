@@ -107,9 +107,15 @@ Smartsheet cron above.
 
 | Setting | Value |
 | --- | --- |
-| Start command | `npm run cron:tick` |
+| Config file | `railway.cron.json` |
 | Cron schedule | `*/15 * * * *` |
 | Variables | `DATABASE_URL`, `SWEEP_SECRET` |
+
+The config file matters: the root `railway.json` sets `startCommand` to
+`npm run start`, and config-as-code beats dashboard settings. A cron service
+running the web server would never exit, and Railway skips a scheduled run
+while the previous one is still going — so it would fire exactly once, ever.
+`railway.cron.json` starts `npm run cron:tick` instead and never restarts it.
 
 Every wake-up reopens repeating tasks whose period rolled over, then sweeps
 monitors whose window closed with nothing in it. A quiet tick costs about a
