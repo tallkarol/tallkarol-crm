@@ -14,19 +14,19 @@
   ],
   "icons": [
     {
-      "src": "/icons/clock-192.png",
+      "src": "/icons/tk-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/clock-512.png",
+      "src": "/icons/tk-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/clock-maskable-512.png",
+      "src": "/icons/tk-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

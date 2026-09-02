@@ -11,13 +11,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: [{ url: "/icons/clock-32.png", sizes: "32x32", type: "image/png" }],
-    apple: [{ url: "/icons/clock-180.png", sizes: "180x180", type: "image/png" }],
+    icon: [
+      { url: "/icons/tk-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/tk-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/tk-180.png", sizes: "180x180", type: "image/png" }],
   },
   // Saved to a home screen, this opens straight onto the clock.
   appleWebApp: {
     capable: true,
-    title: "TK Clock",
+    title: "TallKarol",
     statusBarStyle: "default",
   },
 }

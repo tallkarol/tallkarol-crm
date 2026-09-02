@@ -5,12 +5,13 @@
  * the clock installable and to keep its own chrome — icons, manifest — instant.
  */
 
-const SHELL = "tk-shell-v2"
+const SHELL = "tk-shell-v3"
 const SHELL_FILES = [
   "/manifest.webmanifest",
+  "/icons/tk-192.png",
+  "/icons/tk-512.png",
+  "/icons/tk-maskable-512.png",
   "/icons/clock-192.png",
-  "/icons/clock-512.png",
-  "/icons/clock-maskable-512.png",
 ]
 
 self.addEventListener("install", (event) => {
@@ -63,8 +64,8 @@ self.addEventListener("push", (event) => {
   const title = data.title || "TallKarol"
   const options = {
     body: data.body || "",
-    icon: "/icons/clock-192.png",
-    badge: "/icons/clock-192.png",
+    icon: "/icons/tk-192.png",
+    badge: "/icons/tk-192.png",
     tag: data.tag || data.kind || undefined,
     renotify: false,
     data: { url: data.url || "/", kind: data.kind || "" },
