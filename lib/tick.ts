@@ -3,7 +3,9 @@ import { sweepMonitors } from "@/lib/monitors"
 import { notify } from "@/lib/notify"
 import { sweepNotifications } from "@/lib/notification-sweep"
 import { staleQueuedRuns } from "@/lib/punchlists"
-import { sweepSessionNotes } from "@/lib/leftoff-data"
+import { sendBriefing, sweepSessionNotes } from "@/lib/leftoff-data"
+import { localHourMinute } from "@/lib/leftoff"
+import { workspaceTimezone } from "@/lib/timezone"
 import { ROUTES } from "@/lib/nav"
 
 /**
@@ -66,5 +68,19 @@ export async function tick(now = new Date()) {
     return { presumedGone: 0, purged: 0 }
   })
 
-  return { reopened, sweep, notifications, nudged, leftoff }
+  // The morning briefing's fallback: if the Mac has not asked for it by
+  // 07:30 (it asks on the first unlock), send it from here. The (kind, day)
+  // dedupe means the two never both fire.
+  let briefing: "sent" | "skipped" = "skipped"
+  try {
+    const { hour, minute } = localHourMinute(now, await workspaceTimezone())
+    if (hour === 7 && minute >= 30) {
+      const b = await sendBriefing(now)
+      briefing = b.sent ? "sent" : "skipped"
+    }
+  } catch (err) {
+    console.error("briefing failed:", err)
+  }
+
+  return { reopened, sweep, notifications, nudged, leftoff, briefing }
 }

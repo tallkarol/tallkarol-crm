@@ -29,9 +29,8 @@ class Rollback extends Error {}
 
 async function main() {
   const { db } = await import("../db")
-  const { recordNote, dismissNote, pinNote, loadLeftOff, sweepSessionNotes } = await import(
-    "../lib/leftoff-data"
-  )
+  const { recordNote, dismissNote, pinNote, loadLeftOff, sweepSessionNotes, queueReply, readReply } =
+    await import("../lib/leftoff-data")
 
   const T0 = new Date("2026-09-02T18:00:00.000Z")
   const at = (s: number) => new Date(T0.getTime() + s * 1000)
@@ -42,15 +41,19 @@ async function main() {
       const exists = await tx.execute(
         sql`select 1 from information_schema.tables where table_name = 'session_notes'`
       )
-      if (!exists.length) {
-        const file = join(process.cwd(), "drizzle", "0048_leftoff.sql")
+      const apply = async (tag: string) => {
+        const file = join(process.cwd(), "drizzle", `${tag}.sql`)
         for (const stmt of readFileSync(file, "utf8").split("--> statement-breakpoint")) {
           if (stmt.trim()) await tx.execute(sql.raw(stmt))
         }
-        console.log("  (table created inside the transaction)")
-      } else {
-        console.log("  (table already exists)")
+        console.log(`  (${tag} applied inside the transaction)`)
       }
+      if (!exists.length) await apply("0048_leftoff")
+      const hasReply = await tx.execute(
+        sql`select 1 from information_schema.columns where table_name = 'session_notes' and column_name = 'reply'`
+      )
+      if (!hasReply.length) await apply("0049_leftoff_act")
+      if (exists.length && hasReply.length) console.log("  (table and columns already exist)")
 
       console.log("hook sequence")
       let r = await recordNote(
@@ -109,15 +112,43 @@ async function main() {
       check("note on a chat with an OLD timestamp still lands (outside the guard)", [onChat.applied, row.body, row.pinned], [false, "finish the widget", true])
       check("note on a chat keeps its surface and title", [row.surface, row.title], ["claude", "Thing doing"])
 
+      console.log("client + blocked-on")
+      const [anyClient] = (await tx.execute(sql`select slug from clients order by created_at limit 1`)) as unknown as { slug: string }[]
+      if (anyClient) {
+        await recordNote({ sessionRef: REF, surface: "claude", event: "touch", at: at(85), client: anyClient.slug }, tx)
+        row = (await tx.execute(sql`select c.slug from session_notes n join clients c on c.id = n.client_id where n.session_ref = ${REF}`))[0] as Record<string, unknown>
+        check("client slug from the repo pin resolves to client_id", row?.slug, anyClient.slug)
+        await recordNote({ sessionRef: REF, surface: "claude", event: "touch", at: at(86), client: "no-such-client-xyz" }, tx)
+        row = (await tx.execute(sql`select c.slug from session_notes n join clients c on c.id = n.client_id where n.session_ref = ${REF}`))[0] as Record<string, unknown>
+        check("an unknown slug does not clear the client", row?.slug, anyClient.slug)
+      }
+      await recordNote({ sessionRef: REF, surface: "claude", event: "Notification", at: at(87), blockedOn: "Bash: npm run db:migrate", meta: { notification_type: "permission_prompt" } }, tx)
+      row = (await tx.execute(sql`select state, blocked_on from session_notes where session_ref = ${REF}`))[0] as Record<string, unknown>
+      check("blocked note carries what it wants", [row.state, row.blocked_on], ["blocked", "Bash: npm run db:migrate"])
+      await recordNote({ sessionRef: REF, surface: "claude", event: "UserPromptSubmit", at: at(88), prompt: "ok go" }, tx)
+      row = (await tx.execute(sql`select state, blocked_on from session_notes where session_ref = ${REF}`))[0] as Record<string, unknown>
+      check("the next prompt clears blocked_on", [row.state, row.blocked_on], ["working", ""])
+
+      console.log("reply queue")
+      check("queue a reply", await queueReply(REF, "yes, go ahead", at(89), tx), true)
+      check("peek does not consume", await readReply(REF, false, tx), "yes, go ahead")
+      check("take returns it", await readReply(REF, true, tx), "yes, go ahead")
+      check("second take is empty", await readReply(REF, true, tx), "")
+      row = (await tx.execute(sql`select reply, reply_at from session_notes where session_ref = ${REF}`))[0] as Record<string, unknown>
+      check("queue cleared after take", [row.reply, row.reply_at], ["", null])
+
       console.log("snapshot")
+      // The browser row is a singleton the real hook may have written moments
+      // ago, so the test snapshot must be newer than anything real.
+      const snapAt = new Date(Date.now() + 60_000)
       const snap = await recordNote(
-        { sessionRef: null, surface: "browser", event: "snapshot", at: at(90), title: "2 tabs", meta: { windows: [{ title: "Railway", tabs: [{ title: "R", url: "https://railway.app", active: true }] }] } },
+        { sessionRef: null, surface: "browser", event: "snapshot", at: snapAt, title: "2 tabs", meta: { windows: [{ title: "Railway", tabs: [{ title: "R", url: "https://railway.app", active: true }] }] } },
         tx
       )
       check("snapshot lands on the browser row", snap.sessionRef, "browser:chrome")
 
       console.log("payload")
-      const payload = await loadLeftOff(at(100), tx)
+      const payload = await loadLeftOff(new Date(Date.now() + 120_000), tx)
       const mine = payload.notes.filter((n) => n.sessionRef === REF || n.sessionRef === manual.sessionRef)
       check("both rows visible", mine.length, 2)
       check("chat row shows its body over the reply, pinned", [mine.find((n) => n.sessionRef === REF)?.body, mine.find((n) => n.sessionRef === REF)?.pinned], ["finish the widget", true])

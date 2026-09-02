@@ -111,7 +111,16 @@ export type NoteFacts = {
   endedAt: Date | null
   dismissedAt: Date | null
   meta: Record<string, unknown>
+  /** What a blocked chat is waiting to be allowed to do. */
+  blockedOn?: string
+  /** A reply queued from the board, not yet delivered by the chat's hooks. */
+  reply?: string
+  taskId?: string | null
+  ticketId?: string | null
+  client?: LeftOffClient | null
 }
+
+export type LeftOffClient = { slug: string; name: string; color: string }
 
 const MIN = 60_000
 const HOUR = 60 * MIN
@@ -210,6 +219,11 @@ export type LeftOffNoteView = {
   ago: string
   resumeCommand: string
   openPath: string
+  client: LeftOffClient | null
+  blockedOn: string
+  pendingReply: string
+  taskId: string | null
+  ticketId: string | null
 }
 
 export type BrowserTab = { title: string; url: string; active: boolean }
@@ -242,11 +256,38 @@ export function toView(n: NoteFacts, now: Date): LeftOffNoteView {
     ago: agoLabel(n.eventAt, now),
     resumeCommand: resumeCommand(n),
     openPath: n.cwd,
+    client: n.client ?? null,
+    blockedOn: n.blockedOn ?? "",
+    pendingReply: n.reply ?? "",
+    taskId: n.taskId ?? null,
+    ticketId: n.ticketId ?? null,
   }
 }
 
+/**
+ * Client groups first — that is how the day is actually switched between —
+ * with the house / unattributed group last. Inside a group: pinned, then the
+ * state band, then newest. Groups are ordered by their most urgent note so a
+ * client with something blocked rises to the top.
+ */
 export function sortViews(views: LeftOffNoteView[]) {
+  const groupRank = new Map<string, number>()
+  for (const v of views) {
+    const key = v.client?.slug ?? ""
+    const rank = STATE_RANK[v.state] - (v.pinned ? 1 : 0)
+    groupRank.set(key, Math.min(groupRank.get(key) ?? 99, rank))
+  }
   return [...views].sort((a, b) => {
+    const ka = a.client?.slug ?? ""
+    const kb = b.client?.slug ?? ""
+    if (ka !== kb) {
+      if (!ka) return 1
+      if (!kb) return -1
+      const ra = groupRank.get(ka) ?? 99
+      const rb = groupRank.get(kb) ?? 99
+      if (ra !== rb) return ra - rb
+      return ka < kb ? -1 : 1
+    }
     if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
     const rank = STATE_RANK[a.state] - STATE_RANK[b.state]
     if (rank !== 0) return rank
@@ -281,4 +322,92 @@ export function buildPayload(rows: NoteFacts[], now: Date): LeftOffPayload {
     counts,
     browser: readBrowser(browserRow),
   }
+}
+
+/* --------------------------------------------------------------- briefing */
+
+export type BriefingInput = {
+  now: Date
+  /** Start of the window being reported on — the last briefing, or 12 h ago. */
+  since: Date
+  notes: NoteFacts[]
+  /** Agent sessions that ended in the window, from `agent_sessions`. */
+  finishedSessions: { sessionRef: string; name: string; client: string }[]
+  newTickets: number
+}
+
+export type Briefing = {
+  title: string
+  /** One line for the push / the menu bar. */
+  body: string
+  /** One line per section for the notification and the band. */
+  lines: string[]
+  counts: { parked: number; blocked: number; finished: number; presumedGone: number; newTickets: number }
+}
+
+function named(n: NoteFacts) {
+  const title = n.title || n.project || "untitled"
+  return n.client ? `${title} (${n.client.name})` : title
+}
+
+function joinNames(items: string[], max = 4) {
+  if (items.length <= max) return items.join(", ")
+  return `${items.slice(0, max).join(", ")} +${items.length - max}`
+}
+
+/** What happened while you were away, in the order you should read it. */
+export function buildBriefing(input: BriefingInput): Briefing {
+  const { now, since } = input
+  const live = input.notes.filter((n) => !n.dismissedAt && n.surface !== "browser" && n.surface !== "manual")
+  const blocked = live.filter((n) => deriveState(n, now) === "blocked")
+  const parked = live.filter((n) => deriveState(n, now) === "parked")
+  const gone = live.filter((n) => n.state === "gone" && n.endedAt && n.endedAt >= since)
+  const presumed = gone.filter((n) => n.meta.presumed === true)
+  const finishedNotes = gone.filter((n) => n.meta.presumed !== true)
+  const seen = new Set(finishedNotes.map((n) => n.sessionRef))
+  const finishedAgents = input.finishedSessions.filter((f) => !seen.has(f.sessionRef))
+  const finished = [
+    ...finishedNotes.map(named),
+    ...finishedAgents.map((f) => (f.client ? `${f.name || f.sessionRef} (${f.client})` : f.name || f.sessionRef)),
+  ]
+
+  const lines: string[] = []
+  if (blocked.length) lines.push(`Blocked on you: ${joinNames(blocked.map((n) => `${named(n)}${n.blockedOn ? " — " + n.blockedOn : ""}`), 3)}`)
+  if (parked.length) lines.push(`Parked: ${joinNames(parked.map(named))}`)
+  if (finished.length) lines.push(`Finished while you were away: ${joinNames(finished)}`)
+  if (presumed.length) lines.push(`Presumed gone (no word for a day): ${joinNames(presumed.map(named))}`)
+  if (input.newTickets) lines.push(`New tickets: ${input.newTickets}`)
+
+  const parts: string[] = []
+  if (blocked.length) parts.push(`${blocked.length} blocked`)
+  if (parked.length) parts.push(`${parked.length} parked`)
+  if (finished.length) parts.push(`${finished.length} finished`)
+  if (presumed.length) parts.push(`${presumed.length} presumed gone`)
+  if (input.newTickets) parts.push(`${input.newTickets} new ${input.newTickets === 1 ? "ticket" : "tickets"}`)
+
+  return {
+    title: "Morning briefing",
+    body: parts.length ? parts.join(" · ") : "Nothing waiting. Clean desk.",
+    lines,
+    counts: {
+      parked: parked.length,
+      blocked: blocked.length,
+      finished: finished.length,
+      presumedGone: presumed.length,
+      newTickets: input.newTickets,
+    },
+  }
+}
+
+/** yyyy-mm-dd in the workspace's own zone — the briefing's dedupe key. */
+export function localDay(now: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now)
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? ""
+  return `${get("year")}-${get("month")}-${get("day")}`
+}
+
+export function localHourMinute(now: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone, hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(now)
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? "0")
+  return { hour: get("hour") % 24, minute: get("minute") }
 }

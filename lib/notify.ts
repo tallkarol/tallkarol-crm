@@ -26,6 +26,7 @@ export type NotificationKind =
   | "ops.monitor"
   | "punchlist.test"
   | "leftoff.return"
+  | "leftoff.briefing"
 
 export type KindSpec = {
   kind: NotificationKind
@@ -49,6 +50,7 @@ export const NOTIFICATION_KINDS: KindSpec[] = [
   // Fired locally by the Mac app when you come back after being away — the
   // CRM only carries the switch so it can be turned off with the others.
   { kind: "leftoff.return", title: "Back at the desk", summary: "What was parked while you were away.", defaultOn: true, ignoresQuietHours: false },
+  { kind: "leftoff.briefing", title: "Morning briefing", summary: "Once a day, on the first unlock: what was parked, finished or lost overnight.", defaultOn: true, ignoresQuietHours: false },
 ]
 
 const SPEC = new Map(NOTIFICATION_KINDS.map((k) => [k.kind, k]))

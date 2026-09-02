@@ -2697,6 +2697,16 @@ export const sessionNotes = pgTable(
     /** A note left on purpose — shown over the auto text, survives `gone`. */
     body: text("body").notNull().default(""),
     pinned: boolean("pinned").notNull().default(false),
+    /** Resolved from the repo's `.claude/client` pin by the hook; else from agent_sessions. */
+    clientId: uuid("client_id").references(() => clients.id, { onDelete: "set null" }),
+    /** What a blocked chat is asking for — "Bash: npm run db:migrate". */
+    blockedOn: text("blocked_on").notNull().default(""),
+    /** A reply left on the board, delivered by the chat's own hooks at its next turn. */
+    reply: text("reply").notNull().default(""),
+    replyAt: timestamp("reply_at", { withTimezone: true }),
+    /** Set when the note was turned into a task or a ticket. */
+    taskId: uuid("task_id").references(() => tasks.id, { onDelete: "set null" }),
+    ticketId: uuid("ticket_id").references(() => supportTickets.id, { onDelete: "set null" }),
     /** When the event that last wrote this row happened — the ordering guard. */
     eventAt: timestamp("event_at", { withTimezone: true }).notNull().defaultNow(),
     startedAt: timestamp("started_at", { withTimezone: true }),

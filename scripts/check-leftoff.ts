@@ -6,7 +6,10 @@
 
 import {
   LEFTOFF_RULES,
+  buildBriefing,
   buildPayload,
+  localDay,
+  localHourMinute,
   clip,
   deriveState,
   eventState,
@@ -104,6 +107,49 @@ check(
   sortViews(views).map((v) => v.sessionRef),
   ["pin", "b", "p", "wait-new", "wait-old", "w", "g"]
 )
+
+console.log("client grouping")
+const mine = { slug: "mineralife", name: "Mineralife", color: "#009688" }
+const gdi = { slug: "gdi", name: "GDI", color: "#B07818" }
+const grouped = sortViews([
+  toView(note({ sessionRef: "house-wait", state: "waiting", eventAt: minAgo(1) }), NOW),
+  toView(note({ sessionRef: "m-wait", state: "waiting", eventAt: minAgo(5), client: mine }), NOW),
+  toView(note({ sessionRef: "g-blocked", state: "blocked", eventAt: minAgo(2), client: gdi }), NOW),
+  toView(note({ sessionRef: "m-parked", state: "waiting", eventAt: minAgo(50), client: mine }), NOW),
+  toView(note({ sessionRef: "g-work", state: "working", eventAt: minAgo(1), client: gdi }), NOW),
+])
+check(
+  "client with a blocked note first, then the other client, house last; bands inside",
+  grouped.map((v) => v.sessionRef),
+  ["g-blocked", "g-work", "m-parked", "m-wait", "house-wait"]
+)
+
+console.log("briefing")
+const briefing = buildBriefing({
+  now: NOW,
+  since: minAgo(8 * 60),
+  notes: [
+    note({ sessionRef: "b", state: "blocked", eventAt: minAgo(3), blockedOn: "Bash: npm run db:migrate", client: mine }),
+    note({ sessionRef: "p", state: "waiting", eventAt: minAgo(300), title: "Punch lists feature" }),
+    note({ sessionRef: "f", state: "gone", endedAt: minAgo(120), eventAt: minAgo(120), title: "Care audit", client: gdi }),
+    note({ sessionRef: "pg", state: "gone", endedAt: minAgo(60), eventAt: minAgo(60), title: "Lost one", meta: { presumed: true } }),
+    note({ sessionRef: "old", state: "gone", endedAt: minAgo(20 * 60), eventAt: minAgo(20 * 60), title: "Yesterday" }),
+    note({ sessionRef: "d", state: "waiting", eventAt: minAgo(300), dismissedAt: minAgo(1) }),
+    note({ sessionRef: "manual:x", surface: "manual", body: "note", eventAt: minAgo(300) }),
+  ],
+  finishedSessions: [
+    { sessionRef: "f", name: "dup of note f", client: "GDI" },
+    { sessionRef: "agent-1", name: "Purser month-end", client: "Mineralife" },
+  ],
+  newTickets: 2,
+})
+check("briefing counts", briefing.counts, { parked: 1, blocked: 1, finished: 2, presumedGone: 1, newTickets: 2 })
+check("briefing body", briefing.body, "1 blocked · 1 parked · 2 finished · 1 presumed gone · 2 new tickets")
+check("blocked line names what it wants", briefing.lines[0], "Blocked on you: Punch lists feature (Mineralife) — Bash: npm run db:migrate")
+check("finished dedupes the session that also has a note", briefing.lines[2], "Finished while you were away: Care audit (GDI), Purser month-end (Mineralife)")
+check("empty briefing has a clean-desk body", buildBriefing({ now: NOW, since: minAgo(60), notes: [], finishedSessions: [], newTickets: 0 }).body, "Nothing waiting. Clean desk.")
+check("local day in New York", localDay(new Date("2026-09-03T03:30:00.000Z"), "America/New_York"), "2026-09-02")
+check("local hour:minute in New York", localHourMinute(new Date("2026-09-03T11:31:00.000Z"), "America/New_York"), { hour: 7, minute: 31 })
 
 console.log("payload")
 const payload = buildPayload(
