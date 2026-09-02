@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState, useTransition } from "react"
+import { sourceLabel } from "@/lib/punch-source"
 import { Play, Square } from "lucide-react"
 import { clockLabel, useElapsed } from "@/components/timesheet/useElapsed"
 import { clientColor } from "@/lib/client-colors"
@@ -220,12 +221,3 @@ function RunningBand({
   )
 }
 
-export function sourceLabel(source: string) {
-  if (source === "watch") return "Watch"
-  if (source === "web") return "Browser"
-  if (source === "api") return "API"
-  if (source === "meeting") return "Calendar"
-  if (source === "agent") return "Agent"
-  if (source === "clock") return "Clock"
-  return "Manual"
-}

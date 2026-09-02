@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ClockPanel } from "@/components/timesheet/ClockPanel"
-import { sourceLabel } from "@/components/timesheet/ClockPanel"
+import { sourceLabel } from "@/lib/punch-source"
 import { getSessionUser } from "@/lib/auth"
 import { ROUTES } from "@/lib/nav"
 import {

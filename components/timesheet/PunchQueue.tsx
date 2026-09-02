@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react"
 import { AlertTriangle } from "lucide-react"
 import { Badge } from "@/components/work/Badge"
-import { sourceLabel } from "@/components/timesheet/ClockPanel"
+import { sourceLabel } from "@/lib/punch-source"
 import { clientColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { FLAG_LABEL, approvalBlocker } from "@/lib/punch"
