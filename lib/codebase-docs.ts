@@ -85,12 +85,16 @@ export type StoreDocResult =
 
 const SLUG = /^[a-z0-9][a-z0-9._-]{0,80}$/
 
+/** Fields that change on every run without the codebase changing. */
+const VOLATILE = new Set(["generatedAt", "scannedAt", "tool"])
+
 function stableJson(value: unknown): string {
-  return JSON.stringify(value, (_k, v) =>
-    v && typeof v === "object" && !Array.isArray(v)
+  return JSON.stringify(value, (key, v) => {
+    if (VOLATILE.has(key)) return undefined
+    return v && typeof v === "object" && !Array.isArray(v)
       ? Object.fromEntries(Object.entries(v as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)))
       : v
-  )
+  })
 }
 
 /**

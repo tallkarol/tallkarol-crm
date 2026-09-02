@@ -11,7 +11,7 @@ Credentials → rotate / regenerate, then update any linked `DATABASE_URL`.
 
 - Root directory: repo root (this project)
 - Build: `npm run build` (already in `railway.json`)
-- Release: `npm run db:migrate`
+- Pre-deploy: `npm run db:migrate` (`preDeployCommand`)
 - Start: `npm run start`
 - Link the existing Postgres plugin so `DATABASE_URL` is injected (internal host is fine on Railway)
 
