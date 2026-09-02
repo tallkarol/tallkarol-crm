@@ -27,9 +27,43 @@ const FILTERS: { key: StateFilter; label: string }[] = [
 ]
 
 /**
- * The punch list itself — header, filter chips, sections, rows. Rendered by
- * the full page and by the peek, the same way TaskDetailBody serves both.
- * `compact` drops the header facts the peek's eyebrow already states.
+ * A section heading is its name, a rule, and a count — like a report's. The
+ * sections carry their own ordinal from the source ("0 · Prep", "B · Code
+ * fixes"), so adding a second number here would just compete with it.
+ */
+function SectionRule({
+  title,
+  done,
+  total,
+}: {
+  title: string
+  done: number
+  total: number
+}) {
+  const complete = total > 0 && done === total
+  return (
+    <div className="flex items-center gap-3 pb-2.5">
+      <h2 className="text-[11.5px] font-bold uppercase tracking-[.14em] text-tk-onyx">
+        {title}
+      </h2>
+      <span aria-hidden className="h-px flex-1 bg-tk-slate/15" />
+      <span
+        className={cn(
+          "font-mono text-[11px] tabular-nums",
+          complete ? "text-tk-teal" : "text-tk-slate/50"
+        )}
+      >
+        {done}/{total}
+      </span>
+    </div>
+  )
+}
+
+/**
+ * The punch list itself — masthead, filter chips, numbered sections, rows.
+ * Rendered by the full page and by the peek, the same way TaskDetailBody
+ * serves both; `compact` drops the masthead facts the peek's eyebrow already
+ * states.
  */
 export function PunchlistBody({
   list,
@@ -44,12 +78,26 @@ export function PunchlistBody({
 }) {
   const visible = list.items.filter((item) => matchesState(item, filter))
   const sections = groupBySection(visible)
+  // Items keep the number they were filed with, whatever the filter hides.
+  const numbering = new Map(list.items.map((item, i) => [item.id, i + 1]))
+  // Section counts are of the whole section, not of what the filter left —
+  // otherwise "B · Code fixes 0/3" under To do would mean something different
+  // from the same line under All.
+  const sectionTally = new Map<string, { done: number; total: number }>()
+  for (const item of list.items) {
+    const key = item.section || ""
+    const tally = sectionTally.get(key) ?? { done: 0, total: 0 }
+    tally.total += 1
+    if (item.state === "done") tally.done += 1
+    sectionTally.set(key, tally)
+  }
   const counts = {
     all: list.items.length,
     todo: list.items.filter((i) => matchesState(i, "todo")).length,
     doing: list.items.filter((i) => i.state === "doing").length,
     done: list.progress.done,
   }
+  const open = counts.all - counts.done
   const draft = list.effectiveStatus === "draft"
   const sourceLabel = [
     SOURCE_KIND_LABEL[list.sourceKind] ?? list.sourceKind,
@@ -60,130 +108,186 @@ export function PunchlistBody({
 
   return (
     <div>
-      <div className={cn("px-5", compact ? "pt-4" : "pt-5")}>
-        {!compact ? (
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h1 className="text-xl font-semibold tracking-tight text-tk-onyx">{list.title}</h1>
-              <p className="mt-1 text-sm text-tk-slate/70">
-                <Link href={ROUTES.client(list.client.slug)} className="font-semibold text-tk-teal hover:underline">
-                  {list.client.name}
-                </Link>
-                {list.project ? (
-                  <>
-                    {" · "}
-                    <Link href={ROUTES.project(list.project.slug)} className="font-semibold text-tk-teal hover:underline">
-                      {list.project.name}
-                    </Link>
-                  </>
-                ) : null}
-                {" · "}
+      {!compact ? (
+        <header className="border-b border-tk-slate/12 bg-tk-linen/45 px-5 pb-6 pt-7 sm:px-8">
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+            <p className="text-[10.5px] font-semibold uppercase tracking-[.16em] text-tk-teal">
+              <Link href={ROUTES.client(list.client.slug)} className="hover:underline">
+                {list.client.name}
+              </Link>
+              {list.project ? (
+                <>
+                  <span className="text-tk-slate/30"> · </span>
+                  <Link href={ROUTES.project(list.project.slug)} className="hover:underline">
+                    {list.project.name}
+                  </Link>
+                </>
+              ) : null}
+              <span className="text-tk-slate/30"> · </span>
+              <span className="text-tk-slate/55">
                 {formatDay(list.createdAt.toISOString().slice(0, 10))}
-              </p>
-            </div>
+              </span>
+            </p>
             <span
               className={cn(
-                "rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                list.effectiveStatus === "done" && "bg-tk-teal/10 text-tk-teal",
-                list.effectiveStatus === "open" && "bg-tk-linen text-tk-slate",
-                list.effectiveStatus === "draft" && "bg-amber-50 text-amber-700",
-                list.effectiveStatus === "void" && "bg-tk-slate/10 text-tk-slate/60"
+                "rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.1em]",
+                list.effectiveStatus === "done" && "bg-tk-teal text-tk-linen",
+                list.effectiveStatus === "open" && "bg-white text-tk-slate ring-1 ring-tk-slate/15",
+                list.effectiveStatus === "draft" && "bg-amber-100 text-amber-800",
+                list.effectiveStatus === "void" && "bg-tk-slate/10 text-tk-slate/55"
               )}
             >
               {LIST_STATUS_LABEL[list.effectiveStatus]}
             </span>
           </div>
-        ) : null}
 
-        {list.intro ? (
-          <p className="mt-3 text-[13.5px] leading-relaxed text-tk-slate">{list.intro}</p>
-        ) : null}
-        {sourceLabel ? (
-          <p className="mt-1.5 text-xs text-tk-slate/60">
-            Generated {sourceLabel}
-            {list.generatedBy ? ` · ${list.generatedBy}` : ""}
-            {list.sessionRef ? (
-              <>
-                {" · "}
-                <Link
-                  href={`${base}?peek=session:${encodeURIComponent(list.sessionRef)}`}
-                  scroll={false}
-                  className="font-semibold text-tk-teal hover:underline"
-                >
-                  session {list.sessionRef.slice(0, 8)}
-                </Link>
-              </>
-            ) : null}
+          <h1 className="mt-3 max-w-2xl text-[27px] font-bold leading-[1.12] tracking-[-.02em] text-tk-onyx sm:text-[32px]">
+            {list.title}
+          </h1>
+
+          {list.intro ? (
+            <p className="mt-3 max-w-2xl font-serif text-[16px] leading-[1.6] text-tk-slate/85">
+              {list.intro}
+            </p>
+          ) : null}
+
+          {/* The count is the headline fact, so it gets to be big. */}
+          <div className="mt-6 flex flex-wrap items-end gap-x-8 gap-y-4">
+            <div>
+              <p className="flex items-baseline gap-1.5">
+                <span className="font-mono text-[30px] font-semibold leading-none tabular-nums text-tk-onyx">
+                  {list.progress.done}
+                </span>
+                <span className="font-mono text-[15px] leading-none tabular-nums text-tk-slate/45">
+                  / {list.progress.total}
+                </span>
+              </p>
+              <p className="mt-1.5 text-[10.5px] font-semibold uppercase tracking-[.14em] text-tk-slate/50">
+                Done
+              </p>
+            </div>
+            <div>
+              <p className="font-mono text-[30px] font-semibold leading-none tabular-nums text-tk-onyx">
+                {open}
+              </p>
+              <p className="mt-1.5 text-[10.5px] font-semibold uppercase tracking-[.14em] text-tk-slate/50">
+                Still open
+              </p>
+            </div>
+            <div className="min-w-[180px] flex-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10.5px] font-semibold uppercase tracking-[.14em] text-tk-slate/50">
+                  Progress
+                </span>
+                <span className="font-mono text-[11.5px] tabular-nums text-tk-slate/55">
+                  {list.progress.pct}%
+                </span>
+              </div>
+              <span
+                className="mt-1.5 block h-2 overflow-hidden rounded-full bg-tk-slate/12"
+                aria-hidden
+              >
+                <span
+                  className="block h-full rounded-full bg-tk-teal transition-[width] duration-500"
+                  style={{ width: `${list.progress.pct}%` }}
+                />
+              </span>
+            </div>
+          </div>
+
+          {sourceLabel || draft ? (
+            <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-tk-slate/10 pt-3.5">
+              {sourceLabel ? (
+                <p className="text-[11.5px] text-tk-slate/55">
+                  Generated {sourceLabel}
+                  {list.generatedBy ? ` · ${list.generatedBy}` : ""}
+                  {list.sessionRef ? (
+                    <>
+                      {" · "}
+                      <Link
+                        href={`${base}?peek=session:${encodeURIComponent(list.sessionRef)}`}
+                        scroll={false}
+                        className="font-semibold text-tk-teal hover:underline"
+                      >
+                        session {list.sessionRef.slice(0, 8)}
+                      </Link>
+                    </>
+                  ) : null}
+                </p>
+              ) : null}
+              {draft ? (
+                <AcceptDraftButton
+                  count={list.items.filter((i) => !i.taskId).length}
+                  action={acceptDraftAction.bind(null, list.id, list.slug)}
+                />
+              ) : null}
+            </div>
+          ) : null}
+        </header>
+      ) : null}
+
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-1.5 border-b border-tk-slate/12 px-5 py-3 sm:px-8",
+          compact && "px-6 sm:px-6"
+        )}
+        role="tablist"
+        aria-label="Filter items"
+      >
+        {FILTERS.map((f) => (
+          <Link
+            key={f.key}
+            href={f.key === "all" ? base : `${base}?state=${f.key}`}
+            scroll={false}
+            role="tab"
+            aria-selected={filter === f.key}
+            className={cn(
+              "rounded-full px-3 py-1 text-[11.5px] font-semibold transition-colors",
+              filter === f.key
+                ? "bg-tk-onyx text-tk-linen"
+                : "text-tk-slate/70 hover:bg-tk-linen hover:text-tk-onyx"
+            )}
+          >
+            {f.label}
+            <span className="ml-1.5 font-mono text-[10.5px] tabular-nums opacity-60">
+              {counts[f.key]}
+            </span>
+          </Link>
+        ))}
+        {compact ? null : (
+          <span className="ml-auto text-[11px] text-tk-slate/40">
+            Click a circle to move an item · to do → doing → done
+          </span>
+        )}
+      </div>
+
+      <div className={cn("space-y-7 px-5 py-6 sm:px-8", compact && "px-6 py-5 sm:px-6")}>
+        {sections.length === 0 ? (
+          <p className="py-6 text-center text-sm text-tk-slate/55">
+            Nothing here for that filter.
           </p>
         ) : null}
 
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[12px] tabular-nums text-tk-slate/70">
-              {list.progress.done} / {list.progress.total} done
-            </span>
-            <span className="h-1.5 w-28 overflow-hidden rounded-full bg-tk-slate/10" aria-hidden>
-              <span
-                className="block h-full rounded-full bg-tk-teal transition-[width]"
-                style={{ width: `${list.progress.pct}%` }}
-              />
-            </span>
-          </div>
-          {draft ? (
-            <AcceptDraftButton
-              count={list.items.filter((i) => !i.taskId).length}
-              action={acceptDraftAction.bind(null, list.id, list.slug)}
-            />
-          ) : null}
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-1.5" role="tablist" aria-label="Filter items">
-          {FILTERS.map((f) => (
-            <Link
-              key={f.key}
-              href={f.key === "all" ? base : `${base}?state=${f.key}`}
-              scroll={false}
-              role="tab"
-              aria-selected={filter === f.key}
-              className={cn(
-                "rounded-full border px-2.5 py-1 text-[11.5px] font-semibold transition-colors",
-                filter === f.key
-                  ? "border-tk-teal bg-tk-teal text-tk-linen"
-                  : "border-tk-slate/20 bg-white text-tk-slate hover:border-tk-teal hover:text-tk-teal"
-              )}
-            >
-              {f.label}
-              <span className="ml-1 font-mono text-[10.5px] tabular-nums opacity-70">{counts[f.key]}</span>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-4 space-y-4 px-5 pb-5">
-        {sections.length === 0 ? (
-          <p className="text-sm text-tk-slate/60">Nothing here for that filter.</p>
-        ) : null}
         {sections.map((section) => (
           <section key={section.section || "_"}>
             {section.section || sections.length > 1 ? (
-              <div className="flex items-baseline justify-between px-1 pb-1.5">
-                <h2 className="text-[12.5px] font-bold text-tk-onyx">
-                  {section.section || "Items"}
-                </h2>
-                <span className="font-mono text-[11px] tabular-nums text-tk-slate/55">
-                  {section.done}/{section.total}
-                </span>
-              </div>
+              <SectionRule
+                title={section.section || "Items"}
+                done={sectionTally.get(section.section || "")?.done ?? section.done}
+                total={sectionTally.get(section.section || "")?.total ?? section.total}
+              />
             ) : null}
-            <ul className="divide-y divide-tk-slate/10 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+            <ul className="overflow-hidden rounded-xl border border-tk-slate/15 bg-white shadow-[0_1px_2px_rgba(15,22,21,.04)]">
               {section.items.map((item) => {
                 const run = list.latestRuns[item.id]
                 return (
                   <ItemRow
                     key={item.id}
                     item={item}
+                    index={numbering.get(item.id) ?? 0}
                     draft={draft}
                     peekBase={base}
+                    defaultOpen={!compact && item.state !== "done"}
                     latestRun={
                       run
                         ? {
@@ -205,8 +309,8 @@ export function PunchlistBody({
         ))}
 
         {list.sourceText && !compact ? (
-          <details className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-3 shadow-sm">
-            <summary className="cursor-pointer text-[12.5px] font-semibold text-tk-slate">
+          <details className="rounded-xl border border-tk-slate/15 bg-white px-5 py-3 shadow-[0_1px_2px_rgba(15,22,21,.04)]">
+            <summary className="cursor-pointer text-[11.5px] font-semibold uppercase tracking-[.12em] text-tk-slate/55 hover:text-tk-onyx">
               Source text
             </summary>
             <pre className="mt-3 max-h-[28rem] overflow-auto whitespace-pre-wrap font-mono text-[11.5px] leading-relaxed text-tk-slate">

@@ -55,7 +55,7 @@ export default async function PunchlistPage({
 
       {searchParams.peek ? <PeekRouter peek={searchParams.peek} closeHref={closeHref} /> : null}
 
-      <div className="mt-4 max-w-3xl overflow-hidden rounded-2xl border border-tk-slate/15 bg-tk-linen/30 shadow-sm">
+      <div className="mt-4 max-w-4xl overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-[0_1px_3px_rgba(15,22,21,.06)]">
         <PunchlistBody list={list} filter={filter} base={base} />
       </div>
     </>

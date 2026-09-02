@@ -56,22 +56,23 @@ export function ItemStateCircle({
       aria-label={`${title}: ${ITEM_STATE_LABEL[state]}. Click to mark ${ITEM_STATE_LABEL[NEXT_STATE[state]].toLowerCase()}.`}
       title={disabled ? "Accept the draft first" : `${ITEM_STATE_LABEL[state]} → ${ITEM_STATE_LABEL[NEXT_STATE[state]]}`}
       className={cn(
-        "relative grid size-[18px] shrink-0 place-items-center rounded-full border-[1.5px] transition-colors",
+        "relative grid size-[22px] shrink-0 place-items-center rounded-full border-[1.5px] transition-all",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tk-teal/40 focus-visible:ring-offset-2",
         state === "done" && "border-tk-teal bg-tk-teal",
-        state === "doing" && "border-tk-teal bg-white",
-        state === "waiting" && "border-amber-500 bg-white",
-        state === "todo" && "border-tk-slate/30 bg-white hover:border-tk-teal",
+        state === "doing" && "border-tk-teal bg-white ring-4 ring-tk-teal/10",
+        state === "waiting" && "border-amber-500 bg-white ring-4 ring-amber-500/10",
+        state === "todo" && "border-tk-slate/25 bg-white hover:border-tk-teal hover:ring-4 hover:ring-tk-teal/10",
         disabled && "cursor-not-allowed opacity-40",
         pending && "opacity-70"
       )}
     >
       {state === "done" ? (
-        <svg width="10" height="8" viewBox="0 0 11 9" fill="none" aria-hidden>
-          <path d="M1 4.5L4 7.5L10 1.5" stroke="#F1EADC" strokeWidth="2.2" strokeLinecap="round" />
+        <svg width="12" height="9" viewBox="0 0 11 9" fill="none" aria-hidden>
+          <path d="M1 4.5L4 7.5L10 1.5" stroke="#F1EADC" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       ) : null}
-      {state === "doing" ? <span aria-hidden className="size-2 rounded-full bg-tk-teal" /> : null}
-      {state === "waiting" ? <span aria-hidden className="size-2 rounded-full bg-amber-500" /> : null}
+      {state === "doing" ? <span aria-hidden className="size-2.5 rounded-full bg-tk-teal" /> : null}
+      {state === "waiting" ? <span aria-hidden className="size-2.5 rounded-full bg-amber-500" /> : null}
     </button>
   )
 }
