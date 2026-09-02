@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SEM Report v2 — Mineralife — September 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#F4F2EC;--surface:#FFF;--surface-2:#EDE9DE;--ink:#0F1615;--ink-2:#3D4947;--muted:#6E7A77;--line:rgba(15,22,21,.13);--line-soft:rgba(15,22,21,.07);--accent:#006965;--accent-ink:#00504D;--accent-soft:rgba(0,105,101,.10);--warn:#A45A1E;--warn-soft:rgba(164,90,30,.12);--crit:#8E3521;--crit-soft:rgba(142,53,33,.12);--good:#2E7D57;--good-soft:rgba(46,125,87,.12);--display:"Archivo",ui-sans-serif,system-ui,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:ui-sans-serif,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6}
+.wrap{max-width:880px;margin:0 auto;padding:0 32px}
+@media(max-width:720px){.wrap{padding:0 20px}}
+h1,h2,h3,h4,.eyebrow,.chip,.num,th,.ui{font-family:var(--display)}
+h1{font-size:clamp(28px,4.2vw,40px);line-height:1.08;letter-spacing:-.02em;font-weight:700;margin:0 0 10px}
+h2{font-size:20px;line-height:1.2;letter-spacing:-.01em;font-weight:600;margin:0 0 12px}
+h3{font-size:15px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 14px}p:last-child{margin-bottom:0}
+code,.mono{font-family:var(--mono);font-size:.85em;background:var(--surface-2);padding:.1em .34em;border-radius:3px}
+.small{font-size:13.5px;line-height:1.5}.muted{color:var(--muted)}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 14px}
+header.rpt{padding:56px 0 28px;border-bottom:2px solid var(--ink)}
+section{padding:34px 0;border-bottom:1px solid var(--line)}
+.sec-label{display:flex;align-items:baseline;gap:10px;margin:0 0 16px}
+.sec-label .n{font-family:var(--mono);font-size:12px;color:var(--accent-ink)}
+.metastrip{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;margin-top:22px}
+.metastrip>div{flex:1 1 160px;padding:12px 16px;border-right:1px solid var(--line-soft)}
+.metastrip>div:last-child{border-right:0}
+.metastrip .k{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px}
+.metastrip .v{font-family:var(--display);font-size:14px;font-weight:500}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:720px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:1fr}.g2{grid-template-columns:1fr}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.stat .num{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block;font-variant-numeric:tabular-nums}
+.stat .lbl{font-family:var(--ui);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:5px;display:block}
+.stat .sub{font-size:12.5px;color:var(--ink-2);margin-top:5px;display:block;line-height:1.35}
+.stat.good .num{color:var(--good)}.stat.warn .num{color:var(--warn)}.stat.crit .num{color:var(--crit)}.stat.accent .num{color:var(--accent-ink)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+.tablecard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 10px 6px;overflow-x:auto}
+th{text-align:left;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);font-family:var(--ui);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12px}
+.r{text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);font-family:var(--ui)}
+.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.accent{background:var(--accent-soft);color:var(--accent-ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.card.tint{background:var(--surface-2);border-color:var(--line-soft)}
+.rail{border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.rail.crit{border-left-color:var(--crit)}.rail.good{border-left-color:var(--good)}.rail.warn{border-left-color:var(--warn)}
+.up{color:var(--good);font-weight:600}.down{color:var(--crit);font-weight:600}
+ul.tight{margin:0;padding-left:19px}ul.tight li{margin-bottom:5px}
+footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(--ui)}
+@media print{body{background:#fff;font-size:12pt}section{page-break-inside:avoid}header.rpt{padding-top:0}}
+.toc{background:var(--surface-2);border:1px solid var(--line-soft);border-radius:8px;padding:16px 20px;margin-top:26px}
+.toc ol{margin:0;padding-left:20px;columns:2;column-gap:30px}
+.toc li{margin-bottom:5px;font-size:14px}
+.toc a{color:var(--ink);text-decoration:none}
+.toc a:hover{color:var(--accent-ink);text-decoration:underline}
+@media(max-width:640px){.toc ol{columns:1}}
+.statusrow{display:grid;grid-template-columns:88px 1fr;gap:14px;padding:11px 0;border-bottom:1px solid var(--line-soft);align-items:start}
+.statusrow:last-child{border-bottom:0}
+.statusrow .st{font-family:var(--ui);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:4px;text-align:center;white-space:nowrap}
+.st.done{background:var(--good-soft);color:var(--good)}
+.st.part{background:var(--warn-soft);color:var(--warn)}
+.st.open{background:var(--crit-soft);color:var(--crit)}
+.statusrow .what{font-size:14px}
+.statusrow .what b{font-weight:600}
+.statusrow .what .why{display:block;font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.45}
+.stack{display:grid;gap:14px}
+.new{background:var(--warn-soft);color:var(--warn);font-family:var(--ui);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:2px 7px;border-radius:4px;display:inline-block;vertical-align:middle;margin-left:7px}
+.fixed{background:var(--good-soft);color:var(--good);font-family:var(--ui);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:2px 7px;border-radius:4px;display:inline-block;vertical-align:middle;margin-left:7px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="rpt">
+  <p class="eyebrow">Tall Karol &middot; Mineralife Nutraceuticals &middot; mycustommanufacturer.com</p>
+  <h1>SEM Report v2</h1>
+  <p class="muted" style="font-size:17px">August 2026 review &mdash; re-verified against the live systems on
+  2 September 2026, after the account rebuild described in section 03.</p>
+  <div class="metastrip">
+    <div><span class="k">Shipped since v1</span><span class="v">Everything but two cleanups</span></div>
+    <div><span class="k">Still blocking</span><span class="v">Nothing &mdash; cleared 2 Sep</span></div>
+    <div><span class="k">September budget</span><span class="v">$600/mo &middot; up from $300</span></div>
+    <div><span class="k">Goal</span><span class="v">first attributable US enquiry</span></div>
+  </div>
+  <div class="toc">
+    <ol>
+      <li><a href="#s1">Where things stand</a></li>
+      <li><a href="#s2">Status of every v1 finding</a></li>
+      <li><a href="#s3">The blocker, cleared</a></li>
+      <li><a href="#s4">What the cookieless counter revealed</a></li>
+      <li><a href="#s5">August in numbers</a></li>
+      <li><a href="#s6">Where the money went in August</a></li>
+      <li><a href="#s7">Organic search and index health</a></li>
+      <li><a href="#s8">The September campaign, as built</a></li>
+      <li><a href="#s9">What changed on Competitors</a></li>
+      <li><a href="#s10">Still outstanding</a></li>
+      <li><a href="#s11">Decisions still open</a></li>
+      <li><a href="#s12">Verified configuration, 2 September</a></li>
+    </ol>
+  </div>
+</header>
+
+<section id="s1">
+  <div class="sec-label"><span class="n">01</span><h2>Where things stand</h2></div>
+  <p>Version one described a system whose plumbing was sound and whose wiring was not. As of tonight the wiring is
+  done too. The site-side work shipped over the weekend; the Analytics side was finished on 1 September; and on
+  2 September the Google Ads account itself was rebuilt &mdash; conversion goals, match types, negatives, networks,
+  landing pages, ad copy, and a second campaign, all verified live against the API after the changes were made.</p>
+
+  <div class="grid g4" style="margin:20px 0">
+    <div class="stat good"><span class="num">2</span><span class="lbl">Campaigns, wired</span><span class="sub">Both bid on Submit lead form only. Nothing else steers them.</span></div>
+    <div class="stat good"><span class="num">0</span><span class="lbl">Broad keywords live</span><span class="sub">All thirteen paused. Everything serving is phrase or exact.</span></div>
+    <div class="stat good"><span class="num">174</span><span class="lbl">Negative keywords</span><span class="sub">One shared list, attached to both campaigns.</span></div>
+    <div class="stat accent"><span class="num">3</span><span class="lbl">Ads in review</span><span class="sub">The new US campaign's ads, awaiting Google's routine approval.</span></div>
+  </div>
+
+  <div class="card rail good">
+    <h3>The whole chain, closed</h3>
+    <p class="small" style="margin-bottom:0">For the first time since the account was opened: an advertisement is
+    clicked &rarr; the click ID is stored server-side before consent &rarr; the visitor lands on a page built for the
+    search with the form on it &rarr; the enquiry fires <code>generate_lead</code> with the form location attached
+    &rarr; Analytics counts it as a key event &rarr; and Google Ads counts it as the primary conversion it bids
+    toward. Every link in that chain was verified individually today.</p>
+  </div>
+
+  <div class="card rail warn" style="margin-top:14px">
+    <h3>What the rebuild cannot change</h3>
+    <p class="small" style="margin-bottom:0">Bidding still has zero conversion history to learn from &mdash; the
+    signal only began existing tonight. Expect the first weeks of &ldquo;maximise conversions&rdquo; on Competitors
+    to behave much as before until real enquiries teach it otherwise, and read September as the first month of a
+    system that can learn, not a month that has already learned.</p>
+  </div>
+</section>
+
+<section id="s2">
+  <div class="sec-label"><span class="n">02</span><h2>Status of every v1 finding</h2></div>
+  <p class="small muted">Verified against the live Google systems and the production site on 2 September, after the
+  rebuild.</p>
+
+  <div style="margin-top:16px">
+    <div class="statusrow"><span class="st done">Done</span><span class="what"><b>The real enquiry event is a conversion everywhere</b><span class="why"><code>generate_lead</code> is a key event in Analytics and the <b>enabled, primary</b> conversion in Google Ads. <code>catalog_download</code> rides along as secondary.</span></span></div>
+    <div class="statusrow"><span class="st done">Done</span><span class="what"><b>Retail conversions no longer steer the business campaigns</b><span class="why">Both B2B campaigns use campaign-specific goals: Submit lead form only. Page view is no longer a bidding target. The Zemvelo retail actions still exist but only steer their own campaign.</span></span></div>
+    <div class="statusrow"><span class="st part">Partial</span><span class="what"><b>The dead form_submission import</b><span class="why">Demoted from primary &mdash; it no longer influences anything. Deleting it entirely is cleanup, not urgency.</span></span></div>
+    <div class="statusrow"><span class="st done">Done</span><span class="what"><b>Analytics retention, dimensions, timezone, stream</b><span class="why">14 months, 13 dimensions including <code>form_location</code>, America/Denver, correct domain. Unchanged since 1 September.</span></span></div>
+    <div class="statusrow"><span class="st done">Done</span><span class="what"><b>Paid traffic lands on purpose-built pages</b><span class="why">Competitors lands on <code>/lp/switch-manufacturers</code> &mdash; a better read of that audience's intent than the contract-manufacturing page this report originally suggested. The new campaign's three ad groups land on their three matching pages.</span></span></div>
+    <div class="statusrow"><span class="st done">Done</span><span class="what"><b>Broad match retired</b><span class="why">All 13 broad keywords paused. Serving: 7 phrase competitor terms and a new 8-keyword switching-intent ad group, phrase and exact.</span></span></div>
+    <div class="statusrow"><span class="st done">Done</span><span class="what"><b>Negative keywords on both campaigns</b><span class="why">A 174-keyword shared list, <code>mineralife-exclusion-2026</code>, attached to Competitors and Core Terms.</span></span></div>
+    <div class="statusrow"><span class="st done">Done</span><span class="what"><b>Search Partners off on both B2B campaigns</b><span class="why">The source of v1's automated traffic no longer serves them.</span></span></div>
+    <div class="statusrow"><span class="st done">Done</span><span class="what"><b>The Regional campaign is paused</b><span class="why">After ninety days of zero impressions it no longer reserves budget or attention.</span></span></div>
+    <div class="statusrow"><span class="st done">Done</span><span class="what"><b>The US campaign exists</b><span class="why">B2B &ndash; Search &ndash; Core Terms, live tonight. Section 08 documents it as built.</span></span></div>
+    <div class="statusrow"><span class="st done">Done</span><span class="what"><b>The trademark exposure is gone</b><span class="why">The pinned &ldquo;NutraScience Labs is Closed&rdquo; headline was replaced along with the rest of the ad. New copy is drawn from approved site content and pinned in three rotating groups of five.</span></span></div>
+    <div class="statusrow"><span class="st done">Done</span><span class="what"><b>Homepage form, form locations, server-side attribution, double-count</b><span class="why">All carried from earlier in the report cycle, all still verified live.</span></span></div>
+    <div class="statusrow"><span class="st part">Partial</span><span class="what"><b>Obsolete Analytics key events</b><span class="why"><code>purchase</code> remains &mdash; Google does not permit unmarking it. It fires zero times on this property, so it sits at zero.</span></span></div>
+  </div>
+</section>
+
+<section id="s3">
+  <div class="sec-label"><span class="n">03</span><h2>The blocker, cleared<span class="fixed">2 Sep</span></h2></div>
+  <p>Every version of this report has led with the same defect: the advertising account could not count an enquiry,
+  so it bid toward retail signals and a form event that stopped existing in July. That is over.</p>
+
+  <div class="tablecard" style="margin-top:16px">
+    <table>
+      <thead><tr><th>Wiring</th><th>Was</th><th>Now</th></tr></thead>
+      <tbody>
+        <tr><td>Lead conversion in Ads</td><td class="small">form_submission &mdash; never fired once</td><td class="small"><b>generate_lead</b>, enabled, primary <span class="chip ok">live</span></td></tr>
+        <tr><td>Secondary conversion</td><td class="small">&mdash;</td><td class="small">catalog_download, enabled <span class="chip ok">live</span></td></tr>
+        <tr><td>Competitors bids toward</td><td class="small">Page view + dead form event</td><td class="small"><b>Submit lead form only</b> <span class="chip ok">live</span></td></tr>
+        <tr><td>Core Terms bids toward</td><td class="small">(did not exist)</td><td class="small"><b>Submit lead form only</b>, set at creation <span class="chip ok">live</span></td></tr>
+        <tr><td>Retail goals (Purchase, Add to cart&hellip;)</td><td class="small">steering everything</td><td class="small">confined to the Zemvelo campaign</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="small muted" style="margin-top:14px">One honest caveat: the conversion count starts at zero tonight.
+  Smart bidding needs observed conversions before it behaves differently, and at roughly five enquiries a month
+  that learning is slow. The offline-outcomes upload in section 10 is what accelerates it.</p>
+</section>
+
+<section id="s4">
+  <div class="sec-label"><span class="n">04</span><h2>What the cookieless counter revealed<span class="new">New</span></h2></div>
+  <p>A cookieless visitor counter went live on the site on 31 August. It counts every visitor, consent or not, and it
+  has immediately answered a question v1 could only estimate: how much of the traffic Analytics actually sees.</p>
+
+  <div class="tablecard" style="margin-top:16px">
+    <table>
+      <thead><tr><th>Day</th><th class="r">Real visitors</th><th class="r">Sessions in Analytics</th><th class="r">Seen</th></tr></thead>
+      <tbody>
+        <tr><td>31 August</td><td class="r mono">108</td><td class="r mono">3</td><td class="r"><span class="chip crit">2.8%</span></td></tr>
+        <tr><td>1 September</td><td class="r mono">73</td><td class="r mono">0</td><td class="r"><span class="chip crit">0%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card rail crit" style="margin-top:16px">
+    <h3>Analytics is close to blind, and it is worse than v1 assumed</h3>
+    <p class="small">Version one put it at roughly one paid click in twenty. Measured against a real denominator it is
+    nearer <b>one visitor in thirty-five</b>, and on 1 September it was none at all. Two days is a small
+    sample and zero is not alarming by itself &mdash; but the direction is unambiguous.</p>
+    <p class="small" style="margin-bottom:0">Nothing is broken. The container is on the page, all eight Analytics
+    tags are live, and version 13 is serving &mdash; verified directly. This is the cookie banner doing exactly what
+    it was built to do.</p>
+  </div>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h3>What this changes about reading Analytics</h3>
+      <p class="small" style="margin-bottom:0">Every session, event and rate drawn from Analytics in this report is a
+      floor rather than a total, and a very low floor. Analytics stays useful for <em>proportions</em> &mdash; which
+      page, which form, which step &mdash; and is close to useless for volume.</p>
+    </div>
+    <div class="card">
+      <h3>Why the enquiries are still trustworthy</h3>
+      <p class="small" style="margin-bottom:0">Enquiries are recorded server-side with their advertisement click,
+      independent of consent. The lead records are the truth at the bottom of the funnel and the advertising account
+      is the truth at the top. Analytics only fills in the middle.</p>
+    </div>
+  </div>
+</section>
+
+<section id="s5">
+  <div class="sec-label"><span class="n">05</span><h2>August in numbers</h2></div>
+
+  <div class="grid g4" style="margin:6px 0 18px">
+    <div class="stat"><span class="num">$307</span><span class="lbl">Competitors spend</span><span class="sub">791 clicks at 39&cent; average.</span></div>
+    <div class="stat warn"><span class="num">7</span><span class="lbl">Real enquiries</span><span class="sub">Ten records, three of them test submissions.</span></div>
+    <div class="stat"><span class="num">2</span><span class="lbl">Carried a click ID</span><span class="sub">Plus two catalogue downloads, both from paid.</span></div>
+    <div class="stat crit"><span class="num">0</span><span class="lbl">Conversions in Ads</span><span class="sub">The account recorded none &mdash; in August, it could not.</span></div>
+  </div>
+
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Campaign</th><th class="r">Budget/day</th><th class="r">Aug spend</th><th class="r">Clicks</th><th class="r">Impressions</th><th class="r">Conv.</th></tr></thead>
+      <tbody>
+        <tr><td><b>B2B &ndash; Search &ndash; Competitors</b><br><span class="small muted">the only campaign producing enquiries</span></td><td class="r mono">$10.00</td><td class="r mono">$307.49</td><td class="r mono">791</td><td class="r mono">7,161</td><td class="r mono">0</td></tr>
+        <tr><td><b>2023 &ndash; Performance Max</b><br><span class="small muted">Zemvelo retail, same account</span></td><td class="r mono">$15.93</td><td class="r mono">$467.58</td><td class="r mono">169</td><td class="r mono">18,612</td><td class="r mono">3</td></tr>
+        <tr><td><b>B2B &ndash; Search &ndash; Regional</b><br><span class="small muted">paused 2 September</span></td><td class="r mono">$5.00</td><td class="r mono">$0.00</td><td class="r mono">0</td><td class="r mono">0</td><td class="r mono">0</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small muted" style="margin-top:10px">Competitors lost 21.9% of its available impressions to its daily
+  budget in August &mdash; budget-limited, not demand-limited.</p>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h3>The measured cost of a paid enquiry</h3>
+      <p class="small">August: <b>$307.49</b> produced two enquiries carrying a click ID and two catalogue downloads
+      carrying one. That is <b>$154 per paid enquiry</b>, or <b>$77 per paid action</b> if downloads count.</p>
+      <p class="small" style="margin-bottom:0">Higher than the ~$88 quoted in v1, which covered a longer window with a
+      better month in it. Against a $400&ndash;1,000 category benchmark it remains cheap. Four outcomes is far too
+      small a sample to call a rate &mdash; treat it as an order of magnitude, not a figure.</p>
+    </div>
+    <div class="card">
+      <h3>September so far</h3>
+      <p class="small">Through 2 September: Competitors $2.11 and 23 clicks; Core Terms $0 &mdash; launched tonight,
+      its ads still in review. No enquiries yet this month.</p>
+      <p class="small" style="margin-bottom:0">September's numbers will be a before/after seam: two days of the old
+      configuration, then the rebuilt account. Read the month accordingly.</p>
+    </div>
+  </div>
+
+  <div class="card rail" style="margin-top:16px">
+    <h3>Three of the ten August records were tests</h3>
+    <p class="small" style="margin-bottom:0">Two labelled <em>TEST</em> on 30 August and one <em>Test</em> on
+    19 August, created while the notification path was being verified. They are excluded from every figure in this
+    report. Worth stating because the raw record count in the database says ten.</p>
+  </div>
+</section>
+
+<section id="s6">
+  <div class="sec-label"><span class="n">06</span><h2>Where the money went in August</h2></div>
+  <p class="small muted">This section is history &mdash; the configuration that produced it was retired on
+  2 September. It stays in the report because it is the baseline the rebuilt account has to beat.</p>
+
+  <div class="tablecard" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Keyword</th><th>Match, then</th><th class="r">Aug spend</th><th class="r">Clicks</th><th class="r">Share</th></tr></thead>
+      <tbody>
+        <tr><td><code>nutra labs</code></td><td><span class="chip crit">Broad</span> <span class="chip ok">now phrase</span></td><td class="r mono">$177.98</td><td class="r mono">594</td><td class="r"><b>58%</b></td></tr>
+        <tr><td><code>nutri science</code></td><td><span class="chip crit">Broad</span> <span class="chip ok">now phrase</span></td><td class="r mono">$56.22</td><td class="r mono">90</td><td class="r">18%</td></tr>
+        <tr><td><code>custom vitamin manufacturers</code></td><td><span class="chip crit">Broad</span> <span class="chip ok">now phrase</span></td><td class="r mono">$23.63</td><td class="r mono">38</td><td class="r">8%</td></tr>
+        <tr><td><code>nutriscience labs</code></td><td><span class="chip crit">Broad</span> <span class="chip ok">now phrase</span></td><td class="r mono">$16.73</td><td class="r mono">28</td><td class="r">5%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:22px">What broad matching bought before it was retired</h3>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Search term paid for</th><th class="r">Clicks</th><th class="r">Cost</th><th>Assessment</th></tr></thead>
+      <tbody>
+        <tr><td><code>custom gummy vitamin manufacturer</code></td><td class="r mono">126</td><td class="r mono">$26.99</td><td class="small">a format Mineralife does not make</td></tr>
+        <tr><td><code>best supplement supplier</code></td><td class="r mono">77</td><td class="r mono">$19.21</td><td class="small">not a manufacturing enquiry</td></tr>
+        <tr><td><code>nutrition manufacturing companies</code></td><td class="r mono">57</td><td class="r mono">$2.20</td><td class="small">generic, but cheap and plausible</td></tr>
+        <tr><td><code>outsource supplement manufacturing</code></td><td class="r mono">42</td><td class="r mono">$2.37</td><td class="small"><span class="chip ok">on target</span></td></tr>
+        <tr><td><code>chromium picolinate manufacturers in india</code></td><td class="r mono">1</td><td class="r mono">$2.78</td><td class="small">wrong continent, wrong side of the trade</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:24px">Where the clicks came from</h3>
+  <div class="grid g3" style="margin-top:12px">
+    <div class="stat crit"><span class="num">185</span><span class="lbl">Clicks from India</span><span class="sub">The single largest source of Competitors traffic in August.</span></div>
+    <div class="stat"><span class="num">157</span><span class="lbl">Clicks from the US</span><span class="sub">Second, on a campaign with no location targeting at all.</span></div>
+    <div class="stat"><span class="num">79%</span><span class="lbl">Mobile</span><span class="sub">629 of 791 clicks, at 17&cent; each against 35&cent; on desktop.</span></div>
+  </div>
+  <p class="small muted" style="margin-top:12px">Competitors remains deliberately untargeted &mdash; that decision is
+  unchanged, and the new US-only campaign is the counterweight. The phrase-match switch and the negative list will
+  reshape this geography on their own; September's report will show by how much.</p>
+</section>
+
+<section id="s7">
+  <div class="sec-label"><span class="n">07</span><h2>Organic search and index health</h2></div>
+
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Calendar month</th><th class="r">Impressions</th><th class="r">Clicks</th><th class="r">CTR</th><th class="r">Avg position</th></tr></thead>
+      <tbody>
+        <tr><td>August 2026</td><td class="r mono">35,444</td><td class="r mono">135</td><td class="r mono">0.38%</td><td class="r mono">12.8</td></tr>
+        <tr><td>July 2026</td><td class="r mono">32,580</td><td class="r mono">170</td><td class="r mono">0.52%</td><td class="r mono">16.4</td></tr>
+        <tr><td>Change</td><td class="r"><span class="up">+8.8%</span></td><td class="r"><span class="down">&minus;20.6%</span></td><td class="r"><span class="down">&minus;0.14pt</span></td><td class="r"><span class="up">3.6 better</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card rail" style="margin-top:16px">
+    <h3>The same pattern as v1, one month deeper</h3>
+    <p class="small">Rankings improved by more than three positions and impressions rose nearly 9%, and clicks fell a
+    fifth. The site is surfacing more often on searches it is not the chosen answer for.</p>
+    <p class="small" style="margin-bottom:0">Of the 66 clicks Google attributes to a specific term in August,
+    <b>61 are the brand name</b>. Everything that is not someone typing &ldquo;mineralife&rdquo; produced
+    <b>five clicks</b> across the whole month.</p>
+  </div>
+
+  <div class="tablecard" style="margin-top:16px">
+    <table>
+      <thead><tr><th>Non-brand query</th><th class="r">Impressions</th><th class="r">Clicks</th><th class="r">Position</th></tr></thead>
+      <tbody>
+        <tr><td><code>dietary supplement manufacturers usa</code></td><td class="r mono">150</td><td class="r mono">1</td><td class="r mono">1.0</td></tr>
+        <tr><td><code>gmp vs nsf certified</code></td><td class="r mono">33</td><td class="r mono">2</td><td class="r mono">2.9</td></tr>
+        <tr><td><code>dietary supplement manufacturers in usa</code></td><td class="r mono">10</td><td class="r mono">1</td><td class="r mono">1.0</td></tr>
+        <tr><td><code>food supplement manufacturers in usa</code></td><td class="r mono">2</td><td class="r mono">1</td><td class="r mono">1.0</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small muted" style="margin-top:10px">Ranking first for
+  <code>dietary supplement manufacturers usa</code> and turning 150 impressions into a single click is the clearest
+  titles-and-descriptions problem on the site. That exact term is now also a paid keyword in the USA Manufacturer ad
+  group, so the two can be read against each other.</p>
+
+  <h3 style="margin-top:24px">Index health &mdash; rescanned 1 September</h3>
+  <div class="grid g4" style="margin-top:12px">
+    <div class="stat good"><span class="num">59/63</span><span class="lbl">Pages indexed</span><span class="sub">93.7% of the sitemap.</span></div>
+    <div class="stat warn"><span class="num">4</span><span class="lbl">Still not indexed</span><span class="sub">Unchanged from v1 &mdash; none actioned.</span></div>
+    <div class="stat good"><span class="num">0</span><span class="lbl">Sitemap errors</span><span class="sub">63 URLs submitted, clean.</span></div>
+    <div class="stat good"><span class="num">0</span><span class="lbl">New problems</span><span class="sub">Nothing opened or regressed this month.</span></div>
+  </div>
+  <p class="small muted" style="margin-top:12px">The same four: the hiring post whose address contains an emoji
+  character, <code>/serving/colorado/boulder</code>, <code>/serving/nevada/las-vegas</code>, and the glutathione blog
+  post. The emoji URL is about fifteen minutes of work and is the only one with an obvious fix.</p>
+</section>
+
+<section id="s8">
+  <div class="sec-label"><span class="n">08</span><h2>The September campaign, as built<span class="fixed">Live 2 Sep</span></h2></div>
+  <p>The plan from earlier drafts is now a live campaign. Every value below was read back from the account after
+  creation, not copied from the plan.</p>
+
+  <div class="tablecard" style="margin-top:16px">
+    <table>
+      <thead><tr><th>Setting</th><th>As built</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>Name</td><td class="mono">B2B – Search – Core Terms</td><td><span class="chip ok">enabled</span></td></tr>
+        <tr><td>Budget</td><td class="mono">$10.00/day</td><td><span class="chip ok">matches Competitors</span></td></tr>
+        <tr><td>Bidding</td><td class="mono">Maximise clicks, $12 max CPC on every ad group</td><td><span class="chip ok">verified</span></td></tr>
+        <tr><td>Location</td><td class="mono">United States — Presence</td><td><span class="chip ok">not &ldquo;presence or interest&rdquo;</span></td></tr>
+        <tr><td>Networks</td><td class="mono">Search only; partners and Display off</td><td><span class="chip ok">verified</span></td></tr>
+        <tr><td>Conversion goals</td><td class="mono">campaign-specific: Submit lead form</td><td><span class="chip ok">set at creation</span></td></tr>
+        <tr><td>Negatives</td><td class="mono">mineralife-exclusion-2026 (174 terms)</td><td><span class="chip ok">attached</span></td></tr>
+        <tr><td>URL suffix</td><td class="mono">utm_campaign=b2b-core-2026-09</td><td><span class="chip ok">verified</span></td></tr>
+        <tr><td>Sitelinks</td><td class="mono">6 attached</td><td><span class="chip ok">live</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:22px">Three ad groups, twelve keywords, phrase and exact only</h3>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Ad group</th><th>Keywords</th><th>Lands on</th><th>Ad</th></tr></thead>
+      <tbody>
+        <tr><td>Nutraceutical</td><td class="small">&ldquo;nutraceutical contract manufacturer&rdquo; (phrase + exact), manufacturing, manufacturer</td><td class="mono small">/lp/nutraceutical-…</td><td><span class="chip warn">in review</span></td></tr>
+        <tr><td>cGMP Certified</td><td class="small">&ldquo;gmp certified supplement manufacturer&rdquo; (phrase + exact), cgmp, nsf certified</td><td class="mono small">/lp/gmp-certified-…</td><td><span class="chip warn">in review</span></td></tr>
+        <tr><td>USA Manufacturer</td><td class="small">supplement manufacturer usa &middot; dietary &middot; best &middot; manufacturers in usa</td><td class="mono small">/lp/contract-manufacturing</td><td><span class="chip warn">in review</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small muted" style="margin-top:10px">Ad review is Google's routine check on new ads &mdash; typically
+  hours, occasionally a day. The campaign spends nothing until they clear, which is why September&rsquo;s spend
+  reads $0 tonight. The head term (<code>contract supplement manufacturer</code>, $31 a click) is deliberately held
+  for October, once there is a conversion signal to justify it. White label stays out with &ldquo;private
+  label&rdquo; ruled out.</p>
+
+  <div class="card tint rail" style="margin-top:16px">
+    <h3>What September can and cannot settle</h3>
+    <div class="grid g2" style="margin-top:10px">
+      <div>
+        <p class="small"><b>It can settle:</b> whether US category demand converts on this site at all; what a US
+        click actually costs as an account figure; whether the landing pages beat the homepage; and which landing
+        page and which form position produce enquiries &mdash; measurable directly for the first time.</p>
+      </div>
+      <div>
+        <p class="small" style="margin-bottom:0"><b>It cannot settle:</b> a reliable conversion rate. At roughly 30
+        to 40 clicks a month, one enquiry and zero are consistent with the same underlying rate. Nor a like-for-like
+        with Competitors, which buys 39&cent; clicks on a rival's name rather than $8&ndash;19 category clicks.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="s9">
+  <div class="sec-label"><span class="n">09</span><h2>What changed on Competitors<span class="fixed">2 Sep</span></h2></div>
+  <p>Every recommendation from the morning draft was applied the same day, several of them improved on in the
+  applying. Budget and geography deliberately untouched.</p>
+
+  <div class="stack" style="margin-top:16px">
+    <div class="card rail good">
+      <h3>Lands on a page built for the searcher</h3>
+      <p class="small" style="margin-bottom:0">Final URL is now <code>/lp/switch-manufacturers</code> &mdash; a better
+      choice than the contract-manufacturing page this report originally suggested, because someone searching a
+      competitor's name is weighing a switch, and that is the page written for exactly that moment.</p>
+    </div>
+    <div class="card rail good">
+      <h3>The ad was rebuilt, not patched</h3>
+      <p class="small" style="margin-bottom:0">Fifteen new headlines drawn from approved site copy, pinned in three
+      rotating groups of five &mdash; intent, differentiator, qualifier &mdash; replacing eleven near-duplicates and
+      the pinned competitor-trademark headline. Display path <code>/switch/transfer</code>. Approved and serving.</p>
+    </div>
+    <div class="card rail good">
+      <h3>A second audience, separated</h3>
+      <p class="small" style="margin-bottom:0">A new <b>Switching Intent</b> ad group &mdash; eight phrase/exact terms
+      like &ldquo;switch supplement manufacturer&rdquo; and &ldquo;supplement manufacturer not responding&rdquo; &mdash;
+      with its own approved ad. Competitor-name searches and I-want-out searches now report separately.</p>
+    </div>
+    <div class="card rail good">
+      <h3>Waste controls, all live</h3>
+      <p class="small" style="margin-bottom:0">Broad match paused across the board. 174 negatives attached. Search
+      Partners off. Eight rewritten sitelinks (the old set included one pointing at a 404 and four at redirect
+      chains). Five callouts. All verified against the API tonight.</p>
+    </div>
+  </div>
+
+  <p class="small muted" style="margin-top:14px">One flag carried forward: the headline
+  <b>&ldquo;FDA Registered Facility&rdquo;</b> appears nowhere in the site's approved copy. The ad passed Google's
+  review; confirming the claim with Mineralife is section 10's business, not Google's.</p>
+</section>
+
+<section id="s10">
+  <div class="sec-label"><span class="n">10</span><h2>Still outstanding</h2></div>
+
+  <div class="tablecard">
+    <table>
+      <thead><tr><th style="width:34px"></th><th>Task</th><th>Impact</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">1</td><td><b>Move enquiries through pipeline stages, upload outcomes to Google</b><span class="small muted"> &mdash; the compounding one. With Analytics seeing ~3% of visitors, offline upload is close to the only way bidding learns. Not a technical task; needs the pipeline used.</span></td><td><span class="chip crit">Highest value</span></td><td class="small">Sales team</td></tr>
+        <tr><td class="mono">2</td><td><b>Confirm the &ldquo;FDA Registered Facility&rdquo; claim</b><span class="small muted"> &mdash; live in the ad, absent from site copy</span></td><td><span class="chip warn">High</span></td><td class="small">Mineralife</td></tr>
+        <tr><td class="mono">3</td><td><b>Watch the Core Terms ad review clear, then confirm delivery starts</b></td><td><span class="chip warn">High</span></td><td class="small">Ads UI</td></tr>
+        <tr><td class="mono">4</td><td><b>Delete the demoted form_submission import</b></td><td><span class="chip">Low</span></td><td class="small">Ads UI</td></tr>
+        <tr><td class="mono">5</td><td><b>Republish the emoji-URL blog post and redirect</b></td><td><span class="chip">Low</span></td><td class="small">Site</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="small muted" style="margin-top:12px">That is the whole list. Ten of the twelve items that stood on this
+  list in the morning draft were closed today.</p>
+</section>
+
+<section id="s11">
+  <div class="sec-label"><span class="n">11</span><h2>Decisions still open</h2></div>
+  <div class="stack">
+    <div class="card">
+      <h3>1. Overseas brands <span class="chip warn">half-answered</span></h3>
+      <p class="small" style="margin-bottom:0">The new callout on Competitors reads <em>&ldquo;Ships
+      Internationally&rdquo;</em> &mdash; which, if deliberate, answers the question this report has carried since
+      v1. Worth saying out loud so it is a decision rather than a side effect: Competitors stays worldwide and
+      welcomes overseas enquiries; Core Terms is the US-only arm. If that is the position, it is a coherent one
+      &mdash; the two strongest pipeline enquiries are Pakistani and Bangladeshi.</p>
+    </div>
+    <div class="card">
+      <h3>2. Tablets and gummies</h3>
+      <p class="small" style="margin-bottom:0">The 174-term negative list is live on both campaigns. Worth a
+      five-minute read-through to confirm gummy and tablet exclusions match real capability &mdash; a negative
+      keyword is invisible once set, and <code>custom gummy vitamin manufacturer</code> was 126 clicks in August.</p>
+    </div>
+    <div class="card">
+      <h3>3. What happens at the first attributable enquiry</h3>
+      <p class="small" style="margin-bottom:0">Now imminent rather than hypothetical. Agree in advance what it
+      triggers &mdash; budget up, hold a month, or reshape keywords &mdash; so the decision is made against the plan
+      rather than against the excitement.</p>
+    </div>
+    <div class="card">
+      <h3>4. Private label <span class="chip ok">answered</span></h3>
+      <p class="small" style="margin-bottom:0">Ruled out. Recorded so the reasoning is not relitigated: it removes
+      roughly 590 searches a month from reach and takes the white-label ad group below the threshold where its
+      landing page earns its keep.</p>
+    </div>
+  </div>
+</section>
+
+<section id="s12">
+  <div class="sec-label"><span class="n">12</span><h2>Verified configuration, 2 September</h2></div>
+  <p class="small muted">Read directly from the Google systems after the rebuild, late on 2 September.</p>
+
+  <div class="tablecard" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Setting</th><th>Current value</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td>Ads lead conversion</td><td class="small"><code>generate_lead</code> enabled + primary; <code>catalog_download</code> enabled secondary</td><td><span class="chip ok">correct</span></td></tr>
+        <tr><td>Campaign goals, Competitors</td><td class="small">campaign-specific: Submit lead form only</td><td><span class="chip ok">correct</span></td></tr>
+        <tr><td>Campaign goals, Core Terms</td><td class="small">campaign-specific: Submit lead form only</td><td><span class="chip ok">correct</span></td></tr>
+        <tr><td>form_submission import</td><td class="small">enabled, demoted from primary</td><td><span class="chip warn">delete when convenient</span></td></tr>
+        <tr><td>Competitors keywords</td><td class="small">7 phrase (competitor) + 8 phrase/exact (switching); 13 broad paused</td><td><span class="chip ok">correct</span></td></tr>
+        <tr><td>Competitors landing page</td><td class="small">/lp/switch-manufacturers</td><td><span class="chip ok">correct</span></td></tr>
+        <tr><td>Negative keywords</td><td class="small">mineralife-exclusion-2026, 174 terms, both B2B campaigns</td><td><span class="chip ok">attached</span></td></tr>
+        <tr><td>Search Partners</td><td class="small">off on both B2B campaigns</td><td><span class="chip ok">correct</span></td></tr>
+        <tr><td>Core Terms targeting</td><td class="small">United States, Presence; $12 CPC cap; suffix set</td><td><span class="chip ok">correct</span></td></tr>
+        <tr><td>Core Terms ads</td><td class="small">3 RSAs, 15 headlines each, correct pages and paths</td><td><span class="chip warn">in review</span></td></tr>
+        <tr><td>Regional campaign</td><td class="small">paused</td><td><span class="chip ok">correct</span></td></tr>
+        <tr><td>Analytics key events</td><td class="small"><code>generate_lead</code>, <code>catalog_download</code>, <code>purchase</code></td><td><span class="chip warn">purchase cannot be removed</span></td></tr>
+        <tr><td>Retention / dimensions / timezone / stream</td><td class="small">14 months / 13 incl. <code>form_location</code> / America/Denver / correct domain</td><td><span class="chip ok">correct</span></td></tr>
+        <tr><td>Tag Manager</td><td class="small">version 13 live, forwards <code>form_location</code>, dead tags removed</td><td><span class="chip ok">correct</span></td></tr>
+        <tr><td>Landing pages</td><td class="small">6 live, all 200, excluded from the organic index</td><td><span class="chip ok">correct</span></td></tr>
+        <tr><td>Enquiry event integrity</td><td class="small"><code>form_submit</code> 9 : <code>generate_lead</code> 9 in August</td><td><span class="chip ok">1:1</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card tint rail" style="margin-top:18px">
+    <h3>How these numbers were measured</h3>
+    <ul class="tight small" style="margin-bottom:0">
+      <li><b>Advertising</b> &mdash; the Google Ads API directly, account 624-370-2566, re-read after each change.</li>
+      <li><b>Enquiries</b> &mdash; the website's own lead records, click ID stored server-side at submission. Three
+      August test submissions excluded.</li>
+      <li><b>Real visitor counts</b> &mdash; the cookieless counter on the site, live since 31 August.</li>
+      <li><b>Sessions and funnel steps</b> &mdash; Google Analytics property 395780153. A floor, not a total; see
+      section 04.</li>
+      <li><b>Organic search and index health</b> &mdash; Search Console for the domain property, rescanned
+      1 September.</li>
+      <li><b>Keyword costs</b> &mdash; third-party US estimates pulled 30 August, used only where the account has no
+      history of its own yet.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  Tall Karol &middot; SEM Report v2 &middot; Mineralife Nutraceuticals, LLC &middot; supersedes the August 2026
+  report &middot; configuration and performance re-verified against Google Ads account 624-370-2566, Google
+  Analytics property 395780153, Search Console <code>sc-domain:mycustommanufacturer.com</code>, Tag Manager
+  container GTM-5B83HMG and the production site &middot; last full verification 2 September 2026, following the
+  same-day account rebuild
+</footer>
+
+</div>
+</body>
+</html>

@@ -3,6 +3,7 @@ import { db } from "@/db"
 import { timeEntries } from "@/db/schema"
 import { clientColor } from "@/lib/client-colors"
 import { ensureClientColors } from "@/lib/client-colors-store"
+import { roundRobinByClient } from "@/lib/widget"
 import { occurredOnIn } from "@/lib/punch"
 import {
   pendingPunchCount,
@@ -123,16 +124,23 @@ export async function widgetClock(
     today,
     weekHours: round(week),
     pendingApproval: pending,
-    // Enough for the medium tile's buttons and the configuration picker.
-    targets: targets.slice(0, 12).map((t) => ({
-      clientId: t.clientId,
-      clientName: t.clientName,
-      clientSlug: t.clientSlug,
-      projectId: t.projectId,
-      projectName: t.projectName,
-      label: t.label,
-      color: clientColor(t.clientSlug),
-    })),
+    // One row per client before any client repeats. `punchTargets` orders by
+    // recency, which is right, but the medium tile only shows three — and two
+    // Mineralife rows plus a Zemvelo one hides the retainer with the largest
+    // ceiling. Same rule the task rows follow.
+    targets: roundRobinByClient(
+      targets.map((t) => ({ ...t, groupKey: t.clientSlug }))
+    )
+      .slice(0, 12)
+      .map((t) => ({
+        clientId: t.clientId,
+        clientName: t.clientName,
+        clientSlug: t.clientSlug,
+        projectId: t.projectId,
+        projectName: t.projectName,
+        label: t.label,
+        color: clientColor(t.clientSlug),
+      })),
   }
 }
 

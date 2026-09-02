@@ -152,7 +152,7 @@ function titleCase(value: string) {
  * one account being on fire when it only means that client sorts early. Input
  * must already be in rank order — the queues inherit it.
  */
-function roundRobinByClient<T extends { groupKey: string }>(rows: T[]): T[] {
+export function roundRobinByClient<T extends { groupKey: string }>(rows: T[]): T[] {
   const queues = new Map<string, T[]>()
   for (const row of rows) {
     const queue = queues.get(row.groupKey)

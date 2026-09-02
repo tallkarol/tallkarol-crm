@@ -62,6 +62,8 @@ export type PunchTarget = {
   projectName: string | null
   label: string
   lastUsedAt: string | null
+  /** Last day time was logged against this, punched or not. */
+  lastLoggedOn: string | null
 }
 
 const UNIQUE_VIOLATION = "23505"
@@ -185,7 +187,7 @@ export async function todayTotals(userId: string) {
  * behind it. Ordered by what you punched most recently.
  */
 export async function punchTargets(userId: string): Promise<PunchTarget[]> {
-  const [clientRows, projectRows, recent] = await Promise.all([
+  const [clientRows, projectRows, recent, logged] = await Promise.all([
     db.query.clients.findMany({
       orderBy: [asc(clients.name)],
       with: { retainers: true },
@@ -208,6 +210,20 @@ export async function punchTargets(userId: string): Promise<PunchTarget[]> {
       .from(timePunches)
       .where(and(eq(timePunches.userId, userId), ne(timePunches.status, "discarded")))
       .groupBy(timePunches.clientId, timePunches.projectId),
+    // Logged time, as a fallback ordering signal. Punches are the better
+    // signal, but there may be none — the clock is new, and everything before
+    // it was entered by hand. Without this the list falls back to the
+    // alphabet, which puts work last touched a year ago above the retainers
+    // being worked this week.
+    db
+      .select({
+        clientId: timeEntries.clientId,
+        projectId: timeEntries.projectId,
+        lastLoggedOn: sql<string>`max(${timeEntries.occurredOn})`,
+      })
+      .from(timeEntries)
+      .where(eq(timeEntries.userId, userId))
+      .groupBy(timeEntries.clientId, timeEntries.projectId),
   ])
 
   const byClient = new Map(clientRows.map((row) => [row.id, row]))
@@ -216,6 +232,16 @@ export async function punchTargets(userId: string): Promise<PunchTarget[]> {
   const lastUsed = new Map(
     recent.map((row) => [key(row.clientId, row.projectId), row.lastUsedAt])
   )
+  // Client-level too: time logged against a project still says that client is
+  // live, which is what a bare retainer row wants to know.
+  const lastLogged = new Map<string, string>()
+  for (const row of logged) {
+    if (!row.clientId) continue
+    for (const k of [key(row.clientId, row.projectId), key(row.clientId, null)]) {
+      const current = lastLogged.get(k)
+      if (!current || current < row.lastLoggedOn) lastLogged.set(k, row.lastLoggedOn)
+    }
+  }
 
   const targets: PunchTarget[] = []
 
@@ -230,6 +256,7 @@ export async function punchTargets(userId: string): Promise<PunchTarget[]> {
       projectName: project.name,
       label: `${client.name} · ${project.name}`,
       lastUsedAt: lastUsed.get(key(client.id, project.id)) ?? null,
+      lastLoggedOn: lastLogged.get(key(client.id, project.id)) ?? null,
     })
   }
 
@@ -245,13 +272,22 @@ export async function punchTargets(userId: string): Promise<PunchTarget[]> {
       projectName: null,
       label: `${client.name} · Retainer`,
       lastUsedAt: lastUsed.get(key(client.id, null)) ?? null,
+      lastLoggedOn: lastLogged.get(key(client.id, null)) ?? null,
     })
   }
 
   return targets.sort((a, b) => {
+    // Punched beats logged beats alphabetical.
     if (a.lastUsedAt && b.lastUsedAt) return a.lastUsedAt < b.lastUsedAt ? 1 : -1
     if (a.lastUsedAt) return -1
     if (b.lastUsedAt) return 1
+
+    const aLogged = a.lastLoggedOn
+    const bLogged = b.lastLoggedOn
+    if (aLogged && bLogged) return aLogged < bLogged ? 1 : -1
+    if (aLogged) return -1
+    if (bLogged) return 1
+
     return a.label.localeCompare(b.label)
   })
 }

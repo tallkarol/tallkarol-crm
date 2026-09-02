@@ -25,6 +25,7 @@ export type NavIconName =
   | "devices"
   | "attribution"
   | "analytics"
+  | "ads"
   | "reports"
   | "revenue"
   | "logs"
@@ -78,6 +79,7 @@ export const ROUTES = {
   timesheetMeetings: "/timesheet/review?tab=meetings",
   attribution: "/settings/attribution",
   insights: "/insights",
+  paidAds: "/ads",
   reports: "/reports",
   revenue: "/revenue",
   logs: "/logs",
@@ -135,6 +137,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
     title: "Insights",
     items: [
       { href: ROUTES.insights, label: "Analytics", icon: "analytics" },
+      { href: ROUTES.paidAds, label: "Paid Ads", icon: "ads" },
       { href: ROUTES.reports, label: "Reports", icon: "reports" },
       { href: ROUTES.revenue, label: "Revenue", icon: "revenue" },
       { href: ROUTES.logs, label: "Logs", icon: "logs" },

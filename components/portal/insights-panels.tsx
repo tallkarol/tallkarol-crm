@@ -6,6 +6,7 @@ import { BarList, MeterList } from "@/components/insights/BarList"
 import { Delta, KpiTile, PositionKpiDelta } from "@/components/insights/KpiTile"
 import { PrintTrend } from "@/components/insights/PrintTrend"
 import { SearchTable } from "@/components/insights/SearchTable"
+import { scopeAdsSnapshot } from "@/lib/insights/ads-split"
 import { CHART } from "@/lib/insights/chart"
 import {
   deltaPct,
@@ -210,7 +211,8 @@ export async function PortalInsights({
   const site = sites.find((s) => s.slug === siteParam) ?? sites[0]
   const range = parseRange(rangeParam)
   const cached = await readReport<SnapshotV2>(insightsCacheKey(site.slug))
-  const snapshot = cached.payload?.version === 2 ? cached.payload : null
+  const raw = cached.payload?.version === 2 ? cached.payload : null
+  const snapshot = raw ? scopeAdsSnapshot(raw, site) : null
 
   const period = todayKey().slice(0, 7)
   const [scan, open, pkg] = await Promise.all([

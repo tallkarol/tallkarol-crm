@@ -29,9 +29,10 @@ export const METRIC_META = {
   keyEvents: { label: "Key events", series: "teal", money: false },
   clicks: { label: "Clicks", series: "amber", money: false },
   impressions: { label: "Impressions", series: "amber", money: false },
-  adSpend: { label: "Ad spend", series: "teal", money: true },
-  adClicks: { label: "Ad clicks", series: "teal", money: false },
-  adImpressions: { label: "Ad impressions", series: "teal", money: false },
+  adSpend: { label: "Ad spend", series: "ink", money: true },
+  adClicks: { label: "Ad clicks", series: "ink", money: false },
+  adImpressions: { label: "Ad impressions", series: "ink", money: false },
+  adConversions: { label: "Ad conversions", series: "ink", money: false },
 } as const
 
 export type TrendMetric = keyof typeof METRIC_META

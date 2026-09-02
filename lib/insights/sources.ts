@@ -13,8 +13,14 @@ import {
   gscQuery,
   microsToAmount,
   num,
+  type AdsRow,
   type Ga4Report,
 } from "@/lib/insights/google"
+import {
+  adsCampaignSplitFor,
+  adsSplitNote,
+  campaignMatchesSplit,
+} from "@/lib/insights/ads-split"
 import { addDays } from "@/lib/insights/derive"
 import { fetchPageSpeed } from "@/lib/insights/pagespeed"
 import {
@@ -442,25 +448,73 @@ const gscSource: InsightSource = {
 
 export type AdsTables = Pick<AdsBlock, "campaigns">
 
+function keepAdsRow(row: AdsRow, site: Site) {
+  return campaignMatchesSplit(String(row.campaign?.name ?? ""), adsCampaignSplitFor(site))
+}
+
+function rollupAdsDaily(rows: AdsRow[]): AdsDailyRow[] {
+  const byDate = new Map<string, AdsDailyRow>()
+  for (const row of rows) {
+    const date = String(row.segments?.date || "")
+    if (!date) continue
+    const cur = byDate.get(date) ?? {
+      date,
+      adImpressions: 0,
+      adClicks: 0,
+      adSpend: 0,
+      adConversions: 0,
+    }
+    cur.adImpressions += num(row.metrics?.impressions)
+    cur.adClicks += num(row.metrics?.clicks)
+    cur.adSpend += microsToAmount(row.metrics?.costMicros)
+    cur.adConversions += num(row.metrics?.conversions)
+    byDate.set(date, cur)
+  }
+  return Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date))
+}
+
+function rollupAdsCampaigns(rows: AdsRow[], startDate: string): AdsCampaignRow[] {
+  const byId = new Map<string, AdsCampaignRow>()
+  for (const row of rows) {
+    const date = String(row.segments?.date || "")
+    if (date && date < startDate) continue
+    const id = String(row.campaign?.id ?? "")
+    const name = String(row.campaign?.name ?? "(untitled)")
+    const key = id || name
+    const cur = byId.get(key) ?? {
+      id,
+      name,
+      status: String(row.campaign?.status ?? ""),
+      impressions: 0,
+      clicks: 0,
+      spend: 0,
+      conversions: 0,
+    }
+    cur.impressions += num(row.metrics?.impressions)
+    cur.clicks += num(row.metrics?.clicks)
+    cur.spend += microsToAmount(row.metrics?.costMicros)
+    cur.conversions += num(row.metrics?.conversions)
+    byId.set(key, cur)
+  }
+  return Array.from(byId.values())
+    .filter((row) => row.impressions > 0)
+    .sort((a, b) => b.spend - a.spend)
+    .slice(0, 25)
+}
+
 export async function fetchAdsCampaigns(
   token: string,
   customerId: string,
-  range: { startDate: string; endDate: string }
+  range: { startDate: string; endDate: string },
+  site?: Site
 ): Promise<AdsCampaignRow[]> {
   const rows = await adsSearch(
     token,
-    `SELECT campaign.id, campaign.name, campaign.status, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions FROM campaign WHERE segments.date BETWEEN '${range.startDate}' AND '${range.endDate}' AND metrics.impressions > 0 ORDER BY metrics.cost_micros DESC LIMIT 25`,
+    `SELECT campaign.id, campaign.name, campaign.status, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions FROM campaign WHERE segments.date BETWEEN '${range.startDate}' AND '${range.endDate}' AND metrics.impressions > 0 ORDER BY metrics.cost_micros DESC`,
     customerId
   )
-  return rows.map((row) => ({
-    id: String(row.campaign?.id ?? ""),
-    name: String(row.campaign?.name ?? "(untitled)"),
-    status: String(row.campaign?.status ?? ""),
-    impressions: num(row.metrics?.impressions),
-    clicks: num(row.metrics?.clicks),
-    spend: microsToAmount(row.metrics?.costMicros),
-    conversions: num(row.metrics?.conversions),
-  }))
+  const kept = site ? rows.filter((row) => keepAdsRow(row, site)) : rows
+  return rollupAdsCampaigns(kept, range.startDate)
 }
 
 const adsSource: InsightSource = {
@@ -481,7 +535,7 @@ const adsSource: InsightSource = {
       }
     }
     try {
-      const [accountRows, dailyRows, campaigns] = await Promise.all([
+      const [accountRows, campaignDays] = await Promise.all([
         adsSearch(
           ctx.token,
           "SELECT customer.id, customer.descriptive_name, customer.currency_code FROM customer LIMIT 1",
@@ -489,30 +543,29 @@ const adsSource: InsightSource = {
         ),
         adsSearch(
           ctx.token,
-          `SELECT segments.date, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions FROM customer WHERE segments.date BETWEEN '${ctx.startDate}' AND '${ctx.endDate}' ORDER BY segments.date`,
+          `SELECT campaign.id, campaign.name, campaign.status, segments.date, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions FROM campaign WHERE segments.date BETWEEN '${ctx.startDate}' AND '${ctx.endDate}' ORDER BY segments.date`,
           customerId
         ),
-        fetchAdsCampaigns(ctx.token, customerId, {
-          startDate: addDays(ctx.endDate, -(TABLE_WINDOW_DAYS - 1)),
-          endDate: ctx.endDate,
-        }),
       ])
       const account = accountRows[0]?.customer
       const accountName = String(account?.descriptiveName || customerId)
       const currency = String(account?.currencyCode || "USD")
-      const adsDaily: AdsDailyRow[] = dailyRows.map((row) => ({
-        date: String(row.segments?.date || ""),
-        adImpressions: num(row.metrics?.impressions),
-        adClicks: num(row.metrics?.clicks),
-        adSpend: microsToAmount(row.metrics?.costMicros),
-        adConversions: num(row.metrics?.conversions),
-      }))
+      const split = adsCampaignSplitFor(site)
+      const kept = campaignDays.filter((row) => keepAdsRow(row, site))
+      const adsDaily = rollupAdsDaily(kept)
+      const campaigns = rollupAdsCampaigns(
+        kept,
+        addDays(ctx.endDate, -(TABLE_WINDOW_DAYS - 1))
+      )
+      const splitNote = adsSplitNote(split)
       return {
         health: {
           id: this.id,
           label: this.label,
           ok: true,
-          detail: `Reading ${accountName} (${customerId})`,
+          detail: splitNote
+            ? `Reading ${accountName} (${customerId}) · ${splitNote}`
+            : `Reading ${accountName} (${customerId})`,
         },
         adsDaily,
         ads: {

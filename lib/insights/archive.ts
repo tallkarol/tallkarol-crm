@@ -68,7 +68,7 @@ async function fetchMonthTables(site: Site, first: string, last: string) {
         }).catch(() => null)
       : Promise.resolve(null),
     site.adsCustomerId
-      ? fetchAdsCampaigns(token, site.adsCustomerId, { startDate: first, endDate: last }).catch(
+      ? fetchAdsCampaigns(token, site.adsCustomerId, { startDate: first, endDate: last }, site).catch(
           () => null
         )
       : Promise.resolve(null),

@@ -19,6 +19,15 @@ import type { ProjectStatus } from "@/db/schema"
 import { loadClientHub, UNPAID_INVOICE_FLAG_DAYS } from "@/lib/client-hub"
 import { cn } from "@/lib/cn"
 import { retainerRateCents } from "@/lib/engagements"
+import {
+  adsRates,
+  deriveWindow,
+  fmtConv,
+  fmtCustomerId,
+  fmtInt,
+  fmtMoney,
+} from "@/lib/insights/derive"
+import { getInsightsContext } from "@/lib/insights/queries"
 import { ROUTES } from "@/lib/nav"
 import { tasksFor, taskTargets } from "@/lib/tasks"
 import { currentMonth } from "@/lib/timesheet"
@@ -74,13 +83,20 @@ export default async function ClientDetailPage({
   if (!hub) notFound()
 
   const { client } = hub
-  const [clientTasks, targets, brainstorm] = await Promise.all([
+  const adsSites = hub.sites.filter((site) => Boolean(site.adsCustomerId))
+  const [clientTasks, targets, brainstorm, adsViews] = await Promise.all([
     tasksFor({ clientId: client.id }),
     taskTargets(),
     db.query.brainstormNotes.findMany({
       where: (notes, { eq }) => eq(notes.clientId, client.id),
       orderBy: (notes, { desc }) => [desc(notes.createdAt)],
     }),
+    Promise.all(
+      adsSites.map(async (site) => {
+        const ctx = await getInsightsContext(site.slug)
+        return { site, snapshot: ctx?.snapshot ?? null }
+      })
+    ),
   ])
   const openTasks = clientTasks.filter((t) => t.status === "open")
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
@@ -138,6 +154,7 @@ export default async function ClientDetailPage({
       : null,
     sortedReports.length > 0 ? { id: "reports", label: "Reports" } : null,
     sortedProposals.length > 0 ? { id: "proposals", label: "Proposals" } : null,
+    adsViews.length > 0 ? { id: "ads", label: "Paid Ads" } : null,
     brainstorm.length > 0 ? { id: "brainstorm", label: "Brainstorm" } : null,
     sortedWorksheets.length > 0
       ? { id: "worksheets", label: "Worksheets" }
@@ -206,6 +223,14 @@ export default async function ClientDetailPage({
               className="rounded-lg border border-tk-slate/20 bg-white px-3.5 py-1.5 text-sm font-semibold text-tk-onyx hover:border-tk-teal hover:text-tk-teal"
             >
               Insights
+            </Link>
+          ) : null}
+          {adsViews[0] ? (
+            <Link
+              href={`${ROUTES.paidAds}/${adsViews[0].site.slug}`}
+              className="rounded-lg border border-tk-slate/20 bg-white px-3.5 py-1.5 text-sm font-semibold text-tk-onyx hover:border-tk-teal hover:text-tk-teal"
+            >
+              Paid Ads
             </Link>
           ) : null}
           <Link
@@ -837,6 +862,84 @@ export default async function ClientDetailPage({
             </Block>
           ) : null}
 
+          {/* -------------------------------------------------- paid ads */}
+          {adsViews.length > 0 ? (
+            <Block
+              id="ads"
+              title="Paid Ads"
+              action={
+                <Link
+                  href={`${ROUTES.paidAds}/${adsViews[0].site.slug}`}
+                  className="text-xs font-semibold text-tk-teal hover:underline"
+                >
+                  Dashboard →
+                </Link>
+              }
+            >
+              <div className="space-y-3">
+                {adsViews.map(({ site, snapshot }) => {
+                  const ads = snapshot?.ads
+                  const win = snapshot ? deriveWindow(snapshot, 28) : null
+                  const totals = win?.totals
+                  const currency = ads?.currency || "USD"
+                  const rates = totals ? adsRates(totals) : null
+                  return (
+                    <Card key={site.id}>
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <Link
+                            href={`${ROUTES.paidAds}/${site.slug}`}
+                            className="text-[14.5px] font-bold text-tk-onyx hover:text-tk-teal"
+                          >
+                            {ads?.accountName || site.name}
+                          </Link>
+                          <p className="mt-0.5 font-mono text-xs text-tk-slate/60">
+                            {fmtCustomerId(site.adsCustomerId)}
+                            {win?.label ? ` · ${win.label}` : ""}
+                          </p>
+                        </div>
+                        <Link
+                          href={`${ROUTES.paidAds}/${site.slug}`}
+                          className="text-[11px] font-semibold text-tk-teal hover:underline"
+                        >
+                          Open →
+                        </Link>
+                      </div>
+                      {totals && ads?.ok ? (
+                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                          <HubAdStat
+                            label="Spend"
+                            value={fmtMoney(totals.adSpend, currency)}
+                          />
+                          <HubAdStat label="Clicks" value={fmtInt(totals.adClicks)} />
+                          <HubAdStat
+                            label="Conversions"
+                            value={fmtConv(totals.adConversions)}
+                          />
+                          <HubAdStat
+                            label="CPA"
+                            value={
+                              rates?.cpa == null
+                                ? "—"
+                                : fmtMoney(rates.cpa, currency)
+                            }
+                          />
+                        </div>
+                      ) : (
+                        <p className="mt-3 text-sm text-tk-slate/60">
+                          {snapshot
+                            ? ads?.error ||
+                              "Ads did not load on the last fetch — refresh from the dashboard."
+                            : "Nothing fetched yet. Open the dashboard and fetch the snapshot."}
+                        </p>
+                      )}
+                    </Card>
+                  )
+                })}
+              </div>
+            </Block>
+          ) : null}
+
           {/* ------------------------------------------------ brainstorm */}
           {brainstorm.length > 0 ? (
             <Block id="brainstorm" title="Brainstorm">
@@ -952,12 +1055,22 @@ export default async function ClientDetailPage({
                     <span className="truncate font-mono text-xs text-tk-onyx">
                       {site.origin.replace(/^https?:\/\//, "") || site.name}
                     </span>
-                    <Link
-                      href={`${ROUTES.insights}/${site.slug}`}
-                      className="shrink-0 text-xs font-semibold text-tk-teal hover:underline"
-                    >
-                      Insights →
-                    </Link>
+                    <span className="flex shrink-0 items-center gap-2">
+                      <Link
+                        href={`${ROUTES.insights}/${site.slug}`}
+                        className="text-xs font-semibold text-tk-teal hover:underline"
+                      >
+                        Insights
+                      </Link>
+                      {site.adsCustomerId ? (
+                        <Link
+                          href={`${ROUTES.paidAds}/${site.slug}`}
+                          className="text-xs font-semibold text-tk-teal hover:underline"
+                        >
+                          Ads
+                        </Link>
+                      ) : null}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -1039,6 +1152,17 @@ function Card({ children }: { children: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
       {children}
+    </div>
+  )
+}
+
+function HubAdStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-tk-slate/50">
+        {label}
+      </p>
+      <p className="mt-0.5 text-lg font-bold tabular-nums text-tk-onyx">{value}</p>
     </div>
   )
 }

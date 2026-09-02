@@ -166,6 +166,33 @@ export function fmtPct01(ratio: number) {
   return `${(ratio * 100).toFixed(1)}%`
 }
 
+export function ratio(num: number, den: number) {
+  if (den <= 0) return null
+  return num / den
+}
+
+/** CPC / CTR / CPA / conversion rate from a spend window. */
+export function adsRates(t: {
+  adSpend: number
+  adClicks: number
+  adImpressions: number
+  adConversions: number
+}) {
+  return {
+    ctr: ratio(t.adClicks, t.adImpressions),
+    cpc: ratio(t.adSpend, t.adClicks),
+    cpa: ratio(t.adSpend, t.adConversions),
+    convRate: ratio(t.adConversions, t.adClicks),
+  }
+}
+
+/** Google Ads customer ids display as XXX-XXX-XXXX. */
+export function fmtCustomerId(id: string) {
+  const digits = id.replace(/\D/g, "")
+  if (digits.length !== 10) return id || "—"
+  return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`
+}
+
 export function fmtDay(iso: string) {
   const [y, m, d] = iso.split("-").map(Number)
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {

@@ -27,7 +27,13 @@ export function getDb(): Db {
     )
   }
 
-  const client = postgres(connectionString, { max: 10 })
+  // Railway's hobby cap is tight. Leftover Next processes used to open 10
+  // each and trip `too many clients already` — a 500 on every page.
+  const client = postgres(connectionString, {
+    max: 3,
+    idle_timeout: 20,
+    max_lifetime: 60 * 30,
+  })
   const db = drizzle(client, { schema })
   if (process.env.NODE_ENV !== "production") {
     global.__tk_crm_db_v15 = db

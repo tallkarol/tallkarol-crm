@@ -4,6 +4,7 @@ import { db } from "@/db"
 import { sites, snapshotArchive } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { getPortalScope } from "@/lib/portal"
+import { scopeAdsSnapshot } from "@/lib/insights/ads-split"
 import { archiveCsv, isCsvTable, snapshotCsv } from "@/lib/insights/csv"
 import { insightsCacheKey, type ArchivePayload, type SnapshotV2 } from "@/lib/insights/types"
 import { readReport } from "@/lib/report-cache"
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
     if (!cached.payload || cached.payload.version !== 2) {
       return new NextResponse("Fetch a snapshot first.", { status: 404 })
     }
-    csv = snapshotCsv(cached.payload, table)
+    csv = snapshotCsv(scopeAdsSnapshot(cached.payload, site), table)
     stamp = cached.payload.fetchedAt.slice(0, 10)
   }
 

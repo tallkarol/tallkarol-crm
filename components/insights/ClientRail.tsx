@@ -15,9 +15,13 @@ function domain(origin: string) {
 export function ClientRail({
   sites,
   activeSlug,
+  hrefFor = (slug) => `/insights/${slug}`,
+  showAdd = true,
 }: {
   sites: (Site & { client: Client | null })[]
   activeSlug: string
+  hrefFor?: (slug: string) => string
+  showAdd?: boolean
 }) {
   const ordered = [...sites].sort((a, b) => {
     const houseA = isHouseSite(a) ? 0 : 1
@@ -35,7 +39,7 @@ export function ClientRail({
         return (
           <Link
             key={site.slug}
-            href={`/insights/${site.slug}`}
+            href={hrefFor(site.slug)}
             aria-current={active ? "page" : undefined}
             className={cn(
               "flex items-center gap-2.5 rounded-xl border px-3.5 py-2 transition-colors",
@@ -65,9 +69,11 @@ export function ClientRail({
           </Link>
         )
       })}
-      <p className="rounded-xl border border-dashed border-tk-slate/25 px-3 py-2 text-xs font-semibold text-tk-slate/55">
-        ＋ npm run site:add
-      </p>
+      {showAdd ? (
+        <p className="rounded-xl border border-dashed border-tk-slate/25 px-3 py-2 text-xs font-semibold text-tk-slate/55">
+          ＋ npm run site:add
+        </p>
+      ) : null}
     </div>
   )
 }

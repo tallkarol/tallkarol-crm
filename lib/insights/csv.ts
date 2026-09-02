@@ -1,3 +1,4 @@
+import { scopeAdsSnapshot } from "@/lib/insights/ads-split"
 import type { ArchivePayload, SnapshotV2 } from "@/lib/insights/types"
 
 function cell(value: string | number | null | undefined) {
@@ -35,7 +36,7 @@ export function archiveCsv(payload: ArchivePayload, table: CsvTable): string {
     gsc: payload.gsc,
     ads: payload.ads,
   } as SnapshotV2
-  return snapshotCsv(pseudo, table)
+  return snapshotCsv(scopeAdsSnapshot(pseudo, { slug: payload.siteSlug }), table)
 }
 
 /** Render one snapshot table as CSV. Reads the cache only — no Google calls. */

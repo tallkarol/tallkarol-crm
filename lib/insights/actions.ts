@@ -31,6 +31,8 @@ export async function refreshInsightsAction(slug: string) {
     await writeReport(insightsCacheKey(site.slug), snapshot)
     await ensureMonthlyArchive(site, snapshot)
     revalidatePath("/insights", "layout")
+    revalidatePath("/ads", "layout")
+    revalidatePath("/clients", "layout")
     revalidatePath("/reports")
     return { ok: true as const }
   } catch (error) {

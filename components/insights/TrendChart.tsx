@@ -47,7 +47,7 @@ export function TrendChart({
   const svgRef = useRef<SVGSVGElement>(null)
 
   const meta = METRIC_META[metric]
-  const color = meta.series === "teal" ? CHART.teal : CHART.amber
+  const color = CHART[meta.series]
   const format = (v: number) => (meta.money ? fmtMoney(v) : fmtInt(v))
 
   const cur = useMemo(() => current.map((p) => p[metric] ?? 0), [current, metric])
