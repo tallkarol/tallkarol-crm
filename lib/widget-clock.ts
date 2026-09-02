@@ -8,7 +8,7 @@ import { occurredOnIn } from "@/lib/punch"
 import {
   pendingPunchCount,
   punchTargets,
-  runningPunch,
+  runningPunches,
   todayTotals,
   type PunchView,
 } from "@/lib/punches"
@@ -18,9 +18,9 @@ import { workspaceTimezone } from "@/lib/timezone"
  * The clock and timesheet widgets.
  *
  * Everything here leans on `lib/punches.ts` rather than touching `time_punches`
- * directly — the one-running-punch constraint, the timezone handling and the
- * retry guard all live there, and a second implementation would get the
- * midnight cases wrong.
+ * directly — the no-duplicate-target rule, the timezone handling and the retry
+ * guard all live there, and a second implementation would get the midnight
+ * cases wrong.
  */
 
 export type ClockTarget = {
@@ -33,23 +33,30 @@ export type ClockTarget = {
   color: string
 }
 
+export type ClockRunning = {
+  id: string
+  clientId: string
+  clientName: string
+  clientSlug: string
+  projectId: string | null
+  projectName: string | null
+  color: string
+  startedAt: string
+  startClock: string
+  /** Whole minutes so far. The widget re-derives this as its timeline ticks. */
+  minutes: number
+  elapsed: string
+  /** "long" once it passes the 8-hour mark — the forgot-to-clock-out case. */
+  flags: string[]
+}
+
 export type ClockPayload = {
   generatedAt: string
   timezone: string
-  running: {
-    id: string
-    clientName: string
-    clientSlug: string
-    projectName: string | null
-    color: string
-    startedAt: string
-    startClock: string
-    /** Whole minutes so far. The widget re-derives this as its timeline ticks. */
-    minutes: number
-    elapsed: string
-    /** "long" once it passes the 8-hour mark — the forgot-to-clock-out case. */
-    flags: string[]
-  } | null
+  /** The oldest open punch. Kept so a widget built before concurrent punches still decodes. */
+  running: ClockRunning | null
+  /** Every open punch, oldest first. */
+  runningPunches: ClockRunning[]
   today: { day: string; hours: number; entries: number }
   weekHours: number
   pendingApproval: number
@@ -109,18 +116,20 @@ export async function widgetClock(
   const tz = await workspaceTimezone()
 
   const [running, today, targets, pending] = await Promise.all([
-    runningPunch(userId),
+    runningPunches(userId),
     todayTotals(userId),
     punchTargets(userId),
     pendingPunchCount(userId),
   ])
 
   const week = await sumHours(userId, iso(weekStart(now)), iso(now))
+  const open = running.map(shapeRunning)
 
   return {
     generatedAt: now.toISOString(),
     timezone: tz,
-    running: running ? shapeRunning(running) : null,
+    running: open[0] ?? null,
+    runningPunches: open,
     today,
     weekHours: round(week),
     pendingApproval: pending,
@@ -144,11 +153,13 @@ export async function widgetClock(
   }
 }
 
-function shapeRunning(punch: PunchView): NonNullable<ClockPayload["running"]> {
+function shapeRunning(punch: PunchView): ClockRunning {
   return {
     id: punch.id,
+    clientId: punch.clientId,
     clientName: punch.clientName,
     clientSlug: punch.clientSlug,
+    projectId: punch.projectId,
     projectName: punch.projectName,
     color: clientColor(punch.clientSlug),
     startedAt: punch.startedAt,
@@ -170,7 +181,7 @@ export async function widgetTimesheet(
   const today = occurredOnIn(now, tz)
 
   const from = iso(shift(now, -6))
-  const [rows, monthRows, running, pending] = await Promise.all([
+  const [rows, monthRows, open, pending] = await Promise.all([
     db
       .select({ day: timeEntries.occurredOn, hours: timeEntries.hours })
       .from(timeEntries)
@@ -189,7 +200,7 @@ export async function widgetTimesheet(
       columns: { hours: true, occurredOn: true },
       with: { client: { columns: { name: true, slug: true } } },
     }),
-    runningPunch(userId),
+    runningPunches(userId),
     pendingPunchCount(userId),
   ])
 
@@ -237,7 +248,7 @@ export async function widgetTimesheet(
     today: round(byDay.get(today) ?? 0),
     week: round(await sumHours(userId, weekFrom, today)),
     month: round(month),
-    running: Boolean(running),
+    running: open.length > 0,
     days,
     clients: Array.from(byClient.values())
       .map((c) => ({

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { punchTargets, runningPunch, todayTotals, pendingPunchCount } from "@/lib/punches"
+import { punchTargets, runningPunches, todayTotals, pendingPunchCount } from "@/lib/punches"
 import { workspaceTimezone } from "@/lib/timezone"
 import { authenticateTimeRequest, unauthorized } from "@/lib/time-api"
 
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   if (!caller) return unauthorized()
 
   const [running, today, targets, pending, timezone] = await Promise.all([
-    runningPunch(caller.userId),
+    runningPunches(caller.userId),
     todayTotals(caller.userId),
     punchTargets(caller.userId),
     pendingPunchCount(caller.userId),
@@ -23,7 +23,10 @@ export async function GET(request: Request) {
 
   return NextResponse.json(
     {
-      running,
+      // Oldest open punch, for clients that show one clock; every open punch
+      // for the ones that can show several.
+      running: running[0] ?? null,
+      runningPunches: running,
       today,
       pendingApproval: pending,
       timezone,

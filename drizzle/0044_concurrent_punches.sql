@@ -1,0 +1,1 @@
+DROP INDEX "time_punches_one_running_idx";

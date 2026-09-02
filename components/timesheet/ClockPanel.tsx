@@ -11,6 +11,9 @@ import type { PunchTarget, PunchView } from "@/lib/punches"
 /**
  * Clock in and out. Big targets, one tap each — this is the screen that gets
  * used on a phone, so nothing here needs a keyboard.
+ *
+ * Several punches can run at once, one band each. Starting another target adds
+ * a clock rather than swapping the running one.
  */
 export function ClockPanel({
   running,
@@ -18,7 +21,7 @@ export function ClockPanel({
   today,
   compact = false,
 }: {
-  running: PunchView | null
+  running: PunchView[]
   targets: PunchTarget[]
   today: { hours: number; entries: number }
   compact?: boolean
@@ -27,7 +30,6 @@ export function ClockPanel({
   const [error, setError] = useState<string | null>(null)
   const [pendingKey, setPendingKey] = useState<string | null>(null)
   const [note, setNote] = useState("")
-  const seconds = useElapsed(running?.startedAt ?? null, running?.minutes ?? 0)
 
   const shown = useMemo(
     () => (compact ? targets.slice(0, 6) : targets),
@@ -46,8 +48,6 @@ export function ClockPanel({
         clientId: target.clientId,
         projectId: target.projectId,
         note,
-        // A second tap while something runs means "switch to this".
-        switchRunning: Boolean(running),
       })
       setPendingKey(null)
       if (!result.ok) setError(result.error)
@@ -55,10 +55,10 @@ export function ClockPanel({
     })
   }
 
-  function end() {
+  function end(punchId: string) {
     setError(null)
     startTransition(async () => {
-      const result = await stopPunch({ note })
+      const result = await stopPunch({ punchId, note })
       if (!result.ok) setError(result.error)
       else setNote("")
     })
@@ -66,35 +66,16 @@ export function ClockPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      {running ? (
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl bg-tk-teal px-5 py-4 text-tk-linen shadow-sm">
-          <span
-            aria-hidden
-            className="size-2.5 rounded-full bg-tk-linen ring-4 ring-tk-linen/25"
-          />
-          <p className="font-mono text-3xl font-bold tabular-nums tracking-tight">
-            {clockLabel(seconds)}
-          </p>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">
-              {running.projectName
-                ? `${running.clientName} · ${running.projectName}`
-                : running.clientName}
-            </p>
-            <p className="mt-0.5 text-xs text-tk-linen/75">
-              Started {running.startClock} · {sourceLabel(running.source)}
-              {running.flags.includes("stale") ? " · running since yesterday" : ""}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={end}
-            disabled={busy}
-            className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-tk-linen px-4 py-2 text-xs font-bold text-tk-teal disabled:opacity-60"
-          >
-            <Square className="size-3.5" />
-            {busy ? "Stopping…" : "Clock out"}
-          </button>
+      {running.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          {running.map((punch) => (
+            <RunningBand
+              key={punch.id}
+              punch={punch}
+              busy={busy}
+              onStop={() => end(punch.id)}
+            />
+          ))}
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-dashed border-tk-slate/25 bg-white px-5 py-4">
@@ -119,7 +100,7 @@ export function ClockPanel({
       <div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
-            {running ? "Switch to" : "Clock in on"}
+            {running.length > 0 ? "Also clock in on" : "Clock in on"}
           </p>
           <input
             value={note}
@@ -138,10 +119,11 @@ export function ClockPanel({
           <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {shown.map((target) => {
               const key = targetKey(target)
-              const isCurrent =
-                running != null &&
-                running.clientId === target.clientId &&
-                (running.projectId ?? "") === (target.projectId ?? "")
+              const isCurrent = running.some(
+                (punch) =>
+                  punch.clientId === target.clientId &&
+                  (punch.projectId ?? "") === (target.projectId ?? "")
+              )
               return (
                 <li key={key}>
                   <button
@@ -183,6 +165,50 @@ export function ClockPanel({
           </ul>
         )}
       </div>
+    </div>
+  )
+}
+
+/** One running punch: its own ticking clock and its own stop button. */
+function RunningBand({
+  punch,
+  busy,
+  onStop,
+}: {
+  punch: PunchView
+  busy: boolean
+  onStop: () => void
+}) {
+  const seconds = useElapsed(punch.startedAt, punch.minutes)
+  return (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl bg-tk-teal px-5 py-4 text-tk-linen shadow-sm">
+      <span
+        aria-hidden
+        className="size-2.5 rounded-full bg-tk-linen ring-4 ring-tk-linen/25"
+      />
+      <p className="font-mono text-3xl font-bold tabular-nums tracking-tight">
+        {clockLabel(seconds)}
+      </p>
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold">
+          {punch.projectName
+            ? `${punch.clientName} · ${punch.projectName}`
+            : punch.clientName}
+        </p>
+        <p className="mt-0.5 text-xs text-tk-linen/75">
+          Started {punch.startClock} · {sourceLabel(punch.source)}
+          {punch.flags.includes("stale") ? " · running since yesterday" : ""}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onStop}
+        disabled={busy}
+        className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-tk-linen px-4 py-2 text-xs font-bold text-tk-teal disabled:opacity-60"
+      >
+        <Square className="size-3.5" />
+        {busy ? "Stopping…" : "Clock out"}
+      </button>
     </div>
   )
 }

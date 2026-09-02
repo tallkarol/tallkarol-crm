@@ -3,7 +3,7 @@ import { ClockPanel } from "@/components/timesheet/ClockPanel"
 import { DashboardBoard } from "@/components/timesheet/DashboardBoard"
 import { getSessionUser } from "@/lib/auth"
 import { ROUTES } from "@/lib/nav"
-import { punchTargets, runningPunch, todayTotals } from "@/lib/punches"
+import { punchTargets, runningPunches, todayTotals } from "@/lib/punches"
 import { isMonthKey } from "@/lib/timesheet"
 import { timesheetDashboard } from "@/lib/timesheet-dashboard"
 
@@ -28,7 +28,7 @@ export default async function TimesheetPage({
 
   const [data, running, targets, today] = await Promise.all([
     timesheetDashboard(user.id),
-    runningPunch(user.id),
+    runningPunches(user.id),
     punchTargets(user.id),
     todayTotals(user.id),
   ])

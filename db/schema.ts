@@ -187,6 +187,7 @@ export const clientStatusEnum = pgEnum("client_status", [
   "lapsed_retainer",
   "completed_work",
   "in_contact",
+  "internal",
 ])
 
 export const clients = pgTable("clients", {
@@ -808,10 +809,9 @@ export const timePunches = pgTable(
       .defaultNow(),
   },
   (table) => ({
-    // Postgres, not the client, guarantees one timer per person.
-    oneRunning: uniqueIndex("time_punches_one_running_idx")
-      .on(table.userId)
-      .where(sql`${table.status} = 'running'`),
+    // Several timers may run at once — a build for one client while another's
+    // ticket gets answered — so nothing here caps running punches per person.
+    // What `lib/punches.ts` still refuses is the same target twice.
     request: uniqueIndex("time_punches_request_idx")
       .on(table.userId, table.clientRequestId)
       .where(sql`${table.clientRequestId} is not null`),

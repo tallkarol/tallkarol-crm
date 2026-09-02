@@ -12,10 +12,10 @@ export const dynamic = "force-dynamic"
  *
  *   { clientId?, projectId?, switch?, clientRequestId? }
  *
- * Runs the same `clockIn` the watch and the browser do, so the one-running-punch
- * constraint and the retry guard are enforced in exactly one place. Answers 409
- * with the running punch when something is already open, unless `switch` is set
- * — a widget tap should never silently abandon a punch you forgot about.
+ * Runs the same `clockIn` the watch and the browser do, so the retry guard and
+ * the no-duplicate-target rule are enforced in exactly one place. Punches on
+ * other targets keep running alongside the new one; `switch` stops them first.
+ * Answers 409 with the open punch when this exact target is already running.
  */
 export async function POST(request: Request) {
   if (!authenticateWidget(request)) return unauthorized()

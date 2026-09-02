@@ -2,7 +2,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { LiveIndicator } from "@/components/timesheet/LiveIndicator"
 import { TimesheetTabs } from "@/components/timesheet/TimesheetTabs"
 import { getSessionUser } from "@/lib/auth"
-import { pendingPunchCount, runningPunch } from "@/lib/punches"
+import { pendingPunchCount, runningPunches } from "@/lib/punches"
 
 export const dynamic = "force-dynamic"
 
@@ -17,8 +17,8 @@ export default async function TimesheetLayout({
 }) {
   const user = await getSessionUser()
   const [running, pending] = user
-    ? await Promise.all([runningPunch(user.id), pendingPunchCount(user.id)])
-    : [null, 0]
+    ? await Promise.all([runningPunches(user.id), pendingPunchCount(user.id)])
+    : [[], 0]
 
   return (
     <>

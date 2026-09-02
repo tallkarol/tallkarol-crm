@@ -55,12 +55,17 @@ export async function startPunch(input: {
 }
 
 export async function stopPunch(input: {
+  punchId?: string
   note?: string
 } = {}): Promise<Result<PunchView>> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
 
-  const result = await clockOut({ userId: user.id, note: input.note ?? "" })
+  const result = await clockOut({
+    userId: user.id,
+    punchId: input.punchId ?? null,
+    note: input.note ?? "",
+  })
   if (!result.ok) return { ok: false, error: result.error }
   revalidateTime()
   return { ok: true, data: result.data }

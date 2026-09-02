@@ -30,7 +30,15 @@ import { hoursToString, invoiceNumberFor } from "@/lib/timesheet"
  * so the watch and the browser cannot drift apart.
  */
 
-export type PunchResult<T> = { ok: true; data: T } | { ok: false; status: number; error: string; running?: PunchView }
+export type PunchResult<T> =
+  | { ok: true; data: T }
+  | {
+      ok: false
+      status: number
+      error: string
+      /** On a 409 from `clockIn`: the punch already open on that target. */
+      running?: PunchView
+    }
 
 export type PunchView = {
   id: string
@@ -126,13 +134,26 @@ async function loadPunch(id: string) {
   })) as PunchRow | undefined
 }
 
-export async function runningPunch(userId: string): Promise<PunchView | null> {
-  const row = (await db.query.timePunches.findFirst({
+/** Every open punch, oldest first. More than one can run at a time. */
+export async function runningPunches(userId: string): Promise<PunchView[]> {
+  const rows = (await db.query.timePunches.findMany({
     where: and(eq(timePunches.userId, userId), eq(timePunches.status, "running")),
+    orderBy: [asc(timePunches.startedAt)],
     with: withParties,
-  })) as PunchRow | undefined
-  if (!row) return null
-  return toView(row, await workspaceTimezone())
+  })) as PunchRow[]
+  const tz = await workspaceTimezone()
+  const now = new Date()
+  return rows.map((row) => toView(row, tz, now))
+}
+
+/**
+ * The oldest open punch, or null. Kept for callers that show one clock — the
+ * watch status line, the timesheet widget's "and counting" — and for API
+ * responses that predate concurrent punches.
+ */
+export async function runningPunch(userId: string): Promise<PunchView | null> {
+  const [first] = await runningPunches(userId)
+  return first ?? null
 }
 
 /** Stopped-but-not-yet-approved punches, oldest first — the review queue. */
@@ -332,14 +353,17 @@ export type ClockInInput = {
   note?: string
   at?: unknown
   source?: PunchSource
-  /** Stop whatever is running and start this instead. */
+  /**
+   * Stop everything that is running and start this instead. Without it a new
+   * punch simply runs alongside the others.
+   */
   switchRunning?: boolean
   clientRequestId?: string | null
 }
 
 export async function clockIn(
   input: ClockInInput
-): Promise<PunchResult<{ punch: PunchView; stopped: PunchView | null }>> {
+): Promise<PunchResult<{ punch: PunchView; stopped: PunchView[] }>> {
   const instant = resolveInstant(input.at)
   if ("error" in instant) return { ok: false, status: 400, error: instant.error }
 
@@ -356,31 +380,41 @@ export async function clockIn(
       with: withParties,
     })) as PunchRow | undefined
     if (existing) {
-      return { ok: true, data: { punch: toView(existing, tz), stopped: null } }
+      return { ok: true, data: { punch: toView(existing, tz), stopped: [] } }
     }
   }
 
   const target = await resolveTarget(input)
   if ("error" in target) return { ok: false, status: 400, error: target.error }
 
-  let stopped: PunchView | null = null
-  const running = (await db.query.timePunches.findFirst({
+  const running = (await db.query.timePunches.findMany({
     where: and(eq(timePunches.userId, input.userId), eq(timePunches.status, "running")),
+    orderBy: [asc(timePunches.startedAt)],
     with: withParties,
-  })) as PunchRow | undefined
+  })) as PunchRow[]
 
-  if (running) {
-    if (!input.switchRunning) {
-      return {
-        ok: false,
-        status: 409,
-        error: "A punch is already running. Send switch:true to swap to this one.",
-        running: toView(running, tz),
-      }
+  // Punches may overlap across clients, never on the same target: a second
+  // tap on a running row is a double tap, not a second timer.
+  const duplicate = running.find(
+    (row) =>
+      row.clientId === target.clientId && (row.projectId ?? null) === target.projectId
+  )
+  if (duplicate && !input.switchRunning) {
+    return {
+      ok: false,
+      status: 409,
+      error: "That one is already running.",
+      running: toView(duplicate, tz),
     }
-    const closed = await stopRunning(running, instant.at)
-    if (!closed.ok) return closed
-    stopped = closed.data
+  }
+
+  const stopped: PunchView[] = []
+  if (input.switchRunning) {
+    for (const row of running) {
+      const closed = await stopRunning(row, instant.at)
+      if (!closed.ok) return closed
+      stopped.push(closed.data)
+    }
   }
 
   const values = {
@@ -403,12 +437,13 @@ export async function clockIn(
       .returning({ id: timePunches.id })
     id = created.id
   } catch (error) {
-    // Two taps landed at once. The index held; hand back whichever won.
-    if (isUniqueViolation(error)) {
+    // The same request id landed twice at once. The index held; hand back
+    // whichever insert won.
+    if (requestId && isUniqueViolation(error)) {
       const winner = (await db.query.timePunches.findFirst({
         where: and(
           eq(timePunches.userId, input.userId),
-          eq(timePunches.status, "running")
+          eq(timePunches.clientRequestId, requestId)
         ),
         with: withParties,
       })) as PunchRow | undefined
@@ -452,12 +487,29 @@ export async function clockOut(input: {
   const instant = resolveInstant(input.at)
   if ("error" in instant) return { ok: false, status: 400, error: instant.error }
 
-  const row = (await db.query.timePunches.findFirst({
-    where: input.punchId
-      ? and(eq(timePunches.id, input.punchId), eq(timePunches.userId, input.userId))
-      : and(eq(timePunches.userId, input.userId), eq(timePunches.status, "running")),
-    with: withParties,
-  })) as PunchRow | undefined
+  let row: PunchRow | undefined
+  if (input.punchId) {
+    row = (await db.query.timePunches.findFirst({
+      where: and(eq(timePunches.id, input.punchId), eq(timePunches.userId, input.userId)),
+      with: withParties,
+    })) as PunchRow | undefined
+  } else {
+    // No id means "the one that is running" — which only makes sense while
+    // exactly one is. With several open, guessing would stop the wrong clock.
+    const open = (await db.query.timePunches.findMany({
+      where: and(eq(timePunches.userId, input.userId), eq(timePunches.status, "running")),
+      orderBy: [asc(timePunches.startedAt)],
+      with: withParties,
+    })) as PunchRow[]
+    if (open.length > 1) {
+      return {
+        ok: false,
+        status: 409,
+        error: `${open.length} punches are running. Send punchId to say which one.`,
+      }
+    }
+    row = open[0]
+  }
 
   if (!row) return { ok: false, status: 404, error: "Nothing is clocked in." }
   if (row.status !== "running") {

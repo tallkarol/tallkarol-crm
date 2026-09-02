@@ -7,7 +7,7 @@ import { ROUTES } from "@/lib/nav"
 import {
   punchTargets,
   recentPunches,
-  runningPunch,
+  runningPunches,
   todayTotals,
 } from "@/lib/punches"
 
@@ -24,7 +24,7 @@ export default async function ClockPage() {
   if (!user) redirect("/login")
 
   const [running, targets, today, recent] = await Promise.all([
-    runningPunch(user.id),
+    runningPunches(user.id),
     punchTargets(user.id),
     todayTotals(user.id),
     recentPunches(user.id, 12),

@@ -18,7 +18,8 @@ const SOURCES: PunchSource[] = ["api", "watch", "web"]
  * { projectId?, clientId?, note?, at?, switch?, source?, clientRequestId? }
  *
  * Send either a projectId or a clientId — a project implies its own client.
- * 409 with the running punch when one is already open, unless `switch` is true.
+ * Other punches keep running alongside this one; `switch: true` stops them
+ * first. 409 with the open punch when this exact target is already running.
  */
 export async function POST(request: Request) {
   const caller = await authenticateTimeRequest(request)

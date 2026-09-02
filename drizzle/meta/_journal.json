@@ -302,6 +302,20 @@
       "when": 1788314975262,
       "tag": "0042_clumsy_baron_zemo",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1788317548436,
+      "tag": "0043_bitter_outlaw_kid",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1788338862869,
+      "tag": "0044_concurrent_punches",
+      "breakpoints": true
     }
   ]
 }
