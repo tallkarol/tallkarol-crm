@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Page to Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#F4F2EC;--surface:#FFF;--surface-2:#EDE9DE;--ink:#0F1615;--ink-2:#3D4947;--muted:#6E7A77;--line:rgba(15,22,21,.13);--line-soft:rgba(15,22,21,.07);--accent:#006965;--accent-ink:#00504D;--accent-soft:rgba(0,105,101,.10);--warn:#A45A1E;--warn-soft:rgba(164,90,30,.12);--crit:#8E3521;--crit-soft:rgba(142,53,33,.12);--good:#2E7D57;--good-soft:rgba(46,125,87,.12);--display:"Archivo",ui-sans-serif,system-ui,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:ui-sans-serif,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.62}
+.wrap{max-width:1080px;margin:0 auto;padding:0 32px}
+@media(max-width:720px){.wrap{padding:0 20px}body{font-size:16px}}
+h1,h2,h3,h4,.eyebrow,.chip,.num,th,.ui,.sec-num{font-family:var(--display)}
+h1{font-size:clamp(34px,5.4vw,58px);line-height:1.04;letter-spacing:-.02em;font-weight:700;margin:0 0 20px}
+h2{font-size:clamp(25px,3vw,34px);line-height:1.14;letter-spacing:-.015em;font-weight:600;margin:0 0 14px}
+h3{font-size:19px;line-height:1.3;font-weight:600;margin:0 0 7px}
+h4{font-size:15px;line-height:1.35;font-weight:600;margin:0 0 5px}
+p{margin:0 0 16px}p:last-child{margin-bottom:0}
+code,.mono{font-family:var(--mono);font-size:.86em;background:var(--surface-2);padding:.12em .38em;border-radius:3px}
+.lede{font-size:clamp(18px,2.1vw,22px);line-height:1.5;color:var(--ink-2)}
+.muted{color:var(--muted)}.small{font-size:14px;line-height:1.5}
+.eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 20px}
+.sec-num{display:flex;align-items:center;gap:12px;margin:0 0 8px;font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.sec-num::after{content:"";flex:1;height:1px;background:var(--line)}
+section{padding:56px 0;border-top:1px solid var(--line)}
+.hero{padding:72px 0 52px}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:860px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.stack>*+*{margin-top:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px 20px}
+.card.tint{background:var(--surface-2);border-color:var(--line-soft)}
+.rail{border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.rail.warn{border-left-color:var(--warn)}.rail.crit{border-left-color:var(--crit)}.rail.good{border-left-color:var(--good)}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.stat .num{font-size:31px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block}
+.stat .lbl{font-family:var(--ui);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:6px;display:block}
+.stat .sub{font-size:13.5px;color:var(--ink-2);margin-top:7px;display:block;line-height:1.4}
+.stat.crit .num{color:var(--crit)}.stat.warn .num{color:var(--warn)}.stat.good .num{color:var(--good)}.stat.accent .num{color:var(--accent-ink)}
+.metastrip{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;margin-top:34px}
+.metastrip>div{flex:1 1 200px;padding:14px 18px;border-right:1px solid var(--line-soft)}
+.metastrip>div:last-child{border-right:0}
+.metastrip .k{font-family:var(--ui);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.metastrip .v{font-family:var(--display);font-size:14.5px;font-weight:500;line-height:1.35}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2.5px 8px;border-radius:4px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);font-family:var(--ui)}
+.chip.new{background:var(--accent);color:#fff}.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.accent{background:var(--accent-soft);color:var(--accent-ink)}.chip.mono{font-family:var(--mono);font-weight:400}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:left;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);font-family:var(--ui)}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12.5px}.r{text-align:right}
+.tablecard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 10px 8px}
+.mock{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.mock-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface-2);font-family:var(--ui);font-size:12.5px;color:var(--ink-2);flex-wrap:wrap}
+.mock-bar .t{font-family:var(--display);font-weight:600;font-size:13.5px;color:var(--ink)}
+.mock-bar .sp{flex:1}
+.band{padding:6px 14px;background:var(--surface-2);border-bottom:1px solid var(--line-soft);font-family:var(--ui);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.frow{display:flex;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line-soft);align-items:flex-start}
+.frow:last-child{border-bottom:0}
+.frow .id{font-family:var(--mono);font-size:11.5px;color:var(--accent-ink);flex:0 0 76px;padding-top:2px}
+.frow .body{flex:1;min-width:0}
+.frow .txt{font-size:15px;line-height:1.45}
+.frow .prov{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:4px;word-break:break-word}
+.frow .side{flex:0 0 auto;display:flex;flex-direction:column;gap:4px;align-items:flex-end;padding-top:2px}
+pre{margin:0;background:#0F1615;color:#E6E4DC;border-radius:8px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.62}
+pre .c{color:#7E8C89}pre .k{color:#7FD8CE}pre .s{color:#D9C48A}pre .n{color:#C8A2C8}
+.filepath{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding:0 0 7px}
+ul.tight{margin:0;padding-left:20px}ul.tight li{margin-bottom:5px}
+.callout{background:var(--accent-soft);border:1px solid rgba(0,105,101,.22);border-radius:8px;padding:16px 20px}
+.callout.warn{background:var(--warn-soft);border-color:rgba(164,90,30,.24)}
+blockquote{margin:0;padding:12px 0 12px 18px;border-left:3px solid var(--accent);font-size:17px;line-height:1.5}
+.step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line-soft)}
+.step:last-child{border-bottom:0}
+.step .n{flex:0 0 30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:13.5px;font-weight:600}
+.step .c{flex:1}
+.ships{font-size:13.5px;color:var(--accent-ink);margin-top:8px;font-style:italic}
+footer{padding:34px 0 60px;color:var(--muted);font-size:13px;font-family:var(--ui);text-align:center}
+.bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.act{display:flex;gap:14px;padding:15px 0;border-bottom:1px solid var(--line-soft);align-items:flex-start}
+.act:last-child{border-bottom:0}
+.act .rank{flex:0 0 26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:12.5px;font-weight:600;margin-top:1px}
+.act .c{flex:1;min-width:0}
+.act .meta{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:5px}
+.led td.id{font-family:var(--mono);font-size:12px;color:var(--accent-ink);white-space:nowrap}
+@media print{body{background:#fff}section{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">TALLKAROL &middot; mycustommanufacturer.com &middot; consolidated proposal</p>
+  <h1>Page to Report</h1>
+  <p class="lede">
+    One loop, three movements: the site becomes the source of what may be asserted, the assertions
+    become a campaign that produces leads, and the leads produce a report that arrives without
+    anyone remembering to make it. This replaces the three-part series and is written against the
+    state of the systems on 2 September &mdash; which has moved a long way since the parts were
+    drafted, mostly by hand.
+  </p>
+  <div class="metastrip">
+    <div><span class="k">Supersedes</span><span class="v">Page to Claim &middot; Query to Lead &middot; Pull to Report</span></div>
+    <div><span class="k">Touches</span><span class="v">daedalus-insights &middot; daedalus-client-packs &middot; tallkarol/crm &middot; mineralife-frontend</span></div>
+    <div><span class="k">Ledger</span><span class="v">41 increments &middot; 11 done &middot; 1 partial &middot; 1 superseded</span></div>
+    <div><span class="k">Verified</span><span class="v">repos, Ads account, GSC and the archive, 2 Sep 2026</span></div>
+  </div>
+</header>
+
+<section style="border-top:0">
+  <p class="sec-num">00 &mdash; start here</p>
+  <h2>Recommended actions, in order</h2>
+  <p style="max-width:70ch">
+    Everything below is argued later in the document. This is the order I would do it in, and the
+    reasoning for the order is that the top four items make things that already exist start working,
+    which is cheaper than building anything new.
+  </p>
+
+  <div class="card" style="margin-top:24px">
+    <div class="act">
+      <div class="rank">1</div>
+      <div class="c">
+        <h3>Grant the robot Standard access on GA4 property 395780153</h3>
+        <p class="small">Two minutes in the Analytics admin, and it is the only thing on this list
+          with a deadline attached to someone else's calendar. Without it the next monthly report
+          cannot read cost or revenue dimensions, and the Ads source in the insights hub stays
+          half-blind. Search Console access was the equivalent blocker in the original part one; that
+          one is now granted and working, which is why the index scan exists at all.</p>
+        <p class="meta">R-13 &middot; blocks the September report &middot; you, in the Analytics UI</p>
+      </div>
+    </div>
+    <div class="act">
+      <div class="rank">2</div>
+      <div class="c">
+        <h3>Build the conversion outbox and turn on enhanced conversions</h3>
+        <p class="small">The compounding one, and the largest single gap in the whole loop. Two
+          campaigns are live and spending against a bidding strategy that learns from a form
+          submission and nothing else. Every qualification, quote and PO the sales team records is
+          invisible to Google. One migration, one stage hook, one uploader &mdash; and the hashed
+          email and phone go in the same payload, because the site's own analytics sees roughly 8% of
+          visitors and first-party data is how the other 92% gets recovered.</p>
+        <p class="meta">L-15, L-16 &middot; highest value remaining &middot; mineralife-frontend + a scheduled sender</p>
+      </div>
+    </div>
+    <div class="act">
+      <div class="rank">3</div>
+      <div class="c">
+        <h3>Clear the five known account defects in one sitting</h3>
+        <p class="small">Half an hour in the Ads and Analytics UIs, no code: set
+          <code>generate_lead</code> counting to One per click, delete the demoted
+          <code>form_submission</code> import, read and fix or drop the disapproved Toll Filling
+          sitelink, confirm Core Terms is actually serving and lift the $12 cap if a full US day
+          passes at zero, and exclude developer traffic from Analytics. None of them is interesting.
+          All of them are currently wrong.</p>
+        <p class="meta">L-09 through L-13 &middot; ~30 minutes total &middot; Ads UI, Analytics admin</p>
+      </div>
+    </div>
+    <div class="act">
+      <div class="rank">4</div>
+      <div class="c">
+        <h3>Put the things that are built onto the clock that is built</h3>
+        <p class="small">The <code>tallkarol-cron</code> service has been running every fifteen
+          minutes since it shipped, and it does three jobs. The index scanner and the monthly freeze
+          are not among them, so a scan happens when you run a script and a month closes when someone
+          opens the insights page. A job registry with an interval per job, then those two jobs
+          registered against it, is an afternoon and it retires the last two &ldquo;only if a human
+          remembers&rdquo; failures in the reporting spine.</p>
+        <p class="meta">R-04, R-05, R-06 &middot; an afternoon &middot; tallkarol/crm</p>
+      </div>
+    </div>
+    <div class="act">
+      <div class="rank">5</div>
+      <div class="c">
+        <h3>Substantiate &ldquo;FDA Registered Facility&rdquo; or pull it from the ad</h3>
+        <p class="small">This phrase is live in a paid ad and appears nowhere in the site's approved
+          copy. It is accurate as far as I know and it is the exact shape of exposure the fact bank
+          exists to prevent: an assertion in the most exposed surface in the engagement, with no
+          artifact behind it and no page for a Google reviewer to land on. Confirm the registration
+          and publish it, or take it out of the headline set. Do not leave it as it is.</p>
+        <p class="meta">C-08 &middot; needs Mineralife &middot; the best available argument for movement one</p>
+      </div>
+    </div>
+    <div class="act">
+      <div class="rank">6</div>
+      <div class="c">
+        <h3>Build the crawler and the extractor</h3>
+        <p class="small">The two increments of movement one that are worth having even if nothing
+          else in it gets built. Right now every task that needs to know what the site says re-reads
+          pages by hand at a few thousand tokens each and re-derives the answer slightly differently
+          every time &mdash; including the ad copy, which is why item 5 exists. The crawl behind this
+          document proves 28 of 30 pending claim rows are already published verbatim; the code to do
+          it on a cadence does not exist yet.</p>
+        <p class="meta">C-01, C-02 &middot; daedalus-insights &middot; unblocks the claim bank and every future brief</p>
+      </div>
+    </div>
+    <div class="act">
+      <div class="rank">7</div>
+      <div class="c">
+        <h3>Decide what happens to the Search Console archive on your laptop</h3>
+        <p class="small">Sixteen months of history that Google deletes at sixteen months, including
+          the fourteen months of pre-cutover baseline that exist nowhere else, sitting in a local git
+          repo the deployed clock cannot reach. My recommendation is that the CRM absorbs the pull.
+          It is the only genuine decision left in the document and it is section 08.</p>
+        <p class="meta">R-12 &middot; one decision, then a port &middot; the only irreversible risk on the list</p>
+      </div>
+    </div>
+    <div class="act">
+      <div class="rank">8</div>
+      <div class="c">
+        <h3>Give click ids their real expiry windows</h3>
+        <p class="small">A small, certain bug. <code>attribution.ts</code> gives every stored click id
+          a flat 90-day life, which is right for <code>gclid</code> and 6.4&times; too generous for
+          <code>gbraid</code> and <code>wbraid</code>, which Google stops accepting at fourteen days.
+          Nothing breaks today because nothing uploads yet. It becomes a permanent stream of rejected
+          rows the day item 2 ships, so it belongs just before it.</p>
+        <p class="meta">L-14 &middot; one constant becomes three &middot; mineralife-frontend</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warn" style="margin-top:24px">
+    <h4>Nine things need you rather than me</h4>
+    <p class="small" style="margin-top:6px">Seven decisions and two confirmations, collected in
+      section 08. The two that hold something up: the archive question above, and whether
+      &ldquo;FDA Registered Facility&rdquo; can be substantiated. The rest can be answered in the
+      order they come up &mdash; exception thresholds, whether a monthly report reaches the client
+      before you have read it, the toll small-run discrepancy, phone calls from ads, the gummy and
+      tablet negatives, and what happens on the day the first attributable enquiry lands.</p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">01 &mdash; state of play</p>
+  <h2>What changed while the proposals sat</h2>
+  <p style="max-width:70ch">
+    The three parts were written on 29 and 30 August. A great deal shipped in the days after, almost
+    none of it the way the proposals imagined &mdash; the campaign was built by hand in the UI rather
+    than through the API, and the clock arrived before the job registry it was supposed to serve. So
+    several of the original findings are now wrong, and saying which is the point of this section.
+  </p>
+
+  <div class="grid g4" style="margin-top:24px">
+    <div class="stat good"><span class="num">2</span><span class="lbl">campaigns live</span>
+      <span class="sub">Core Terms and Competitors, account 624-370-2566, both serving on approved ads.</span></div>
+    <div class="stat good"><span class="num">1</span><span class="lbl">clock running</span>
+      <span class="sub"><code>tallkarol-cron</code>, every 15 minutes, three jobs.</span></div>
+    <div class="stat crit"><span class="num">0</span><span class="lbl">conversions uploaded</span>
+      <span class="sub">Google still learns from the form submission and nothing after it.</span></div>
+    <div class="stat crit"><span class="num">0</span><span class="lbl">approved claims</span>
+      <span class="sub">Still 31 pending. <code>status.json</code> has not moved since 14 August.</span></div>
+  </div>
+
+  <div class="tablecard" style="margin-top:20px">
+    <table>
+      <thead><tr><th>The proposals said</th><th>Now</th><th>Consequence for this document</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="small">&ldquo;Neither Mineralife property is visible to the robot&rdquo; &mdash; no Search Console data for this client</td>
+          <td class="small"><span class="chip ok">resolved</span> <code>sc-domain:mycustommanufacturer.com</code> is granted and scanned; 60 of 63 sitemap URLs indexed as of 2 September</td>
+          <td class="small">The blocker that gated movement three is gone. GA4 Standard access is the one that remains.</td>
+        </tr>
+        <tr>
+          <td class="small">&ldquo;No Google Ads code in any repo&rdquo; &mdash; zero matches for any Ads client</td>
+          <td class="small"><span class="chip warn">half wrong</span> <code>lib/insights/google.ts</code> carries a paged GAQL client and <code>adsSource</code> is a live insights source. <code>uploadClickConversions</code> is still zero matches everywhere</td>
+          <td class="small">Reading the account is solved. Writing to it is not, and writing is the half that changes bidding.</td>
+        </tr>
+        <tr>
+          <td class="small">&ldquo;No scheduled jobs in any repo&rdquo;</td>
+          <td class="small"><span class="chip ok">shipped</span> <code>tallkarol-cron</code> on Railway, <code>*/15 * * * *</code>, restart policy <code>NEVER</code>, same repo as the web service</td>
+          <td class="small">The clock arrived without the registry. It runs three hardcoded jobs; the index scan and the monthly freeze are not among them.</td>
+        </tr>
+        <tr>
+          <td class="small">&ldquo;Mineralife's homepage has no form; every competitor puts one above the fold&rdquo;</td>
+          <td class="small"><span class="chip ok">resolved</span> six landing pages live, all 200, excluded from the organic index; <code>/lp/switch-manufacturers</code> carries a hero form and is where Competitors traffic lands</td>
+          <td class="small">The cheapest conversion-rate improvement on the board was taken. Movement two's landing-page argument is closed.</td>
+        </tr>
+        <tr>
+          <td class="small">&ldquo;Nobody has watched a real click carry a gclid to a Lead row&rdquo;</td>
+          <td class="small"><span class="chip ok">observed</span> August ran <code>form_submit</code> 9 : <code>generate_lead</code> 9, click id stored server-side at submission</td>
+          <td class="small">The capture half of the loop is confirmed end to end on production. Only the upload half is unproven, because it does not exist.</td>
+        </tr>
+        <tr>
+          <td class="small">&ldquo;Buy <code>private label supplement manufacturer</code> &mdash; 590/mo, its own ad group&rdquo;</td>
+          <td class="small"><span class="chip crit">reversed</span> ruled out. It removes ~590 searches a month from reach and takes the white-label ad group below the volume where its landing page earns its keep</td>
+          <td class="small">Recorded as settled in section 08 so the reasoning is not relitigated. My earlier recommendation was overruled and the overruling is the better call.</td>
+        </tr>
+        <tr>
+          <td class="small">&ldquo;Drop Award-Winning Manufacturer from the headline set&rdquo;</td>
+          <td class="small"><span class="chip ok">done</span> not in the live ads. Fifteen headlines per RSA, three RSAs, all approved and eligible</td>
+          <td class="small">And a new one took its place: &ldquo;FDA Registered Facility&rdquo;, which the site does not say.</td>
+        </tr>
+        <tr>
+          <td class="small">&ldquo;GA4 is read only when a page loads&rdquo;; three of four sources unread</td>
+          <td class="small"><span class="chip warn">wider, same shape</span> eight sources now wired &mdash; GSC, GA4, Ads, Vercel, PageSpeed, the first-party collector, Measurement Protocol, UptimeRobot. All still read on page load</td>
+          <td class="small">The source layer stopped being the gap. The trigger is still the gap, which is exactly what R-04 fixes.</td>
+        </tr>
+        <tr>
+          <td class="small">&ldquo;GA4 numbers are the denominator&rdquo;</td>
+          <td class="small"><span class="chip ok">shipped</span> the cookieless first-party counter is live since 31 August &mdash; 237 visitors 31 Aug to 2 Sep, 53% US</td>
+          <td class="small">There is now a real denominator to measure the consent-limited GA4 figure against. It reports GA4 sees roughly 8% of visitors.</td>
+        </tr>
+        <tr>
+          <td class="small">&ldquo;<code>DATAFORSEO_API_KEY</code> is set and used by nothing&rdquo;</td>
+          <td class="small"><span class="chip crit">unchanged</span> still set, still used by nothing. No <code>keywords.json</code> anywhere</td>
+          <td class="small">The keyword figures in this document are a frozen 30 August pull with no mechanism to notice when they go stale.</td>
+        </tr>
+        <tr>
+          <td class="small">Movement one: a crawler, a fact bank, an asset bank</td>
+          <td class="small"><span class="chip crit">unchanged</span> <code>daedalus-insights</code> has no <code>crawl</code> or <code>facts</code> command; <code>data/mineralife/</code> holds 18 GSC windows and one index scan, no <code>pages/</code>, no <code>facts.json</code>, no <code>assets.json</code></td>
+          <td class="small">Movement one is entirely unbuilt. The crawl behind these findings was a one-off analysis, not committed code.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout" style="margin-top:20px">
+    <h4>The pattern worth naming</h4>
+    <p class="small" style="margin-top:6px">Everything client-facing shipped. Everything that would
+      make it repeatable did not. The campaign runs, the landing pages convert, the index gets
+      scanned, the clock ticks &mdash; and the claim bank is still empty, the keyword prices are a
+      frozen file, the ad copy was written from memory rather than from an artifact, and the monthly
+      report still depends on someone opening a page. That is a coherent state to be in after a fast
+      week, and it is the state this document is sequenced against: the remaining work is almost
+      entirely the connective tissue between things that already work.</p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">02 &mdash; the argument</p>
+  <h2>One chain, eight links, two broken</h2>
+  <p style="max-width:70ch">
+    The three parts were separate documents because they were written on separate days. They are one
+    argument, and it is easier to judge as one: a sentence on a page should be able to travel all the
+    way to a line in a client report without anyone retyping it, and every step should carry where it
+    came from. Two links in that chain do not exist.
+  </p>
+
+  <div class="tablecard" style="margin-top:24px">
+    <table>
+      <thead><tr><th>Link</th><th>Object</th><th>What carries it</th><th>State</th></tr></thead>
+      <tbody>
+        <tr><td class="small">The site says something</td><td class="mono">Page</td><td class="small">a crawled artifact with a fetch date; asserts nothing</td><td><span class="chip crit">not built</span></td></tr>
+        <tr><td class="small">A sentence is extracted from it</td><td class="mono">Fact</td><td class="small">verbatim text, one source page, N echoes, a first-seen date</td><td><span class="chip crit">not built</span></td></tr>
+        <tr><td class="small">You approve it for use</td><td class="mono">Claim</td><td class="small"><code>claims.md</code> &mdash; the promotion gate, unchanged</td><td><span class="chip warn">exists, empty</span></td></tr>
+        <tr><td class="small">It is compressed to fit an ad</td><td class="mono">Assertion</td><td class="small">30 or 90 characters, the fact id it came from, the compression note</td><td><span class="chip crit">not built</span></td></tr>
+        <tr><td class="small">Someone searches</td><td class="mono">Keyword</td><td class="small">priced, deduplicated, dated</td><td><span class="chip warn">a frozen file, no code</span></td></tr>
+        <tr><td class="small">They click and enquire</td><td class="mono">Lead</td><td class="small">click id captured server-side, first and last touch</td><td><span class="chip ok">live and proven</span></td></tr>
+        <tr><td class="small">The outcome goes back to Google</td><td class="mono">Conversion</td><td class="small">an outbox row per (lead, action), with a real expiry</td><td><span class="chip crit">not built</span></td></tr>
+        <tr><td class="small">The month is written up</td><td class="mono">Period</td><td class="small"><code>snapshot_archive</code> and <code>reports</code>, frozen and filed</td><td><span class="chip warn">exists, human-triggered</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail crit">
+      <h3>The break at the front costs accuracy</h3>
+      <p class="small">With no Page and no Fact, an assertion's provenance is somebody's memory of the
+        site. That is not a hypothetical: &ldquo;FDA Registered Facility&rdquo; is live in a paid ad
+        today and does not appear in the site's approved copy. It is probably true. Nothing in the
+        chain can say so, and a Google reviewer checking a superlative or a certification claim lands
+        on a page that does not carry it.</p>
+    </div>
+    <div class="card rail crit">
+      <h3>The break at the back costs money</h3>
+      <p class="small">With no Conversion object, bidding optimises toward whoever fills in a form. For
+        a contract manufacturer that is mostly the wrong buyer &mdash; and the CRM already holds twelve
+        pipeline stages that know which ones were right. Every week without the outbox is a week of
+        signal the account will never get, because the 90-day match window closes on those clicks
+        whether or not we ever upload them.</p>
+    </div>
+  </div>
+
+  <p class="small muted" style="margin-top:18px;max-width:74ch">
+    The middle of the chain &mdash; Claim, Lead, Period &mdash; is the part that already exists, and
+    all three are gated on a human by design. That is deliberate and stays: you promote a claim, you
+    release a report. The machine prepares, you publish. Nothing in this document changes that.
+  </p>
+</section>
+
+<section>
+  <p class="sec-num">03 &mdash; movement one</p>
+  <h2>The site is the source it already is</h2>
+  <p style="max-width:70ch">
+    Nothing about the site is broken. It has a meta description on every page, exactly one
+    <code>h1</code> on every page, and JSON-LD on all 63. The break is that none of it is readable by
+    the systems that need it &mdash; and the one document that <em>is</em> machine-readable says the
+    client cannot be written about at all.
+  </p>
+
+  <div class="grid g4" style="margin-top:24px">
+    <div class="stat crit"><span class="num">0</span><span class="lbl">approved claims</span>
+      <span class="sub">31 pending. The approved table in <code>claims.md</code> is one empty row.</span></div>
+    <div class="stat accent"><span class="num">63</span><span class="lbl">pages, all 200 OK</span>
+      <span class="sub">45,386 words of copy the client shipped and stands behind.</span></div>
+    <div class="stat good"><span class="num">28</span><span class="lbl">already on the site</span>
+      <span class="sub">Of 30 publishable specs tested, sourceable verbatim today with a URL.</span></div>
+    <div class="stat warn"><span class="num">0</span><span class="lbl">crawls, ever</span>
+      <span class="sub">No <code>crawl</code> command exists; <code>data/mineralife/pages/</code> does not exist.</span></div>
+  </div>
+
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail crit">
+      <h3>The claim bank blocks everything and unblocks nothing</h3>
+      <p class="small">Every certification, MOQ, capability and lead-time row sits in
+        <code>PENDING</code>, each blocking on a primary document &mdash; the NSF certificate, a signed
+        capability sheet. The rule that put them there is sound. The effect is that no agent can write
+        a sentence about this client, including sentences the client has already published.</p>
+      <p class="filepath" style="margin-top:10px">daedalus-client-packs/clients/mineralife/claims.md &mdash; approved table: one empty row</p>
+    </div>
+    <div class="card rail crit">
+      <h3>The one approved artifact is ruled inadmissible</h3>
+      <p class="small">The pack and the demand-scout skill both say live copy cannot source a claim
+        &mdash; a page is an observation of an artifact. That rule exists to stop an agent laundering
+        its own prose back in as fact, and it is right to exist. It also throws away 45,386 words that
+        went through the client's own review.</p>
+      <p class="filepath" style="margin-top:10px">skills/demand-scout/SKILL.md &mdash; &ldquo;Live copy is not a claim source.&rdquo;</p>
+    </div>
+    <div class="card rail warn">
+      <h3>63 pages is three corpora wearing one coat</h3>
+      <p class="small">36 migrated WordPress posts (21,646 words), 14 templated <code>/serving</code>
+        geo pages (15,357), and 13 hand-authored pages (8,383). Every word of all three is read and
+        approved, so all three go in the bank &mdash; but a bank that forgets which one a sentence came
+        from cannot tell a 2022 hiring post from the <code>/faq</code> spec table when both mention
+        21 CFR 111. Provenance has to be a field, not a folder.</p>
+      <p class="filepath" style="margin-top:10px">36 inherited &middot; 14 templated &middot; 13 authored &mdash; recorded per fact as <code>origin</code></p>
+    </div>
+    <div class="card rail warn">
+      <h3>Nothing has ever read the site mechanically</h3>
+      <p class="small">The insights config has named <code>contentSources.sitemap</code> since 14
+        August. No crawler consumes it. So every task needing to know what the site says &mdash; an ad
+        headline, a brief, a decay diff &mdash; re-reads pages by hand, at a few thousand tokens each,
+        and re-derives the same answer slightly differently every time.</p>
+      <p class="filepath" style="margin-top:10px">config/sites/mineralife.json &mdash; <code>contentSources.sitemap</code>, still unused</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:34px">What the crawl found</h3>
+  <p class="small" style="max-width:70ch">All 63 URLs crawled, every publishable pending row in
+    <code>claims.md</code> tested against the text. This is the reason to build the thing rather than
+    keep arguing about it.</p>
+  <div class="tablecard" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Pending section</th><th class="r">Tested</th><th class="r">Found</th><th>Coverage</th><th>The exception</th></tr></thead>
+      <tbody>
+        <tr><td>Certifications and compliance</td><td class="r mono">6</td><td class="r mono">5</td>
+          <td><div class="bar"><i style="width:83%;background:var(--good)"></i><i style="width:17%;background:var(--crit)"></i></div></td>
+          <td class="small">&ldquo;Third-party manufacturer, no own consumer brand&rdquo; &mdash; <span class="chip warn">unsourced as written</span></td></tr>
+        <tr><td>Capabilities</td><td class="r mono">9</td><td class="r mono">9</td>
+          <td><div class="bar"><i style="width:100%;background:var(--good)"></i></div></td>
+          <td class="small muted">none &mdash; every spec is published</td></tr>
+        <tr><td>Commercial terms</td><td class="r mono">8</td><td class="r mono">7</td>
+          <td><div class="bar"><i style="width:87%;background:var(--good)"></i><i style="width:13%;background:var(--warn)"></i></div></td>
+          <td class="small">Toll small run &ldquo;2,500 units&rdquo; &mdash; <span class="chip warn">absent</span></td></tr>
+        <tr><td>Scope limits</td><td class="r mono">4</td><td class="r mono">4</td>
+          <td><div class="bar"><i style="width:100%;background:var(--good)"></i></div></td>
+          <td class="small muted">all four, in a single <code>/faq</code> sentence</td></tr>
+        <tr><td>Positioning</td><td class="r mono">3</td><td class="r mono">3</td>
+          <td><div class="bar"><i style="width:100%;background:var(--good)"></i></div></td>
+          <td class="small muted">none</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:10px 10px 6px">
+      30 signatures against 26 publishable rows &mdash; several rows carry more than one spec, so fill
+      sizes and packaging materials were tested separately. The other 5 of the 31 are internal-only
+      figures, permanently unpublishable, and were not tested.
+    </p>
+  </div>
+
+  <h3 style="margin-top:34px">Six things a bank would have caught on day one</h3>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card rail crit">
+      <span class="chip crit">live exposure</span>
+      <h3 style="margin-top:10px">&ldquo;FDA Registered Facility&rdquo; is in an ad and not on the site</h3>
+      <p class="small">The newest instance, and the strongest argument in this section, because it
+        happened <em>after</em> the proposal that predicted it. The phrase is live in the approved RSA
+        set. It appears nowhere in the site's approved copy. &ldquo;FDA Approved&rdquo; is a permanent
+        disapproval; &ldquo;FDA Registered&rdquo; is accurate and survives review &mdash; but only with
+        the registration visible on the page the ad points at.</p>
+      <p class="small" style="margin-top:8px">So the claim needs a primary document and a page, or the
+        headline needs to come out. This is precisely the class of error an extractor catches for free
+        and a human writing headlines from memory cannot.</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">resolved</span>
+      <h3 style="margin-top:10px">The brand row was a tense problem, and the homepage already fixed it</h3>
+      <p class="small">The pending row asserts a third-party manufacturer that doesn't sell its own
+        consumer brand. As written it is unsourced &mdash; that idea appears on 0 of 63 pages and
+        &ldquo;Zemvelo&rdquo; appears zero times. The only nearby sentence,
+        <code>/our-story</code>'s &ldquo;Starting from our own brand&hellip;&rdquo;, describes the
+        origin. Both sentences are true at different times.</p>
+      <p class="small" style="margin-top:8px">The approved present-tense form turns out to be the
+        homepage <code>h1</code> already:</p>
+      <blockquote class="small" style="margin-top:8px">&ldquo;Award-winning supplement manufacturing for established brands&rdquo;</blockquote>
+      <p class="small" style="margin-top:8px">The finding worth keeping is the mechanism: an extractor
+        matching on topic rather than on the exact sentence would have promoted the
+        <code>/our-story</code> line and sourced the opposite of what the row means. Verbatim text and
+        a first-seen date are what stop that.</p>
+    </div>
+    <div class="card rail warn">
+      <span class="chip warn">absent</span>
+      <h3 style="margin-top:10px">&ldquo;2,500 units&rdquo; appears nowhere on the site</h3>
+      <p class="small">The positioning doc gives toll filling a 2,500-unit small run. Zero occurrences
+        across 45,386 words. What the site publishes instead, on
+        <code>/services/toll-filling</code>, is a flat <code>MOQ 5,000 units</code> &mdash; and
+        <code>/services/custom-manufacturing</code> shows &ldquo;SMALL RUN (ADDITIONAL FEE IF
+        ACCEPTED) 5,000 units&rdquo;.</p>
+      <p class="small" style="margin-top:8px">The internal doc and the public site disagree about the
+        cheapest way into a toll project. That is a sales-facing discrepancy, and it is exactly the
+        class of thing that gets into an ad headline and then into a contract argument.</p>
+    </div>
+    <div class="card rail warn">
+      <span class="chip warn">vocabulary conflict</span>
+      <h3 style="margin-top:10px">The possessive rule is wrong, not the site</h3>
+      <p class="small"><code>CLIENT.md</code> is emphatic: always <em>NSF's Certified for Sport&reg;</em>,
+        with the possessive, and never the other form in copy that asserts the certification.</p>
+      <table style="margin-top:10px">
+        <tr><td class="small">&ldquo;NSF's Certified for Sport&rdquo;</td><td class="r mono">0 pages</td></tr>
+        <tr><td class="small">&ldquo;NSF Certified for Sport&rdquo;</td><td class="r mono">63 pages</td></tr>
+      </table>
+      <p class="small" style="margin-top:10px">The live site uses the non-possessive form universally,
+        including in the site-wide meta description. Under the ruling that the site is approved copy,
+        the pack's VOCABULARY slot is the thing that needs correcting.</p>
+    </div>
+    <div class="card rail">
+      <span class="chip accent">precision gap</span>
+      <h3 style="margin-top:10px">The site is more specific than the claim</h3>
+      <p class="small">The pending row says &ldquo;NSF cGMP certified&rdquo;. The site names the actual
+        standard on 19 pages. <code>/why-choose-mineralife</code>:</p>
+      <blockquote class="small" style="margin-top:8px">&ldquo;Mineralife operates under NSF 455-2 cGMP Certified standard.&rdquo;</blockquote>
+      <p class="small" style="margin-top:8px">A bank sourced from pages inherits that precision for
+        free. A bank sourced from a positioning doc rounds it off &mdash; and the rounded version is
+        the weaker line to take into a market where the buyer knows what 455-2 is.</p>
+    </div>
+    <div class="card rail crit">
+      <span class="chip crit">conflict</span>
+      <h3 style="margin-top:10px">Two pages name the award, and they name it differently</h3>
+      <p class="small">The homepage says &ldquo;award-winning&rdquo; and never says which award. Three
+        other pages do, and two of them give it a different title: a 2022 blog post says
+        &ldquo;Top 10 <strong>Contract Manufacturer</strong>&rdquo;;
+        <code>/certifications</code> says &ldquo;Top 10 <strong>Contract Packaging Services
+        Companies</strong>&rdquo;. Contract manufacturing and contract packaging are not the same
+        category, and the second is the weaker of the two for a manufacturer.</p>
+      <p class="small" style="margin-top:10px">Both are client-approved copy, so both are assertable
+        &mdash; which is the situation a bank needs a <code>conflict</code> state for. Your call was
+        ads use Top 10 Contract Manufacturer and <code>/certifications</code> stays as written, which
+        makes the conflict permanent: a crawler that re-raises it every run is noise, and one that
+        quietly drops the losing sentence is lying about what the site says. The resolution is a third
+        object &mdash; a dated decision recorded against the pair, keeping both facts, marking one
+        <code>preferred</code> and the other <code>superseded</code>.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:34px">Chrome is not a fact</h3>
+  <p class="small" style="max-width:70ch">The naive version &mdash; regex the page text, keep the
+    sentences mentioning a spec &mdash; produces something worse than nothing. On the real crawl it
+    returned 417 raw matches, 279 unique, and counted the site-wide meta description 34 times as 34
+    separate findings. The first &ldquo;sentence&rdquo; of <code>/blog/mineralife-is-hiring</code>
+    came back as the nav, the page title, a 2022 date and a real 21 CFR reference glued together,
+    because the tags between them were stripped without inserting a boundary. It matches on
+    <code>cgmp</code> and would enter the bank as a compliance fact.</p>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card rail good">
+      <h4>Four rules that make the output usable</h4>
+      <ul class="tight small" style="margin-top:8px">
+        <li><strong>Scope to main content.</strong> Strip header, nav, footer and the consent banner
+          before extracting. The site is Next.js with consistent landmarks, so this is a selector
+          list, not a heuristic.</li>
+        <li><strong>Dedupe by normalised text, keep every location.</strong> One fact, N pages. A
+          sentence on more than about a third of the site is chrome, and is recorded as chrome rather
+          than as a finding.</li>
+        <li><strong>Attribute to the most specific page.</strong> A spec appearing on <code>/faq</code>
+          and on twelve <code>/serving</code> pages belongs to <code>/faq</code>; the rest are
+          echoes.</li>
+        <li><strong>Never join across a tag boundary.</strong> Insert a separator when flattening, so a
+          heading and the paragraph under it stay two things.</li>
+      </ul>
+    </div>
+    <div class="card rail">
+      <h4>Key on the entity, not on the claim's own vocabulary</h4>
+      <p class="small" style="margin-top:8px">Checking whether the site substantiates
+        &ldquo;award-winning&rdquo; by searching for <code>award</code> returns exactly 1 page &mdash;
+        the homepage, which is the page making the claim. Searching for the entity instead &mdash;
+        <code>Manufacturing Outlook</code>, <code>Top 10</code> &mdash; returns 3 pages, including a
+        dedicated post. Same corpus, same question, opposite answer. The page that proves a claim is
+        rarely the page that phrases it the way the claim does.</p>
+      <p class="small" style="margin-top:10px">And weight by fact density, not length.
+        <code>/faq</code> is 414 words &mdash; shorter than every <code>/serving</code> page and most
+        of the blog &mdash; and carries published MOQs for all three divisions, the full capsule size
+        list, the bottle count range, the fill range, and all four scope limits in one sentence.
+        Weighting by word count would rank it near the bottom.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:34px">What the bank looks like</h3>
+  <p class="small" style="max-width:70ch">Insights has no database and should not get one for this
+    &mdash; it is a CLI that writes files and hands bounded reads to agents. So the deliverable is
+    three files and two commands. Rows below are real facts from the crawl, with their real
+    sources.</p>
+  <div class="mock" style="margin-top:16px">
+    <div class="mock-bar">
+      <span class="t">Fact bank &mdash; mineralife</span>
+      <span class="chip mono">crawl 2026-08-29</span>
+      <span class="sp"></span>
+      <span>63 pages &middot; 279 facts &middot; 28 promotable</span>
+    </div>
+    <div class="band">Commercial terms &middot; 7 promotable</div>
+    <div class="frow"><span class="id">MIN-M-01</span>
+      <div class="body"><div class="txt">&ldquo;Toll projects publish a 5,000-unit MOQ.&rdquo;</div>
+        <div class="prov">page:/faq@2026-08-29 &middot; verbatim on 13 pages &middot; first seen 2026-08-29</div></div>
+      <div class="side"><span class="chip ok">promotable</span><span class="chip">public</span></div></div>
+    <div class="frow"><span class="id">MIN-M-02</span>
+      <div class="body"><div class="txt">&ldquo;White label / catalog lines begin at 250 units with price breaks up to 10,000 units.&rdquo;</div>
+        <div class="prov">page:/faq@2026-08-29 &middot; verbatim on 13 pages &middot; covers 2 pending rows</div></div>
+      <div class="side"><span class="chip ok">promotable</span><span class="chip">public</span></div></div>
+    <div class="frow"><span class="id">MIN-M-04</span>
+      <div class="body"><div class="txt muted"><em>Toll filling small run &mdash; 2,500 units</em></div>
+        <div class="prov">no page carries this &middot; positioning doc only &middot; 0/63 pages</div></div>
+      <div class="side"><span class="chip warn">unsourced</span></div></div>
+    <div class="band">Capabilities &middot; 9 promotable</div>
+    <div class="frow"><span class="id">MIN-P-01</span>
+      <div class="body"><div class="txt">&ldquo;Capsules are powder-only in sizes #1, #0, #00, and #00E, bottled from 15 ct through 180 ct.&rdquo;</div>
+        <div class="prov">page:/faq@2026-08-29 &middot; sole verbatim source &middot; covers 3 pending rows</div></div>
+      <div class="side"><span class="chip ok">promotable</span><span class="chip">public</span></div></div>
+    <div class="band">Scope limits &middot; 4 promotable &mdash; the safest rows in the bank</div>
+    <div class="frow"><span class="id">MIN-S-01</span>
+      <div class="body"><div class="txt">&ldquo;We decline projects that require services we do not offer &mdash; for example stand-alone flavor formulation &mdash; or categories that violate our compliance guardrails, such as spore-forming probiotics or high-regulatory-risk ingredients like Delta-8, Kratom, or DMSA.&rdquo;</div>
+        <div class="prov">page:/faq@2026-08-29 &middot; sole source &middot; covers all 4 pending scope rows</div></div>
+      <div class="side"><span class="chip ok">promotable</span><span class="chip">public</span></div></div>
+    <div class="band">Recognition &middot; 1 preferred, 1 superseded &mdash; a resolved conflict, both sentences kept</div>
+    <div class="frow"><span class="id">MIN-A-01</span>
+      <div class="body"><div class="txt">&ldquo;Mineralife Nutraceuticals was named a Top 10 Contract Manufacturer by Manufacturing Outlook.&rdquo;</div>
+        <div class="prov">page:/blog/mineralife-named-top-10-contract-manufacturer@2026-08-29 &middot; origin inherited &middot; published 2022-09-22</div></div>
+      <div class="side"><span class="chip ok">preferred</span><span class="chip">public</span></div></div>
+    <div class="frow"><span class="id">MIN-A-02</span>
+      <div class="body"><div class="txt">&ldquo;The Manufacturing Outlook recognized Mineralife among its Top 10 Contract Packaging Services Companies&hellip;&rdquo;</div>
+        <div class="prov">page:/certifications@2026-08-29 &middot; origin authored &middot; conflicts with MIN-A-01 &middot; resolved 2026-08-30, page copy left as-is</div></div>
+      <div class="side"><span class="chip warn">superseded</span><span class="chip">public</span></div></div>
+    <div class="band">Certifications &middot; 5 found, 1 unsourced &mdash; plus one asserted in an ad and absent here</div>
+    <div class="frow"><span class="id">MIN-C-01</span>
+      <div class="body"><div class="txt">&ldquo;Mineralife operates under NSF 455-2 cGMP Certified standard.&rdquo;</div>
+        <div class="prov">page:/why-choose-mineralife@2026-08-29 &middot; exact sentence on 8 pages &middot; 455-2 named on 19</div></div>
+      <div class="side"><span class="chip accent">gated:document</span><span class="chip">public</span></div></div>
+    <div class="frow"><span class="id">MIN-C-06</span>
+      <div class="body"><div class="txt muted"><em>FDA Registered Facility</em></div>
+        <div class="prov">0/63 pages &middot; live in an approved RSA since 2 Sep &middot; no primary document on file</div></div>
+      <div class="side"><span class="chip crit">asserted, unsourced</span></div></div>
+  </div>
+  <p class="small muted" style="margin-top:10px">
+    Static visual &mdash; no code written. Every quote, path and count is from the 29 August crawl,
+    except <code>MIN-C-06</code>, which is from the live ad account on 2 September and is here to show
+    what the bank would have flagged.
+  </p>
+
+  <h3 style="margin-top:30px">Three files, two commands</h3>
+  <div class="filepath" style="margin-top:10px">daedalus-insights/data/mineralife/</div>
+  <p class="small muted" style="margin-bottom:12px;max-width:74ch">The bank lives in the archive.
+    That is settled for Mineralife &mdash; you wrote the site &mdash; but the crawler carries an
+    <code>_ownership</code> note in each site config, so the first time this points at a site you
+    inherited, the question of whose material is being copied gets asked before the crawl runs rather
+    than after.</p>
+  <pre><span class="c">// pages/2026-08-29/&lt;slug&gt;.json — one per URL, the photograph</span>
+{
+  <span class="k">"path"</span>: <span class="s">"/services/toll-filling"</span>,
+  <span class="k">"status"</span>: <span class="n">200</span>,
+  <span class="k">"canonical"</span>: <span class="s">"https://www.mycustommanufacturer.com/services/toll-filling"</span>,
+  <span class="k">"title"</span>: <span class="s">"Toll Filling for Established Supplement Brands…"</span>,
+  <span class="k">"h1"</span>: [<span class="s">"Toll Filling for Established Supplement Brands"</span>],
+  <span class="k">"words"</span>: <span class="n">730</span>,
+  <span class="k">"ldTypes"</span>: [<span class="s">"Organization"</span>, <span class="s">"WebSite"</span>, <span class="s">"BreadcrumbList"</span>],
+  <span class="k">"images"</span>: [{ <span class="k">"src"</span>: <span class="s">"…"</span>, <span class="k">"alt"</span>: <span class="s">"…"</span>, <span class="k">"w"</span>: <span class="n">1600</span>, <span class="k">"h"</span>: <span class="n">900</span> }],
+  <span class="k">"blocks"</span>: [{ <span class="k">"tag"</span>: <span class="s">"h2"</span>, <span class="k">"text"</span>: <span class="s">"MOQs &amp; guardrails"</span> }, …]
+}
+
+<span class="c">// facts.json — the bank. Verbatim, located, dated.</span>
+{
+  <span class="k">"id"</span>: <span class="s">"MIN-M-01"</span>,
+  <span class="k">"text"</span>: <span class="s">"Toll projects publish a 5,000-unit MOQ."</span>,
+  <span class="k">"kind"</span>: <span class="s">"commercial"</span>,
+  <span class="k">"source"</span>: { <span class="k">"page"</span>: <span class="s">"/faq"</span>, <span class="k">"block"</span>: <span class="n">14</span>, <span class="k">"crawl"</span>: <span class="s">"2026-08-29"</span> },
+  <span class="k">"origin"</span>: <span class="s">"authored"</span>,   <span class="c">// authored | templated | inherited</span>
+  <span class="k">"echoes"</span>: [<span class="s">"/services/toll-filling"</span>, <span class="s">"/serving/colorado"</span>, …],
+  <span class="k">"firstSeen"</span>: <span class="s">"2026-08-29"</span>, <span class="k">"lastSeen"</span>: <span class="s">"2026-08-29"</span>,
+  <span class="k">"covers"</span>: [<span class="s">"claims:commercial/toll-moq"</span>],
+  <span class="k">"state"</span>: <span class="s">"promotable"</span>
+}
+
+<span class="c">// a settled conflict — both sentences stay, the decision is the third object</span>
+{
+  <span class="k">"conflict"</span>: [<span class="s">"MIN-A-01"</span>, <span class="s">"MIN-A-02"</span>],
+  <span class="k">"about"</span>: <span class="s">"award title"</span>,
+  <span class="k">"prefer"</span>: <span class="s">"MIN-A-01"</span>,
+  <span class="k">"decidedBy"</span>: <span class="s">"karol"</span>, <span class="k">"decidedOn"</span>: <span class="s">"2026-08-30"</span>,
+  <span class="k">"note"</span>: <span class="s">"ads use Top 10 Contract Manufacturer; /certifications copy left unchanged"</span>
+}
+
+<span class="c">// assets.json — the image bank</span>
+{
+  <span class="k">"src"</span>: <span class="s">"/_next/image?url=…&amp;w=1920"</span>,
+  <span class="k">"alt"</span>: <span class="s">"Encapsulation line, Colorado Springs facility"</span>,
+  <span class="k">"native"</span>: { <span class="k">"w"</span>: <span class="n">1920</span>, <span class="k">"h"</span>: <span class="n">1280</span> },
+  <span class="k">"usedOn"</span>: [<span class="s">"/"</span>, <span class="s">"/services"</span>],
+  <span class="k">"adCrops"</span>: { <span class="k">"1.91:1"</span>: <span class="s">"ok"</span>, <span class="k">"1:1"</span>: <span class="s">"ok"</span>, <span class="k">"4:5"</span>: <span class="s">"tight"</span> },
+  <span class="k">"review"</span>: <span class="s">"clear"</span>   <span class="c">// clear | names-a-brand | needs-karol</span>
+}</pre>
+  <pre style="margin-top:14px">insights crawl   --site mineralife [--cadence daily|weekly] [--force] [--dry-run]
+                                   <span class="c"># fetch, extract, diff against the last crawl</span>
+insights facts   --site mineralife [--kind commercial|capability|certification|scope]
+                                   [--state promotable|unsourced|conflict|superseded|stale]
+                                   [--origin authored|templated|inherited] [--limit 20]</pre>
+  <p class="small" style="margin-top:12px;max-width:74ch"><code>facts</code> defaults to a hard limit
+    like every other command, because 279 facts is already past the point where dumping them into
+    context is safe. <code>--cadence</code> is a re-crawl interval, not a scheduler: it sets how old
+    the last crawl has to be before this one does any network work, so the same command is safe to run
+    hourly and only fetches when the interval has elapsed. That matters more now than it did when this
+    was written, because there is a real clock to call it from.</p>
+
+  <h3 style="margin-top:34px">The asset bank: 699 image tags, 53 actual images</h3>
+  <div class="grid g4" style="margin-top:14px">
+    <div class="stat"><span class="num">699</span><span class="lbl">&lt;img&gt; tags</span>
+      <span class="sub">Across 63 pages &mdash; mostly the same logos and icons repeated.</span></div>
+    <div class="stat accent"><span class="num">53</span><span class="lbl">unique sources</span>
+      <span class="sub">The real pool. 48 served locally, 5 external.</span></div>
+    <div class="stat warn"><span class="num">58%</span><span class="lbl">alt coverage</span>
+      <span class="sub">408 of 699. Alt text is the only description of what a photo shows.</span></div>
+    <div class="stat"><span class="num">3</span><span class="lbl">crops needed</span>
+      <span class="sub">1.91:1, 1:1 and 4:5 for image assets and Performance Max.</span></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card rail crit">
+      <h3>Every candidate needs a compliance pass, not a crop</h3>
+      <p class="small">COMPLIANCE line 2 in <code>CLIENT.md</code> is a hard line: never name or imply a
+        customer brand, and no photos of labeled finished goods that identify one. A contract
+        manufacturer's photo library is full of exactly that. So the asset bank carries a review state
+        per image, and anything showing a labeled product is <code>needs-karol</code> until you say
+        otherwise, however good it looks in a 1.91:1 frame.</p>
+    </div>
+    <div class="card rail warn">
+      <h3>58% alt coverage is the selection problem</h3>
+      <p class="small">Nothing in a crawl knows what a photograph depicts except its alt text and the
+        page it sits on. With 42% of tags unlabelled, roughly half the pool can only be described as
+        &ldquo;an image on <code>/services</code>&rdquo;. Enough to build the inventory, not enough to
+        pick assets from it &mdash; so the bank records the gap rather than guessing, and filling it is
+        a cheap job across 53 files that also improves the site.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">04 &mdash; movement two</p>
+  <h2>The campaign exists. The objects behind it do not.</h2>
+  <p style="max-width:70ch">
+    This movement has changed the most. When it was written there was no Ads account, no landing page
+    with a form, and no evidence a click could carry its id to a Lead row. All three are now done, by
+    hand, and they work. What did not get built is everything that would let the next campaign be
+    written from an artifact rather than from memory &mdash; and the upload that makes bidding learn
+    from the pipeline.
+  </p>
+
+  <h3 style="margin-top:28px">The keyword bank was priced, and most of it is worth nothing</h3>
+  <p class="small" style="max-width:70ch"><code>docs/keyword-research.xlsx</code> holds 183 keywords
+    across 18 clusters with estimated volume ranges and a target page for each. It is good work and it
+    was never priced. All of it went to DataForSEO's Google Ads endpoint &mdash; 178 queryable, 5
+    rejected for exceeding Google's ten-word limit &mdash; and the answer came back for $0.09.</p>
+  <div class="grid g4" style="margin-top:16px">
+    <div class="stat crit"><span class="num">84%</span><span class="lbl">zero volume</span>
+      <span class="sub">149 of 178 keywords return no searches at all.</span></div>
+    <div class="stat warn"><span class="num">3.4&times;</span><span class="lbl">overstated</span>
+      <span class="sub">21,725 estimated per month against 6,410 live.</span></div>
+    <div class="stat crit"><span class="num">30</span><span class="lbl">toll filling, per month</span>
+      <span class="sub">All 15 toll keywords combined. The flagship division.</span></div>
+    <div class="stat accent"><span class="num">$31</span><span class="lbl">cost per click, head term</span>
+      <span class="sub">One click on the one term that has real volume.</span></div>
+  </div>
+
+  <div class="grid g2" style="margin-top:18px">
+    <div class="card rail crit">
+      <h3>The flagship service has no paid demand</h3>
+      <p class="small">Fifteen toll-filling keywords return 30 searches a month between them, and all
+        30 belong to <code>toll blending services</code> &mdash; a term that isn't supplements and
+        isn't Mineralife. <em>toll filling services for supplements</em>, <em>supplement tolling</em>,
+        <em>toll encapsulation services</em>: zero, zero, zero. The eleven long-tail toll questions the
+        blog plan was built on return zero between them.</p>
+      <p class="small" style="margin-top:10px">Toll filling is the highest-margin division and the
+        highest-leverage page on the site. Nobody searches for it by name. That is a finding about the
+        channel, not about the business &mdash; and it is why the live account sells toll filling on
+        the contract-manufacturer query and lets the landing page do the translating.</p>
+    </div>
+    <div class="card rail crit">
+      <h3>Fourteen geo pages, zero geo searches</h3>
+      <p class="small">Every regional keyword is zero: <code>colorado supplement manufacturer</code>,
+        <code>supplement manufacturer colorado springs</code>, <code>supplement manufacturer denver</code>,
+        <code>contract manufacturer colorado</code> &mdash; all of them, 0/mo. The site carries 14
+        <code>/serving</code> pages and 15,357 words built on that set. As an SEO long-tail net that may
+        still earn its keep. As a paid target it is nothing, which is why the Regional campaign is
+        paused rather than optimised.</p>
+    </div>
+    <div class="card rail warn">
+      <h3>The demand is in the vocabulary the pack avoids</h3>
+      <p class="small">The one term with real volume is
+        <strong>contract supplement manufacturer</strong> &mdash; 1,600/mo, $31.03 &mdash; which the
+        keyword sheet annotates &ldquo;use sparingly&rdquo; and the positioning doc treats as
+        off-terminology. Underneath it: <em>nutraceutical contract manufacturer</em> 720 at $7.95,
+        <em>custom supplement manufacturer</em> 320 at $38.28.</p>
+      <p class="small" style="margin-top:10px">The approved identity &mdash; an award-winning contract
+        manufacturer for established brands &mdash; is the same phrase as the only paid demand on the
+        board. Convenient, and the live account is built on it.</p>
+    </div>
+    <div class="card rail warn">
+      <h3>Two of the head terms are the same term</h3>
+      <p class="small"><code>supplement contract manufacturer</code> and
+        <code>contract supplement manufacturer</code> both return 1,600/mo at $31.03 with competition
+        index 7 &mdash; identical on every field, because Google normalises word order and reports one
+        number twice. Summed naively the commercial pool reads 5,580/mo; deduplicated it is
+        <strong>3,980</strong>. Any budget model built on the raw sum starts 40% optimistic, and a
+        spreadsheet of estimates cannot catch that. It is also the single best argument for storing the
+        bank as data with a <code>canonical</code> field rather than as a sheet.</p>
+    </div>
+  </div>
+
+  <div class="tablecard" style="margin-top:20px">
+    <table>
+      <thead><tr><th>Cluster</th><th class="r">Keywords</th><th class="r">Estimated</th><th class="r">Live</th><th>Gap</th><th class="r">Avg CPC</th></tr></thead>
+      <tbody>
+        <tr><td>Seed &mdash; head terms</td><td class="r mono">15</td><td class="r mono">13,805</td><td class="r mono">5,410</td>
+          <td><div class="bar"><i style="width:39%;background:var(--good)"></i><i style="width:61%;background:var(--line)"></i></div></td><td class="r mono">$32.11</td></tr>
+        <tr><td>Audience intent</td><td class="r mono">10</td><td class="r mono">1,075</td><td class="r mono">280</td>
+          <td><div class="bar"><i style="width:26%;background:var(--good)"></i><i style="width:74%;background:var(--line)"></i></div></td><td class="r mono">$23.55</td></tr>
+        <tr><td>Powder &amp; capsule</td><td class="r mono">14</td><td class="r mono">1,670</td><td class="r mono">240</td>
+          <td><div class="bar"><i style="width:14%;background:var(--warn)"></i><i style="width:86%;background:var(--line)"></i></div></td><td class="r mono">$14.80</td></tr>
+        <tr><td>Full-service workflow</td><td class="r mono">8</td><td class="r mono">1,010</td><td class="r mono">180</td>
+          <td><div class="bar"><i style="width:18%;background:var(--warn)"></i><i style="width:82%;background:var(--line)"></i></div></td><td class="r mono">$9.98</td></tr>
+        <tr><td>Certifications</td><td class="r mono">12</td><td class="r mono">605</td><td class="r mono">50</td>
+          <td><div class="bar"><i style="width:8%;background:var(--crit)"></i><i style="width:92%;background:var(--line)"></i></div></td><td class="r mono">$10.83</td></tr>
+        <tr><td>White label</td><td class="r mono">11</td><td class="r mono">1,020</td><td class="r mono">40</td>
+          <td><div class="bar"><i style="width:4%;background:var(--crit)"></i><i style="width:96%;background:var(--line)"></i></div></td><td class="r mono">$16.65</td></tr>
+        <tr><td><strong>Toll filling</strong></td><td class="r mono">15</td><td class="r mono">620</td><td class="r mono">30</td>
+          <td><div class="bar"><i style="width:5%;background:var(--crit)"></i><i style="width:95%;background:var(--line)"></i></div></td><td class="r mono">&mdash;</td></tr>
+        <tr><td>Liquid tincture</td><td class="r mono">13</td><td class="r mono">1,100</td><td class="r mono">10</td>
+          <td><div class="bar"><i style="width:1%;background:var(--crit)"></i><i style="width:99%;background:var(--line)"></i></div></td><td class="r mono">$11.65</td></tr>
+        <tr><td>Regional &mdash; 14 <code>/serving</code> pages</td><td class="r mono">7</td><td class="r mono">295</td><td class="r mono">0</td>
+          <td><div class="bar"><i style="width:100%;background:var(--line)"></i></div></td><td class="r mono">&mdash;</td></tr>
+        <tr><td class="muted">8 long-tail clusters, combined</td><td class="r mono">73</td><td class="r mono">525</td><td class="r mono">170</td>
+          <td><div class="bar"><i style="width:32%;background:var(--warn)"></i><i style="width:68%;background:var(--line)"></i></div></td><td class="r mono">$7.41</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:10px 10px 6px">
+      DataForSEO <code>keywords_data/google_ads/search_volume/live</code>, US, English, 30 Aug 2026.
+      Live volume is Google's own twelve-month average, the same number the auction is priced from.
+      Eighty keywords carry a non-zero estimate and a zero live volume &mdash; 6,365 searches a month
+      that do not exist. <strong>These figures are now frozen and ageing with nothing watching them</strong>,
+      which is increment L-17.
+    </p>
+  </div>
+
+  <h3 style="margin-top:34px">A fact is not an assertion</h3>
+  <p style="max-width:70ch">
+    Movement one ends with a Claim: a verbatim sentence with a page behind it. An ad cannot hold a
+    verbatim sentence &mdash; a headline is thirty characters. So something has to sit between a claim
+    and a headline, and it has to be reviewable, or the citation chain breaks at exactly the point
+    where the assertion becomes public.
+  </p>
+  <div class="grid g3" style="margin-top:18px">
+    <div class="stat crit"><span class="num">0/8</span><span class="lbl">facts fit a headline</span>
+      <span class="sub">The shortest promotable fact is 39 characters. The limit is 30.</span></div>
+    <div class="stat warn"><span class="num">4/8</span><span class="lbl">fit a description</span>
+      <span class="sub">The other four run 91 to 132 characters.</span></div>
+    <div class="stat good"><span class="num">12</span><span class="lbl">headlines derivable</span>
+      <span class="sub">Compressed from the same eight facts. Google wants 8+; the live RSAs carry 15.</span></div>
+  </div>
+  <div class="mock" style="margin-top:16px">
+    <div class="mock-bar">
+      <span class="t">Assertions &mdash; mineralife</span>
+      <span class="chip mono">from 8 facts</span>
+      <span class="sp"></span>
+      <span>12 headlines &middot; 4 descriptions &middot; all under limit</span>
+    </div>
+    <div class="band">Headlines &middot; 30 character limit</div>
+    <div class="frow"><span class="id">24 ch</span><div class="body"><div class="txt">NSF 455-2 cGMP Certified</div>
+      <div class="prov">from MIN-C-01 &middot; page:/why-choose-mineralife</div></div>
+      <div class="side"><span class="chip warn">certification mark</span></div></div>
+    <div class="frow"><span class="id">21 ch</span><div class="body"><div class="txt">Toll MOQ: 5,000 units</div>
+      <div class="prov">from MIN-M-01 &middot; page:/faq &middot; number preserved, framing dropped</div></div>
+      <div class="side"><span class="chip ok">figure intact</span></div></div>
+    <div class="frow"><span class="id">26 ch</span><div class="body"><div class="txt">White label from 250 units</div>
+      <div class="prov">from MIN-M-02 &middot; page:/faq</div></div>
+      <div class="side"><span class="chip ok">figure intact</span></div></div>
+    <div class="frow"><span class="id">26 ch</span><div class="body"><div class="txt">Capsules #1, #0, #00, #00E</div>
+      <div class="prov">from MIN-P-01 &middot; page:/faq &middot; sizes verbatim, bottling dropped</div></div>
+      <div class="side"><span class="chip ok">figure intact</span></div></div>
+    <div class="frow"><span class="id">22 ch</span><div class="body"><div class="txt">For established brands</div>
+      <div class="prov">from MIN-A-01 &middot; corroborated on 23 pages</div></div>
+      <div class="side"><span class="chip ok">exact term</span></div></div>
+    <div class="frow"><span class="id">22 ch</span><div class="body"><div class="txt muted"><em>FDA Registered Facility</em></div>
+      <div class="prov">no fact behind it &middot; live in the account since 2 Sep</div></div>
+      <div class="side"><span class="chip crit">would not have passed</span></div></div>
+    <div class="band">Descriptions &middot; 90 character limit</div>
+    <div class="frow"><span class="id">74 ch</span><div class="body"><div class="txt">Toll projects publish a 5,000-unit MOQ. NSF 455-2 cGMP certified facility.</div>
+      <div class="prov">MIN-M-01 + MIN-C-01 &middot; first sentence verbatim</div></div>
+      <div class="side"><span class="chip ok">2 facts</span></div></div>
+    <div class="frow"><span class="id">67 ch</span><div class="body"><div class="txt">We say no to what we can't do well. Honest scope before you commit.</div>
+      <div class="prov">MIN-S-01 &middot; compressed from a 103-character sentence</div></div>
+      <div class="side"><span class="chip warn">tone, not fact</span></div></div>
+  </div>
+  <p class="small muted" style="margin-top:10px">
+    Character counts measured; every fact id is a real row from movement one's bank. The last headline
+    row is the live account's, included to show the gate this layer would be.
+  </p>
+
+  <div class="callout warn" style="margin-top:20px">
+    <h4>Google reviews assertions separately, and truth is not the test</h4>
+    <p class="small" style="margin-top:6px">The good news first: Google's healthcare and medicines
+      policy does not prohibit this business model. It regulates promotion of supplements to consumers;
+      a B2B manufacturing service is not that, and no LegitScript-style certification applies. The
+      scanners still read the landing page, so ad copy and pages must stay off consumer health outcomes
+      &mdash; which Mineralife's copy already does.</p>
+    <p class="small" style="margin-top:10px">Three risks that have nothing to do with whether a
+      statement is true:</p>
+    <ul class="tight small" style="margin-top:8px">
+      <li><strong>Superlatives</strong> are enforced under the misrepresentation policy, and what
+        passes is landing-page evidence carrying the awarding body, the category, and a visible date
+        inside roughly 12&ndash;24 months. The Manufacturing Outlook listing is 2022, so publishing it
+        with the year makes the disapproval <em>more</em> likely, not less. This is why
+        &ldquo;Award-Winning Manufacturer&rdquo; is out of the live headline set, and it should stay
+        out unless a 2025 or 2026 recognition exists.</li>
+      <li><strong>Certification marks</strong> &mdash; NSF Certified for Sport&reg; and NSF 455-2 cGMP
+        &mdash; flag under the trademark policy unless authorisation is on file with Google or the use
+        is strictly descriptive. Descriptive use is arguable here and worth arguing, but not inside the
+        account's only campaign, which is why they belong in an ad group of their own.</li>
+      <li><strong>Registration claims</strong> &mdash; &ldquo;FDA Approved&rdquo; is a permanent
+        disapproval; &ldquo;FDA Registered&rdquo; is accurate and survives, but only with the
+        registration visible on the page it points at. It is live today without one. Never let this one
+        drift in an edit.</li>
+    </ul>
+    <p class="small" style="margin-top:10px">The structural answer is unchanged: flagged assertions
+      launch in their own ad group, so a disapproval takes down one group rather than the account.</p>
+  </div>
+
+  <h3 style="margin-top:34px">The account as built, against the account as proposed</h3>
+  <div class="tablecard" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Proposed</th><th>Live on 2 September</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="small">Core &mdash; contract manufacturing, three ad groups, phrase + exact</td><td class="small">Core Terms, US / Presence, $12 CPC cap, 3 RSAs at 15 headlines, 6 sitelinks</td><td><span class="chip ok">built</span></td></tr>
+        <tr><td class="small">Catalog &mdash; white label, own budget</td><td class="small">folded away with the private-label decision; white label sits inside the core structure</td><td><span class="chip warn">changed</span></td></tr>
+        <tr><td class="small">Listening post &mdash; broad match, capped, <code>/faq</code></td><td class="small">Competitors campaign: 7 phrase competitor terms + 8 phrase/exact switching terms; 13 broad paused; 7 of 8 switching terms rarely served</td><td><span class="chip warn">reshaped</span></td></tr>
+        <tr><td class="small">No geo campaign</td><td class="small">Regional campaign paused</td><td><span class="chip ok">honoured</span></td></tr>
+        <tr><td class="small">No toll-filling campaign by name</td><td class="small">none; toll sold on the contract-manufacturer query</td><td><span class="chip ok">honoured</span></td></tr>
+        <tr><td class="small">Negatives are the ICP written as a filter</td><td class="small"><code>mineralife-exclusion-2026</code>, 174 terms, attached to both B2B campaigns</td><td><span class="chip ok">built</span></td></tr>
+        <tr><td class="small">Search Partners off</td><td class="small">off on both</td><td><span class="chip ok">built</span></td></tr>
+        <tr><td class="small">Paid traffic lands on a page with a form</td><td class="small">6 landing pages, all 200, noindex; Competitors lands on <code>/lp/switch-manufacturers</code> with a hero form</td><td><span class="chip ok">built</span></td></tr>
+        <tr><td class="small">Maximize Conversions, no target CPA</td><td class="small">bidding strategy in learning; Submit-lead-form-only goal on both campaigns</td><td><span class="chip ok">built</span></td></tr>
+        <tr><td class="small">Campaigns written through the Ads API, paused for review</td><td class="small">built by hand in the UI</td><td><span class="chip">superseded</span></td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:10px 10px 6px">
+      Read from the Google Ads API, account 624-370-2566, on 2 September. The negative list is the one
+      to re-read by eye: a negative keyword is invisible once set, and
+      <code>custom gummy vitamin manufacturer</code> was 126 clicks in August &mdash; so gummy and
+      tablet exclusions should be confirmed against real capability rather than assumed.
+    </p>
+  </div>
+
+  <h3 style="margin-top:34px">The conversion loop: three quarters built</h3>
+  <div class="grid g4" style="margin-top:14px">
+    <div class="stat good"><span class="num">4</span><span class="lbl">capture points wired</span>
+      <span class="sub">gclid, gbraid, wbraid and UTMs, first- and last-touch.</span></div>
+    <div class="stat warn"><span class="num">90d</span><span class="lbl">flat click-id TTL</span>
+      <span class="sub">Right for gclid. 6.4&times; too generous for gbraid/wbraid, which expire at 14.</span></div>
+    <div class="stat good"><span class="num">12</span><span class="lbl">pipeline stages</span>
+      <span class="sub">New through Won &mdash; PO Received. The value ladder already exists.</span></div>
+    <div class="stat crit"><span class="num">0</span><span class="lbl">conversions uploaded</span>
+      <span class="sub">No upload path in any repo. Google sees the form and nothing after it.</span></div>
+  </div>
+  <div class="grid g2" style="margin-top:18px">
+    <div class="card rail good">
+      <h3>What works, and better than most implementations</h3>
+      <ul class="tight small" style="margin-top:8px">
+        <li><code>AttributionCapture.tsx</code> writes on mount and on every client navigation, so a
+          click landing on <code>/</code> and converting on <code>/contact</code> keeps its gclid.</li>
+        <li><code>attribution.ts</code> stores first- <em>and</em> last-touch and handles
+          <code>gbraid</code>/<code>wbraid</code> &mdash; the consent-mode variants most
+          implementations drop, which is where iOS and consent-limited clicks go.</li>
+        <li><code>LeadForm.tsx</code> and <code>LeadIntakeWizard.tsx</code> both call
+          <code>getAttributionForSubmit()</code> and spread it into the POST body;
+          <code>/api/leads</code> runs it through <code>pickAttributionFields</code>. Prisma has
+          <code>gclid</code>, <code>gbraid</code>, <code>wbraid</code> with
+          <code>@@index([gclid])</code>, same on <code>CatalogDownload</code>.</li>
+        <li>It is independent of the consent gate, because it is localStorage rather than GTM &mdash;
+          so a gclid survives a visitor who never accepts <code>GTM-5B83HMG</code>. That matters much
+          more than it looks now that the cookieless counter says GA4 sees roughly 8% of visitors.</li>
+        <li>And it is <strong>observed</strong>, which it was not when this was drafted: August ran
+          <code>form_submit</code> 9 : <code>generate_lead</code> 9, with the click id stored
+          server-side at submission.</li>
+      </ul>
+    </div>
+    <div class="card rail crit">
+      <h3>What is missing</h3>
+      <ul class="tight small" style="margin-top:8px">
+        <li>No upload path. The CRM can now <em>read</em> the Ads account &mdash;
+          <code>lib/insights/google.ts</code> carries a paged GAQL client &mdash; but
+          <code>uploadClickConversions</code> is zero matches in every repo.</li>
+        <li>No conversion value. Every lead is worth the same to Google, so it optimises toward whoever
+          fills in a form, which for a manufacturer is mostly the wrong buyer.</li>
+        <li>No hashed first-party data. Google's current guidance is Enhanced Conversions for Leads
+          &mdash; the click id <em>plus</em> hashed email and phone in the same payload, which recovers
+          cross-device journeys and clicks whose id was cleared. The Lead model already holds both
+          fields; it is a hashing step, not a schema change.</li>
+        <li>No per-kind expiry. A stored <code>gbraid</code> older than a fortnight is a row the
+          uploader will always be rejected on, and today every click id is given 90 days.</li>
+      </ul>
+      <p class="small" style="margin-top:10px">One implementation note: direct offline-conversion
+        uploads migrated toward the Data Manager API framework during 2026, so the integration target
+        should be confirmed against current docs on the day rather than copied from an older
+        example.</p>
+    </div>
+  </div>
+
+  <div class="tablecard" style="margin-top:18px">
+    <table>
+      <thead><tr><th>Stage</th><th>Conversion action</th><th>Role</th><th>Why this one</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">new</td><td>Lead submitted</td><td><span class="chip new">primary</span></td><td class="small">what Google bids toward. Fires at the click, so the window barely bites this year. <span class="chip ok">live as generate_lead</span></td></tr>
+        <tr><td class="mono">qualified</td><td>Qualified lead</td><td><span class="chip">secondary</span></td><td class="small">first point a human agreed it is a real buyer &mdash; the ratio to become next year's target</td></tr>
+        <tr><td class="mono">quote_sent</td><td>Quote sent</td><td><span class="chip">secondary</span></td><td class="small">strongest mid-funnel signal that reliably lands inside 90 days</td></tr>
+        <tr><td class="mono">won</td><td>PO received</td><td><span class="chip">secondary</span></td><td class="small">the revenue truth, recorded from day one so it is there when you want to bid on it</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:10px 10px 6px">
+      Twelve stages exist in <code>src/lib/crm/pipeline/defaults.ts</code>.
+      <code>discovery_call</code>, <code>formulation_spec</code>, <code>sample_requested</code> and
+      <code>negotiation</code> stay internal &mdash; more upload traffic, no extra signal.
+      <code>lost</code> matters, but only once there is volume for it to mean anything. Only the first
+      row exists in the account today; the other three are the point of increment L-15.
+    </p>
+  </div>
+
+  <div class="callout warn" style="margin-top:18px">
+    <h4>The sales cycle is longer than Google's memory</h4>
+    <p class="small" style="margin-top:6px">Offline conversion import matches on a click id for
+      <strong>90 days</strong>; past that the upload is rejected outright. Contract manufacturing runs a
+      <strong>60&ndash;180 day</strong> cycle. Spread evenly across that range, only about a quarter of
+      won deals would land inside the window; the other three quarters happen and Google never hears
+      about them. <span class="muted">(Illustrative &mdash; it assumes an even spread, which nobody has
+      measured for this client. The real distribution is something the CRM will know after a
+      year.)</span></p>
+    <p class="small" style="margin-top:10px">Optimising for leads sidesteps most of this for now, which
+      is why the deeper stages are secondary: recorded, not bid on. The window problem arrives in full
+      the day you switch to bidding on quotes or POs, which is exactly why they get recorded from the
+      start. <code>expired</code> stays a first-class state rather than an error &mdash; counting the
+      wins that land too late is how you learn whether the channel works better than Google can
+      see.</p>
+  </div>
+
+  <h3 style="margin-top:34px">One migration, two files</h3>
+  <div class="filepath" style="margin-top:14px">mineralife-frontend &mdash; prisma/migrations/</div>
+  <pre><span class="c">-- Conversion uploads are an outbox, not a column on Lead: one row per</span>
+<span class="c">-- (lead, action) so a re-run is idempotent and a rejection is inspectable.</span>
+<span class="k">CREATE TABLE</span> conversion_upload (
+  id            uuid <span class="k">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  lead_id       uuid <span class="k">NOT NULL REFERENCES</span> "Lead"(id) <span class="k">ON DELETE CASCADE</span>,
+  action        text <span class="k">NOT NULL</span>,        <span class="c">-- lead_submitted | qualified | quote_sent | po_received</span>
+  click_id      text <span class="k">NOT NULL</span>,        <span class="c">-- gclid, gbraid or wbraid, whichever the lead carries</span>
+  click_id_kind text <span class="k">NOT NULL</span>,        <span class="c">-- gclid = 90d window; gbraid/wbraid = 14d</span>
+  expires_at    timestamptz <span class="k">NOT NULL</span>,  <span class="c">-- click time + the window for THIS kind, not a flat 90</span>
+  email_sha256  text,                <span class="c">-- enhanced conversions for leads: sent alongside the</span>
+  phone_sha256  text,                <span class="c">-- click id, recovers cross-device and cleared ids</span>
+  value_usd     numeric(10,2),       <span class="c">-- null in 2026; the column exists so the tROAS</span>
+                                     <span class="c">-- switch next year is a backfill, not a migration</span>
+  occurred_at   timestamptz <span class="k">NOT NULL</span>,  <span class="c">-- when the STAGE changed, not when we uploaded</span>
+  uploaded_at   timestamptz,
+  status        text <span class="k">NOT NULL DEFAULT</span> <span class="s">'pending'</span>,  <span class="c">-- pending | uploaded | rejected | expired</span>
+  error         text,
+  <span class="k">UNIQUE</span> (lead_id, action)
+);
+<span class="k">CREATE INDEX</span> conversion_upload_pending <span class="k">ON</span> conversion_upload (status, occurred_at)
+  <span class="k">WHERE</span> status = <span class="s">'pending'</span>;</pre>
+  <p class="small muted" style="margin-top:10px;max-width:74ch">
+    The Lead model lives in <code>mineralife-frontend</code>, which is where the form posts and where
+    the click ids are already stored, so that is where the outbox goes. The sender is the one piece
+    that wants a schedule &mdash; and there is now a clock to put it on.
+  </p>
+  <div class="filepath" style="margin-top:22px">daedalus-insights/data/mineralife/</div>
+  <pre><span class="c">// keywords.json — the bank, priced and dated</span>
+{
+  <span class="k">"keyword"</span>: <span class="s">"contract supplement manufacturer"</span>,
+  <span class="k">"cluster"</span>: <span class="s">"Seed"</span>, <span class="k">"intent"</span>: <span class="s">"commercial"</span>,
+  <span class="k">"volume"</span>: <span class="n">1600</span>, <span class="k">"cpc"</span>: <span class="n">31.03</span>, <span class="k">"competitionIndex"</span>: <span class="n">7</span>,
+  <span class="k">"estimatedWas"</span>: <span class="n">2100</span>,        <span class="c">// what the sheet claimed, kept for the record</span>
+  <span class="k">"canonical"</span>: <span class="s">"contract supplement manufacturer"</span>,  <span class="c">// word-order duplicates fold here</span>
+  <span class="k">"pricedOn"</span>: <span class="s">"2026-08-30"</span>, <span class="k">"source"</span>: <span class="s">"dataforseo:google_ads/search_volume"</span>
+}
+
+<span class="c">// assertions.json — what an ad is allowed to say</span>
+{
+  <span class="k">"id"</span>: <span class="s">"ASR-014"</span>,
+  <span class="k">"text"</span>: <span class="s">"Toll MOQ: 5,000 units"</span>, <span class="k">"chars"</span>: <span class="n">21</span>, <span class="k">"slot"</span>: <span class="s">"headline"</span>,
+  <span class="k">"from"</span>: <span class="s">"MIN-M-01"</span>,               <span class="c">// the fact it compresses</span>
+  <span class="k">"compression"</span>: <span class="s">"figure preserved, framing dropped"</span>,
+  <span class="k">"approvedBy"</span>: <span class="s">"karol"</span>, <span class="k">"approvedOn"</span>: <span class="s">"2026-09-xx"</span>,
+  <span class="k">"liveIn"</span>: [<span class="s">"core-terms/contract-manufacturer"</span>],
+  <span class="k">"policyRisk"</span>: <span class="s">"none"</span>        <span class="c">// none | superlative | certification-mark | registration</span>
+}</pre>
+</section>
+
+<section>
+  <p class="sec-num">05 &mdash; movement three</p>
+  <h2>The clock runs. It does not run the reporting.</h2>
+  <p style="max-width:70ch">
+    This movement's central complaint &mdash; nothing in any repo is on a schedule &mdash; is no longer
+    true, and the fix went in almost immediately. What it did not bring is the job registry, so the
+    clock knows about three jobs because they are written into a function, and the two jobs that
+    actually produce the reporting are not among them.
+  </p>
+
+  <div class="grid g2" style="margin-top:24px">
+    <div class="card rail good">
+      <span class="chip ok">built and running</span>
+      <h3 style="margin-top:10px">The clock, and the things already on it</h3>
+      <ul class="tight small" style="margin-top:8px">
+        <li><code>tallkarol-cron</code>, a second Railway service in the same project, same repo, no
+          web process. <code>npm run cron:tick</code> every fifteen minutes, restart policy
+          <code>NEVER</code> &mdash; a cron job exits when it is done, and anything that restarts it
+          turns a 15-minute job into a hot loop.</li>
+        <li><code>reopenDueRecurring()</code> &mdash; weekly and monthly tasks now roll over without
+          anyone opening the CRM in a browser, which is what the widgets needed.</li>
+        <li><code>sweepMonitors()</code> &mdash; on a schedule for the first time, so
+          <code>monitors.sweepEveryMinutes</code> finally means something.</li>
+        <li><code>sweepNotifications()</code> &mdash; evaluated from the same endpoints the widgets and
+          the Mac app read.</li>
+        <li>Exposed as <code>/api/cron/tick</code> behind <code>SWEEP_SECRET</code> for any external
+          scheduler, and runnable by hand.</li>
+      </ul>
+      <p class="filepath" style="margin-top:10px">lib/tick.ts &middot; app/api/cron/tick/route.ts &middot; DEPLOY.md</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">built and running</span>
+      <h3 style="margin-top:10px">The index-scan half, and the denominator</h3>
+      <ul class="tight small" style="margin-top:8px">
+        <li><code>gsc_scans</code> and <code>gsc_findings</code>, migration 0032 applied. The scanner
+          does 63 URL inspections in 58 seconds, 3% of the daily quota.</li>
+        <li>Seven rules; findings have a lifecycle, so a fix is recorded by the first scan that stops
+          seeing the problem. Index coverage is 60 of 63 as of 2 September.</li>
+        <li>One monthly task per site carrying <code>clientId</code>, so the work bills.</li>
+        <li>The Health tab section, a client-facing report sample, and
+          <code>/api/insights/gsc-scan</code>, authenticated.</li>
+        <li>The cookieless first-party collector &mdash; live since 31 August, 237 visitors to
+          2 September, 53% US. This is the denominator that lets the GA4 figure be read honestly
+          instead of as a total.</li>
+      </ul>
+    </div>
+    <div class="card rail crit">
+      <span class="chip crit">the gap</span>
+      <h3 style="margin-top:10px">The clock cannot see the two jobs that matter</h3>
+      <p class="small"><code>/api/insights/gsc-scan</code> is authenticated, correct, and still waiting
+        for a caller. And <code>ensureMonthlyArchive()</code> &mdash; which writes the frozen
+        <code>snapshot_archive</code> row and its <code>reports</code> record &mdash; is called from
+        exactly one place: <code>lib/insights/actions.ts:32</code>, inside the Refresh action.</p>
+      <p class="small" style="margin-top:10px">So a month in which nobody opens the insights page still
+        produces no archived snapshot, and the month cannot be reconstructed afterwards because the
+        APIs have moved on. The object is right, the table is right, the unique constraint on
+        <code>(site_id, period)</code> is right. The trigger is a human remembering.</p>
+      <p class="small" style="margin-top:10px">Adding both to <code>tick()</code> by hand would work
+        and would be the wrong shape: they run monthly, not every fifteen minutes, so the interval has
+        to live somewhere. That is the registry.</p>
+    </div>
+    <div class="card rail warn">
+      <span class="chip warn">read on page load only</span>
+      <h3 style="margin-top:10px">Eight sources, none of them on a cadence</h3>
+      <p class="small">The source layer grew a great deal: Search Console, GA4 (property
+        <code>395780153</code>), Google Ads, Vercel, PageSpeed, the first-party collector, Measurement
+        Protocol and UptimeRobot are all <code>InsightSource</code> entries now. Every one of them is
+        still read when somebody loads a page.</p>
+      <p class="small" style="margin-top:10px">That is fine for a dashboard and useless for a report:
+        the numbers in a monthly document should be the numbers as they stood at the close of the
+        month, not as they stand when the page happens to be opened.
+        <code>DATAFORSEO_API_KEY</code> is set and used by nothing at all, which is the ninth source
+        and the one that would keep movement two's keyword figures from silently ageing.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:34px">Four cadences, three audiences</h3>
+  <div class="tablecard" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Cadence</th><th>Job</th><th>Audience</th><th>Convention</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">15 min</td><td>the tick &mdash; recurring tasks, monitors, notifications</td><td class="small">nobody</td><td class="small">silent unless a monitor raises a ticket <span class="chip ok">live</span></td></tr>
+        <tr><td class="mono">daily</td><td>exception check</td><td class="small">you, only when something crossed a line</td><td class="small">site down, job silent, campaign disapproved, spend more than double the daily average. Nothing about ranking or traffic</td></tr>
+        <tr><td class="mono">weekly</td><td>internal digest</td><td class="small">you</td><td class="small">allowed to be blunt &mdash; a keyword died, a page slipped, a lead came in on a term nobody expected</td></tr>
+        <tr><td class="mono">monthly</td><td>freeze, then the client report</td><td class="small">the client, after you release it</td><td class="small">the record: what was found, what was fixed, what it earned, what carries forward</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:10px 10px 6px">
+      A daily report that arrives every day gets filtered within a fortnight. On a normal Tuesday this
+      one produces no output at all, and that silence is the signal. At 130 clicks a month the
+      week-to-week noise is larger than any signal a daily traffic check could find, which is why
+      traffic is deliberately not in the daily thresholds.
+    </p>
+  </div>
+
+  <h3 style="margin-top:30px">What the weekly one says</h3>
+  <div class="mock" style="margin-top:14px">
+    <div class="mock-bar">
+      <span class="t">Weekly digest &mdash; Mineralife</span>
+      <span class="chip mono">week of 24 Aug 2026</span>
+      <span class="sp"></span>
+      <span>4 items &middot; 1 needs you</span>
+    </div>
+    <div class="band">Search &middot; from the archive</div>
+    <div class="frow"><span class="id">&darr; 16.6%</span>
+      <div class="body"><div class="txt">Clicks fell to 131 from 157, while impressions rose 11.3% to 32,878.</div>
+        <div class="prov">gsc:primary@2026-08-27 &middot; average position improved 16.1 &rarr; 12.9</div></div>
+      <div class="side"><span class="chip warn">watch</span></div></div>
+    <div class="frow"><span class="id">pattern</span>
+      <div class="body"><div class="txt">Sixteenth consecutive window with impressions up and clicks flat. CTR is now 0.40%, down from 1.29% in May 2025.</div>
+        <div class="prov">derived from 18 archived windows &middot; not a one-week move</div></div>
+      <div class="side"><span class="chip crit">needs you</span></div></div>
+    <div class="band">Index &middot; from the monthly scan</div>
+    <div class="frow"><span class="id">3 open</span>
+      <div class="body"><div class="txt">Three sitemap URLs Google has not crawled, plus one new clean-slug URL awaiting first discovery.</div>
+        <div class="prov">task: Search Console maintenance &mdash; August 2026 &middot; 60 of 63 indexed</div></div>
+      <div class="side"><span class="chip ok">improving</span></div></div>
+    <div class="band">Paid &middot; reporting, not yet converting</div>
+    <div class="frow"><span class="id">2 live</span>
+      <div class="body"><div class="txt">Core Terms and Competitors serving. No offline outcomes uploaded &mdash; bidding is learning from form submissions only.</div>
+        <div class="prov">ads:624-370-2566 &middot; the absence is stated, not omitted</div></div>
+      <div class="side"><span class="chip warn">L-15</span></div></div>
+  </div>
+  <p class="small muted" style="margin-top:10px">
+    Static visual. Search figures are from the archive built 30 August; index and paid rows are from
+    2 September. The layout is a proposal.
+  </p>
+  <div class="callout" style="margin-top:18px">
+    <h4>A section with nothing in it still says so</h4>
+    <p class="small" style="margin-top:6px">The paid row is the important convention. A digest that
+      silently omits a source it could not read is indistinguishable from one reporting that the source
+      had nothing to say, and the two are opposite facts. Every cadence names every source, including
+      the ones that are absent, broken, or not built yet.</p>
+  </div>
+
+  <h3 style="margin-top:34px">The registry the clock is missing</h3>
+  <pre><span class="c">// today — lib/tick.ts, three jobs, no intervals, no record of a run</span>
+<span class="k">export async function</span> tick(now = <span class="k">new</span> Date()) {
+  <span class="k">const</span> reopened = <span class="k">await</span> reopenDueRecurring(now)
+  <span class="k">const</span> sweep = <span class="k">await</span> sweepMonitors(now)
+  <span class="k">const</span> notifications = <span class="k">await</span> sweepNotifications(now)
+  <span class="k">return</span> { reopened, sweep, notifications }
+}
+
+<span class="c">// proposed — the same tick, asking a table what is due</span>
+<span class="k">for</span> (<span class="k">const</span> job <span class="k">of</span> dueJobs(now)) {        <span class="c">// scheduled_jobs: id, interval, last_run_at</span>
+  <span class="k">await</span> report(job, <span class="s">"running"</span>, runId)          <span class="c">// /api/events/run — already exists</span>
+  <span class="k">try</span> {
+    <span class="k">const</span> stats = <span class="k">await</span> job.run()
+    <span class="k">await</span> report(job, <span class="s">"succeeded"</span>, runId, stats)  <span class="c">// stands down any ticket</span>
+  } <span class="k">catch</span> (err) {
+    <span class="k">await</span> report(job, <span class="s">"failed"</span>, runId, err)     <span class="c">// opens or escalates one</span>
+  }
+}</pre>
+  <p class="small" style="margin-top:14px;max-width:74ch">
+    Every job reports through <code>/api/events/run</code>, which already exists and already opens or
+    escalates a ticket on failure and stands it down on success &mdash; so no new alerting is needed.
+    And <code>monitors:sweep</code> catches the case that endpoint structurally cannot see: a job that
+    never starts at all. That pairing is built and currently guards nothing, because nothing reports
+    into it.
+  </p>
+
+  <div class="card rail crit" style="margin-top:20px">
+    <h3>The one thing the clock cannot reach</h3>
+    <p class="small">Four of the five reporting jobs are pure CRM work and belong on
+      <code>tallkarol-cron</code> without argument. The fifth is the Search Console pull into
+      <code>daedalus-insights/data/</code>, and that CLI runs on your laptop against a local git repo.
+      Railway cron on the CRM cannot call it.</p>
+    <p class="small" style="margin-top:10px">This matters more than it looks. That archive is the only
+      copy of history Google deletes at sixteen months &mdash; eighteen windows now, 2,514 clicks and
+      338,190 impressions, including the fourteen months of pre-cutover baseline that made migration
+      analysis possible at all and that exist nowhere else. A weekly pull that depends on you
+      remembering is the same failure mode as the monthly report that depends on you clicking Refresh,
+      which is the bug this movement exists to fix.</p>
+    <p class="small" style="margin-top:10px">Three ways out, in section 08. It is the only real
+      decision left.</p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">06 &mdash; the model</p>
+  <h2>Nine objects, in one place</h2>
+  <p style="max-width:70ch">
+    The three parts each introduced objects on their own terms and it made the overlaps hard to see.
+    Collected, the whole system is nine, five of which already exist. Nothing here is a new database
+    for its own sake &mdash; each one exists because something in the chain needs to carry provenance
+    across a boundary.
+  </p>
+  <div class="tablecard" style="margin-top:24px">
+    <table>
+      <thead><tr><th>Object</th><th>Lives in</th><th>Carries</th><th>Gated on</th><th>State</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">Page</td><td class="small">insights <code>data/&lt;slug&gt;/pages/</code></td><td class="small">a crawled artifact and a fetch date; asserts nothing</td><td class="small">nothing &mdash; it is a photograph</td><td><span class="chip crit">new</span></td></tr>
+        <tr><td class="mono">Fact</td><td class="small">insights <code>facts.json</code></td><td class="small">verbatim text, source page, echoes, origin, first/last seen</td><td class="small">extraction rules</td><td><span class="chip crit">new</span></td></tr>
+        <tr><td class="mono">Decision</td><td class="small">insights <code>facts.json</code></td><td class="small">a dated resolution over a conflicting pair; keeps both</td><td class="small">you</td><td><span class="chip crit">new</span></td></tr>
+        <tr><td class="mono">Claim</td><td class="small">packs <code>claims.md</code></td><td class="small">what may be asserted, and at what scope</td><td class="small">you, plus a primary document where required</td><td><span class="chip warn">exists, empty</span></td></tr>
+        <tr><td class="mono">Assertion</td><td class="small">insights <code>assertions.json</code></td><td class="small">a claim compressed to a slot, with the compression noted and the policy risk named</td><td class="small">you</td><td><span class="chip crit">new</span></td></tr>
+        <tr><td class="mono">Keyword</td><td class="small">insights <code>keywords.json</code></td><td class="small">priced, canonicalised, dated</td><td class="small">nothing &mdash; it is a measurement</td><td><span class="chip warn">a frozen file</span></td></tr>
+        <tr><td class="mono">Lead</td><td class="small">mineralife-frontend Postgres</td><td class="small">click id, first and last touch, pipeline stage</td><td class="small">nothing</td><td><span class="chip ok">live</span></td></tr>
+        <tr><td class="mono">Conversion</td><td class="small">mineralife-frontend <code>conversion_upload</code></td><td class="small">one row per (lead, action), a real expiry, hashed identifiers, a rejection you can read</td><td class="small">a stage change</td><td><span class="chip crit">new</span></td></tr>
+        <tr><td class="mono">Period</td><td class="small">CRM <code>snapshot_archive</code> + <code>reports</code></td><td class="small">a frozen month and its filing state</td><td class="small">you release it</td><td><span class="chip warn">exists, human-triggered</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail">
+      <h3>Why Page and Fact are two objects and not one</h3>
+      <p class="small">A Page asserts nothing, which is what makes it admissible under the rule that
+        live copy cannot source a claim. It is an observation with a date. A Fact is a sentence lifted
+        out of one, still verbatim, and it is the thing that can be tested against a pending claim row.
+        Collapsing them would mean the crawler's own judgement is baked into the evidence, and the diff
+        between two crawls stops being meaningful.</p>
+    </div>
+    <div class="card rail">
+      <h3>Why Assertion is not just a shorter Claim</h3>
+      <p class="small">Because compression is where truth gets lost, and it needs to be reviewable
+        separately. &ldquo;Toll projects publish a 5,000-unit MOQ&rdquo; becomes &ldquo;Toll MOQ: 5,000
+        units&rdquo; and the figure survives; it could as easily have become &ldquo;Low MOQs&rdquo;,
+        which is a different kind of statement with no fact behind it. Recording the fact id and what
+        was dropped is what lets someone check the second kind never happened.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">07 &mdash; the ledger</p>
+  <h2>Forty-one increments, and where each one stands</h2>
+  <p style="max-width:70ch">
+    This is the section that becomes tasks. Everything already done is listed rather than deleted, so
+    the record of what this engagement has actually cost and produced is complete, and so a report can
+    be written from it. Each id is stable and is the reference a task carries.
+  </p>
+  <div class="grid g4" style="margin-top:24px">
+    <div class="stat good"><span class="num">11</span><span class="lbl">done</span>
+      <span class="sub">Mostly movement two, mostly shipped by hand between 30 Aug and 2 Sep.</span></div>
+    <div class="stat warn"><span class="num">1</span><span class="lbl">partial</span>
+      <span class="sub">The monthly client report: surfaces exist, filing does not.</span></div>
+    <div class="stat"><span class="num">1</span><span class="lbl">superseded</span>
+      <span class="sub">API-written campaigns. Built in the UI instead; kept for the record.</span></div>
+    <div class="stat crit"><span class="num">28</span><span class="lbl">to do</span>
+      <span class="sub">8 in movement one, 12 in movement two, 8 in movement three.</span></div>
+  </div>
+
+  <h3 style="margin-top:32px">Movement one &mdash; the fact bank</h3>
+  <div class="tablecard led" style="margin-top:12px">
+    <table>
+      <thead><tr><th style="width:62px">Id</th><th>Increment</th><th>What it lands</th><th style="width:96px">State</th></tr></thead>
+      <tbody>
+        <tr><td class="id">C-01</td><td class="small"><b>Crawler and page store</b></td><td class="small"><code>insights crawl</code>, one JSON per URL under a dated folder, sitemap-driven, cadence-gated. Ends the hand re-reading of pages.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">C-02</td><td class="small"><b>Extractor, dedupe and coverage report</b></td><td class="small">The four rules, chrome separated from findings, and the table of which pending claim rows the site already covers.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">C-03</td><td class="small"><b>Promotion into the claim bank</b></td><td class="small">A <code>page:&lt;url&gt;@&lt;date&gt;</code> source type, a reviewed diff into <code>claims.md</code>, and <code>insights facts</code> as the bounded read.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">C-04</td><td class="small"><b>Decay and settled conflicts</b></td><td class="small">Re-crawl diffing, <code>stale</code> on facts whose sentence left the site, and suppression of conflicts already decided.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">C-05</td><td class="small"><b>Asset bank and the alt-text pass</b></td><td class="small">53 unique images inventoried with crop fits and a compliance review state; the 42% missing alt text filled, which also improves the site.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">C-06</td><td class="small"><b>Correct the pack's NSF possessive rule</b></td><td class="small">A one-line VOCABULARY fix. The site uses the non-possessive form on 63 of 63 pages; the rule says never use it.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">C-07</td><td class="small"><b>Settle the toll small run</b></td><td class="small">2,500 in the positioning doc, 5,000 published on two pages. One of them is wrong and sales is quoting from one of them.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">C-08</td><td class="small"><b>Substantiate &ldquo;FDA Registered Facility&rdquo; or pull it</b></td><td class="small">Live in an approved ad, absent from 63 of 63 pages, no primary document. Confirm and publish, or remove from the headline set.</td><td><span class="chip crit">to do</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:30px">Movement two &mdash; the campaign</h3>
+  <div class="tablecard led" style="margin-top:12px">
+    <table>
+      <thead><tr><th style="width:62px">Id</th><th>Increment</th><th>What it lands</th><th style="width:96px">State</th></tr></thead>
+      <tbody>
+        <tr><td class="id">L-01</td><td class="small"><b>Google Ads API access</b></td><td class="small">Developer token on the manager account, sub-account linked. Paged GAQL client in <code>lib/insights/google.ts</code>; the account is read directly.</td><td><span class="chip ok">done</span></td></tr>
+        <tr><td class="id">L-02</td><td class="small"><b>Prove a click carries its id to a Lead row</b></td><td class="small">Observed on production: <code>form_submit</code> 9 : <code>generate_lead</code> 9 in August, click id stored server-side at submission.</td><td><span class="chip ok">done</span></td></tr>
+        <tr><td class="id">L-03</td><td class="small"><b><code>generate_lead</code> primary</b></td><td class="small">Enabled and primary; <code>catalog_download</code> secondary; <code>form_submission</code> demoted.</td><td><span class="chip ok">done</span></td></tr>
+        <tr><td class="id">L-04</td><td class="small"><b>Campaign-specific goals</b></td><td class="small">Submit-lead-form-only on both B2B campaigns, so account-level noise cannot steer them.</td><td><span class="chip ok">done</span></td></tr>
+        <tr><td class="id">L-05</td><td class="small"><b>The negative list as an ICP filter</b></td><td class="small"><code>mineralife-exclusion-2026</code>, 174 terms, attached to both campaigns. Scope limits, wrong buyer size, wrong intent, wrong industry.</td><td><span class="chip ok">done</span></td></tr>
+        <tr><td class="id">L-06</td><td class="small"><b>Broad retired, Partners off, Regional paused</b></td><td class="small">13 broad terms paused, Search Partners off on both, the zero-volume geo campaign stopped.</td><td><span class="chip ok">done</span></td></tr>
+        <tr><td class="id">L-07</td><td class="small"><b>Landing pages with the form above the fold</b></td><td class="small">Six live, all 200, excluded from the organic index. Closes the competitor-parity gap at $31 a click.</td><td><span class="chip ok">done</span></td></tr>
+        <tr><td class="id">L-08</td><td class="small"><b>Core Terms, US, live</b></td><td class="small">US/Presence, $12 CPC cap, 3 RSAs at 15 headlines, 6 sitelinks, approved and eligible.</td><td><span class="chip ok">done</span></td></tr>
+        <tr><td class="id">L-09</td><td class="small"><b><code>generate_lead</code> counting to One per click</b></td><td class="small">Currently Every, which counts a double submission twice and inflates the only signal bidding has.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">L-10</td><td class="small"><b>Delete the demoted <code>form_submission</code> import</b></td><td class="small">Housekeeping. It is enabled and demoted; leaving it invites a future edit that re-promotes it.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">L-11</td><td class="small"><b>Fix or drop the Toll Filling sitelink</b></td><td class="small">Disapproved on both B2B campaigns. Read the reason before rewriting it.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">L-12</td><td class="small"><b>Confirm Core Terms is serving</b></td><td class="small">Eligible with zero impressions in its first eight hours. Raise the $12 cap if a full US day passes at zero.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">L-13</td><td class="small"><b>Exclude developer traffic from Analytics</b></td><td class="small">12 August sessions came from <code>localhost:3000</code>. Small, and it contaminates the only funnel data there is.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">L-14</td><td class="small"><b>Per-kind click-id expiry</b></td><td class="small"><code>FIRST_TOUCH_TTL_MS</code> is a flat 90 days. gclid is 90; gbraid and wbraid are 14. One constant becomes three, before the uploader exists rather than after.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">L-15</td><td class="small"><b>The conversion outbox</b></td><td class="small">The migration above, a hook on stage change, and a sender on the clock. Qualified, quote sent and PO received reach Google as secondary actions.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">L-16</td><td class="small"><b>Enhanced conversions for leads</b></td><td class="small">Hashed email and phone in the same payload as the click id. The Lead model already holds both; it recovers cross-device and cleared ids.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">L-17</td><td class="small"><b>Priced keyword bank on a cadence</b></td><td class="small"><code>keywords.json</code> with a <code>canonical</code> field and a <code>pricedOn</code> date, repriced monthly. Stops a frozen spreadsheet from ageing silently.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">L-18</td><td class="small"><b>The assertion store</b></td><td class="small"><code>assertions.json</code> &mdash; slot, character count, the fact id, what compression dropped, the policy risk, and where it is live.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">L-19</td><td class="small"><b>Decide phone calls from ads</b></td><td class="small">Competitors carries a call asset and calls are primary at account level, but the campaign goal means a phone lead is invisible to it. 79% of clicks are mobile.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">L-20</td><td class="small"><b>Campaigns written through the Ads API</b></td><td class="small">Proposed as mutate-and-pause for review. Built by hand in the UI instead, which was faster and is done.</td><td><span class="chip">superseded</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:30px">Movement three &mdash; the clock and the reporting</h3>
+  <div class="tablecard led" style="margin-top:12px">
+    <table>
+      <thead><tr><th style="width:62px">Id</th><th>Increment</th><th>What it lands</th><th style="width:96px">State</th></tr></thead>
+      <tbody>
+        <tr><td class="id">R-01</td><td class="small"><b>The ticker</b></td><td class="small"><code>tallkarol-cron</code> on Railway, every 15 minutes, restart <code>NEVER</code>. Recurring tasks, monitor sweep and notifications on a schedule for the first time.</td><td><span class="chip ok">done</span></td></tr>
+        <tr><td class="id">R-02</td><td class="small"><b>The cookieless denominator</b></td><td class="small">First-party collector live since 31 August. 237 visitors to 2 September, 53% US &mdash; the number GA4's consent-limited figure gets read against.</td><td><span class="chip ok">done</span></td></tr>
+        <tr><td class="id">R-03</td><td class="small"><b>The index scanner</b></td><td class="small"><code>gsc_scans</code>, <code>gsc_findings</code>, seven rules with a finding lifecycle, the Health tab section, a billing task per site, and an authenticated endpoint.</td><td><span class="chip ok">done</span></td></tr>
+        <tr><td class="id">R-04</td><td class="small"><b>The job registry</b></td><td class="small"><code>scheduled_jobs</code> with an interval and a last-run per job; <code>tick()</code> asks what is due and reports every run through <code>/api/events/run</code>.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">R-05</td><td class="small"><b>Index scan on the clock</b></td><td class="small">Register the scan monthly. The endpoint has been correct and uncalled since it shipped.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">R-06</td><td class="small"><b>Close the month on its own</b></td><td class="small">Lift <code>ensureMonthlyArchive()</code> out of the Refresh action into a job, and backfill any period that closed unfrozen while it depended on a page view.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">R-07</td><td class="small"><b>Daily exception digest</b></td><td class="small">Site down, job silent, campaign disapproved, spend over double the daily average. Silent on a normal Tuesday, and the silence is the signal.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">R-08</td><td class="small"><b>Weekly internal digest</b></td><td class="small">The blunt one, for you. Every source named including the absent ones.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">R-09</td><td class="small"><b>Monthly client report, filed as due</b></td><td class="small"><code>reports</code>, <code>/insights-report/[site]</code>, <code>/portal/reports</code> and the export all exist. What is missing is the job that files a period as <code>due</code> and notifies you to release it.</td><td><span class="chip warn">partial</span></td></tr>
+        <tr><td class="id">R-10</td><td class="small"><b>DataForSEO as a source</b></td><td class="small">At the seam <code>lib/insights/sources.ts</code> already names. The key is set and used by nothing; this is what puts L-17 on a cadence.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">R-11</td><td class="small"><b>Ads read on the clock, not on page load</b></td><td class="small">The source exists. Registering it means a monthly report carries the numbers as they stood at the close of the month.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">R-12</td><td class="small"><b>Move the archive off the laptop</b></td><td class="small">Eighteen windows of Search Console history, the only copy of data Google deletes at sixteen months. Recommendation A in section 08.</td><td><span class="chip crit">to do</span></td></tr>
+        <tr><td class="id">R-13</td><td class="small"><b>GA4 Standard access for the robot</b></td><td class="small">Two minutes in the Analytics admin. Blocks cost and revenue dimensions, and therefore the September report.</td><td><span class="chip crit">to do</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">08 &mdash; decisions</p>
+  <h2>Settled, and still open</h2>
+
+  <h3>Settled &mdash; recorded so none of it gets relitigated</h3>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">You are the promotion gate, everywhere</h3>
+      <p class="small">A fact never becomes a claim on its own, an assertion never goes live without
+        approval, and a report is filed rather than sent. The machine prepares, you publish. This is
+        the one rule the whole document is arranged around and nothing in it proposes an exception.</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">The site is approved copy</h3>
+      <p class="small">All three corpora &mdash; inherited, templated, authored &mdash; are assertable,
+        with <code>origin</code> recorded per fact so a 2022 hiring post is never mistaken for the
+        <code>/faq</code> spec table. Certifications remain <code>gated:document</code>: the site can
+        source <em>how Mineralife describes itself</em>, not <em>that a certification is held</em>.</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">Do not bid on <code>private label supplement manufacturer</code></h3>
+      <p class="small">This reverses my earlier recommendation, and the reversal is right. It was 590
+        searches a month at $24.30 &mdash; more volume than <em>custom supplement manufacturer</em>
+        &mdash; and buying a query you answer in your own words is a legitimate move in paid. The
+        counter-argument won: removing it takes the white-label ad group below the volume where its
+        landing page earns its keep, and the terminology discipline is worth more than the reach.</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">No &ldquo;award-winning&rdquo; in ads</h3>
+      <p class="small">Out of the live headline set. What passes a superlative review is landing-page
+        evidence with a date inside roughly 12&ndash;24 months; the Manufacturing Outlook listing is
+        2022, so publishing it with the year makes the disapproval more likely rather than less. The
+        award stays on the site, stays in the bank, and is good material in a call. If a 2025 or 2026
+        recognition exists, this reverses immediately.</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">Optimise for leads. No conversion values this year.</h3>
+      <p class="small">Google bids on Lead submitted; qualified, quote sent and PO received upload as
+        secondary &mdash; recorded, not steering. Maximize Conversions with no target CPA, because a
+        target set before there is data to set it from throttles delivery. <code>value_usd</code>
+        exists and stays null, so switching to target ROAS next year is a backfill rather than a
+        migration.</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">One clock, in the CRM</h3>
+      <p class="small">One project, one place to look. Already built and running. The consequence is
+        R-12: anything the CRM cannot reach is not really scheduled, which is the whole argument for
+        absorbing the archive.</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">Competitors is worldwide; Core Terms is the US arm</h3>
+      <p class="small">The <em>Ships Internationally</em> callout on Competitors makes this a position
+        rather than a side effect, and it is a coherent one &mdash; the two strongest pipeline
+        enquiries are Pakistani and Bangladeshi. Recorded so the geography question stops recurring.</p>
+    </div>
+    <div class="card rail good">
+      <span class="chip ok">decided</span>
+      <h3 style="margin-top:10px">Cadence is a flag, and the bank lives in insights</h3>
+      <p class="small"><code>--cadence daily|weekly</code> with the per-site default in
+        <code>config/sites/mineralife.json</code>; the command no-ops until the interval has elapsed,
+        so it is safe to run as often as you like and <code>--force</code> exists for the day a copy
+        change has to be in the bank before an ad goes out. The bank itself is files in
+        <code>daedalus-insights/data/</code>, not a database.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:34px">Open &mdash; seven decisions and two confirmations</h3>
+  <div class="stack" style="margin-top:16px">
+    <div class="card rail crit">
+      <h3>1. What happens to the archive on your laptop? <span class="chip crit">blocks R-12</span></h3>
+      <p class="small"><strong>What I need:</strong> a choice between three, none of them wrong.</p>
+      <p class="small" style="margin-top:10px"><strong>A &mdash; the CRM absorbs the pull.</strong> Port
+        Search Console archiving into <code>tallkarol/crm</code> and write windows to Postgres instead
+        of files. One system, one clock, one backup. Costs a port, and
+        <code>daedalus-insights</code> becomes an analysis tool over data it no longer owns.</p>
+      <p class="small" style="margin-top:10px"><strong>B &mdash; insights gets deployed too.</strong> A
+        second Railway service running the CLI on its own cron, keeping the file archive as a committed
+        repo. Truest to the existing split, and it is a second thing to deploy and watch.</p>
+      <p class="small" style="margin-top:10px"><strong>C &mdash; leave it manual, honestly.</strong> You
+        run <code>insights pull</code> when you think of it. Cheapest today, and it is the failure mode
+        this movement is about.</p>
+      <p class="small" style="margin-top:10px"><strong>My call: A.</strong> You have decided the clock
+        lives in one spot, and an archive the clock cannot reach is not really scheduled. The pull is
+        one API call and a write &mdash; far less code than keeping two deployments in step &mdash; and
+        the eighteen windows already collected import once and never need moving again.</p>
+    </div>
+    <div class="card rail crit">
+      <h3>2. Can &ldquo;FDA Registered Facility&rdquo; be substantiated? <span class="chip crit">live exposure</span></h3>
+      <p class="small"><strong>What I need:</strong> the FDA facility registration on file, and a
+        decision to publish it on the pages the ads point at &mdash; or instruction to pull the
+        headline.</p>
+      <p class="small" style="margin-top:10px"><strong>Why I'm asking:</strong> it is running in a paid
+        ad now and appears on 0 of 63 pages. The claim is very likely true; that is not the test. The
+        test is whether a reviewer checking it lands on a page that carries it, and today they do
+        not.</p>
+      <p class="small" style="margin-top:10px"><strong>My call:</strong> get the registration, publish
+        it in the trust bar with the registration number visible, and leave the headline in. If the
+        document is not readily to hand, pull the headline this week and put it back when it is. Do not
+        run it uncited for another month.</p>
+    </div>
+    <div class="card rail">
+      <h3>3. Which small run is real &mdash; 2,500 or 5,000?</h3>
+      <p class="small"><strong>What I need:</strong> confirmation of the current toll-filling small run,
+        with a review date rather than just an approval, because MOQs move.</p>
+      <p class="small" style="margin-top:10px">The positioning doc says a 2,500-unit small run. The site
+        publishes a flat 5,000 on <code>/services/toll-filling</code> and
+        &ldquo;SMALL RUN (ADDITIONAL FEE IF ACCEPTED) 5,000 units&rdquo; on
+        <code>/services/custom-manufacturing</code>. Somebody is quoting from one of these.</p>
+    </div>
+    <div class="card rail">
+      <h3>4. What counts as an exception worth interrupting you for?</h3>
+      <p class="small"><strong>What I need:</strong> the lines the daily job checks against. Site down
+        and job-did-not-run are obvious; the rest need a number.</p>
+      <p class="small" style="margin-top:10px"><strong>My call:</strong> start deliberately quiet
+        &mdash; site down, job silent, campaign or asset disapproved, spend more than double the daily
+        average. Nothing about ranking or traffic, because at 130 clicks a month the week-to-week noise
+        is larger than any signal a daily check could find. Tighten later from real data.</p>
+    </div>
+    <div class="card rail">
+      <h3>5. Does the client see the monthly report, or do you first?</h3>
+      <p class="small"><strong>What I need:</strong> whether the first of the month sends anything
+        outward, or files it for you to release.</p>
+      <p class="small" style="margin-top:10px"><strong>My call:</strong> file it as <code>due</code>,
+        notify you, let you release it. The sample report says clicks fell 16.6% &mdash; a true, useful
+        sentence you would want to have read before the client does. Same reasoning as the claim gate:
+        the machine prepares, you publish.</p>
+    </div>
+    <div class="card rail">
+      <h3>6. Phone calls from ads &mdash; gap or choice?</h3>
+      <p class="small">Competitors carries a call asset and &ldquo;Calls from ads&rdquo; is primary at
+        account level, but the campaign's Submit-lead-form-only goal means a phone lead from an ad is
+        not a conversion the campaign can see or bid toward. With 79% of clicks on mobile that is either
+        a real gap or a deliberate choice. Adding the phone-call category to the campaign goals is a
+        two-minute change if it is the former.</p>
+    </div>
+    <div class="card rail">
+      <h3>7. Do the gummy and tablet negatives match real capability?</h3>
+      <p class="small">The 174-term list is live on both campaigns and worth a five-minute read-through,
+        because a negative keyword is invisible once set. <code>custom gummy vitamin manufacturer</code>
+        was 126 clicks in August &mdash; if that capability exists, the exclusion is expensive; if it
+        does not, the exclusion is doing exactly its job.</p>
+    </div>
+    <div class="card rail">
+      <h3>8. What happens at the first attributable enquiry?</h3>
+      <p class="small">Now imminent rather than hypothetical. Agree in advance what it triggers &mdash;
+        budget up, hold a month, or reshape keywords &mdash; so the decision is made against the plan
+        rather than against the excitement.</p>
+    </div>
+    <div class="card rail">
+      <h3>9. Does the pack's NSF vocabulary rule change?</h3>
+      <p class="small">The site uses the non-possessive form on 63 of 63 pages, including the site-wide
+        meta description; <code>CLIENT.md</code> forbids it. Under the ruling that the site is approved
+        copy, the rule is the thing that is wrong. <strong>My call:</strong> correct the pack, note the
+        date and the reason, and leave the site alone. Flagging as a decision rather than just doing it,
+        because it overrides an explicit instruction in a client pack.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">09 &mdash; provenance</p>
+  <h2>Where every number came from</h2>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card rail good">
+      <h3>Measured</h3>
+      <ul class="tight small" style="margin-top:8px">
+        <li><strong>Site figures</strong> &mdash; 63 pages, 45,386 words, 279 facts, 699 image tags, 53
+          unique sources, 58% alt coverage, and every quoted sentence: a live crawl of all 63 URLs on
+          29 August 2026.</li>
+        <li><strong>Keyword volumes and click prices</strong> &mdash; DataForSEO
+          <code>keywords_data/google_ads/search_volume/live</code>, US, English, 178 keywords, 30 August
+          2026, $0.09. Google's own twelve-month averages.</li>
+        <li><strong>Search Console history</strong> &mdash; 18 archived windows, 2,514 clicks, 338,190
+          impressions, pulled 30 August 2026 into
+          <code>daedalus-insights/data/mineralife/raw/gsc/primary/</code>.</li>
+        <li><strong>Ads account state</strong> &mdash; the Google Ads API, account 624-370-2566,
+          2 September 2026, re-read after each change.</li>
+        <li><strong>Enquiry integrity</strong> &mdash; the site's own lead records, click id stored
+          server-side at submission; three August test submissions excluded.</li>
+        <li><strong>Real visitor counts</strong> &mdash; the first-party cookieless counter, live since
+          31 August 2026.</li>
+        <li><strong>Index coverage</strong> &mdash; Search Console
+          <code>sc-domain:mycustommanufacturer.com</code>, rescanned 2 September; search-analytics rows
+          run to 30 August, the newest Google had published.</li>
+        <li><strong>Repo state</strong> &mdash; every file path, function name and absence of a match
+          read directly from <code>daedalus-insights</code>,
+          <code>daedalus-client-packs</code>, <code>tallkarol/crm</code>,
+          <code>mineralife-frontend</code> and <code>mineralife-crm</code> on 2 September 2026.</li>
+      </ul>
+    </div>
+    <div class="card rail warn">
+      <h3>Not measured &mdash; treat accordingly</h3>
+      <ul class="tight small" style="margin-top:8px">
+        <li><strong>The 60&ndash;180 day sales cycle</strong> and the quarter-of-deals-inside-the-window
+          arithmetic: published category benchmarks for B2B industrial and manufacturing search,
+          gathered 30 August 2026. Load-bearing for the 90-day window argument. Replace with
+          Mineralife's own numbers as soon as there are any &mdash; which is one of the things L-15
+          produces.</li>
+        <li><strong>Conversion rates, CPLs and close rates</strong> quoted anywhere in this document:
+          same source, same caveat. This client has one month of paid history and it is not a sample.</li>
+        <li><strong>&ldquo;GA4 sees roughly 8% of visitors&rdquo;</strong>: a ratio between the GA4
+          property and three days of first-party counter data. Directionally solid, three days long.</li>
+        <li><strong>Every mock</strong> in sections 03, 04 and 05 is a static visual. No crawler, no
+          extractor, no assertion store, no digest and no uploader has been written.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:20px">
+    <h4>What this document replaces</h4>
+    <p class="small" style="margin-top:6px">Page to Claim, Query to Lead and Pull to Report, drafted
+      29&ndash;30 August 2026. They remain readable for the working they show, and every finding in
+      them that still holds is carried forward here. Where they disagree with this document, this
+      document is right: it was written against the systems as they stood on 2 September, and a good
+      deal shipped in between.</p>
+  </div>
+</section>
+
+<footer>
+  Tall Karol &middot; <span class="mono">mycustommanufacturer.com</span> &middot; consolidated proposal
+  &middot; supersedes the three-part Page to Report series &middot; 41 increments, 11 done, 1 partial,
+  1 superseded, 28 outstanding &middot; site figures from a live crawl of 63 URLs on 29 August 2026,
+  keyword figures from DataForSEO on 30 August, account and repo state verified 2 September 2026
+</footer>
+
+</div>
+</body>
+</html>
