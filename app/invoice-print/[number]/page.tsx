@@ -7,8 +7,9 @@ import { invoices } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { getInvoiceSender, parseDescription, readBilling } from "@/lib/invoice-print"
 import { getPortalScope } from "@/lib/portal"
+import { hideMoney, MASK_DIGITS } from "@/lib/money-privacy"
+import { readHideMoneyCookie } from "@/lib/money-privacy-server"
 import { ROUTES } from "@/lib/nav"
-import { formatMoney } from "@/lib/work"
 
 export const dynamic = "force-dynamic"
 
@@ -17,6 +18,7 @@ export async function generateMetadata({ params }: { params: { number: string } 
 }
 
 function fmtAmount(cents: number) {
+  if (hideMoney()) return MASK_DIGITS
   return (cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })
 }
 
@@ -39,6 +41,10 @@ export default async function InvoicePrintPage({
     with: { client: true, retainer: true },
   })
   if (!invoice) notFound()
+
+  // Outside the admin layout, so read the demo-mode cookie here. That also
+  // registers the resolver on a cold start whose first hit is this page.
+  const hideAmounts = readHideMoneyCookie()
 
   // Admins see everything; portal users only their own clients' invoices.
   const user = await getSessionUser()
@@ -71,6 +77,11 @@ export default async function InvoicePrintPage({
   return (
     <div className="mx-auto max-w-[52rem] bg-white px-10 py-8 font-['Inter',system-ui,sans-serif] text-[13px] leading-relaxed text-[#1F2C2B] print:max-w-none print:px-2 print:py-0">
       <style>{`body { background: #fff; } @page { margin: 16mm 14mm; } @media print { body { background: #fff; } }`}</style>
+      {hideAmounts ? (
+        <p className="mb-4 rounded-lg bg-amber-700/10 px-3 py-2 text-xs font-semibold text-amber-800 print:hidden">
+          Amounts hidden — turn off demo mode before saving as PDF.
+        </p>
+      ) : null}
       <div className="mb-6 flex items-center justify-between gap-3 print:hidden">
         <Link
           href={ROUTES.invoice(invoice.number)}

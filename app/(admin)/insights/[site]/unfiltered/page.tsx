@@ -5,7 +5,7 @@ import { Delta, KpiTile } from "@/components/insights/KpiTile"
 import { OverlayChart, type OverlaySeries } from "@/components/insights/OverlayChart"
 import { RangeSwitcher } from "@/components/insights/RangeSwitcher"
 import { CHART } from "@/lib/insights/chart"
-import { deltaPct, deriveWindow, fmtInt, parseRange } from "@/lib/insights/derive"
+import { deltaPct, deriveWindow, fmtInt, fmtMoney, parseRange } from "@/lib/insights/derive"
 import { getInsightsContext } from "@/lib/insights/queries"
 
 export const metadata = { title: "Unfiltered traffic · Insights" }
@@ -263,11 +263,7 @@ export default async function InsightsUnfilteredPage({
                     <td className="px-3 py-2 text-right tabular-nums">{fmtInt(row.clicks)}</td>
                     <td className="px-3 py-2 text-right tabular-nums">{fmtInt(row.impressions)}</td>
                     <td className="px-5 py-2 text-right tabular-nums">
-                      {row.spend.toLocaleString("en-US", {
-                        style: "currency",
-                        currency: snapshot.ads.currency || "USD",
-                        maximumFractionDigits: 0,
-                      })}
+                      {fmtMoney(row.spend, snapshot.ads.currency || "USD")}
                     </td>
                   </tr>
                 ))}

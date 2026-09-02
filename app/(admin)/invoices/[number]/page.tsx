@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { eq } from "drizzle-orm"
 import { PageHeader } from "@/components/PageHeader"
+import { MoneyInput } from "@/components/ui/MoneyInput"
 import { Badge } from "@/components/work/Badge"
 import { NotesControl, PickButtons } from "@/components/peek/controls"
 import { Section } from "@/components/work/Section"
@@ -135,7 +136,7 @@ export default async function InvoiceDetailPage({
             </label>
             <label className="block text-sm">
               <span className="text-xs font-medium text-tk-slate/70">Amount ($)</span>
-              <input name="amount" inputMode="decimal" defaultValue={(invoice.amountCents / 100).toFixed(2)} required className="mt-1 w-full rounded-lg border border-tk-slate/20 bg-white px-3 py-2 text-sm tabular-nums outline-none focus:border-tk-teal" />
+              <MoneyInput name="amount" inputMode="decimal" defaultValue={(invoice.amountCents / 100).toFixed(2)} required className="mt-1 w-full rounded-lg border border-tk-slate/20 bg-white px-3 py-2 text-sm tabular-nums outline-none focus:border-tk-teal" />
             </label>
             <label className="block text-sm">
               <span className="text-xs font-medium text-tk-slate/70">Hours</span>

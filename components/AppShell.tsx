@@ -7,7 +7,9 @@ import { BrandMark } from "@/components/BrandMark"
 import { SidebarNav, type NavBadge } from "@/components/SidebarNav"
 import { logoutAction } from "@/lib/actions"
 import { cn } from "@/lib/cn"
+import { HideMoneyToggle } from "@/components/HideMoneyToggle"
 import { ADMIN_NAV, type NavSection } from "@/lib/nav"
+import { primeHideMoney } from "@/lib/money-privacy"
 
 const STORAGE_KEY = "tk-crm-sidebar-collapsed"
 
@@ -15,14 +17,22 @@ export function AppShell({
   email,
   badges = {},
   nav = ADMIN_NAV,
+  hideMoney = false,
   children,
 }: {
   email: string
   /** Keyed by href — see `lib/unread.ts` for what the counts and tones mean. */
   badges?: Record<string, NavBadge>
   nav?: readonly NavSection[]
+  /** Demo mode, from the cookie the admin layout read. */
+  hideMoney?: boolean
   children: React.ReactNode
 }) {
+  // Primes the server pass of every client component below this one, which
+  // cannot read the cookie itself. In the browser the inline script has
+  // already set the global, so this is a no-op there. See lib/money-privacy.ts.
+  primeHideMoney(hideMoney)
+
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -117,7 +127,7 @@ export function AppShell({
             badges={badges}
           />
         </div>
-        <UserFooter email={email} collapsed={collapsed} />
+        <UserFooter email={email} collapsed={collapsed} hideMoney={hideMoney} />
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -186,7 +196,7 @@ export function AppShell({
                 onNavigate={() => setMenuOpen(false)}
               />
             </div>
-            <UserFooter email={email} />
+            <UserFooter email={email} hideMoney={hideMoney} />
           </aside>
         </div>
       ) : null}
@@ -197,9 +207,11 @@ export function AppShell({
 function UserFooter({
   email,
   collapsed,
+  hideMoney,
 }: {
   email: string
   collapsed?: boolean
+  hideMoney: boolean
 }) {
   const initial = email.slice(0, 1).toUpperCase()
 
@@ -212,6 +224,7 @@ function UserFooter({
     >
       {collapsed ? (
         <div className="flex flex-col items-center gap-2">
+          <HideMoneyToggle initial={hideMoney} collapsed />
           <span
             className="flex size-8 items-center justify-center rounded-full bg-tk-teal/10 text-xs font-semibold text-tk-teal"
             title={email}
@@ -228,21 +241,24 @@ function UserFooter({
           </form>
         </div>
       ) : (
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-tk-teal/10 text-xs font-semibold text-tk-teal">
-              {initial}
-            </span>
-            <span className="truncate text-xs text-tk-slate/70">{email}</span>
+        <div className="space-y-3">
+          <HideMoneyToggle initial={hideMoney} />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-tk-teal/10 text-xs font-semibold text-tk-teal">
+                {initial}
+              </span>
+              <span className="truncate text-xs text-tk-slate/70">{email}</span>
+            </div>
+            <form action={logoutAction}>
+              <button
+                type="submit"
+                className="shrink-0 text-xs font-semibold text-tk-slate hover:text-tk-teal hover:underline"
+              >
+                Sign out
+              </button>
+            </form>
           </div>
-          <form action={logoutAction}>
-            <button
-              type="submit"
-              className="shrink-0 text-xs font-semibold text-tk-slate hover:text-tk-teal hover:underline"
-            >
-              Sign out
-            </button>
-          </form>
         </div>
       )}
     </div>

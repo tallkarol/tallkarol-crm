@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache"
 import { eq } from "drizzle-orm"
 import { db } from "@/db"
 import { clients, projects } from "@/db/schema"
-import { logAgentTime } from "@/lib/punches"
+import { logAgentTime, type AgentLogSession } from "@/lib/punches"
 import {
   authenticateTimeRequest,
   badRequest,
@@ -24,7 +24,11 @@ export const dynamic = "force-dynamic"
  * /settings/integrations/devices like any other device.
  *
  * POST { clientSlug | clientId, projectSlug? | projectId?, occurredOn,
- *        startedAt, endedAt, hours, summary, note?, clientRequestId, force? }
+ *        startedAt, endedAt, hours, summary, note?, clientRequestId, force?,
+ *        sessions?: [{ ref, hours, name?, surface?, startedAt?, endedAt?, rawHours? }] }
+ *
+ * `sessions` links the conversations that earned the row (`time_entry_sessions`)
+ * so the ledger can open each one's summary; it never changes the number.
  *
  * 201 with { punch, timeEntryId }. 200 when the same clientRequestId is
  * replayed with the same body. 409 when it is replayed with a different one,
@@ -53,6 +57,9 @@ export async function POST(request: Request) {
     note: readString(body, "note") ?? "",
     clientRequestId: readString(body, "clientRequestId") ?? "",
     force: body.force === true,
+    sessions: Array.isArray(body.sessions)
+      ? (body.sessions as AgentLogSession[]).filter((s) => s && typeof s === "object")
+      : [],
   })
 
   if (!result.ok) {

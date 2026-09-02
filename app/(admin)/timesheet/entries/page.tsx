@@ -1,8 +1,9 @@
 import Link from "next/link"
-import { asc } from "drizzle-orm"
+import { asc, inArray } from "drizzle-orm"
+import { PeekRouter } from "@/components/peek/PeekRouter"
 import { LedgerFilters } from "@/components/timesheet/LedgerFilters"
 import { db } from "@/db"
-import { clients } from "@/db/schema"
+import { clients, timeEntrySessions } from "@/db/schema"
 import { clientColor } from "@/lib/client-colors"
 import { ROUTES } from "@/lib/nav"
 import { ledgerEntries } from "@/lib/sheets"
@@ -33,6 +34,7 @@ export default async function LedgerPage({
     to?: string
     source?: string
     missing?: string
+    peek?: string
   }
 }) {
   const clientRows = await db.query.clients.findMany({
@@ -52,8 +54,32 @@ export default async function LedgerPage({
   const missingSummary = searchParams.missing === "summary"
   const visible = missingSummary ? rows.filter((row) => !row.summary.trim()) : rows
 
+  // Agent rows name the conversations that earned them; a click opens the
+  // session card with the summary the Mac wrote.
+  const agentIds = visible.filter((row) => row.source === "agent").map((row) => row.id)
+  const sessionLinks = agentIds.length
+    ? await db.query.timeEntrySessions.findMany({
+        where: inArray(timeEntrySessions.timeEntryId, agentIds),
+        columns: { timeEntryId: true, sessionRef: true, shareHours: true },
+      })
+    : []
+  const sessionsByEntry = new Map<string, { ref: string; hours: string }[]>()
+  for (const link of sessionLinks) {
+    const list = sessionsByEntry.get(link.timeEntryId) ?? []
+    list.push({ ref: link.sessionRef, hours: link.shareHours })
+    sessionsByEntry.set(link.timeEntryId, list)
+  }
+  const query = new URLSearchParams()
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (key !== "peek" && value) query.set(key, value)
+  }
+  const closeHref = query.toString()
+    ? `${ROUTES.timesheetEntries}?${query.toString()}`
+    : ROUTES.timesheetEntries
+
   return (
     <>
+      {searchParams.peek ? <PeekRouter peek={searchParams.peek} closeHref={closeHref} /> : null}
       <LedgerFilters
         clients={clientRows.map((row) => ({ slug: row.slug, name: row.name }))}
         q={searchParams.q ?? ""}
@@ -123,6 +149,21 @@ export default async function LedgerPage({
                       {row.summary || (
                         <span className="text-amber-700">no summary</span>
                       )}
+                      {sessionsByEntry.get(row.id)?.length ? (
+                        <span className="ml-2 inline-flex flex-wrap gap-1 align-middle">
+                          {sessionsByEntry.get(row.id)!.map((s) => (
+                            <Link
+                              key={s.ref}
+                              href={`${closeHref}${closeHref.includes("?") ? "&" : "?"}peek=session:${encodeURIComponent(s.ref)}`}
+                              scroll={false}
+                              title={`${s.hours} h from this session`}
+                              className="rounded bg-tk-teal/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-tk-teal hover:underline"
+                            >
+                              {s.ref.slice(0, 8)}
+                            </Link>
+                          ))}
+                        </span>
+                      ) : null}
                     </td>
                     <td className="px-3 py-2.5 text-right font-mono tabular-nums text-tk-slate">
                       {formatSheetHours(row.hours)}

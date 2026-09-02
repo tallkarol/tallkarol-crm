@@ -1,4 +1,5 @@
 import type { DailyPoint, SnapshotV2, WindowTotals } from "@/lib/insights/types"
+import { hideMoney, maskedMoney } from "@/lib/money-privacy"
 
 /** The site's reporting timezone. GA4/GSC both report property-local days. */
 const REPORT_TZ = "Europe/Warsaw"
@@ -146,6 +147,7 @@ export function fmtInt(n: number | null | undefined) {
 
 export function fmtMoney(n: number | null | undefined, currency = "USD") {
   if (n == null) return "—"
+  if (hideMoney()) return maskedMoney(currency)
   try {
     return n.toLocaleString("en-US", {
       style: "currency",

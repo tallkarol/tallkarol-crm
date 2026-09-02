@@ -14,6 +14,7 @@ export type NavIconName =
   | "emails"
   | "proposals"
   | "worksheets"
+  | "punchlists"
   | "contracts"
   | "invoices"
   | "expenses"
@@ -69,6 +70,8 @@ export const ROUTES = {
   emails: "/emails",
   proposals: "/proposals",
   worksheets: "/worksheets",
+  punchlists: "/punchlists",
+  punchlist: (slug: string) => `/punchlists/${slug}`,
   contracts: "/contracts",
   invoices: "/invoices",
   expenses: "/expenses",
@@ -153,6 +156,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
     items: [
       { href: ROUTES.delivery, label: "Delivery", icon: "delivery" },
       { href: ROUTES.projects, label: "Projects", icon: "projects" },
+      { href: ROUTES.punchlists, label: "Punch lists", icon: "punchlists" },
       { href: ROUTES.retainers, label: "Retainers", icon: "retainers" },
     ],
   },

@@ -10,6 +10,8 @@ import {
 } from "recharts"
 import { ChartFrame } from "@/components/revenue/ChartFrame"
 import { chartColor } from "@/lib/client-colors"
+import { formatAxisMoney } from "@/lib/revenue"
+import { formatMoney } from "@/lib/work"
 
 export type RevenuePoint = {
   month: string // "May 25"
@@ -49,7 +51,7 @@ export function RevenueChart({
             axisLine={false}
             width={40}
             tick={{ fontSize: 10, fill: "#71807D" }}
-            tickFormatter={(v: number) => (v ? `$${Math.round(v / 100000)}k` : "0")}
+            tickFormatter={(v: number) => formatAxisMoney(v)}
           />
           <Tooltip
             cursor={{ fill: "rgba(15,22,21,0.04)" }}
@@ -59,7 +61,7 @@ export function RevenueChart({
               return (
                 <div className="rounded-xl bg-tk-onyx px-3 py-2 text-xs text-tk-linen shadow-lg">
                   <p className="font-semibold">
-                    {label} · ${(total / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    {label} · {formatMoney(total)}
                   </p>
                   <div className="mt-1 space-y-0.5">
                     {payload.map((p) => (
@@ -72,7 +74,7 @@ export function RevenueChart({
                           {series.find((s) => s.slug === String(p.dataKey))?.name ?? String(p.dataKey)}
                         </span>
                         <span className="font-semibold tabular-nums">
-                          ${((Number(p.value) || 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          {formatMoney(Number(p.value) || 0)}
                         </span>
                       </p>
                     ))}

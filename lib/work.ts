@@ -15,6 +15,7 @@ import type {
   WorksheetMode,
   WorksheetStatus,
 } from "@/db/schema"
+import { hideMoney, maskedMoney } from "@/lib/money-privacy"
 
 export const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
   not_started: "Not started",
@@ -213,11 +214,18 @@ export function plural(count: number, word: string) {
   return `${count} ${word}${count === 1 ? "" : "s"}`
 }
 
-export function formatMoney(cents: number, currency = "USD") {
+/** Always the real figure — for strings that get persisted (invoice notes). */
+export function formatMoneyRaw(cents: number, currency = "USD") {
   return (cents / 100).toLocaleString("en-US", {
     style: "currency",
     currency,
   })
+}
+
+/** For display. Masked in demo mode — see `lib/money-privacy.ts`. */
+export function formatMoney(cents: number, currency = "USD") {
+  if (hideMoney()) return maskedMoney(currency)
+  return formatMoneyRaw(cents, currency)
 }
 
 export function formatHours(value: string | number | null | undefined) {

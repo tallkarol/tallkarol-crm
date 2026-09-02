@@ -5,6 +5,7 @@ import { CHART, METRIC_META, type TrendMetric } from "@/lib/insights/chart"
 import { fmtDay, fmtInt, fmtMoney } from "@/lib/insights/derive"
 import type { DailyPoint } from "@/lib/insights/types"
 import { cn } from "@/lib/cn"
+import { hideMoney } from "@/lib/money-privacy"
 
 const W = 640
 const H = 180
@@ -132,7 +133,11 @@ export function TrendChart({
                 fill={CHART.axisText}
                 textAnchor="end"
               >
-                {v >= 1000 ? `${(v / 1000).toLocaleString("en-US")}k` : v}
+                {meta.money && hideMoney()
+                  ? ""
+                  : v >= 1000
+                    ? `${(v / 1000).toLocaleString("en-US")}k`
+                    : v}
               </text>
             </g>
           ))}

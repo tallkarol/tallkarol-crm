@@ -2,6 +2,7 @@ import { CHART_ORDER } from "@/lib/client-colors"
 import { retainerRateCents } from "@/lib/engagements"
 import { retainerCoversMonth, monthKey as forecastMonthKey } from "@/lib/forecast"
 import type { Goals } from "@/lib/goals"
+import { hideMoney, maskedMoney } from "@/lib/money-privacy"
 
 /**
  * Revenue page model.
@@ -133,6 +134,7 @@ function rateCents(amountCents: number, hours: number) {
  * pace board rounds; anything you would tie back to an invoice keeps cents.
  */
 export function formatWholeMoney(cents: number) {
+  if (hideMoney()) return maskedMoney()
   return Math.round(cents / 100).toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
@@ -140,7 +142,9 @@ export function formatWholeMoney(cents: number) {
   })
 }
 
+/** Axis ticks go blank in demo mode: the bar shapes stay, the scale does not leak. */
 export function formatAxisMoney(cents: number) {
+  if (hideMoney()) return ""
   if (!cents) return "0"
   const dollars = cents / 100
   if (Math.abs(dollars) >= 1000) return `$${Math.round(dollars / 1000)}k`
@@ -148,6 +152,7 @@ export function formatAxisMoney(cents: number) {
 }
 
 export function formatAxisRate(cents: number) {
+  if (hideMoney()) return ""
   if (!cents) return "0"
   return `$${Math.round(cents / 100)}`
 }

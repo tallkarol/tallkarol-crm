@@ -15,6 +15,7 @@ import {
 } from "@dnd-kit/core"
 import { setLeadStageAction, setLeadValueAction } from "@/app/(admin)/leads/actions"
 import { cn } from "@/lib/cn"
+import { hideMoney, MASK_DIGITS } from "@/lib/money-privacy"
 import {
   SALES_STAGES,
   leadStage,
@@ -268,20 +269,32 @@ export function SalesBoard({
                   onOpen={() => onSelect(lead.id)}
                 >
                   <CardBody lead={lead} />
-                  <input
-                    defaultValue={
-                      lead.pipeline.valueCents != null ? String(lead.pipeline.valueCents / 100) : ""
-                    }
-                    placeholder="$ value"
-                    inputMode="decimal"
-                    aria-label={`Estimated value for ${lead.name}`}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") (e.target as HTMLInputElement).blur()
-                    }}
-                    onBlur={(e) => saveValue(lead, e.target.value)}
-                    className="mt-1.5 w-full rounded-md border border-tk-slate/15 bg-tk-linen/60 px-2 py-1 text-[11px] tabular-nums outline-none focus:border-tk-teal"
-                  />
+                  {hideMoney() ? (
+                    // Demo mode: no value in the DOM and no save on blur.
+                    <input
+                      readOnly
+                      value={lead.pipeline.valueCents != null ? MASK_DIGITS : ""}
+                      placeholder="$ value"
+                      aria-label={`Estimated value for ${lead.name} (hidden)`}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      className="mt-1.5 w-full rounded-md border border-tk-slate/15 bg-tk-linen/60 px-2 py-1 text-[11px] tabular-nums outline-none"
+                    />
+                  ) : (
+                    <input
+                      defaultValue={
+                        lead.pipeline.valueCents != null ? String(lead.pipeline.valueCents / 100) : ""
+                      }
+                      placeholder="$ value"
+                      inputMode="decimal"
+                      aria-label={`Estimated value for ${lead.name}`}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") (e.target as HTMLInputElement).blur()
+                      }}
+                      onBlur={(e) => saveValue(lead, e.target.value)}
+                      className="mt-1.5 w-full rounded-md border border-tk-slate/15 bg-tk-linen/60 px-2 py-1 text-[11px] tabular-nums outline-none focus:border-tk-teal"
+                    />
+                  )}
                 </DraggableCard>
               ))}
             </Column>

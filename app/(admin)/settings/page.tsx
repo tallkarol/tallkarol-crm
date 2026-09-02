@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/PageHeader"
+import { MoneyInput } from "@/components/ui/MoneyInput"
 import { getGoals } from "@/lib/goals"
 import { saveGoals } from "./actions"
 
@@ -21,7 +22,7 @@ export default async function SettingsPage() {
         <form action={saveGoals} className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
           <label className="block text-sm">
             <span className="text-xs font-medium text-tk-slate/70">Monthly goal ($)</span>
-            <input
+            <MoneyInput
               name="monthly"
               inputMode="decimal"
               placeholder="6,000"
@@ -31,7 +32,7 @@ export default async function SettingsPage() {
           </label>
           <label className="block text-sm">
             <span className="text-xs font-medium text-tk-slate/70">Annual goal ($)</span>
-            <input
+            <MoneyInput
               name="annual"
               inputMode="decimal"
               placeholder="72,000"

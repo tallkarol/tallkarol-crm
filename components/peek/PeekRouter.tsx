@@ -5,6 +5,9 @@ import { GonePeek } from "@/components/peek/bits"
 import { DeliverablePeek } from "@/components/peek/DeliverablePeek"
 import { InvoicePeek } from "@/components/peek/InvoicePeek"
 import { ProjectPeek } from "@/components/peek/ProjectPeek"
+import { PunchlistPeek } from "@/components/peek/PunchlistPeek"
+import { RunPeek } from "@/components/peek/RunPeek"
+import { SessionPeek } from "@/components/peek/SessionPeek"
 import { TaskPeek } from "@/components/peek/TaskPeek"
 import { ROUTES } from "@/lib/nav"
 
@@ -79,6 +82,28 @@ export async function PeekRouter({
           footer={{ href: ROUTES.project(id), label: "Open full project" }}
         >
           <ProjectPeek slug={id} />
+        </PeekShell>
+      )
+    case "punchlist":
+      return (
+        <PeekShell
+          closeHref={closeHref}
+          eyebrow="Punch list"
+          footer={{ href: ROUTES.punchlist(id), label: "Open full list" }}
+        >
+          <PunchlistPeek slug={id} base={closeHref.split("?")[0]} />
+        </PeekShell>
+      )
+    case "run":
+      return (
+        <PeekShell closeHref={closeHref} eyebrow="Test run">
+          <RunPeek id={id} />
+        </PeekShell>
+      )
+    case "session":
+      return (
+        <PeekShell closeHref={closeHref} eyebrow="Agent session">
+          <SessionPeek sessionRef={id} />
         </PeekShell>
       )
     default:

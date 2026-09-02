@@ -2,6 +2,9 @@ import { reopenDueRecurring } from "@/lib/tasks"
 import { sweepMonitors } from "@/lib/monitors"
 import { notify } from "@/lib/notify"
 import { sweepNotifications } from "@/lib/notification-sweep"
+import { staleQueuedRuns } from "@/lib/punchlists"
+import { sweepSessionNotes } from "@/lib/leftoff-data"
+import { ROUTES } from "@/lib/nav"
 
 /**
  * The clock work nothing else does.
@@ -39,5 +42,29 @@ export async function tick(now = new Date()) {
     return {}
   })
 
-  return { reopened, sweep, notifications }
+  // A punch-list test nobody picked up: nudge once an hour, three times, then
+  // leave it on the list where it is visible anyway.
+  let nudged = 0
+  const stale = await staleQueuedRuns(now, 60).catch(() => [])
+  for (const run of stale) {
+    const age = Math.floor((now.getTime() - run.requestedAt.getTime()) / 3_600_000)
+    if (age < 1 || age > 3) continue
+    const sent = await notify({
+      kind: "punchlist.test",
+      dedupeKey: `run:${run.id}:h${age}`,
+      body: `Still waiting: ${run.item.title} — ${run.item.punchlist.title}`,
+      url: `${ROUTES.punchlist(run.item.punchlist.slug)}?peek=run:${run.id}`,
+      now,
+    }).catch(() => "unsent" as const)
+    if (sent === "sent") nudged += 1
+  }
+
+  // Where-I-left-off notes: presume a silent chat gone after a day, purge
+  // hidden rows after two weeks. Pinned and hand-written notes are kept.
+  const leftoff = await sweepSessionNotes(now).catch((err) => {
+    console.error("leftoff sweep failed:", err)
+    return { presumedGone: 0, purged: 0 }
+  })
+
+  return { reopened, sweep, notifications, nudged, leftoff }
 }

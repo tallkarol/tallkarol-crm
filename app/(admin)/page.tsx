@@ -2,6 +2,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { PageHeader } from "@/components/PageHeader"
 import { Forecast } from "@/components/dashboard/Forecast"
+import { LeftOff } from "@/components/dashboard/LeftOff"
 import { MonthBilled } from "@/components/dashboard/MonthBilled"
 import { NeedsAttention } from "@/components/dashboard/NeedsAttention"
 import { Unread } from "@/components/dashboard/Unread"
@@ -16,6 +17,7 @@ import { getGoals } from "@/lib/goals"
 import { ROUTES } from "@/lib/nav"
 import { getSessionUser } from "@/lib/auth"
 import { greetingFor } from "@/lib/greeting"
+import { loadLeftOff } from "@/lib/leftoff-data"
 import { ensureRenewalTasks } from "@/lib/renewals"
 import { loadUnread } from "@/lib/unread-data"
 import { reopenDueRecurring, waitingTooLong } from "@/lib/tasks"
@@ -59,7 +61,7 @@ export default async function DashboardPage({
   await reopenDueRecurring()
   const stalled = await waitingTooLong()
   const sessionUser = await getSessionUser()
-  const [invoices, openTasks, retainers, projects, timeEntries, meetings, unread] =
+  const [invoices, openTasks, retainers, projects, timeEntries, meetings, unread, leftoff] =
     await Promise.all([
       db.query.invoices.findMany({ with: { client: true } }),
       db.query.tasks.findMany({ with: { client: true } }).then((rows) =>
@@ -71,6 +73,7 @@ export default async function DashboardPage({
       getUpcomingMeetings(),
       // Cached per request — the shell already loaded this for the badges.
       loadUnread(),
+      loadLeftOff().catch(() => null),
     ])
 
   const goals = await getGoals()
@@ -204,6 +207,7 @@ export default async function DashboardPage({
       {searchParams.peek ? (
         <PeekRouter peek={searchParams.peek} closeHref="/" />
       ) : null}
+      {leftoff ? <LeftOff payload={leftoff} /> : null}
 
       <div className="mt-5 grid min-w-0 gap-3 md:mt-8 xl:grid-cols-[1fr_3fr]">
         <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">

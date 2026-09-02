@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, gte, inArray, isNotNull, lt, sql } from "drizzle-orm"
 import { db } from "@/db"
+import { formatWholeMoney } from "@/lib/revenue"
 import {
   calendarEvents,
   clients,
@@ -376,11 +377,7 @@ export type ClientHub = {
 }
 
 function money(cents: number) {
-  return (cents / 100).toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  })
+  return formatWholeMoney(cents)
 }
 
 function fmtH(n: number) {

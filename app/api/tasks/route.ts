@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm"
 import { db } from "@/db"
 import { tasks } from "@/db/schema"
 import type { Cadence } from "@/db/schema"
+import { insertTaskRow, resolveTaskTarget } from "@/lib/task-insert"
 import { parseTaskInput } from "@/lib/task-parse"
 import { taskTargets } from "@/lib/tasks"
 import {
@@ -91,35 +92,9 @@ export async function POST(request: Request) {
     )
   }
 
-  // A project or product implies its client — the same resolution the composer does.
-  let retainerId: string | null = null
-  if (projectId) {
-    const project = await db.query.projects.findFirst({
-      where: (p, { eq }) => eq(p.id, projectId!),
-    })
-    if (!project) {
-      return NextResponse.json({ error: "That project does not exist." }, { status: 400 })
-    }
-    clientId = project.clientId
-    retainerId = project.retainerId
-    productId = null
-  } else if (productId) {
-    const product = await db.query.products.findFirst({
-      where: (p, { eq }) => eq(p.id, productId!),
-    })
-    if (!product) {
-      return NextResponse.json({ error: "That product does not exist." }, { status: 400 })
-    }
-    clientId = product.clientId
-  } else if (clientId) {
-    const client = await db.query.clients.findFirst({
-      where: (c, { eq }) => eq(c.id, clientId!),
-      with: { retainers: true },
-    })
-    if (!client) {
-      return NextResponse.json({ error: "That client does not exist." }, { status: 400 })
-    }
-    retainerId = client.retainers.find((r) => r.status === "active")?.id ?? null
+  const target = await resolveTaskTarget({ clientId, projectId, productId })
+  if ("error" in target) {
+    return NextResponse.json({ error: target.error }, { status: 400 })
   }
 
   const priorityRaw = body.priority
@@ -128,29 +103,24 @@ export async function POST(request: Request) {
       ? priorityRaw
       : 2
 
-  const [created] = await db
-    .insert(tasks)
-    .values({
-      title,
-      userId: caller.userId,
-      clientId,
-      projectId,
-      productId,
-      retainerId,
-      dueOn: dueOn && /^\d{4}-\d{2}-\d{2}$/.test(dueOn) ? dueOn : null,
-      snoozedUntil:
-        snoozedUntil && /^\d{4}-\d{2}-\d{2}$/.test(snoozedUntil) ? snoozedUntil : null,
-      cadence,
-      priority,
-      notes: (readString(body, "notes") ?? "").slice(0, 4000),
-      labels: Array.isArray(body.labels)
-        ? body.labels.filter((v): v is string => typeof v === "string" && !!v.trim()).slice(0, 10)
-        : [],
-      source: readString(body, "source") ?? "api",
-      refKind: refKind && refId ? refKind : null,
-      refId: refKind && refId ? refId : null,
-    })
-    .returning({ id: tasks.id })
+  const id = await insertTaskRow(db, {
+    title,
+    userId: caller.userId,
+    target,
+    dueOn,
+    snoozedUntil,
+    cadence,
+    priority,
+    notes: readString(body, "notes") ?? "",
+    labels: Array.isArray(body.labels) ? (body.labels as string[]) : [],
+    source: readString(body, "source") ?? "api",
+    refKind,
+    refId,
+  })
+  const created = { id }
+  clientId = target.clientId
+  projectId = target.projectId
+  productId = target.productId
 
   revalidatePath("/tasks")
   revalidatePath("/")

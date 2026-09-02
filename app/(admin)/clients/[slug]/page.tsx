@@ -14,6 +14,7 @@ import { StatusPill } from "@/components/clients/StatusPill"
 import type { PillTone } from "@/components/clients/StatusPill"
 import { TicketList } from "@/components/clients/TicketList"
 import { PeekRouter } from "@/components/peek/PeekRouter"
+import { PunchlistList } from "@/components/punchlist/PunchlistList"
 import { TaskBoardView } from "@/components/tasks/TaskBoardView"
 import { TaskComposer } from "@/components/tasks/TaskComposer"
 import { db } from "@/db"
@@ -34,6 +35,7 @@ import {
 import { getInsightsContext } from "@/lib/insights/queries"
 import { siteSupportsInternalTraffic } from "@/lib/internal-traffic"
 import { ROUTES } from "@/lib/nav"
+import { punchlistsFor } from "@/lib/punchlists"
 import { tasksFor, taskTargets } from "@/lib/tasks"
 import { currentMonth } from "@/lib/timesheet"
 import {
@@ -89,7 +91,7 @@ export default async function ClientDetailPage({
 
   const { client } = hub
   const adsSites = hub.sites.filter((site) => Boolean(site.adsCustomerId))
-  const [clientTasks, targets, brainstorm, adsViews] = await Promise.all([
+  const [clientTasks, targets, brainstorm, adsViews, clientPunchlists] = await Promise.all([
     tasksFor({ clientId: client.id }),
     taskTargets(),
     db.query.brainstormNotes.findMany({
@@ -102,6 +104,7 @@ export default async function ClientDetailPage({
         return { site, snapshot: ctx?.snapshot ?? null }
       })
     ),
+    punchlistsFor({ clientId: client.id }),
   ])
   const openTasks = clientTasks.filter((t) => t.status === "open")
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
@@ -165,6 +168,7 @@ export default async function ClientDetailPage({
     sortedWorksheets.length > 0
       ? { id: "worksheets", label: "Worksheets" }
       : null,
+    clientPunchlists.length > 0 ? { id: "punchlists", label: "Punch lists" } : null,
   ].filter((item): item is { id: string; label: string } => item != null)
 
   return (
@@ -1018,6 +1022,13 @@ export default async function ClientDetailPage({
                   </div>
                 ))}
               </div>
+            </Block>
+          ) : null}
+
+          {/* ------------------------------------------------ punch lists */}
+          {clientPunchlists.length > 0 ? (
+            <Block id="punchlists" title="Punch lists">
+              <PunchlistList rows={clientPunchlists} peekBase={ROUTES.client(client.slug)} />
             </Block>
           ) : null}
         </div>

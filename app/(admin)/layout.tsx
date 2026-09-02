@@ -6,6 +6,8 @@ import { adminNav, ROUTES } from "@/lib/nav"
 import { flattenProducts, studiosWithProducts } from "@/lib/products"
 import { COLOR_GLOBAL } from "@/lib/client-colors"
 import { hydrateClientColors } from "@/lib/client-colors-store"
+import { HIDE_MONEY_GLOBAL } from "@/lib/money-privacy"
+import { readHideMoneyCookie } from "@/lib/money-privacy-server"
 import { loadUnread } from "@/lib/unread-data"
 import { worstTone } from "@/lib/unread"
 import { runningPunches } from "@/lib/punches"
@@ -17,6 +19,10 @@ export default async function AdminLayout({
 }) {
   const user = await getSessionUser()
   if (!user) redirect("/login")
+
+  // Demo mode — see `lib/money-privacy.ts`. Read here for the script tag and
+  // the shell's switch; server components read the same cookie themselves.
+  const hideMoney = readHideMoneyCookie()
 
   // One read behind every badge and behind the dashboard's Unread card, so a
   // badge can never disagree with the card or the page it points at. The call
@@ -52,6 +58,18 @@ export default async function AdminLayout({
         }}
       />
       {/*
+        Demo mode for the browser bundle, same reasoning: `hideMoney()` is a
+        plain function inside the money formatters, and this lands before
+        hydration so the first client render matches the masked server HTML.
+      */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `window.${HIDE_MONEY_GLOBAL}=${hideMoney}${
+            hideMoney ? ";document.documentElement.dataset.hideMoney='1'" : ""
+          }`,
+        }}
+      />
+      {/*
         Embedded chrome. The Mac app's Settings window opens CRM settings
         pages with `?embed=settings`; that turns off the sidebar, top bar and
         floating clock (see `[data-chrome]` in globals.css) so the page reads
@@ -69,6 +87,7 @@ export default async function AdminLayout({
       email={user.email}
       badges={badges}
       nav={adminNav(flattenProducts(catalog))}
+      hideMoney={hideMoney}
     >
       {children}
     </AppShell>

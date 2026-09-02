@@ -58,7 +58,11 @@ async function main() {
       // The whole point of the partial index: two running punches cannot exist.
       const [user] = await tx.unsafe(`select id from users limit 1`)
       const [client] = await tx.unsafe(`select id from clients limit 1`)
-      if (user && client) {
+      // 0044 relaxed this to "same target twice"; only assert while the index exists.
+      const [oneRunning] = await tx.unsafe(
+        `select 1 from pg_indexes where indexname = 'time_punches_one_running_idx'`
+      )
+      if (user && client && oneRunning) {
         await tx.unsafe(
           `insert into time_punches (user_id, client_id, started_at, status)
            values ('${user.id}', '${client.id}', now(), 'running')`

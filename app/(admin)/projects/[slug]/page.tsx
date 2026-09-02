@@ -5,10 +5,12 @@ import { PeekRouter } from "@/components/peek/PeekRouter"
 import { WorkstreamLane } from "@/components/delivery/WorkstreamLane"
 import { TaskComposer } from "@/components/tasks/TaskComposer"
 import { TaskRows } from "@/components/tasks/TaskRows"
+import { PunchlistList } from "@/components/punchlist/PunchlistList"
 import { db } from "@/db"
 import { clientColor } from "@/lib/client-colors"
 import { daysSince, fmtHours, readLinks } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
+import { punchlistsFor } from "@/lib/punchlists"
 import { tasksFor, taskTargets } from "@/lib/tasks"
 import { formatDay, formatMoney, plural } from "@/lib/work"
 import { addProjectLink, draftDeliverableInvoice, removeProjectLink } from "../actions"
@@ -53,9 +55,10 @@ export default async function ProjectDetailPage({
   const invoiceableCents = invoiceable.reduce((s, d) => s + (d.feeCents ?? 0), 0)
   const nextDue = deliverables.find((d) => d.status === "pending" && d.dueOn)
 
-  const [projectTasks, targets] = await Promise.all([
+  const [projectTasks, targets, projectPunchlists] = await Promise.all([
     tasksFor({ projectId: project.id }),
     taskTargets(),
+    punchlistsFor({ projectId: project.id }),
   ])
   const tasks = projectTasks.filter((t) => t.status === "open")
 
@@ -342,6 +345,16 @@ export default async function ProjectDetailPage({
               <button className="rounded-full border border-tk-slate/20 px-3 py-1 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal">Add</button>
             </form>
           </section>
+
+          {projectPunchlists.length > 0 ? (
+            <section>
+              <div className="flex items-center justify-between px-1 pb-2">
+                <h2 className="text-[13px] font-bold text-tk-onyx">Punch lists</h2>
+                <span className="text-[11px] tabular-nums text-tk-slate/60">{projectPunchlists.length}</span>
+              </div>
+              <PunchlistList rows={projectPunchlists} peekBase={ROUTES.project(project.slug)} />
+            </section>
+          ) : null}
 
           <section className="rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
             <div className="flex items-center justify-between px-5 pb-1 pt-4">

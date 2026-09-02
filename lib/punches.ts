@@ -7,6 +7,8 @@ import {
   retainers,
   timeEntries,
   timePunches,
+  agentSessions,
+  timeEntrySessions,
 } from "@/db/schema"
 import type { TimePunch } from "@/db/schema"
 import {
@@ -648,6 +650,22 @@ export type AgentLogInput = {
   clientRequestId: string
   /** Log into a month that already has an invoice. */
   force?: boolean
+  /**
+   * The conversations this row pays for and each one's share of the hours.
+   * Additive metadata: it links `time_entry_sessions`, never changes the
+   * number, and a replay with a different list is ignored.
+   */
+  sessions?: AgentLogSession[]
+}
+
+export type AgentLogSession = {
+  ref: string
+  hours: number
+  name?: string
+  surface?: string
+  startedAt?: unknown
+  endedAt?: unknown
+  rawHours?: number
 }
 
 async function findAgentLog(userId: string, requestId: string) {
@@ -665,6 +683,58 @@ async function findAgentLog(userId: string, requestId: string) {
       })
     : null
   return { punch, entry: entry ?? null }
+}
+
+/**
+ * The sessions behind an agent entry. A stub `agent_sessions` row is made
+ * for any ref not seen yet, so the link holds even when the summarizer
+ * never ran; `POST /api/sessions` fills the summary in later.
+ */
+async function linkSessions(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  entryId: string,
+  target: { clientId: string; projectId: string | null },
+  sessions: AgentLogSession[]
+) {
+  for (const s of sessions.slice(0, 50)) {
+    const ref = typeof s.ref === "string" ? s.ref.trim().slice(0, 200) : ""
+    if (!ref) continue
+    const started = s.startedAt ? parseInstant(s.startedAt) : null
+    const ended = s.endedAt ? parseInstant(s.endedAt) : null
+    await tx
+      .insert(agentSessions)
+      .values({
+        sessionRef: ref,
+        surface: typeof s.surface === "string" ? s.surface.slice(0, 20) : "claude",
+        name: typeof s.name === "string" ? s.name.slice(0, 300) : "",
+        clientId: target.clientId,
+        projectId: target.projectId,
+        startedAt: started && "at" in started ? started.at : null,
+        endedAt: ended && "at" in ended ? ended.at : null,
+        meterHours:
+          typeof s.rawHours === "number" ? (Math.round(s.rawHours * 100) / 100).toFixed(2) : "0",
+      })
+      .onConflictDoUpdate({
+        target: agentSessions.sessionRef,
+        set: {
+          clientId: sql`coalesce(${agentSessions.clientId}, excluded.client_id)`,
+          projectId: sql`coalesce(${agentSessions.projectId}, excluded.project_id)`,
+          name: sql`case when ${agentSessions.name} = '' then excluded.name else ${agentSessions.name} end`,
+          startedAt: sql`coalesce(${agentSessions.startedAt}, excluded.started_at)`,
+          endedAt: sql`coalesce(${agentSessions.endedAt}, excluded.ended_at)`,
+          meterHours: sql`greatest(${agentSessions.meterHours}, excluded.meter_hours)`,
+          updatedAt: new Date(),
+        },
+      })
+    await tx
+      .insert(timeEntrySessions)
+      .values({
+        timeEntryId: entryId,
+        sessionRef: ref,
+        shareHours: (Math.round((typeof s.hours === "number" ? s.hours : 0) * 100) / 100).toFixed(2),
+      })
+      .onConflictDoNothing()
+  }
 }
 
 /**
@@ -802,6 +872,7 @@ export async function logAgentTime(
         hours,
         summary,
       })
+      await linkSessions(tx, entryId, target, input.sessions ?? [])
       const [created] = await tx
         .insert(timePunches)
         .values({

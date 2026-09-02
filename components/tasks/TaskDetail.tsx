@@ -13,6 +13,7 @@ import { db } from "@/db"
 import { clients, deliverables, products, projects, tasks } from "@/db/schema"
 import { clientColor } from "@/lib/client-colors"
 import { ROUTES } from "@/lib/nav"
+import { punchlistForTask } from "@/lib/punchlists"
 import { completionHistory, taskChecklist } from "@/lib/tasks"
 import {
   setTaskCadenceAction,
@@ -47,6 +48,8 @@ const SOURCE_NOTE: Record<string, string> = {
   api: "Captured from a device",
   ticket: "Made from a support ticket",
   meeting: "Made from a meeting",
+  notion: "Accepted from a notebook",
+  punchlist: "An item on a punch list",
 }
 
 export async function TaskDetailBody({ id }: { id: string }) {
@@ -55,6 +58,7 @@ export async function TaskDetailBody({ id }: { id: string }) {
     with: { client: true, retainer: true, project: true, product: true, deliverable: true },
   })
   if (!task) return null
+  const onList = task.source === "punchlist" ? await punchlistForTask(task.id) : null
 
   const [clientRows, projectRows, productRows, deliverableRows, items, history] =
     await Promise.all([
@@ -295,7 +299,15 @@ export async function TaskDetailBody({ id }: { id: string }) {
               {formatDay(task.updatedAt.toISOString().slice(0, 10))}
             </Fact>
           )}
-          <Fact label="Origin">{SOURCE_NOTE[task.source] ?? task.source}</Fact>
+          <Fact label="Origin">
+            {onList ? (
+              <Link href={ROUTES.punchlist(onList.punchlist.slug)} className="font-semibold text-tk-teal hover:underline">
+                {onList.punchlist.title}
+              </Link>
+            ) : (
+              SOURCE_NOTE[task.source] ?? task.source
+            )}
+          </Fact>
           {task.product ? (
             <Fact label="Product">
               <EntityLink href={ROUTES.productPage(task.product.slug)}>

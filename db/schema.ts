@@ -377,7 +377,7 @@ export const tasks = pgTable(
      * contract as `support_tickets.tags`.
      */
     labels: text("labels").array().notNull().default([]),
-    /** manual | renewal | ticket | meeting | api | mail */
+    /** manual | renewal | ticket | meeting | api | mail | notion | punchlist */
     source: text("source").notNull().default("manual"),
     /** What this task was made out of, for the trail. */
     refKind: text("ref_kind"),
@@ -892,6 +892,8 @@ export const clientsRelations = relations(clients, ({ many }) => ({
   timeEntries: many(timeEntries),
   contracts: many(contracts),
   notionLinks: many(notionLinks),
+  punchlists: many(punchlists),
+  agentSessions: many(agentSessions),
 }))
 
 export const retainersRelations = relations(retainers, ({ one, many }) => ({
@@ -925,6 +927,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   invoices: many(invoices),
   contracts: many(contracts),
   workstreams: many(workstreams),
+  punchlists: many(punchlists),
 }))
 
 export const productStudiosRelations = relations(
@@ -992,7 +995,8 @@ export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   timeEntries: many(timeEntries),
 }))
 
-export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({
+export const timeEntriesRelations = relations(timeEntries, ({ one, many }) => ({
+  sessions: many(timeEntrySessions),
   client: one(clients, {
     fields: [timeEntries.clientId],
     references: [clients.id],
@@ -1032,6 +1036,10 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
   user: one(users, { fields: [tasks.userId], references: [users.id] }),
   items: many(taskItems),
   completions: many(taskCompletions),
+  punchlistItem: one(punchlistItems, {
+    fields: [tasks.id],
+    references: [punchlistItems.taskId],
+  }),
 }))
 
 export const reportsRelations = relations(reports, ({ one }) => ({
@@ -2326,3 +2334,381 @@ export const notificationLog = pgTable(
 
 export type PushSubscription = typeof pushSubscriptions.$inferSelect
 export type NotificationLogRow = typeof notificationLog.$inferSelect
+
+/* ------------------------------------------------------------------ */
+/* agent sessions — what a Claude Code / Cursor conversation did       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * One row per agent conversation, keyed by the session id the hooks already
+ * see. The Mac writes the summary after the session ends (`session-log` in
+ * daedalus-hive-mind); `/log-session` links the hours it bills to the
+ * sessions that earned them through `time_entry_sessions`. Only the
+ * model-written summary lands here — never prompts or transcript text.
+ */
+export const agentSessions = pgTable(
+  "agent_sessions",
+  {
+    sessionRef: text("session_ref").primaryKey(),
+    /** claude | cursor */
+    surface: text("surface").notNull().default("claude"),
+    name: text("name").notNull().default(""),
+    clientId: uuid("client_id").references(() => clients.id, {
+      onDelete: "set null",
+    }),
+    projectId: uuid("project_id").references(() => projects.id, {
+      onDelete: "set null",
+    }),
+    cwd: text("cwd").notNull().default(""),
+    repos: jsonb("repos").$type<string[]>().notNull().default([]),
+    filesTouched: jsonb("files_touched").$type<string[]>().notNull().default([]),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    /** Invoice voice — lowercase, terse, comma-joined outcomes. A draft Karol edits. */
+    summary: text("summary").notNull().default(""),
+    highlights: jsonb("highlights").$type<string[]>().notNull().default([]),
+    tokensIn: integer("tokens_in").notNull().default(0),
+    tokensOut: integer("tokens_out").notNull().default(0),
+    /** Raw metered hours for the conversation — working data, never billed as-is. */
+    meterHours: numeric("meter_hours", { precision: 6, scale: 2 }).notNull().default("0"),
+    model: text("model").notNull().default(""),
+    summarizedAt: timestamp("summarized_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    byClient: index("agent_sessions_client_idx").on(
+      table.clientId,
+      table.startedAt.desc()
+    ),
+  })
+)
+
+/**
+ * Which sessions a billable entry paid for, and how much of it each one
+ * earned. Cascades with the entry — delete the hours and the link goes,
+ * the session record stays.
+ */
+export const timeEntrySessions = pgTable(
+  "time_entry_sessions",
+  {
+    timeEntryId: uuid("time_entry_id")
+      .notNull()
+      .references(() => timeEntries.id, { onDelete: "cascade" }),
+    sessionRef: text("session_ref")
+      .notNull()
+      .references(() => agentSessions.sessionRef, { onDelete: "cascade" }),
+    shareHours: numeric("share_hours", { precision: 6, scale: 2 }).notNull().default("0"),
+  },
+  (table) => ({
+    pk: uniqueIndex("time_entry_sessions_pk").on(table.timeEntryId, table.sessionRef),
+    bySession: index("time_entry_sessions_session_idx").on(table.sessionRef),
+  })
+)
+
+/* ------------------------------------------------------------------ */
+/* punch lists — agent-generated checklists whose items are tasks      */
+/* ------------------------------------------------------------------ */
+
+export const punchlistStatusEnum = pgEnum("punchlist_status", [
+  "draft",
+  "open",
+  "done",
+  "void",
+])
+
+/**
+ * A punch list is cut from a source — an email, a Word doc, a transcript —
+ * by an agent, never typed in. Every item becomes a task; the item has no
+ * done flag of its own, the task's status IS the item's state. `draft` is
+ * the only state in which items have no task yet.
+ */
+export const punchlists = pgTable(
+  "punchlists",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    title: text("title").notNull(),
+    slug: text("slug").notNull(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    projectId: uuid("project_id").references(() => projects.id, {
+      onDelete: "set null",
+    }),
+    retainerId: uuid("retainer_id").references(() => retainers.id, {
+      onDelete: "set null",
+    }),
+    status: punchlistStatusEnum("status").notNull().default("draft"),
+    /** The line under the title — where the list came from, what it covers. */
+    intro: text("intro").notNull().default(""),
+    /** mail | doc | transcript | manual */
+    sourceKind: text("source_kind").notNull().default("doc"),
+    /** inbox_mail id, a filename, or "Pedro's hitlist (Aug 31)". */
+    sourceRef: text("source_ref").notNull().default(""),
+    /** The text the items were cut from, so every `reported` quote has a home. */
+    sourceText: text("source_text").notNull().default(""),
+    /** Tool + version that wrote the list. */
+    generatedBy: text("generated_by").notNull().default(""),
+    sessionRef: text("session_ref").references(() => agentSessions.sessionRef, {
+      onDelete: "set null",
+    }),
+    /** Idempotency for the CLI: the same pair replays instead of twinning. */
+    refKind: text("ref_kind"),
+    refId: uuid("ref_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    slug: uniqueIndex("punchlists_slug_unique").on(table.slug),
+    ref: uniqueIndex("punchlists_ref_idx")
+      .on(table.refKind, table.refId)
+      .where(sql`${table.refId} is not null`),
+    byClient: index("punchlists_client_idx").on(table.clientId, table.status),
+    byProject: index("punchlists_project_idx")
+      .on(table.projectId)
+      .where(sql`${table.projectId} is not null`),
+  })
+)
+
+/** The test an agent runs to prove an item's outcome. Prose-shaped on purpose. */
+export type PunchlistTestSpec = {
+  kind: "browser" | "http" | "command" | "manual"
+  url?: string
+  method?: string
+  repo?: string
+  command?: string
+  steps?: string[]
+  expect: string
+  evidence?: string[]
+  timeoutSec?: number
+}
+
+export const punchlistItems = pgTable(
+  "punchlist_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    punchlistId: uuid("punchlist_id")
+      .notNull()
+      .references(() => punchlists.id, { onDelete: "cascade" }),
+    /** "A · Answers & decisions" — the heading the item sits under. */
+    section: text("section").notNull().default(""),
+    sectionSort: smallint("section_sort").notNull().default(0),
+    sort: integer("sort").notNull().default(0),
+    title: text("title").notNull(),
+    /** The chip: "theme PR", "bundle", "preprod script", "held", "answer". */
+    kind: text("kind").notNull().default(""),
+    /** The client's words, verbatim from the source. */
+    reported: text("reported").notNull().default(""),
+    /** The fix path / expected result — what "done" means for this item. */
+    outcome: text("outcome").notNull().default(""),
+    taskId: uuid("task_id").references(() => tasks.id, { onDelete: "set null" }),
+    test: jsonb("test").$type<PunchlistTestSpec | null>(),
+    /** queued | running | pass | fail | blocked — rolled up from the latest run. */
+    lastTestStatus: text("last_test_status").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    byList: index("punchlist_items_list_idx").on(
+      table.punchlistId,
+      table.sectionSort,
+      table.sort
+    ),
+    byTask: index("punchlist_items_task_idx")
+      .on(table.taskId)
+      .where(sql`${table.taskId} is not null`),
+  })
+)
+
+export type PunchlistTestReport = {
+  findings?: string[]
+  notCovered?: string[]
+  evidence?: string[]
+  fixes?: string[]
+  raw?: string
+}
+
+/**
+ * One request to prove one item, and what came back. Request-shaped, not
+ * schedule-shaped — that is why this is not a `monitor_runs` row: nobody
+ * should open a support ticket because a punch-list test was not run yet.
+ */
+export const punchlistTestRuns = pgTable(
+  "punchlist_test_runs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    itemId: uuid("item_id")
+      .notNull()
+      .references(() => punchlistItems.id, { onDelete: "cascade" }),
+    /** queued | running | pass | fail | blocked | cancelled */
+    status: text("status").notNull().default("queued"),
+    /** Snapshot of the item's test at request time — edits later do not rewrite history. */
+    spec: jsonb("spec").$type<PunchlistTestSpec>().notNull(),
+    requestedBy: uuid("requested_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    requestedAt: timestamp("requested_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    /** One human-facing line: what the agent concluded. */
+    verdict: text("verdict").notNull().default(""),
+    report: jsonb("report").$type<PunchlistTestReport>().notNull().default({}),
+    sessionRef: text("session_ref").references(() => agentSessions.sessionRef, {
+      onDelete: "set null",
+    }),
+    /** Who claimed it — "qa@karol-mbp". */
+    runner: text("runner").notNull().default(""),
+    clientRequestId: text("client_request_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    byItem: index("punchlist_test_runs_item_idx").on(
+      table.itemId,
+      table.requestedAt.desc()
+    ),
+    open: index("punchlist_test_runs_open_idx")
+      .on(table.status)
+      .where(sql`${table.status} in ('queued', 'running')`),
+    request: uniqueIndex("punchlist_test_runs_request_idx")
+      .on(table.clientRequestId)
+      .where(sql`${table.clientRequestId} is not null`),
+  })
+)
+
+export const agentSessionsRelations = relations(agentSessions, ({ one, many }) => ({
+  client: one(clients, {
+    fields: [agentSessions.clientId],
+    references: [clients.id],
+  }),
+  project: one(projects, {
+    fields: [agentSessions.projectId],
+    references: [projects.id],
+  }),
+  entries: many(timeEntrySessions),
+  punchlists: many(punchlists),
+  testRuns: many(punchlistTestRuns),
+}))
+
+export const timeEntrySessionsRelations = relations(timeEntrySessions, ({ one }) => ({
+  entry: one(timeEntries, {
+    fields: [timeEntrySessions.timeEntryId],
+    references: [timeEntries.id],
+  }),
+  session: one(agentSessions, {
+    fields: [timeEntrySessions.sessionRef],
+    references: [agentSessions.sessionRef],
+  }),
+}))
+
+export const punchlistsRelations = relations(punchlists, ({ one, many }) => ({
+  client: one(clients, {
+    fields: [punchlists.clientId],
+    references: [clients.id],
+  }),
+  project: one(projects, {
+    fields: [punchlists.projectId],
+    references: [projects.id],
+  }),
+  retainer: one(retainers, {
+    fields: [punchlists.retainerId],
+    references: [retainers.id],
+  }),
+  session: one(agentSessions, {
+    fields: [punchlists.sessionRef],
+    references: [agentSessions.sessionRef],
+  }),
+  items: many(punchlistItems),
+}))
+
+export const punchlistItemsRelations = relations(punchlistItems, ({ one, many }) => ({
+  punchlist: one(punchlists, {
+    fields: [punchlistItems.punchlistId],
+    references: [punchlists.id],
+  }),
+  task: one(tasks, {
+    fields: [punchlistItems.taskId],
+    references: [tasks.id],
+  }),
+  runs: many(punchlistTestRuns),
+}))
+
+export const punchlistTestRunsRelations = relations(punchlistTestRuns, ({ one }) => ({
+  item: one(punchlistItems, {
+    fields: [punchlistTestRuns.itemId],
+    references: [punchlistItems.id],
+  }),
+  session: one(agentSessions, {
+    fields: [punchlistTestRuns.sessionRef],
+    references: [agentSessions.sessionRef],
+  }),
+  requester: one(users, {
+    fields: [punchlistTestRuns.requestedBy],
+    references: [users.id],
+  }),
+}))
+
+export type AgentSession = typeof agentSessions.$inferSelect
+export type TimeEntrySession = typeof timeEntrySessions.$inferSelect
+export type Punchlist = typeof punchlists.$inferSelect
+export type PunchlistItem = typeof punchlistItems.$inferSelect
+export type PunchlistTestRun = typeof punchlistTestRuns.$inferSelect
+export type PunchlistStatus = (typeof punchlistStatusEnum.enumValues)[number]
+
+/* ------------------------------------------------------ where I left off */
+
+/**
+ * One sticky note per agent conversation, overwritten by its own hooks.
+ * `session_ref` matches `agent_sessions.session_ref` (bare Claude session id,
+ * `cursor:<id>`), so a note can join to the meter and the punch lists; it is
+ * a separate table because notes are purged and session records are not.
+ * `state` is what the last hook said (working | waiting | blocked | gone) —
+ * "parked" is derived at read time in `lib/leftoff.ts`, never stored.
+ */
+export const sessionNotes = pgTable(
+  "session_notes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sessionRef: text("session_ref").notNull().unique(),
+    /** claude | cursor | manual | browser */
+    surface: text("surface").notNull().default("claude"),
+    title: text("title").notNull().default(""),
+    project: text("project").notNull().default(""),
+    cwd: text("cwd").notNull().default(""),
+    branch: text("branch").notNull().default(""),
+    lastPrompt: text("last_prompt").notNull().default(""),
+    lastReply: text("last_reply").notNull().default(""),
+    state: text("state").notNull().default("waiting"),
+    /** A note left on purpose — shown over the auto text, survives `gone`. */
+    body: text("body").notNull().default(""),
+    pinned: boolean("pinned").notNull().default(false),
+    /** When the event that last wrote this row happened — the ordering guard. */
+    eventAt: timestamp("event_at", { withTimezone: true }).notNull().defaultNow(),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true }),
+    meta: jsonb("meta").$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    live: index("session_notes_live_idx").on(table.dismissedAt, table.eventAt),
+  })
+)
+
+export type SessionNote = typeof sessionNotes.$inferSelect

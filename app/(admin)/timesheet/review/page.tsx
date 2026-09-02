@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { asc, ne } from "drizzle-orm"
 import { DomainTriage } from "@/components/timesheet/DomainTriage"
 import { MeetingInbox } from "@/components/timesheet/MeetingInbox"
+import { PeekRouter } from "@/components/peek/PeekRouter"
 import { PunchQueue } from "@/components/timesheet/PunchQueue"
 import { db } from "@/db"
 import { clients, projects } from "@/db/schema"
@@ -21,12 +22,13 @@ export const dynamic = "force-dynamic"
 export default async function ReviewPage({
   searchParams,
 }: {
-  searchParams: { tab?: string }
+  searchParams: { tab?: string; peek?: string }
 }) {
   const user = await getSessionUser()
   if (!user) redirect("/login")
 
   const tab = searchParams.tab === "meetings" ? "meetings" : "punches"
+  const closeHref = tab === "meetings" ? "/timesheet/review?tab=meetings" : "/timesheet/review"
 
   const [punches, proposals] = await Promise.all([
     pendingPunches(user.id),
@@ -35,6 +37,7 @@ export default async function ReviewPage({
 
   return (
     <>
+      {searchParams.peek ? <PeekRouter peek={searchParams.peek} closeHref={closeHref} /> : null}
       <nav
         aria-label="Review queues"
         className="mt-5 flex flex-wrap gap-2"

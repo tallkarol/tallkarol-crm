@@ -6,6 +6,7 @@ import { billingGaps, pace, retainerRateCents } from "@/lib/engagements"
 import { occurredOnIn } from "@/lib/punch"
 import { workspaceTimezone } from "@/lib/timezone"
 import { pendingPunches } from "@/lib/punches"
+import { formatWholeMoney } from "@/lib/revenue"
 import { hoursByMonthSeries } from "@/lib/sheets"
 import { currentMonth, shiftMonth } from "@/lib/timesheet"
 
@@ -287,11 +288,7 @@ async function unloggedMeetingCount() {
 }
 
 function formatCents(cents: number) {
-  return (cents / 100).toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  })
+  return formatWholeMoney(cents)
 }
 
 function monthName(key: string) {

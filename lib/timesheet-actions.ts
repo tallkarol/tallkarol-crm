@@ -14,7 +14,7 @@ import {
   parseHoursInput,
   sumHours,
 } from "@/lib/timesheet"
-import { formatMoney } from "@/lib/work"
+import { formatMoneyRaw } from "@/lib/work"
 
 export type TimeEntryInput = {
   id?: string
@@ -181,7 +181,7 @@ export async function createInvoiceFromTimesheet(input: {
         status: "draft",
         billTo: client.name,
         description: `${period} hours`,
-        notes: `1099. ${Number(hoursLabel)} hr at ${formatMoney(rateCents)}/hr.`,
+        notes: `1099. ${Number(hoursLabel)} hr at ${formatMoneyRaw(rateCents)}/hr.`,
       })
       .returning({ id: invoices.id })
 

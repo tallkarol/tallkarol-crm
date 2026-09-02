@@ -8,6 +8,7 @@ import { PrintButton } from "@/components/insights/PrintButton"
 import { PrintTrend } from "@/components/insights/PrintTrend"
 import { SearchTable } from "@/components/insights/SearchTable"
 import { getSessionUser } from "@/lib/auth"
+import { readHideMoneyCookie } from "@/lib/money-privacy-server"
 import { getPortalScope } from "@/lib/portal"
 import { fmtConv, fmtDayYear, fmtInt, fmtMoney } from "@/lib/insights/derive"
 import type { ArchivePayload } from "@/lib/insights/types"
@@ -66,6 +67,8 @@ export default async function InsightsReportPage({
   // Admins see every site; portal customers only the sites of clients they
   // hold grants for — the portal Reports tab links straight here.
   const user = await getSessionUser()
+  // Outside the admin layout — see the same note in /invoice-print.
+  const hideAmounts = readHideMoneyCookie()
 
   const site = await db.query.sites.findFirst({ where: eq(sites.slug, params.site) })
   if (!site) notFound()
@@ -97,6 +100,11 @@ export default async function InsightsReportPage({
     <div className="mx-auto max-w-[820px] px-6 py-8 print:max-w-none print:px-0 print:py-0">
       <style>{`@page { margin: 14mm 12mm; } @media print { body { background: #fff; } }`}</style>
 
+      {hideAmounts ? (
+        <p className="mb-4 rounded-lg bg-amber-700/10 px-3 py-2 text-xs font-semibold text-amber-800 print:hidden">
+          Amounts hidden — turn off demo mode before saving as PDF.
+        </p>
+      ) : null}
       <div className="mb-6 flex items-center justify-between gap-3 print:hidden">
         <Link
           href={user ? `/insights/${site.slug}/reports` : "/portal/reports"}

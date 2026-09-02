@@ -5,6 +5,7 @@ import type {
   RetainerStatus,
   WorkstreamStage,
 } from "@/db/schema"
+import { hideMoney, maskedMoney } from "@/lib/money-privacy"
 
 /**
  * The one place the CRM decides that something needs you.
@@ -117,6 +118,7 @@ export function daysUntil(iso: string, now: Date) {
 }
 
 function money(cents: number) {
+  if (hideMoney()) return maskedMoney()
   return (cents / 100).toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
