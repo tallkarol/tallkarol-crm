@@ -17,7 +17,11 @@ export const LONG_PUNCH_HOURS = 8
 /** A clock-in dated further off than this is a client-clock problem. */
 export const MAX_BACKDATE_MS = 24 * 60 * 60 * 1000
 
-export type PunchSource = "api" | "watch" | "web"
+/**
+ * How a punch was made. `agent` rows are written already-approved by
+ * `logAgentTime` — the approval happened in the chat that proposed them.
+ */
+export type PunchSource = "api" | "watch" | "web" | "agent"
 
 /** Y/M/D/h/m for an instant, read in the given zone. */
 function zoned(at: Date, timeZone: string) {
@@ -146,5 +150,19 @@ export function resolveInstant(
   if (Math.abs(at.getTime() - now.getTime()) > MAX_BACKDATE_MS) {
     return { error: "`at` must be within 24 hours of now." }
   }
+  return { at }
+}
+
+/**
+ * An explicit instant with no drift clamp — for callers that know exactly
+ * when something happened (an agent log reconstructed from session
+ * transcripts), as opposed to a device reporting "now, roughly".
+ */
+export function parseInstant(raw: unknown): { at: Date } | { error: string } {
+  if (typeof raw !== "string" || !raw.trim()) {
+    return { error: "Send an ISO timestamp." }
+  }
+  const at = new Date(raw)
+  if (Number.isNaN(at.getTime())) return { error: "Not a valid ISO timestamp." }
   return { at }
 }

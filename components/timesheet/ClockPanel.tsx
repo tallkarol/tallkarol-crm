@@ -192,6 +192,7 @@ export function sourceLabel(source: string) {
   if (source === "web") return "Browser"
   if (source === "api") return "API"
   if (source === "meeting") return "Calendar"
+  if (source === "agent") return "Agent"
   if (source === "clock") return "Clock"
   return "Manual"
 }

@@ -11,6 +11,7 @@ const SOURCES = [
   { value: "manual", label: "Typed by hand" },
   { value: "clock", label: "From a clock-in" },
   { value: "meeting", label: "From a meeting" },
+  { value: "agent", label: "Agent hours" },
 ]
 
 export function LedgerFilters({

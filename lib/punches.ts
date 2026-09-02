@@ -2,6 +2,7 @@ import { and, asc, desc, eq, gte, inArray, isNull, ne, sql } from "drizzle-orm"
 import { db } from "@/db"
 import {
   clients,
+  invoices,
   projects,
   retainers,
   timeEntries,
@@ -12,6 +13,7 @@ import {
   approvalBlocker,
   elapsedLabel,
   occurredOnIn,
+  parseInstant,
   punchFlags,
   punchHours,
   punchMinutes,
@@ -21,7 +23,7 @@ import {
   type PunchSource,
 } from "@/lib/punch"
 import { workspaceTimezone } from "@/lib/timezone"
-import { hoursToString } from "@/lib/timesheet"
+import { hoursToString, invoiceNumberFor } from "@/lib/timesheet"
 
 /**
  * Every operation on a punch, shared by the API routes and the server actions
@@ -527,6 +529,281 @@ export async function updatePunch(input: {
   return { ok: true, data: toView(fresh, await workspaceTimezone()) }
 }
 
+/** Anything that can `insert` — the db itself or a transaction handle. */
+type Writer = Pick<typeof db, "insert">
+
+/** The retainer an approved entry files under: the active one, else the first. */
+export async function activeRetainerFor(clientId: string) {
+  const rows = await db.query.retainers.findMany({
+    where: eq(retainers.clientId, clientId),
+  })
+  return rows.find((item) => item.status === "active") ?? rows[0] ?? null
+}
+
+/**
+ * The one insert that turns time into money. `approvePunch` and
+ * `logAgentTime` both come through here so the billable row is shaped
+ * identically whoever wrote it.
+ */
+export async function insertApprovedEntry(
+  tx: Writer,
+  input: {
+    userId: string | null
+    source: "clock" | "agent"
+    clientId: string
+    retainerId: string | null
+    projectId: string | null
+    occurredOn: string
+    startedAt: string
+    endedAt: string
+    hours: number
+    summary: string
+  }
+): Promise<string> {
+  const [entry] = await tx
+    .insert(timeEntries)
+    .values({
+      userId: input.userId,
+      source: input.source,
+      clientId: input.clientId,
+      retainerId: input.retainerId,
+      projectId: input.projectId,
+      occurredOn: input.occurredOn,
+      startedAt: input.startedAt,
+      endedAt: input.endedAt,
+      hours: hoursToString(input.hours),
+      summary: input.summary,
+    })
+    .returning({ id: timeEntries.id })
+  return entry.id
+}
+
+export type AgentLogInput = {
+  userId: string
+  deviceId?: string | null
+  clientId?: string | null
+  clientSlug?: string | null
+  projectId?: string | null
+  projectSlug?: string | null
+  occurredOn: string
+  startedAt: unknown
+  endedAt: unknown
+  hours: number
+  summary: string
+  /** Audit trail for the punch: which conversations, which request ids. */
+  note?: string
+  /** Proposal hash from the caller. A replay returns the same rows. */
+  clientRequestId: string
+  /** Log into a month that already has an invoice. */
+  force?: boolean
+}
+
+async function findAgentLog(userId: string, requestId: string) {
+  const punch = (await db.query.timePunches.findFirst({
+    where: and(
+      eq(timePunches.userId, userId),
+      eq(timePunches.clientRequestId, requestId)
+    ),
+    with: withParties,
+  })) as PunchRow | undefined
+  if (!punch) return null
+  const entry = punch.timeEntryId
+    ? await db.query.timeEntries.findFirst({
+        where: eq(timeEntries.id, punch.timeEntryId),
+      })
+    : null
+  return { punch, entry: entry ?? null }
+}
+
+/**
+ * Agent hours, approved in the chat that proposed them. Writes the billable
+ * entry and an already-approved punch that carries the real start/end and
+ * the audit note, in one transaction — so "where did that 1.52 come from"
+ * has an answer and nothing waits in the review queue a second time.
+ *
+ * Idempotent on `clientRequestId`: a replay with the same hours, day and
+ * summary returns the existing rows; the same id with a different body is
+ * a 409, because that is a bug upstream, not a retry.
+ */
+export async function logAgentTime(
+  input: AgentLogInput
+): Promise<PunchResult<{ punch: PunchView; timeEntryId: string; replayed: boolean }>> {
+  const requestId = input.clientRequestId?.trim()
+  if (!requestId) {
+    return { ok: false, status: 400, error: "Send a clientRequestId — the proposal id." }
+  }
+
+  const tz = await workspaceTimezone()
+  const hours = Math.round(input.hours * 100) / 100
+  const summary = (input.summary ?? "").trim()
+  const occurredOn = (input.occurredOn ?? "").trim()
+
+  const sameAsStored = (entry: { hours: string; occurredOn: string; summary: string } | null) =>
+    !!entry &&
+    Number(entry.hours) === hours &&
+    entry.occurredOn === occurredOn &&
+    entry.summary === summary
+
+  const existing = await findAgentLog(input.userId, requestId)
+  if (existing) {
+    if (sameAsStored(existing.entry) && existing.punch.timeEntryId) {
+      return {
+        ok: true,
+        data: {
+          punch: toView(existing.punch, tz),
+          timeEntryId: existing.punch.timeEntryId,
+          replayed: true,
+        },
+      }
+    }
+    return {
+      ok: false,
+      status: 409,
+      error: `clientRequestId ${requestId} was already logged with different hours, day or summary. Propose again.`,
+    }
+  }
+
+  // Slugs come from the caller's own client pins; ids are the CRM's. Both
+  // are accepted, and a project always names its own client.
+  let clientId = input.clientId ?? null
+  let projectId = input.projectId ?? null
+  if (!clientId && input.clientSlug) {
+    const client = await db.query.clients.findFirst({
+      where: eq(clients.slug, input.clientSlug),
+    })
+    if (!client) {
+      return { ok: false, status: 404, error: `No client with slug "${input.clientSlug}".` }
+    }
+    clientId = client.id
+  }
+  if (!projectId && input.projectSlug) {
+    const project = await db.query.projects.findFirst({
+      where: eq(projects.slug, input.projectSlug),
+    })
+    if (!project) {
+      return { ok: false, status: 404, error: `No project with slug "${input.projectSlug}".` }
+    }
+    projectId = project.id
+  }
+  const target = await resolveTarget({ clientId, projectId })
+  if ("error" in target) return { ok: false, status: 400, error: target.error }
+
+  const start = parseInstant(input.startedAt)
+  if ("error" in start) return { ok: false, status: 400, error: `startedAt: ${start.error}` }
+  const end = parseInstant(input.endedAt)
+  if ("error" in end) return { ok: false, status: 400, error: `endedAt: ${end.error}` }
+  if (end.at.getTime() <= start.at.getTime()) {
+    return { ok: false, status: 400, error: "The end time is before the start time." }
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(occurredOn)) {
+    return { ok: false, status: 400, error: "occurredOn must be YYYY-MM-DD." }
+  }
+  if (occurredOn > occurredOnIn(new Date(), tz)) {
+    return { ok: false, status: 400, error: "occurredOn is in the future." }
+  }
+  if (!summary) {
+    return { ok: false, status: 422, error: "Agent hours always carry a summary." }
+  }
+  const blocker = approvalBlocker({
+    clientId: target.clientId,
+    projectId: target.projectId,
+    summary,
+    hours,
+  })
+  if (blocker) return { ok: false, status: 422, error: blocker }
+
+  const client = await db.query.clients.findFirst({
+    where: eq(clients.id, target.clientId),
+  })
+  if (!client) return { ok: false, status: 404, error: "That client does not exist." }
+
+  if (!input.force) {
+    const number = invoiceNumberFor(client.slug, occurredOn.slice(0, 7))
+    const billed = await db.query.invoices.findFirst({
+      where: eq(invoices.number, number),
+    })
+    if (billed) {
+      return {
+        ok: false,
+        status: 409,
+        error: `${number} already exists for that month. Send force:true to log into a billed month.`,
+      }
+    }
+  }
+
+  const retainer = await activeRetainerFor(target.clientId)
+  const note = [summary, (input.note ?? "").trim()].filter(Boolean).join("\n\n")
+
+  let punchId: string
+  try {
+    punchId = await db.transaction(async (tx) => {
+      const entryId = await insertApprovedEntry(tx, {
+        userId: input.userId,
+        source: "agent",
+        clientId: target.clientId,
+        retainerId: retainer?.id ?? null,
+        projectId: target.projectId,
+        occurredOn,
+        startedAt: wallClockIn(start.at, tz),
+        endedAt: wallClockIn(end.at, tz),
+        hours,
+        summary,
+      })
+      const [created] = await tx
+        .insert(timePunches)
+        .values({
+          userId: input.userId,
+          clientId: target.clientId,
+          projectId: target.projectId,
+          startedAt: start.at,
+          endedAt: end.at,
+          status: "approved",
+          note,
+          source: "agent",
+          deviceId: input.deviceId ?? null,
+          clientRequestId: requestId,
+          timeEntryId: entryId,
+          approvedAt: new Date(),
+          approvedBy: input.userId,
+        })
+        .returning({ id: timePunches.id })
+      return created.id
+    })
+  } catch (error) {
+    // Two submits raced on the same proposal. The index held; hand back
+    // whichever won, under the same body-match rule as above.
+    if (isUniqueViolation(error)) {
+      const winner = await findAgentLog(input.userId, requestId)
+      if (winner?.punch.timeEntryId && sameAsStored(winner.entry)) {
+        return {
+          ok: true,
+          data: {
+            punch: toView(winner.punch, tz),
+            timeEntryId: winner.punch.timeEntryId,
+            replayed: true,
+          },
+        }
+      }
+      return {
+        ok: false,
+        status: 409,
+        error: `clientRequestId ${requestId} was already logged with a different body.`,
+      }
+    }
+    throw error
+  }
+
+  const fresh = await loadPunch(punchId)
+  if (!fresh?.timeEntryId) {
+    return { ok: false, status: 500, error: "Could not read that punch back." }
+  }
+  return {
+    ok: true,
+    data: { punch: toView(fresh, tz), timeEntryId: fresh.timeEntryId, replayed: false },
+  }
+}
+
 /**
  * The gate. Writes the billable `time_entries` row and marks the punch
  * approved — the only path by which a punch becomes money.
@@ -577,13 +854,7 @@ export async function approvePunch(input: {
   })
   if (blocker) return { ok: false, status: 422, error: blocker }
 
-  const clientRetainers = await db.query.retainers.findMany({
-    where: eq(retainers.clientId, row.clientId),
-  })
-  const retainer =
-    clientRetainers.find((item) => item.status === "active") ??
-    clientRetainers[0] ??
-    null
+  const retainer = await activeRetainerFor(row.clientId)
 
   const occurredOn = input.occurredOn?.trim() || occurredOnIn(start, tz)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(occurredOn)) {
@@ -591,21 +862,18 @@ export async function approvePunch(input: {
   }
 
   const timeEntryId = await db.transaction(async (tx) => {
-    const [entry] = await tx
-      .insert(timeEntries)
-      .values({
-        userId: row.userId,
-        source: "clock",
-        clientId: row.clientId,
-        retainerId: retainer?.id ?? null,
-        projectId,
-        occurredOn,
-        startedAt: wallClockIn(start, tz),
-        endedAt: wallClockIn(end, tz),
-        hours: hoursToString(hours),
-        summary,
-      })
-      .returning({ id: timeEntries.id })
+    const entryId = await insertApprovedEntry(tx, {
+      userId: row.userId,
+      source: "clock",
+      clientId: row.clientId,
+      retainerId: retainer?.id ?? null,
+      projectId,
+      occurredOn,
+      startedAt: wallClockIn(start, tz),
+      endedAt: wallClockIn(end, tz),
+      hours,
+      summary,
+    })
 
     await tx
       .update(timePunches)
@@ -613,13 +881,13 @@ export async function approvePunch(input: {
         status: "approved",
         note: summary,
         projectId,
-        timeEntryId: entry.id,
+        timeEntryId: entryId,
         approvedAt: new Date(),
         approvedBy: input.approvedBy,
       })
       .where(eq(timePunches.id, row.id))
 
-    return entry.id
+    return entryId
   })
 
   const fresh = await loadPunch(row.id)

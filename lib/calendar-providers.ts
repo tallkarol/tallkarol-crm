@@ -139,6 +139,35 @@ export type NewGoogleEvent = {
   endsAt: string
   timeZone: string
   attendees: string[]
+  /**
+   * Caller's own id, stored as a private extended property so a retry can
+   * find the event it already made instead of making a second one.
+   */
+  refKey?: string | null
+}
+
+/** The event carrying `refKey`, if one was already created on this calendar. */
+export async function findGoogleEventByRef(
+  calendarId: string,
+  refKey: string
+): Promise<{ id: string; htmlLink: string } | null> {
+  const token = await googleAccessToken(CALENDAR_SCOPES)
+  const params = new URLSearchParams({
+    privateExtendedProperty: `tk_ref=${refKey}`,
+    maxResults: "1",
+    showDeleted: "false",
+  })
+  const res = await fetch(
+    `${GOOGLE_API}/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
+    { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }
+  )
+  const json = (await res.json()) as {
+    items?: { id?: string; htmlLink?: string; status?: string }[]
+    error?: { message?: string }
+  }
+  if (!res.ok) throw new Error(json.error?.message || `Google Calendar ${res.status}`)
+  const hit = (json.items ?? []).find((item) => item.id && item.status !== "cancelled")
+  return hit?.id ? { id: hit.id, htmlLink: hit.htmlLink || "" } : null
 }
 
 export async function createGoogleEvent(
@@ -163,6 +192,9 @@ export async function createGoogleEvent(
         end: { dateTime: input.endsAt, timeZone: input.timeZone },
         attendees: input.attendees.length
           ? input.attendees.map((email) => ({ email }))
+          : undefined,
+        extendedProperties: input.refKey
+          ? { private: { tk_ref: input.refKey } }
           : undefined,
       }),
     }

@@ -63,6 +63,8 @@ web client *is* the reference client.
 | `POST /api/time/clock-in` | `{ projectId? \| clientId, note?, at?, switch?, source?, clientRequestId? }` | 201 with the punch. 409 with the running punch unless `switch: true`. |
 | `POST /api/time/clock-out` | `{ punchId?, note?, at? }` | Returns `rawMinutes`, `wouldBill`, and `needs` — what still blocks approval. |
 | `POST /api/time/punches/:id/approve` | `{ summary?, hours?, projectId?, occurredOn? }` | Writes the billable row. 422 when the rules above are not met. |
+| `POST /api/time/agent-log` | `{ clientSlug \| clientId, projectSlug? \| projectId?, occurredOn, startedAt, endedAt, hours, summary, note?, clientRequestId, force? }` | Agent hours, already approved (see below). 201, or 200 on an identical replay. 409 on a different body for the same id, or a billed month without `force`. |
+| `GET /api/time/agent-log?client=<slug>` | — | Does the slug exist, its projects, and the workspace timezone — what a proposal needs before it asks. |
 
 Two fields make a wrist tap safe on a bad connection:
 
@@ -82,6 +84,33 @@ Tokens are issued at **Settings → Devices** (`/settings/integrations/devices`)
 one per device, shown once, stored as a SHA-256 hash, revocable individually.
 That page also sets the workspace timezone — the zone a punch's timestamps
 resolve into a day and a `4:13 PM` wall-clock string for the sheet.
+
+## Agent hours
+
+`/log-session` (in the daedalus-hive-mind plugin) turns the agent meter — when
+Claude Code or Cursor agents were actually working, per client — into a
+proposal: client, project, a summary, the weighted hours, and the conversations
+that contributed. Karol approves it in the chat. **That approval is the gate**,
+so `POST /api/time/agent-log` writes the row already approved: a
+`time_punches` row with `source = 'agent'`, `status = 'approved'`, the real
+start/end and an audit note naming the conversations, plus the billable
+`time_entries` row with `source = 'agent'`, linked the usual way. Nothing waits
+in `/timesheet/review` a second time, and the row is swept into the month's
+invoice like any other hour.
+
+Three things keep that honest:
+
+- `clientRequestId` is a hash of the proposal Karol saw. Replaying it returns
+  the same rows; replaying it with different hours, day or summary is a 409.
+- The month is checked against `invoices` — logging into a billed month needs
+  `force: true`.
+- The credential is an ordinary device token (name it `daedalus-agent`), so
+  revoking it is one click on the Devices page.
+
+Six agents for one hour is not six hours: the plugin weights concurrency at
+`1 + 0.1 × (extra agents)` per instant, scoped to the client, before the number
+ever reaches this API. The math lives in `skills/log-session` over there; this
+side only stores what was approved.
 
 ## PWA
 

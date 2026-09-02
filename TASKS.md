@@ -44,6 +44,12 @@ curl -X POST https://crm.tallkarol.com/api/tasks \
   -d '{"text":"chase hero images @caps fieldhouse website !fri"}'
 ```
 
+Structured calls may also send `notes`, `priority` (1–3), `labels` (up to
+ten strings), and `refKind` + `refId` (a uuid) naming what the task was made
+from. The same `refKind`/`refId` pair sent twice returns the task already made
+with `200` and `replayed: true` — the `/follow-up` skill in daedalus-hive-mind
+relies on that so a retried submit never files a twin.
+
 ## The hub
 
 `/tasks` is one 44px bar over a banded list.

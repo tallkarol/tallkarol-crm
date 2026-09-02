@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
+import { and, eq } from "drizzle-orm"
 import { db } from "@/db"
 import { tasks } from "@/db/schema"
 import type { Cadence } from "@/db/schema"
@@ -21,12 +22,45 @@ export const dynamic = "force-dynamic"
  *
  *   { "text": "chase hero images @caps fieldhouse website !fri" }
  *   { "title": "...", "clientId": "...", "dueOn": "2026-09-04" }
+ *
+ * `refKind` + `refId` (a uuid) name what the task was made from. Sending the
+ * same pair twice returns the task already made, with 200 — so a script that
+ * retries after a dropped connection cannot file the same follow-up twice.
  */
 export async function POST(request: Request) {
   const caller = await authenticateTimeRequest(request)
   if (!caller) return unauthorized()
 
   const body = await readJson(request)
+
+  const refKind = readString(body, "refKind")
+  const refId = readString(body, "refId")
+  if (refId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(refId)) {
+    return NextResponse.json({ error: "`refId` must be a uuid." }, { status: 400 })
+  }
+  if (refKind && refId) {
+    const existing = await db.query.tasks.findFirst({
+      where: and(eq(tasks.refKind, refKind), eq(tasks.refId, refId)),
+    })
+    if (existing) {
+      return NextResponse.json(
+        {
+          task: {
+            id: existing.id,
+            title: existing.title,
+            clientId: existing.clientId,
+            projectId: existing.projectId,
+            productId: existing.productId,
+            dueOn: existing.dueOn,
+            cadence: existing.cadence,
+            priority: existing.priority,
+          },
+          replayed: true,
+        },
+        { status: 200 }
+      )
+    }
+  }
   const text = readString(body, "text")
   const targets = await taskTargets()
 
@@ -108,8 +142,13 @@ export async function POST(request: Request) {
         snoozedUntil && /^\d{4}-\d{2}-\d{2}$/.test(snoozedUntil) ? snoozedUntil : null,
       cadence,
       priority,
-      notes: readString(body, "notes") ?? "",
-      source: "api",
+      notes: (readString(body, "notes") ?? "").slice(0, 4000),
+      labels: Array.isArray(body.labels)
+        ? body.labels.filter((v): v is string => typeof v === "string" && !!v.trim()).slice(0, 10)
+        : [],
+      source: readString(body, "source") ?? "api",
+      refKind: refKind && refId ? refKind : null,
+      refId: refKind && refId ? refId : null,
     })
     .returning({ id: tasks.id })
 
@@ -128,6 +167,7 @@ export async function POST(request: Request) {
         cadence,
         priority,
       },
+      replayed: false,
     },
     { status: 201 }
   )

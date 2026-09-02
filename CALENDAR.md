@@ -62,6 +62,23 @@ Mark exactly one Google source as **Destination**. Events made with **New
 event** are written there, then synced back. That calendar needs *Make changes
 to events*, not just read access.
 
+### From a device token
+
+`POST /api/calendar/events` writes to the same destination calendar on the
+device token the clock uses:
+
+```
+{ "title", "startsAt": "2026-09-05T14:00", "endsAt": "2026-09-05T14:45",
+  "timeZone": "Europe/Warsaw", "description"?, "location"?, "attendees"?: [],
+  "clientRequestId"? }
+```
+
+`startsAt`/`endsAt` are local wall-clock in `timeZone` (send yours — the
+default is UTC). `clientRequestId` is stored on the Google event as a private
+extended property; sending it again returns the existing event with `200`
+instead of creating another. `lib/calendar-write.ts` is the shared write path
+under both this route and the New event form.
+
 ## Cal.com
 
 1. Cal.com → Settings → Developer → API keys → create one.

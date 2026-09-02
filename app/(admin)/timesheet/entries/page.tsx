@@ -15,6 +15,7 @@ const SOURCE_LABEL: Record<string, string> = {
   manual: "man",
   clock: "clock",
   meeting: "cal",
+  agent: "agent",
 }
 
 /**

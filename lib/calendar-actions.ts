@@ -6,8 +6,8 @@ import { db } from "@/db"
 import { calendarSources } from "@/db/schema"
 import type { CalendarSourceKind } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
-import { createGoogleEvent } from "@/lib/calendar-providers"
-import { syncAllCalendars, syncSource } from "@/lib/calendar-sync"
+import { syncAllCalendars } from "@/lib/calendar-sync"
+import { writeCalendarEvent } from "@/lib/calendar-write"
 import { SOURCE_PALETTE } from "@/lib/calendar-types"
 
 type Result<T = unknown> = ({ ok: true } & T) | { ok: false; error: string }
@@ -148,48 +148,13 @@ export async function createCalendarEvent(input: {
   const denied = await requireAdmin()
   if (denied) return { ok: false, error: denied }
 
-  const title = input.title.trim()
-  if (!title) return { ok: false, error: "Give the event a title." }
-  if (!input.startsAt || !input.endsAt) {
-    return { ok: false, error: "Pick a start and an end." }
-  }
-  if (input.endsAt <= input.startsAt) {
-    return { ok: false, error: "The end has to come after the start." }
-  }
-
-  const destination = await db.query.calendarSources.findFirst({
-    where: and(
-      eq(calendarSources.writable, true),
-      eq(calendarSources.enabled, true)
-    ),
-  })
-  if (!destination || destination.kind !== "google") {
-    return {
-      ok: false,
-      error:
-        "No destination calendar. Pick one in Settings → Integrations → Calendar.",
-    }
-  }
-
   const attendees = input.attendees
     .split(/[,\s]+/)
     .map((value) => value.trim().toLowerCase())
     .filter((value) => value.includes("@"))
 
-  try {
-    const created = await createGoogleEvent(destination.externalId, {
-      title,
-      description: input.description.trim(),
-      location: input.location.trim(),
-      startsAt: input.startsAt,
-      endsAt: input.endsAt,
-      timeZone: input.timeZone || "UTC",
-      attendees,
-    })
-    await syncSource(destination.id)
-    revalidateCalendar()
-    return { ok: true, url: created.htmlLink }
-  } catch (error) {
-    return { ok: false, error: message(error) }
-  }
+  const result = await writeCalendarEvent({ ...input, attendees })
+  if (!result.ok) return { ok: false, error: result.error }
+  revalidateCalendar()
+  return { ok: true, url: result.url }
 }
