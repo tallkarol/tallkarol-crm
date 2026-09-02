@@ -10,8 +10,10 @@ loadLocalEnv()
 import { tick } from "../lib/tick"
 
 tick()
-  .then(({ reopened, sweep }) => {
+  .then(({ reopened, sweep, notifications }) => {
     console.log(`Reopened ${reopened} repeating task${reopened === 1 ? "" : "s"}.`)
+    const parts = Object.entries(notifications ?? {}).map(([k, v]) => `${v} ${k}`)
+    console.log(`Notifications: ${parts.length ? parts.join(", ") : "nothing to say"}.`)
     console.log(
       `Checked ${sweep.checked} of ${sweep.monitors} monitors (the rest aren't due yet).`
     )
