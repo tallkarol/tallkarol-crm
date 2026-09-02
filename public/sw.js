@@ -5,7 +5,7 @@
  * the clock installable and to keep its own chrome — icons, manifest — instant.
  */
 
-const SHELL = "tk-shell-v3"
+const SHELL = "tk-shell-v4"
 const SHELL_FILES = [
   "/manifest.webmanifest",
   "/icons/tk-192.png",
@@ -44,6 +44,22 @@ self.addEventListener("fetch", (event) => {
   const isShell =
     url.pathname === "/manifest.webmanifest" || url.pathname.startsWith("/icons/")
   if (!isShell) return
+
+  // The manifest is where the name and icon come from, and Android reads it
+  // through this worker. Network first, so a rename shows up on the next
+  // visit instead of a device keeping "Tall Karol Clock" until its cache dies.
+  if (url.pathname === "/manifest.webmanifest") {
+    event.respondWith(
+      fetch(request)
+        .then((fresh) => {
+          const copy = fresh.clone()
+          caches.open(SHELL).then((cache) => cache.put(request, copy))
+          return fresh
+        })
+        .catch(() => caches.match(request))
+    )
+    return
+  }
 
   event.respondWith(
     caches.match(request).then((hit) => hit || fetch(request))
