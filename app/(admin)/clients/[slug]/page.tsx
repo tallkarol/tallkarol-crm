@@ -74,9 +74,13 @@ export default async function ClientDetailPage({
   if (!hub) notFound()
 
   const { client } = hub
-  const [clientTasks, targets] = await Promise.all([
+  const [clientTasks, targets, brainstorm] = await Promise.all([
     tasksFor({ clientId: client.id }),
     taskTargets(),
+    db.query.brainstormNotes.findMany({
+      where: (notes, { eq }) => eq(notes.clientId, client.id),
+      orderBy: (notes, { desc }) => [desc(notes.createdAt)],
+    }),
   ])
   const openTasks = clientTasks.filter((t) => t.status === "open")
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
@@ -134,6 +138,7 @@ export default async function ClientDetailPage({
       : null,
     sortedReports.length > 0 ? { id: "reports", label: "Reports" } : null,
     sortedProposals.length > 0 ? { id: "proposals", label: "Proposals" } : null,
+    brainstorm.length > 0 ? { id: "brainstorm", label: "Brainstorm" } : null,
     sortedWorksheets.length > 0
       ? { id: "worksheets", label: "Worksheets" }
       : null,
@@ -826,6 +831,28 @@ export default async function ClientDetailPage({
                         View
                       </a>
                     ) : null}
+                  </div>
+                ))}
+              </div>
+            </Block>
+          ) : null}
+
+          {/* ------------------------------------------------ brainstorm */}
+          {brainstorm.length > 0 ? (
+            <Block id="brainstorm" title="Brainstorm">
+              <div className="divide-y divide-tk-slate/10 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+                {brainstorm.map((note) => (
+                  <div key={note.id} className="px-5 py-3">
+                    <p className="text-[13.5px] text-tk-onyx">{note.body}</p>
+                    <p className="mt-1 text-xs text-tk-slate/60">
+                      {[
+                        note.topic || null,
+                        note.source === "mail" ? "from mail" : null,
+                        formatDay(note.createdAt.toISOString().slice(0, 10)),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
                   </div>
                 ))}
               </div>

@@ -118,6 +118,8 @@ export type HubTask = {
   id: string
   title: string
   notes: string
+  /** "feature request" / "change request" / "covered under warranty" chips. */
+  labels: string[]
   status: "open" | "done"
   stage: "queue" | "doing" | "waiting"
   cadence: Cadence

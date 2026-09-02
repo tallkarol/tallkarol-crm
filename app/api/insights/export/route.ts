@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm"
 import { db } from "@/db"
 import { sites, snapshotArchive } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
+import { getPortalScope } from "@/lib/portal"
 import { archiveCsv, isCsvTable, snapshotCsv } from "@/lib/insights/csv"
 import { insightsCacheKey, type ArchivePayload, type SnapshotV2 } from "@/lib/insights/types"
 import { readReport } from "@/lib/report-cache"
@@ -16,7 +17,6 @@ export const dynamic = "force-dynamic"
  */
 export async function GET(request: Request) {
   const user = await getSessionUser()
-  if (!user) return new NextResponse("Sign in first.", { status: 401 })
 
   const url = new URL(request.url)
   const slug = url.searchParams.get("site") || ""
@@ -28,6 +28,14 @@ export async function GET(request: Request) {
   }
   const site = await db.query.sites.findFirst({ where: eq(sites.slug, slug) })
   if (!site) return new NextResponse("Site not found.", { status: 404 })
+
+  // Admins export any site; portal customers only their own clients' sites.
+  if (!user) {
+    const scope = await getPortalScope()
+    if (!scope) return new NextResponse("Sign in first.", { status: 401 })
+    const allowed = site.clientId && scope.clients.some((c) => c.id === site.clientId)
+    if (!allowed) return new NextResponse("Not your site.", { status: 403 })
+  }
 
   let csv: string
   let stamp: string

@@ -16,6 +16,7 @@ import {
   type Ga4Report,
 } from "@/lib/insights/google"
 import { addDays } from "@/lib/insights/derive"
+import { fetchPageSpeed } from "@/lib/insights/pagespeed"
 import {
   fetchVercelAnalytics,
   vercelConfigured,
@@ -26,6 +27,7 @@ import {
   TABLE_WINDOW_DAYS,
   emptyAds,
   emptyGsc,
+  emptyPageSpeed,
   emptyVercel,
   type AdsBlock,
   type AdsCampaignRow,
@@ -33,6 +35,7 @@ import {
   type Ga4Block,
   type GscBlock,
   type PageRow,
+  type PageSpeedBlock,
   type SearchRow,
   type SourceHealth,
   type VercelBlock,
@@ -102,6 +105,7 @@ export type SourceOutcome = {
   adsDaily?: AdsDailyRow[]
   vercel?: VercelBlock
   vercelDaily?: VercelDailyRow[]
+  pagespeed?: PageSpeedBlock
 }
 
 /**
@@ -586,6 +590,47 @@ const vercelSource: InsightSource = {
   },
 }
 
+const pagespeedSource: InsightSource = {
+  id: "pagespeed",
+  label: "PageSpeed",
+  appliesTo: (site) => Boolean(site.origin),
+  async run(site) {
+    const url = site.origin
+    try {
+      const [mobile, desktop] = await Promise.all([
+        fetchPageSpeed(url, "mobile"),
+        fetchPageSpeed(url, "desktop"),
+      ])
+      const perf = (score: number | null) => (score == null ? "—" : String(score))
+      return {
+        health: {
+          id: this.id,
+          label: this.label,
+          ok: true,
+          detail: `Performance ${perf(mobile.performance)} mobile · ${perf(desktop.performance)} desktop on ${url}.`,
+        },
+        pagespeed: {
+          ok: true,
+          error: null,
+          url,
+          fetchedAt: new Date().toISOString(),
+          mobile,
+          desktop,
+        },
+      }
+    } catch (err) {
+      let message = err instanceof Error ? err.message : "PageSpeed API failed"
+      if (!process.env.PAGESPEED_API_KEY) {
+        message += " Set PAGESPEED_API_KEY — the keyless quota pool is exhausted."
+      }
+      return {
+        health: { id: this.id, label: this.label, ok: false, detail: message },
+        pagespeed: { ...emptyPageSpeed(url), error: message },
+      }
+    }
+  },
+}
+
 const collectorSource: InsightSource = {
   id: "collector",
   label: "First-party collector",
@@ -686,6 +731,7 @@ export const INSIGHT_SOURCES: InsightSource[] = [
   gscSource,
   adsSource,
   vercelSource,
+  pagespeedSource,
   collectorSource,
   mpSource,
   uptimeSource,

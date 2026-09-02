@@ -197,6 +197,25 @@ export default async function InsightsHealthPage({
           />
         </Setup>
 
+        <Setup title="PageSpeed (Core Web Vitals)">
+          <Checklist
+            items={[
+              {
+                title: "API key, not the service account",
+                body: "GCP → APIs & Services → enable the PageSpeed Insights API, then Credentials → Create API key. Store it as PAGESPEED_API_KEY (local and Railway). The keyless pool is exhausted and the API rejects OAuth tokens, so the robot cannot cover this one.",
+              },
+              {
+                title: "Runs for any site with an origin",
+                body: "npm run site:set -- <slug> origin https://… attaches it. Each Refresh runs a live mobile + desktop Lighthouse audit, which is why refreshes take up to a minute with it on.",
+              },
+              {
+                title: "Field data needs traffic",
+                body: "Lighthouse scores always appear; the Core Web Vitals row (LCP, INP, CLS) only shows once Chrome's CrUX dataset has enough real visitors for the origin.",
+              },
+            ]}
+          />
+        </Setup>
+
         <Setup title="UptimeRobot">
           <Checklist
             items={[

@@ -8,6 +8,7 @@ import { PrintButton } from "@/components/insights/PrintButton"
 import { PrintTrend } from "@/components/insights/PrintTrend"
 import { SearchTable } from "@/components/insights/SearchTable"
 import { getSessionUser } from "@/lib/auth"
+import { getPortalScope } from "@/lib/portal"
 import { fmtConv, fmtDayYear, fmtInt, fmtMoney } from "@/lib/insights/derive"
 import type { ArchivePayload } from "@/lib/insights/types"
 
@@ -62,11 +63,19 @@ export default async function InsightsReportPage({
   params: { site: string }
   searchParams: { period?: string; sections?: string }
 }) {
+  // Admins see every site; portal customers only the sites of clients they
+  // hold grants for — the portal Reports tab links straight here.
   const user = await getSessionUser()
-  if (!user) redirect("/login")
 
   const site = await db.query.sites.findFirst({ where: eq(sites.slug, params.site) })
   if (!site) notFound()
+
+  if (!user) {
+    const scope = await getPortalScope()
+    if (!scope) redirect("/login")
+    const allowed = site.clientId && scope.clients.some((c) => c.id === site.clientId)
+    if (!allowed) notFound()
+  }
 
   const period = searchParams.period || ""
   const archive = await db.query.snapshotArchive.findFirst({
@@ -90,10 +99,10 @@ export default async function InsightsReportPage({
 
       <div className="mb-6 flex items-center justify-between gap-3 print:hidden">
         <Link
-          href={`/insights/${site.slug}/reports`}
+          href={user ? `/insights/${site.slug}/reports` : "/portal/reports"}
           className="text-xs font-semibold text-tk-teal hover:underline"
         >
-          ← Back to Insights
+          {user ? "← Back to Insights" : "← Back to your portal"}
         </Link>
         <PrintButton />
       </div>

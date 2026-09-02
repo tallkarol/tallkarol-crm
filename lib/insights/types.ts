@@ -104,6 +104,28 @@ export type VercelBlock = {
   countries: DimRow[]
 }
 
+export type PageSpeedScores = {
+  /** Lighthouse category scores, 0–100; null when a category was absent. */
+  performance: number | null
+  accessibility: number | null
+  bestPractices: number | null
+  seo: number | null
+  /** CrUX field data (p75) — null when Google lacks real-user traffic. */
+  lcpMs: number | null
+  inpMs: number | null
+  cls: number | null
+}
+
+export type PageSpeedBlock = {
+  ok: boolean
+  error: string | null
+  url: string
+  /** When the Lighthouse runs happened — PSI is a live audit, not a range. */
+  fetchedAt: string
+  mobile: PageSpeedScores | null
+  desktop: PageSpeedScores | null
+}
+
 export type SnapshotV2 = {
   version: 2
   fetchedAt: string
@@ -114,6 +136,8 @@ export type SnapshotV2 = {
   gsc: GscBlock
   ads: AdsBlock
   vercel: VercelBlock
+  /** Optional — snapshots cached before the PageSpeed source lack it. */
+  pagespeed?: PageSpeedBlock
   health: SourceHealth[]
 }
 
@@ -164,6 +188,17 @@ export function emptyVercel(projectId = ""): VercelBlock {
   }
 }
 
+export function emptyPageSpeed(url = ""): PageSpeedBlock {
+  return {
+    ok: false,
+    error: null,
+    url,
+    fetchedAt: "",
+    mobile: null,
+    desktop: null,
+  }
+}
+
 /** CRM slice — computed live from the local DB (never cached), house site only. */
 export type CrmSlice = {
   inquiries: number
@@ -196,6 +231,8 @@ export type ArchivePayload = {
   gsc: Pick<GscBlock, "ok" | "siteUrl" | "queries" | "pages">
   ads: Pick<AdsBlock, "ok" | "customerId" | "accountName" | "currency" | "campaigns">
   vercel?: Pick<VercelBlock, "ok" | "projectId" | "pages" | "referrers" | "devices" | "countries">
+  /** Scores as of the freeze — PSI has no history, so this is that month's reading. */
+  pagespeed?: PageSpeedBlock
   crm: CrmSlice | null
   health: SourceHealth[]
 }

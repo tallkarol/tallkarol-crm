@@ -112,6 +112,12 @@ export async function loadSnapshotV2(
     if (outcome.gsc) snapshot.gsc = outcome.gsc
     if (outcome.ads) snapshot.ads = outcome.ads
     if (outcome.vercel) snapshot.vercel = outcome.vercel
+    if (outcome.pagespeed) snapshot.pagespeed = outcome.pagespeed
+  }
+  // PSI is a live Lighthouse run and occasionally flakes — a failed run keeps
+  // the last good scores rather than blanking the panel.
+  if (!snapshot.pagespeed?.ok && previous?.pagespeed?.ok) {
+    snapshot.pagespeed = previous.pagespeed
   }
   return snapshot
 }

@@ -246,6 +246,7 @@ export async function allTasks(now = new Date()): Promise<HubTask[]> {
       id: row.id,
       title: row.title,
       notes: row.notes,
+      labels: row.labels,
       status: row.status,
       stage: row.boardStage,
       cadence: row.cadence,

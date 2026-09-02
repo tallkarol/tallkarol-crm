@@ -147,6 +147,7 @@ export async function buildArchivePayload(
       devices: snapshot.vercel?.devices ?? [],
       countries: snapshot.vercel?.countries ?? [],
     },
+    pagespeed: snapshot.pagespeed,
     crm,
     health: snapshot.health,
   }

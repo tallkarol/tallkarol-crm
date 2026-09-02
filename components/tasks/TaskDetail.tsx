@@ -113,6 +113,14 @@ export async function TaskDetailBody({ id }: { id: string }) {
           ) : (
             <span className="text-tk-slate/55">No client</span>
           )}
+          {task.labels.map((label) => (
+            <span
+              key={label}
+              className="rounded bg-tk-linen px-1.5 py-0.5 font-mono text-[10.5px] text-tk-slate/70"
+            >
+              {label}
+            </span>
+          ))}
           {due && !done ? (
             <span
               className={

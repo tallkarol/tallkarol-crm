@@ -198,6 +198,14 @@ function Row({ row, peekBase }: { row: RenderRow; peekBase: string }) {
               {row.deliverableLabel}
             </span>
           ) : null}
+          {row.labels.map((label) => (
+            <span
+              key={label}
+              className="shrink-0 rounded bg-tk-linen px-1.5 font-mono text-[10px] text-tk-slate/70"
+            >
+              {label}
+            </span>
+          ))}
           {row.items.total > 0 ? (
             <span className="shrink-0 rounded bg-tk-linen px-1.5 font-mono text-[10px] text-tk-slate/70">
               {row.items.done}/{row.items.total}

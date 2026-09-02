@@ -349,7 +349,13 @@ export const tasks = pgTable(
     snoozedUntil: date("snoozed_until"),
     boardStage: boardStageEnum("board_stage").notNull().default("queue"),
     notes: text("notes").notNull().default(""),
-    /** manual | renewal | ticket | meeting | api */
+    /**
+     * What the row is besides plain work — "feature request", "change request" —
+     * plus commercial flags like "covered under warranty". Same free-text-array
+     * contract as `support_tickets.tags`.
+     */
+    labels: text("labels").array().notNull().default([]),
+    /** manual | renewal | ticket | meeting | api | mail */
     source: text("source").notNull().default("manual"),
     /** What this task was made out of, for the trail. */
     refKind: text("ref_kind"),
@@ -547,6 +553,42 @@ export const proposals = pgTable(
   (table) => ({
     slug: uniqueIndex("proposals_slug_unique").on(table.slug),
     byClient: index("proposals_client_idx").on(table.clientId, table.status),
+  })
+)
+
+/**
+ * Brainstorm — raw scope ideas caught before a proposal exists. Client mail
+ * and calls throw these off constantly; a row here keeps each one attached to
+ * the client until a proposal absorbs it, instead of living in a mail thread.
+ */
+export const brainstormNotes = pgTable(
+  "brainstorm_notes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    clientId: uuid("client_id").references(() => clients.id, {
+      onDelete: "cascade",
+    }),
+    /** Shared name for a batch of ideas — e.g. "Chartmetric API scope". */
+    topic: text("topic").notNull().default(""),
+    body: text("body").notNull(),
+    /** manual | mail | meeting */
+    source: text("source").notNull().default("manual"),
+    /** What the note was captured out of, for the trail. */
+    refKind: text("ref_kind"),
+    refId: uuid("ref_id"),
+    /** Set once a proposal picks the idea up — the note's exit. */
+    proposalId: uuid("proposal_id").references(() => proposals.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    byClient: index("brainstorm_notes_client_idx").on(
+      table.clientId,
+      table.createdAt
+    ),
   })
 )
 
@@ -995,6 +1037,17 @@ export const proposalsRelations = relations(proposals, ({ one }) => ({
   }),
 }))
 
+export const brainstormNotesRelations = relations(brainstormNotes, ({ one }) => ({
+  client: one(clients, {
+    fields: [brainstormNotes.clientId],
+    references: [clients.id],
+  }),
+  proposal: one(proposals, {
+    fields: [brainstormNotes.proposalId],
+    references: [proposals.id],
+  }),
+}))
+
 export const worksheetsRelations = relations(worksheets, ({ one }) => ({
   client: one(clients, { fields: [worksheets.clientId], references: [clients.id] }),
   retainer: one(retainers, {
@@ -1020,6 +1073,7 @@ export type Task = typeof tasks.$inferSelect
 export type Report = typeof reports.$inferSelect
 export type Proposal = typeof proposals.$inferSelect
 export type ProposalStatus = (typeof proposalStatusEnum.enumValues)[number]
+export type BrainstormNote = typeof brainstormNotes.$inferSelect
 export type Worksheet = typeof worksheets.$inferSelect
 export type WorksheetStatus = (typeof worksheetStatusEnum.enumValues)[number]
 export type WorksheetMode = (typeof worksheetModeEnum.enumValues)[number]

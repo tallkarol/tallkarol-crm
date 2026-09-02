@@ -78,6 +78,11 @@ due, snooze, repeat, a checklist, notes, and a trail with the repeat history.
 ## Rules
 
 - **Priority** is 1 high · 2 normal · 3 low. The dot only fills for high.
+- **Labels** (`labels text[]`) say what a row is besides plain work — "feature
+  request", "change request" — plus commercial flags like "covered under
+  warranty". Same free-array contract as `support_tickets.tags`; rendered as
+  chips on rows and the detail. Bugs are never labeled tasks — they open a
+  ticket instead.
 - **Snooze is separate from due.** `snoozed_until` hides a task without touching
   `due_on`, because a faked deadline is how "overdue" stops meaning anything.
 - **`completed_at` is its own column.** `updated_at` used to carry it, so

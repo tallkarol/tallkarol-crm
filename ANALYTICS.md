@@ -127,6 +127,30 @@ House plus Zemvelo and Mineralife (mycustommanufacturer.com) are monitored.
 The live board is `/uptime`, grouped by client; the Health tab picks the same
 source up on Refresh. No monitor id, no uptime number — by rule.
 
+## PageSpeed
+
+The `pagespeed` source runs for any site with an `origin` set. It **requires
+`PAGESPEED_API_KEY`** — the keyless pool is a shared anonymous project whose
+daily quota is permanently exhausted (verified 2 Sep 2026), and the API takes
+keys only, so the service account cannot cover it. Enable the PageSpeed
+Insights API in the GCP project, create an API key under Credentials, and set
+it locally and on Railway. Each Refresh then runs a live mobile + desktop
+Lighthouse audit (15–30 s each, so refreshes take up to a minute), storing
+category scores and CrUX field vitals (LCP/INP/CLS, once Google has enough
+real traffic) in the snapshot under `pagespeed`. A failed run keeps the last
+good scores. Month freezes carry the scores as of the freeze — PSI has no
+history.
+
+## Client portal
+
+`/portal/insights` shows customers their own sites' snapshot: GA4 KPIs and
+trends, Search Console queries/pages with position movement, Google Ads spend
+and campaigns, PageSpeed scores, and search-index health from the GSC scans.
+It reads only the cached snapshot and the local scan tables — never Google —
+so it is exactly as fresh as the last admin Refresh. The printable month
+report (`/insights-report/<slug>?period=…`) and the CSV export also accept
+portal customers now, scoped to sites whose `client_id` they hold a grant for.
+
 ## Cursor analytics-mcp (optional, read-only)
 
 ```
