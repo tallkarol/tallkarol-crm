@@ -1355,6 +1355,67 @@ export const sites = pgTable("sites", {
     .defaultNow(),
 })
 
+/**
+ * What a client's codebases are made of, as read from the code itself by the
+ * daedalus-hive-mind `spec-sheet` tool (and, later, its siblings: folder
+ * structure, db diagram, feature list, permissions). One row per run, so a
+ * rerun after a change is a new row and the previous state stays readable;
+ * the latest `generated_at` per (client, codebase, kind) is the current sheet.
+ * `data` is the tool's own JSON contract (`schema_version` says which).
+ */
+export const codebaseDocs = pgTable(
+  "codebase_docs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    siteId: uuid("site_id").references(() => sites.id, { onDelete: "set null" }),
+    projectId: uuid("project_id").references(() => projects.id, {
+      onDelete: "set null",
+    }),
+    productId: uuid("product_id").references(() => products.id, {
+      onDelete: "set null",
+    }),
+    /** The codebase's own slug under the client — "crm", "gdi-multisite". */
+    codebase: text("codebase").notNull(),
+    /** spec | structure | db | features | permissions */
+    kind: text("kind").notNull(),
+    schemaVersion: integer("schema_version").notNull().default(1),
+    title: text("title").notNull().default(""),
+    /** One line for lists: "Next.js 14.2 · Drizzle · Postgres · Railway". */
+    summary: text("summary").notNull().default(""),
+    data: jsonb("data").notNull().default({}),
+    commitHash: text("commit_hash").notNull().default(""),
+    branch: text("branch").notNull().default(""),
+    /** Which tool and version produced it — "spec-sheet.py 1.0". */
+    tool: text("tool").notNull().default(""),
+    /** Where on disk it was scanned; informational. */
+    sourcePath: text("source_path").notNull().default(""),
+    generatedAt: timestamp("generated_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    latest: index("codebase_docs_latest_idx").on(
+      table.clientId,
+      table.codebase,
+      table.kind,
+      table.generatedAt.desc()
+    ),
+  })
+)
+
+export const codebaseDocsRelations = relations(codebaseDocs, ({ one }) => ({
+  client: one(clients, { fields: [codebaseDocs.clientId], references: [clients.id] }),
+  site: one(sites, { fields: [codebaseDocs.siteId], references: [sites.id] }),
+  project: one(projects, { fields: [codebaseDocs.projectId], references: [projects.id] }),
+  product: one(products, { fields: [codebaseDocs.productId], references: [products.id] }),
+}))
+
+export type CodebaseDoc = typeof codebaseDocs.$inferSelect
+
 export const sitesRelations = relations(sites, ({ one, many }) => ({
   client: one(clients, { fields: [sites.clientId], references: [clients.id] }),
   snapshotArchives: many(snapshotArchive),

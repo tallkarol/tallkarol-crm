@@ -19,6 +19,8 @@ import { TaskComposer } from "@/components/tasks/TaskComposer"
 import { db } from "@/db"
 import type { ProjectStatus } from "@/db/schema"
 import { loadClientHub, UNPAID_INVOICE_FLAG_DAYS } from "@/lib/client-hub"
+import { DOC_KIND_LABEL, latestDocsFor } from "@/lib/codebase-docs"
+import type { DocKind } from "@/lib/codebase-docs"
 import { cn } from "@/lib/cn"
 import { retainerRateCents } from "@/lib/engagements"
 import {
@@ -146,6 +148,8 @@ export default async function ClientDetailPage({
     client.retainers.length > 0 || client.projects.length > 0 || client.products.length > 0
   const hasMoney = client.invoices.length > 0 || client.contracts.length > 0
 
+  const codebaseDocs = await latestDocsFor(client.id)
+  const codebases = Array.from(new Set(codebaseDocs.map((d) => d.codebase)))
   const navItems = [
     { id: "now", label: "Now" },
     hasWork ? { id: "work", label: "Work" } : null,
@@ -1077,6 +1081,39 @@ export default async function ClientDetailPage({
                     </span>
                   </li>
                 ))}
+              </ul>
+            </RailCard>
+          ) : null}
+
+          {codebases.length > 0 ? (
+            <RailCard title="Codebases">
+              <ul className="divide-y divide-tk-slate/10">
+                {codebases.map((cb) => {
+                  const docs = codebaseDocs.filter((d) => d.codebase === cb)
+                  const spec = docs.find((d) => d.kind === "spec")
+                  const newest = docs.reduce((a, b) => (a.generatedAt > b.generatedAt ? a : b))
+                  return (
+                    <li key={cb} className="py-1.5 first:pt-0 last:pb-0">
+                      <Link
+                        href={`${ROUTES.client(client.slug)}/codebases/${cb}`}
+                        className="block hover:opacity-80"
+                      >
+                        <span className="flex items-baseline justify-between gap-2">
+                          <span className="truncate text-[13px] font-semibold text-tk-onyx">{spec?.title || cb}</span>
+                          <span className="shrink-0 text-[10.5px] text-tk-slate/45">
+                            {newest.generatedAt.toISOString().slice(0, 10)}
+                          </span>
+                        </span>
+                        {spec?.summary ? (
+                          <span className="block truncate text-xs text-tk-slate/60">{spec.summary}</span>
+                        ) : null}
+                        <span className="mt-0.5 block text-[10.5px] text-tk-slate/45">
+                          {docs.map((d) => DOC_KIND_LABEL[d.kind as DocKind] ?? d.kind).join(" · ")}
+                        </span>
+                      </Link>
+                    </li>
+                  )
+                })}
               </ul>
             </RailCard>
           ) : null}
