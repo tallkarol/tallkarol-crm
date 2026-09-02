@@ -573,11 +573,33 @@ export async function widgetTickets(now = new Date(), clientId?: string) {
 /* ---------------------------------------------------------------- clients */
 
 export async function widgetClients() {
+  await ensureClientColors()
   const rows = await db.query.clients.findMany({
     columns: { id: true, name: true, slug: true },
     orderBy: [asc(clients.name)],
+    with: {
+      retainers: { columns: { status: true } },
+      projects: { columns: { status: true } },
+    },
   })
-  return rows
+  // `active` is what the phone's clock row shows by default: anyone with a
+  // live retainer or a project in flight. The colour is the CRM's, so a chip
+  // on the phone matches the bar on the Mac and the rail in Settings.
+  return rows.map((row) => {
+    const r = row as unknown as {
+      retainers: { status: string }[]
+      projects: { status: string }[]
+    }
+    return {
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      color: clientColor(row.slug),
+      active:
+        r.retainers.some((x) => x.status === "active") ||
+        r.projects.some((x) => x.status === "in_progress"),
+    }
+  })
 }
 
 export async function widgetClient(slug: string, now = new Date()) {
