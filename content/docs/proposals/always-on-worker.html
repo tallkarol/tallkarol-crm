@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Always-On Worker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#F4F2EC;--surface:#FFF;--surface-2:#EDE9DE;--ink:#0F1615;--ink-2:#3D4947;--muted:#6E7A77;--line:rgba(15,22,21,.13);--line-soft:rgba(15,22,21,.07);--accent:#006965;--accent-ink:#00504D;--accent-soft:rgba(0,105,101,.10);--warn:#A45A1E;--warn-soft:rgba(164,90,30,.12);--crit:#8E3521;--crit-soft:rgba(142,53,33,.12);--good:#2E7D57;--good-soft:rgba(46,125,87,.12);--display:"Archivo",ui-sans-serif,system-ui,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:ui-sans-serif,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.62}
+.wrap{max-width:1080px;margin:0 auto;padding:0 32px}
+@media(max-width:720px){.wrap{padding:0 20px}body{font-size:16px}}
+h1,h2,h3,h4,.eyebrow,.chip,.num,th,.ui,.sec-num{font-family:var(--display)}
+h1{font-size:clamp(34px,5.4vw,58px);line-height:1.04;letter-spacing:-.02em;font-weight:700;margin:0 0 20px}
+h2{font-size:clamp(25px,3vw,34px);line-height:1.14;letter-spacing:-.015em;font-weight:600;margin:0 0 14px}
+h3{font-size:19px;line-height:1.3;font-weight:600;margin:0 0 7px}
+h4{font-size:15px;line-height:1.35;font-weight:600;margin:0 0 5px}
+p{margin:0 0 16px}p:last-child{margin-bottom:0}
+code,.mono{font-family:var(--mono);font-size:.86em;background:var(--surface-2);padding:.12em .38em;border-radius:3px}
+.lede{font-size:clamp(18px,2.1vw,22px);line-height:1.5;color:var(--ink-2)}
+.muted{color:var(--muted)}.small{font-size:14px;line-height:1.5}
+.eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 20px}
+.sec-num{display:flex;align-items:center;gap:12px;margin:0 0 8px;font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.sec-num::after{content:"";flex:1;height:1px;background:var(--line)}
+section{padding:56px 0;border-top:1px solid var(--line)}
+.hero{padding:72px 0 52px}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:860px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.stack>*+*{margin-top:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px 20px}
+.card.tint{background:var(--surface-2);border-color:var(--line-soft)}
+.rail{border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.rail.warn{border-left-color:var(--warn)}.rail.crit{border-left-color:var(--crit)}.rail.good{border-left-color:var(--good)}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.stat .num{font-size:31px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block}
+.stat .lbl{font-family:var(--ui);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:6px;display:block}
+.stat .sub{font-size:13.5px;color:var(--ink-2);margin-top:7px;display:block;line-height:1.4}
+.stat.crit .num{color:var(--crit)}.stat.warn .num{color:var(--warn)}.stat.good .num{color:var(--good)}.stat.accent .num{color:var(--accent-ink)}
+.metastrip{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;margin-top:34px}
+.metastrip>div{flex:1 1 200px;padding:14px 18px;border-right:1px solid var(--line-soft)}
+.metastrip>div:last-child{border-right:0}
+.metastrip .k{font-family:var(--ui);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.metastrip .v{font-family:var(--display);font-size:14.5px;font-weight:500;line-height:1.35}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2.5px 8px;border-radius:4px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);font-family:var(--ui)}
+.chip.new{background:var(--accent);color:#fff}.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.accent{background:var(--accent-soft);color:var(--accent-ink)}.chip.mono{font-family:var(--mono);font-weight:400}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:left;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);font-family:var(--ui)}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12.5px}.r{text-align:right}
+.tablecard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 10px 8px;overflow-x:auto}
+pre{margin:0;background:#0F1615;color:#E6E4DC;border-radius:8px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.62}
+pre .c{color:#7E8C89}pre .k{color:#7FD8CE}pre .s{color:#D9C48A}pre .n{color:#C8A2C8}
+.filepath{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding:0 0 7px}
+ul.tight{margin:0;padding-left:20px}ul.tight li{margin-bottom:5px}
+.callout{background:var(--accent-soft);border:1px solid rgba(0,105,101,.22);border-radius:8px;padding:16px 20px}
+.callout.warn{background:var(--warn-soft);border-color:rgba(164,90,30,.24)}
+blockquote{margin:0;padding:12px 0 12px 18px;border-left:3px solid var(--accent);font-size:17px;line-height:1.5}
+.step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line-soft)}
+.step:last-child{border-bottom:0}
+.step .n{flex:0 0 30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:13.5px;font-weight:600}
+.step .c{flex:1}
+.ships{font-size:13.5px;color:var(--accent-ink);margin-top:8px;font-style:italic}
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:stretch}
+.flow .node{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.flow .node h4{margin-bottom:6px}
+.flow .arrow{display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:var(--mono);font-size:12px;padding:0 2px}
+@media(max-width:760px){.flow{grid-template-columns:1fr}.flow .arrow{transform:rotate(90deg);padding:4px 0}}
+footer{padding:34px 0 60px;color:var(--muted);font-size:13px;font-family:var(--ui);text-align:center}
+@media print{body{background:#fff}section{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">TALLKAROL &middot; internal infrastructure &middot; proposal</p>
+  <h1>Always-On Worker</h1>
+  <p class="lede">
+    Everything that can run in the cloud, runs in the cloud. One always-on laptop at home does the
+    three things the cloud cannot: run Claude Code on the subscription, drive a real logged-in
+    browser, and use a GPU. The CRM never learns the laptop exists &mdash; it only knows about jobs.
+  </p>
+  <div class="metastrip">
+    <div><span class="k">Scope</span><span class="v">1 jobs table &middot; 1 worker &middot; 3 job kinds</span></div>
+    <div><span class="k">Touches</span><span class="v">crm &middot; daedalus-hive-mind skills &middot; one Windows laptop</span></div>
+    <div><span class="k">Starts</span><span class="v">15 November 2026</span></div>
+    <div><span class="k">Status</span><span class="v">proposal &mdash; nothing built</span></div>
+  </div>
+</header>
+
+<section style="border-top:0">
+  <p class="sec-num">01 &mdash; the read</p>
+  <h2>Where it breaks</h2>
+  <p style="max-width:70ch">
+    The CRM's AI surface is smaller than it feels. There is exactly one Anthropic call in the whole
+    app &mdash; the notebook scan in <code>lib/notion-scan.ts</code> &mdash; and it bills to an API key.
+    Everything else that looks like AI in this practice is Claude Code itself, run by hand from a
+    terminal on a Mac that sleeps when the lid closes. The two problems are separate and want
+    different fixes.
+  </p>
+  <div class="grid g4" style="margin-top:24px">
+    <div class="stat accent"><span class="num">1</span><span class="lbl">API call site</span><span class="sub">notion-scan, zod structured output. The only thing paying per token.</span></div>
+    <div class="stat crit"><span class="num">0</span><span class="lbl">sanctioned ways</span><span class="sub">to put Pro/Max credentials inside the CRM or the Agent SDK. Policy since Feb 2026, enforced since Apr 2026.</span></div>
+    <div class="stat warn"><span class="num">0</span><span class="lbl">always-on machines</span><span class="sub">today. Puppets, snapshots and Lighthouse runs only happen while the Mac is open.</span></div>
+    <div class="stat"><span class="num">8 / 16</span><span class="lbl">GB VRAM, unconfirmed</span><span class="sub">The 3080 laptop part shipped both ways. Decides the optional local-inference tier, nothing else.</span></div>
+  </div>
+
+  <div class="grid g2" style="margin-top:24px">
+    <div class="card rail crit">
+      <h3>The subscription cannot be borrowed</h3>
+      <p class="small">Anthropic restricts consumer OAuth to Claude Code and claude.ai. The Agent SDK
+        quickstart says to use API keys; <code>--bare</code> headless mode does not even read the
+        long-lived token. A personal internal tool is not an exception. What <em>is</em> sanctioned
+        is the Claude Code binary itself running non-interactively on a machine you own, with a token
+        from <code>claude setup-token</code> &mdash; the documented CI path.</p>
+    </div>
+    <div class="card rail warn">
+      <h3>Puppets need a body</h3>
+      <p class="small">Lighthouse against prod, docent screenshots, the leftoff Chrome tab snapshot,
+        headless CDP verification &mdash; all of it needs a real Chrome, often a logged-in one, on a
+        machine that is awake. Railway cannot open a browser and Anthropic's cloud routines cannot
+        reach your sessions. The Mac does both, but only when you are sitting at it.</p>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:24px">
+    <strong>So the direction flips.</strong> Instead of the CRM calling Claude, Claude Code and a
+    small worker call the CRM. The app enqueues; a machine you own dequeues. The subscription is
+    spent by Claude Code, the puppets get a body, and the API key stays as the fallback for the day
+    the body is switched off.
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">02 &mdash; the split</p>
+  <h2>Cloud first, laptop for what the cloud cannot do</h2>
+  <p style="max-width:70ch">
+    One rule decides where a thing runs: <em>if a cloud routine or the Railway app can do it, it
+    does.</em> The laptop earns a job only by being physically necessary.
+  </p>
+  <div class="grid g2" style="margin-top:24px">
+    <div class="card">
+      <span class="chip ok">stays in the cloud</span>
+      <ul class="tight small" style="margin-top:12px">
+        <li><strong>CRM</strong> on Railway, <strong>Postgres</strong> on Railway, sites on Vercel, demos on Neon.</li>
+        <li><strong>Cron-shaped Claude work</strong> as scheduled routines on the Anthropic account &mdash; morning sweeps, weekly care audits, anything a clock triggers.</li>
+        <li><strong>API-key Anthropic calls</strong> as the fallback path for the admin UI when no worker is alive.</li>
+        <li><strong>Mail, calendar, monitors, notifications</strong> &mdash; unchanged, already cloud.</li>
+      </ul>
+    </div>
+    <div class="card rail">
+      <span class="chip accent">belongs on the laptop</span>
+      <ul class="tight small" style="margin-top:12px">
+        <li><strong>On-demand Claude Code runs</strong> on the subscription, triggered from a button in the CRM rather than a clock.</li>
+        <li><strong>Browser puppets</strong> that need a real, logged-in Chrome: Lighthouse, screenshots, tab snapshots, CDP prod verify.</li>
+        <li><strong>Optional local inference</strong> on the GPU for high-volume, low-stakes extraction. VRAM-dependent, phase four.</li>
+        <li><strong>LAN and local-file work</strong> &mdash; nightly care-plan backups onto the 3 TB, local checkouts.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="small muted" style="margin-top:18px;max-width:70ch">
+    The Mac mini that was pencilled in for mid-2027 is not on this path. A headless worker has no
+    macOS dependency. If a second box ever arrives it registers as another worker on the same table.
+  </p>
+</section>
+
+<section>
+  <p class="sec-num">03 &mdash; the contract</p>
+  <h2>One jobs table, and nothing else crosses the line</h2>
+  <p style="max-width:70ch">
+    The CRM writes a row. A worker, somewhere, claims it over the same Postgres connection the CRM
+    already uses, does the work, and writes the result back onto the row. No inbound ports, no
+    tunnel, no webhook into the house. Tailscale exists only so you can SSH in.
+  </p>
+
+  <div class="flow" style="margin-top:24px">
+    <div class="node"><h4>Cloud enqueues</h4><p class="small">A server action or routine inserts <code>jobs</code> row: kind, payload, priority, idempotency key. The UI shows it as <em>queued</em>.</p></div>
+    <div class="arrow">&rarr;</div>
+    <div class="node"><h4>Worker claims</h4><p class="small">Polls every 30&ndash;60 s with <code>FOR UPDATE SKIP LOCKED</code>, sets <code>claimed_by</code>, holds a lease with a heartbeat.</p></div>
+    <div class="arrow">&rarr;</div>
+    <div class="node"><h4>Result lands</h4><p class="small">Row moves to <em>done</em> or <em>failed</em> with <code>result</code> JSON and artefact paths. Downstream rows (tasks, proposals, notes) are written through existing actions.</p></div>
+  </div>
+
+  <div class="filepath" style="margin-top:28px">db/schema.ts &mdash; sketch, names final at build time</div>
+<pre><span class="c">// Every cross-boundary request is one of these. Nothing else crosses.</span>
+<span class="k">export const</span> jobs = pgTable(<span class="s">"jobs"</span>, {
+  id:          uuid().defaultRandom().primaryKey(),
+  kind:        text().notNull(),            <span class="c">// notebook.scan | puppet.lighthouse | puppet.shots | leftoff.snapshot</span>
+  payload:     jsonb().notNull().default({}),
+  status:      jobStatusEnum().notNull().default(<span class="s">"queued"</span>), <span class="c">// queued | claimed | running | done | failed | cancelled</span>
+  priority:    smallint().notNull().default(<span class="n">2</span>),
+  runAfter:    timestamp({ withTimezone: <span class="k">true</span> }),  <span class="c">// quiet hours, backoff</span>
+  claimedBy:   text(),                      <span class="c">// worker name, e.g. "ryzen-3080"</span>
+  claimedAt:   timestamp({ withTimezone: <span class="k">true</span> }),
+  heartbeatAt: timestamp({ withTimezone: <span class="k">true</span> }),  <span class="c">// lease; stale → back to queued</span>
+  attempts:    smallint().notNull().default(<span class="n">0</span>),
+  maxAttempts: smallint().notNull().default(<span class="n">3</span>),
+  result:      jsonb(),
+  error:       text(),
+  <span class="c">// same replay contract as POST /api/tasks: the same pair twice returns the first row</span>
+  refKind:     text(),
+  refId:       uuid(),
+  requestedBy: uuid().references(() =&gt; users.id),
+  createdAt:   timestamp({ withTimezone: <span class="k">true</span> }).notNull().defaultNow(),
+  finishedAt:  timestamp({ withTimezone: <span class="k">true</span> }),
+})
+
+<span class="c">// Optional, for a status pill on the dashboard. The CRM still never addresses a worker.</span>
+<span class="k">export const</span> workers = pgTable(<span class="s">"workers"</span>, {
+  name:       text().primaryKey(),
+  lanes:      text().array().notNull().default([]),   <span class="c">// ["claude","puppet","gpu"]</span>
+  lastSeenAt: timestamp({ withTimezone: <span class="k">true</span> }).notNull(),
+  version:    text().notNull().default(<span class="s">""</span>),
+})</pre>
+
+  <div class="grid g3" style="margin-top:24px">
+    <div class="card tint">
+      <h4>Idempotent by construction</h4>
+      <p class="small">Enqueue carries <code>refKind</code>/<code>refId</code>. Clicking Scan twice on the same notebook returns the queued row, not a twin. Same rule the tasks API already enforces.</p>
+    </div>
+    <div class="card tint">
+      <h4>Failure is a state, not an alert</h4>
+      <p class="small">Laptop off: rows sit <em>queued</em> and the UI says so. Laptop dies mid-job: heartbeat goes stale, a sweep tick requeues it. Three failures: <em>failed</em>, with the error on the row, and a task made through the existing triage path.</p>
+    </div>
+    <div class="card tint">
+      <h4>Connection hygiene</h4>
+      <p class="small">The worker opens one connection: <code>max: 1</code>, <code>idle_timeout</code> set. The Railway hobby cap has been tripped before; the worker must not be the thing that trips it again.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">04 &mdash; the job kinds</p>
+  <h2>Three kinds to start. Each has a trigger, an executor, an output, and a budget.</h2>
+  <div class="tablecard" style="margin-top:20px">
+    <table>
+      <thead><tr><th>Kind</th><th>Trigger</th><th>Executor on the laptop</th><th>Writes back</th><th>Budget</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">notebook.scan</td>
+          <td>Scan button on a notebook page; or a nightly routine enqueuing every notebook with edits since last scan.</td>
+          <td><code>scripts/notion.ts dump</code> emits pages as JSON &rarr; <code>claude -p</code> on the subscription (or the local model in phase four) extracts actionables against the existing zod schema &rarr; <code>scripts/notion.ts ingest</code> writes proposals with the same fingerprint dedup as today.</td>
+          <td><code>notion_proposals</code> rows; scan stats on <code>jobs.result</code>.</td>
+          <td><code>--model</code> pinned to Sonnet, <code>--max-turns 3</code>, one page batch per turn.</td>
+        </tr>
+        <tr>
+          <td class="mono">puppet.lighthouse</td>
+          <td>Care-plan audit (caretaker), or a button on a site row.</td>
+          <td>Headless system Chrome via CDP, Lighthouse CLI, all four categories, mobile and desktop.</td>
+          <td>Scores and the HTML report path onto <code>monitor_runs</code> or the care log.</td>
+          <td>No model tokens. ~90 s of wall clock per URL.</td>
+        </tr>
+        <tr>
+          <td class="mono">puppet.shots</td>
+          <td>Docent guide build; portfolio grid refresh; punch-list before/after evidence.</td>
+          <td>Puppeteer against a logged-in Chrome profile; viewport list in payload.</td>
+          <td>PNGs into the artefact folder; paths onto <code>jobs.result</code>.</td>
+          <td>No model tokens.</td>
+        </tr>
+        <tr>
+          <td class="mono">leftoff.snapshot</td>
+          <td>The leftoff skill, or an hourly routine while the Mac is asleep.</td>
+          <td>Reads open tabs from the laptop's Chrome and posts them through the existing leftoff endpoints.</td>
+          <td><code>session_notes</code> via the leftoff API, tagged with the machine name.</td>
+          <td>No model tokens.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small muted" style="margin-top:14px;max-width:70ch">
+    Adding a fourth kind later is a new executor module and an enum value. No schema change, no CRM
+    change beyond the button that enqueues it.
+  </p>
+</section>
+
+<section>
+  <p class="sec-num">05 &mdash; the worker</p>
+  <h2>Two lanes on one machine</h2>
+  <p style="max-width:70ch">
+    The Claude lane and the GPU lane want Linux. The puppet lane wants the Chrome you are actually
+    logged into, which lives on the Windows side. Rather than fight WSL's browser story, the worker
+    runs as two small services that claim from the same table by <code>kind</code>.
+  </p>
+  <div class="grid g2" style="margin-top:24px">
+    <div class="card rail">
+      <h3>Lane A &mdash; WSL2 Ubuntu, systemd</h3>
+      <ul class="tight small">
+        <li>Node worker under a <code>systemd</code> unit, <code>Restart=always</code>, distro set to boot with Windows.</li>
+        <li>Claims <code>notebook.scan</code> and any future <code>claude.*</code> kind.</li>
+        <li>Runs <code>claude -p</code> with <code>--output-format json</code>, <code>--allowedTools</code> scoped per kind, <code>--append-system-prompt</code> from the skill file, <code>--max-turns</code> capped.</li>
+        <li>Auth: <code>CLAUDE_CODE_OAUTH_TOKEN</code> from <code>claude setup-token</code>. One-year expiry; the expiry date goes on a task the day it is minted.</li>
+        <li>Phase four: Ollama with CUDA passthrough in the same lane.</li>
+      </ul>
+    </div>
+    <div class="card rail">
+      <h3>Lane B &mdash; native Windows, scheduled task</h3>
+      <ul class="tight small">
+        <li>Node worker registered as a logon-triggered task that restarts on failure.</li>
+        <li>Claims <code>puppet.*</code> and <code>leftoff.snapshot</code>.</li>
+        <li>Drives system Chrome with a persistent profile signed into the accounts the puppets need. One manual sign-in, then it stays.</li>
+        <li>Lighthouse CLI installed globally; artefacts written to <code>D:\tk-artefacts\&lt;job id&gt;\</code> and served nowhere &mdash; the CRM stores paths, Tailscale fetches files.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="filepath" style="margin-top:28px">worker/.env &mdash; the whole configuration surface</div>
+<pre>WORKER_NAME=ryzen-3080
+WORKER_LANES=claude              <span class="c"># lane B sets: puppet,leftoff</span>
+DATABASE_URL=postgresql://...rlwy.net/railway   <span class="c"># public URL; the internal host does not resolve here</span>
+CLAUDE_CODE_OAUTH_TOKEN=...      <span class="c"># lane A only; minted 2026-11-15, expires 2027-11-15</span>
+TK_DEVICE_TOKEN=...              <span class="c"># for POST /api/tasks and the leftoff endpoints</span>
+POLL_SECONDS=45
+QUIET_HOURS=01:00-06:00          <span class="c"># claude lane sleeps; puppets run through</span></pre>
+
+  <div class="callout warn" style="margin-top:24px">
+    <strong>Do not set</strong> <code>ANTHROPIC_API_KEY</code>, <code>CLAUDE_CODE_USE_BEDROCK</code>,
+    <code>CLAUDE_CODE_USE_VERTEX</code> or <code>CLAUDE_CODE_USE_FOUNDRY</code> in lane A's environment.
+    Any of them outranks the subscription token and silently moves the bill back to the API.
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">06 &mdash; the machine</p>
+  <h2>Turning a gaming laptop into a server that stays up</h2>
+  <p style="max-width:70ch">
+    Ryzen 9, RTX 3080 laptop, 48 GB, 3 TB. The hardware is not the risk; Windows defaults and
+    laptop thermals are. This is the prep list, in order, before a single job runs.
+  </p>
+  <div class="grid g2" style="margin-top:24px">
+    <div class="card">
+      <h3>Power and uptime</h3>
+      <ul class="tight small">
+        <li>Power plan: never sleep on AC, never turn off the disk, lid close does nothing.</li>
+        <li>Auto sign-in after reboot so both lanes come back without a keyboard.</li>
+        <li>Windows Update: active hours pinned to the working day, feature updates deferred, restart notifications on.</li>
+        <li>Battery: leave it in as a built-in UPS if the health check passes; pull it if it is swollen or under 60 % health.</li>
+        <li>BIOS: power-on after AC loss, if the board offers it.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Thermals</h3>
+      <ul class="tight small">
+        <li>Open it, clean the fans, repaste if it has never been done.</li>
+        <li>Stand it on its rear edge or a cooling riser so both intakes breathe.</li>
+        <li>Cap the GPU power limit at roughly 70 % for sustained inference. Laptop 3080s throttle hard past that and the last 30 % of watts buys little.</li>
+        <li>Log the temperatures for the first week of jobs before trusting an overnight batch.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Software</h3>
+      <ul class="tight small">
+        <li>WSL2 Ubuntu 24.04 with <code>systemd=true</code> in <code>wsl.conf</code>; distro starts at logon via a scheduled task.</li>
+        <li>NVIDIA driver on Windows; CUDA toolkit inside WSL only if phase four goes ahead.</li>
+        <li>Node LTS in both lanes; Claude Code CLI in lane A; Chrome stable and Lighthouse in lane B.</li>
+        <li>Tailscale on Windows, SSH server enabled, key-only.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Storage on the 3 TB</h3>
+      <ul class="tight small">
+        <li><code>D:\tk-artefacts\</code> &mdash; job outputs, pruned after 90 days by the worker.</li>
+        <li><code>D:\tk-backups\</code> &mdash; nightly care-plan site backups pulled over Tailscale. Answers the open &ldquo;local + cloud dual redundancy&rdquo; task already on the board.</li>
+        <li><code>D:\models\</code> &mdash; Ollama cache, phase four.</li>
+        <li>Local Sites checkouts stay on the Mac. The laptop is a worker, not a second dev machine.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">07 &mdash; budget and limits</p>
+  <h2>What it costs, and what it could quietly eat</h2>
+  <div class="grid g3" style="margin-top:20px">
+    <div class="stat"><span class="num">~30 W</span><span class="lbl">idle draw</span><span class="sub">Roughly 22 kWh a month at idle. A few dollars. Load bursts are short and rare at current job volume.</span></div>
+    <div class="stat warn"><span class="num">1</span><span class="lbl">shared usage window</span><span class="sub">The worker spends the same 5-hour Pro/Max window you work in. A runaway scan at 14:00 is your afternoon gone.</span></div>
+    <div class="stat good"><span class="num">$0</span><span class="lbl">new subscriptions</span><span class="sub">Tailscale free tier, Ollama free, Lighthouse free. The API key stays funded as fallback, spent only when no worker is alive.</span></div>
+  </div>
+  <h3 style="margin-top:28px">Guardrails on the Claude lane</h3>
+  <ul class="tight">
+    <li>Concurrency of one. The worker never runs two Claude jobs at once.</li>
+    <li>Extraction kinds pinned to Sonnet or Haiku via <code>--model</code>; Opus-class models only when a job kind explicitly asks.</li>
+    <li><code>--max-turns</code> set per kind, never unbounded. A scan is three turns, not a conversation.</li>
+    <li>Quiet hours on the Claude lane so overnight routines do not drain the window you need at 09:00.</li>
+    <li>Token counts from the JSON result land on <code>jobs.result</code>, so a week of usage is one query away.</li>
+  </ul>
+</section>
+
+<section>
+  <p class="sec-num">08 &mdash; the build</p>
+  <h2>Four phases from 15 November. Dates are estimates, not promises.</h2>
+  <p class="small muted" style="max-width:70ch">
+    Each phase ends with something you can click. Nothing in a later phase is needed to keep an
+    earlier one useful, so the plan can stop after any of them and still have paid for itself.
+  </p>
+  <div style="margin-top:20px">
+    <div class="step">
+      <div class="n">0</div>
+      <div class="c">
+        <h3>Machine prep &middot; 15&ndash;16 Nov</h3>
+        <p class="small">Section six in full. Confirm VRAM. Mint the setup token and file its expiry. Tailscale SSH from the Mac working. Both lanes installed but idle.</p>
+        <p class="ships">Ships: a laptop you can SSH into from the sofa, and a photo of <code>nvidia-smi</code>.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="n">1</div>
+      <div class="c">
+        <h3>The contract &middot; 17&ndash;19 Nov</h3>
+        <p class="small">Migration for <code>jobs</code> and <code>workers</code>. Enqueue action with the replay rule. Sweep tick requeues stale leases. Worker skeleton in both lanes claiming and completing a <code>noop</code> kind. Dashboard pill: worker name, last seen, queue depth.</p>
+        <p class="ships">Ships: a Ping button in the CRM that lights up green from the laptop with the Mac closed.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="n">2</div>
+      <div class="c">
+        <h3>notebook.scan end to end &middot; 20&ndash;22 Nov</h3>
+        <p class="small">Split <code>scripts/notion.ts</code> into dump and ingest. Skill prompt for the extraction. Ingest validates against the existing zod schema and rejects malformed output. Scan button enqueues when a Claude-lane worker was seen in the last two minutes, otherwise falls through to the API path as today. Side-by-side on ten pages against current API output before switching the default.</p>
+        <p class="ships">Ships: the one API call site becomes a fallback. Quality comparison written onto the job results.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="n">3</div>
+      <div class="c">
+        <h3>Puppets &middot; 23&ndash;26 Nov</h3>
+        <p class="small"><code>puppet.lighthouse</code> wired to the caretaker audit and a button on site rows. <code>puppet.shots</code> for docent and the portfolio grid. <code>leftoff.snapshot</code> posting the laptop's Chrome tabs through the existing endpoints, tagged by machine.</p>
+        <p class="ships">Ships: care-plan audits gather their own Lighthouse evidence overnight; the leftoff board shows tabs from a machine you are not sitting at.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="n">4</div>
+      <div class="c">
+        <h3>Local inference &middot; December, optional, VRAM-gated</h3>
+        <p class="small">Ollama in lane A with JSON-schema output. <code>notebook.scan</code> gains an <code>executor: local</code> payload flag. Same ten-page comparison against the Sonnet run. If quality holds, the scan leaves the subscription window entirely and the machine doubles as the HiveMind local-build reference deployment.</p>
+        <p class="ships">Ships only if the comparison passes. Otherwise the phase closes with a written reason.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">09 &mdash; decided and open</p>
+  <h2>What is settled, and the four things that are not</h2>
+  <div class="grid g3" style="margin-top:20px">
+    <div class="card rail good"><span class="chip ok">decided</span><h4 style="margin-top:10px">Cloud first</h4><p class="small">A thing runs on the laptop only when the cloud physically cannot do it.</p></div>
+    <div class="card rail good"><span class="chip ok">decided</span><h4 style="margin-top:10px">Jobs table is the only contract</h4><p class="small">No inbound ports, no tunnel, no webhook. The CRM never names a machine.</p></div>
+    <div class="card rail good"><span class="chip ok">decided</span><h4 style="margin-top:10px">Subscription via Claude Code only</h4><p class="small">Setup token, Claude Code binary, machine you own. Never a token inside the app or the SDK.</p></div>
+    <div class="card rail good"><span class="chip ok">decided</span><h4 style="margin-top:10px">API key stays as fallback</h4><p class="small">The admin button must work with the laptop off. It just costs money that day.</p></div>
+    <div class="card rail good"><span class="chip ok">decided</span><h4 style="margin-top:10px">Mac mini is off the critical path</h4><p class="small">Buy one later for noise or speed, not capability.</p></div>
+    <div class="card rail good"><span class="chip ok">decided</span><h4 style="margin-top:10px">Two lanes</h4><p class="small">WSL2 for Claude and GPU; native Windows for anything that needs the logged-in Chrome.</p></div>
+  </div>
+
+  <h3 style="margin-top:34px">Open</h3>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card tint"><span class="chip warn">before phase 0</span><h4 style="margin-top:10px">8 or 16 GB of VRAM</h4><p class="small">Read it off <code>nvidia-smi</code>. Sixteen makes phase four comfortable at 14B; eight caps it at 7&ndash;8B quantised. Nothing before phase four depends on the answer.</p></div>
+    <div class="card tint"><span class="chip warn">before phase 1</span><h4 style="margin-top:10px">Where job logs live</h4><p class="small"><code>jobs.result</code> alone, or also an <code>agent_sessions</code> row per Claude job so the ledger sees the hours. Recommendation: both, with the session summary pointing at the job id.</p></div>
+    <div class="card tint"><span class="chip warn">before phase 2</span><h4 style="margin-top:10px">Nightly scan: routine or worker</h4><p class="small">A cloud routine can enqueue and a worker can execute, or the routine can do the whole scan itself on the account. Recommendation: routine enqueues, worker executes, so the two paths share one code path and one quality bar.</p></div>
+    <div class="card tint"><span class="chip warn">before phase 3</span><h4 style="margin-top:10px">Artefact delivery</h4><p class="small">Screenshots and Lighthouse reports stay on the laptop disk with paths in the CRM, or get pushed to object storage so the CRM can show them inline. Recommendation: paths first, storage only if a client-facing surface needs them.</p></div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">10 &mdash; done looks like</p>
+  <h2>Acceptance</h2>
+  <ul class="tight">
+    <li>Mac closed, laptop on: Scan on a notebook page produces new actionables within five minutes, billed to the subscription, with the token count on the job row.</li>
+    <li>Laptop off: the same click shows <em>queued</em>, not an error, and falls through to the API path if you choose it.</li>
+    <li>Kill the worker mid-job: the row returns to <em>queued</em> on the next sweep tick and completes on restart. No twin rows.</li>
+    <li>Worker unseen for 15 minutes: the existing monitors table raises it like any other down service.</li>
+    <li>The setup token's expiry is a dated task on the board from the day it is minted.</li>
+    <li>A care-plan audit run overnight includes Lighthouse scores it gathered itself.</li>
+  </ul>
+</section>
+
+<footer>
+  Tall Karol &middot; internal infrastructure &middot; proposal &middot; drafted 3 September 2026 for a
+  15 November 2026 start &middot; one API call site counted from the crm repo the same day &middot; nothing built
+</footer>
+
+</div>
+</body>
+</html>

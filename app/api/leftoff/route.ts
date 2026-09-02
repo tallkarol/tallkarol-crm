@@ -64,6 +64,8 @@ function parseNote(raw: unknown, now: Date): IncomingNote | { error: string } {
     body: str(body.body),
     pinned: typeof body.pinned === "boolean" ? body.pinned : undefined,
     meta,
+    client: str(body.client),
+    blockedOn: str(body.blockedOn),
   }
 }
 
