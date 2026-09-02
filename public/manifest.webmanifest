@@ -1,14 +1,17 @@
 {
-  "name": "Tall Karol Clock",
-  "short_name": "TK Clock",
-  "description": "Clock in and out on a client or project, then approve the time in the CRM.",
+  "name": "TallKarol",
+  "short_name": "TallKarol",
+  "description": "Clock in and out, see what needs you, and get told when something does.",
   "start_url": "/timesheet/live",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#F1EADC",
   "theme_color": "#006965",
-  "categories": ["productivity", "business"],
+  "categories": [
+    "productivity",
+    "business"
+  ],
   "icons": [
     {
       "src": "/icons/clock-192.png",
@@ -34,12 +37,22 @@
       "name": "Clock in",
       "short_name": "Clock",
       "url": "/timesheet/live",
-      "icons": [{ "src": "/icons/clock-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icons/clock-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Review punches",
       "short_name": "Review",
       "url": "/timesheet/review"
+    },
+    {
+      "name": "Tickets",
+      "short_name": "Tickets",
+      "url": "/support"
     }
   ]
 }

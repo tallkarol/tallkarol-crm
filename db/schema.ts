@@ -2277,3 +2277,52 @@ export const vaultEntriesRelations = relations(vaultEntries, ({ one }) => ({
 }))
 
 export type VaultEntry = typeof vaultEntries.$inferSelect
+
+/* ------------------------------------------------------------ web push */
+
+/**
+ * One row per browser that opted in. The endpoint is the identity — a
+ * browser re-subscribing after a key rotation shows up as a new endpoint, and
+ * the old one is pruned the first time the push service answers 404 or 410.
+ */
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  userAgent: text("user_agent").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  lastOkAt: timestamp("last_ok_at", { withTimezone: true }),
+  failCount: integer("fail_count").notNull().default(0),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+})
+
+/**
+ * Everything ever sent, and the reason nothing is sent twice: the unique index
+ * on (kind, dedupe_key) is the dedupe. A flag that stays raised for five days
+ * inserts once and is rejected four times.
+ */
+export const notificationLog = pgTable(
+  "notification_log",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    kind: text("kind").notNull(),
+    dedupeKey: text("dedupe_key").notNull(),
+    title: text("title").notNull().default(""),
+    body: text("body").notNull().default(""),
+    url: text("url").notNull().default(""),
+    /** Rows written on first run to remember what existed, without sending. */
+    seeded: boolean("seeded").notNull().default(false),
+    sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+    clickedAt: timestamp("clicked_at", { withTimezone: true }),
+  },
+  (table) => ({
+    once: uniqueIndex("notification_log_once_idx").on(table.kind, table.dedupeKey),
+    recent: index("notification_log_recent_idx").on(table.sentAt),
+  })
+)
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect
+export type NotificationLogRow = typeof notificationLog.$inferSelect

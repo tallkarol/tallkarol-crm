@@ -5,7 +5,7 @@
  * the clock installable and to keep its own chrome — icons, manifest — instant.
  */
 
-const SHELL = "tk-clock-shell-v1"
+const SHELL = "tk-shell-v2"
 const SHELL_FILES = [
   "/manifest.webmanifest",
   "/icons/clock-192.png",
@@ -46,5 +46,64 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     caches.match(request).then((hit) => hit || fetch(request))
+  )
+})
+
+/* ---------------------------------------------------------------- push */
+
+// Every push must show something on Chrome (userVisibleOnly). The payload is
+// what lib/notify.ts sent: { title, body, url, kind, tag }.
+self.addEventListener("push", (event) => {
+  let data = {}
+  try {
+    data = event.data ? event.data.json() : {}
+  } catch {
+    data = { body: event.data ? event.data.text() : "" }
+  }
+  const title = data.title || "TallKarol"
+  const options = {
+    body: data.body || "",
+    icon: "/icons/clock-192.png",
+    badge: "/icons/clock-192.png",
+    tag: data.tag || data.kind || undefined,
+    renotify: false,
+    data: { url: data.url || "/", kind: data.kind || "" },
+  }
+  event.waitUntil(self.registration.showNotification(title, options))
+})
+
+// A tap carries the CRM path it is about. Reuse an open window if there is
+// one — the installed PWA counts — otherwise open a new one.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close()
+  const target = new URL(event.notification.data?.url || "/", self.location.origin).href
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const client of list) {
+        if (new URL(client.url).origin === self.location.origin && "focus" in client) {
+          client.navigate(target)
+          return client.focus()
+        }
+      }
+      return self.clients.openWindow(target)
+    })
+  )
+})
+
+// The push service rotated our subscription; re-subscribe with the same key
+// and tell the CRM, or this browser goes quietly deaf.
+self.addEventListener("pushsubscriptionchange", (event) => {
+  const key = event.oldSubscription && event.oldSubscription.options.applicationServerKey
+  event.waitUntil(
+    self.registration.pushManager
+      .subscribe({ userVisibleOnly: true, applicationServerKey: key })
+      .then((sub) =>
+        fetch("/api/push/subscribe", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(sub.toJSON()),
+        })
+      )
+      .catch(() => {})
   )
 })

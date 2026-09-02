@@ -92,6 +92,7 @@ export const ROUTES = {
   scaffold: (slug: string) => `/scaffolds/${slug}`,
   settings: "/settings",
   settingsColors: "/settings/colors",
+  settingsNotifications: "/settings/notifications",
   settingsPortals: "/settings/portals",
   settingsTeam: "/settings/team",
   settingsEmail: "/settings/email",
@@ -190,6 +191,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
         label: "Settings",
         icon: "settings",
         children: [
+          { href: ROUTES.settingsNotifications, label: "Notifications", icon: "settings" },
           { href: ROUTES.settingsColors, label: "Colours", icon: "clients" },
           { href: ROUTES.settingsPortals, label: "Client Portals", icon: "clients" },
           { href: ROUTES.settingsTeam, label: "Team", icon: "team" },
