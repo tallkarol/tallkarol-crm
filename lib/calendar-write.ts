@@ -29,6 +29,11 @@ export type WriteEventResult =
 
 const WALL_CLOCK = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/
 
+/** Google's `dateTime` is RFC 3339 and wants seconds; `YYYY-MM-DDTHH:mm` is a 400. */
+function withSeconds(value: string) {
+  return value.length === 16 ? `${value}:00` : value
+}
+
 export async function writeCalendarEvent(input: WriteEventInput): Promise<WriteEventResult> {
   const title = input.title.trim()
   if (!title) return { ok: false, status: 400, error: "Give the event a title." }
@@ -63,8 +68,8 @@ export async function writeCalendarEvent(input: WriteEventInput): Promise<WriteE
       title,
       description: (input.description ?? "").trim(),
       location: (input.location ?? "").trim(),
-      startsAt: input.startsAt,
-      endsAt: input.endsAt,
+      startsAt: withSeconds(input.startsAt),
+      endsAt: withSeconds(input.endsAt),
       timeZone: input.timeZone || "UTC",
       attendees: input.attendees ?? [],
       refKey,
