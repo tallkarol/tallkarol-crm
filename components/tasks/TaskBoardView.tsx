@@ -46,13 +46,27 @@ export function TaskBoardView({
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [tasks, setTasks] = useState(initial)
+  const [forced, setForced] = useState<Record<string, "done" | HubTask["stage"]>>({})
   const [activeId, setActiveId] = useState<string | null>(null)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   )
 
   // Server refreshes (a peek edit, another tab) replace the board's copy.
-  useEffect(() => setTasks(initial), [initial])
+  // A stale refresh after a drag must not undo a stage we just wrote.
+  useEffect(() => {
+    setTasks(
+      initial.map((task) => {
+        const override = forced[task.id]
+        if (!override) return task
+        return {
+          ...task,
+          status: override === "done" ? "done" : "open",
+          stage: override === "done" ? task.stage : override,
+        }
+      })
+    )
+  }, [initial, forced])
 
   const active = tasks.find((t) => t.id === activeId) ?? null
 
@@ -67,17 +81,10 @@ export function TaskBoardView({
     if (!stage || !task || !STAGES.some((s) => s.id === stage)) return
     if (stageOf(task) === stage) return
 
-    setTasks((rows) =>
-      rows.map((row) =>
-        row.id === task.id
-          ? {
-              ...row,
-              status: stage === "done" ? "done" : "open",
-              stage: stage === "done" ? row.stage : (stage as HubTask["stage"]),
-            }
-          : row
-      )
-    )
+    setForced((current) => ({
+      ...current,
+      [task.id]: stage === "done" ? "done" : (stage as HubTask["stage"]),
+    }))
     startTransition(async () => {
       await setTaskStage(task.id, stage)
       router.refresh()

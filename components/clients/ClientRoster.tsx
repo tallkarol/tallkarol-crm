@@ -50,7 +50,7 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
 
   return (
     <>
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter clients">
           {FILTERS.map((f) => (
             <button

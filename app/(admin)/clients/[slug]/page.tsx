@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ActivityFeed } from "@/components/clients/ActivityFeed"
 import { AnchorNav } from "@/components/clients/AnchorNav"
+import { ExcludeIpButton } from "@/components/clients/ExcludeIpButton"
 import { BurnHistory } from "@/components/clients/BurnHistory"
 import { ClientAvatar } from "@/components/clients/ClientAvatar"
 import { HoursMeter } from "@/components/clients/HoursMeter"
@@ -29,6 +30,7 @@ import {
   fmtMoney,
 } from "@/lib/insights/derive"
 import { getInsightsContext } from "@/lib/insights/queries"
+import { siteSupportsInternalTraffic } from "@/lib/internal-traffic"
 import { ROUTES } from "@/lib/nav"
 import { tasksFor, taskTargets } from "@/lib/tasks"
 import { currentMonth } from "@/lib/timesheet"
@@ -230,6 +232,11 @@ export default async function ClientDetailPage({
               Paid Ads
             </Link>
           ) : null}
+          {hub.sites
+            .filter(siteSupportsInternalTraffic)
+            .map((site) => (
+              <ExcludeIpButton key={site.id} origin={site.origin} />
+            ))}
           <Link
             href={ROUTES.invoices}
             className="rounded-lg border border-tk-slate/20 bg-white px-3.5 py-1.5 text-sm font-semibold text-tk-onyx hover:border-tk-teal hover:text-tk-teal"

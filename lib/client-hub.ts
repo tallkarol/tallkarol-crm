@@ -91,17 +91,8 @@ export type RosterRow = {
   lastActivity: string | null
 }
 
-export type RosterFlag = {
-  key: string
-  severity: "hot" | "warn"
-  title: string
-  sub: string
-  clientSlug: string
-}
-
 export type RosterData = {
   rows: RosterRow[]
-  flags: RosterFlag[]
   totals: { clients: number; retainerHours: number; outstandingCents: number }
 }
 
@@ -110,7 +101,7 @@ export async function loadClientRoster(now = new Date()): Promise<RosterData> {
   const { start: monthStart } = monthBounds(month)
   const today = isoDay(now)
 
-  const [clientRows, taskRows, sentInvoices, ticketRows, meetingRows, entrySums, dueReports, lastEntries] =
+  const [clientRows, taskRows, sentInvoices, ticketRows, meetingRows, entrySums, lastEntries] =
     await Promise.all([
       db.query.clients.findMany({
         orderBy: [asc(clients.name)],
@@ -168,14 +159,6 @@ export async function loadClientRoster(now = new Date()): Promise<RosterData> {
         .groupBy(timeEntries.clientId),
       db
         .select({
-          clientId: reports.clientId,
-          title: reports.title,
-          periodLabel: reports.periodLabel,
-        })
-        .from(reports)
-        .where(and(eq(reports.status, "due"), isNotNull(reports.clientId))),
-      db
-        .select({
           clientId: timeEntries.clientId,
           last: sql<string>`max(${timeEntries.occurredOn})`,
         })
@@ -224,7 +207,6 @@ export async function loadClientRoster(now = new Date()): Promise<RosterData> {
     })
   }
 
-  const flags: RosterFlag[] = []
   const rows: RosterRow[] = clientRows.map((client) => {
     const activeRetainers = client.retainers.filter((r) => r.status === "active")
     const cap = activeRetainers.reduce((sum, r) => sum + r.hoursPerMonth, 0)
@@ -238,7 +220,12 @@ export async function loadClientRoster(now = new Date()): Promise<RosterData> {
     if (activeRetainers.length > 0) tags.push("retainer")
     if (activeProjects.length > 0) tags.push("project")
     if (liveProducts.length > 0) tags.push("product")
-    const dormant = tags.length === 0
+    // No attached work is not the same as done talking — in contact, a
+    // proposal, or internal work should still read as live on the roster.
+    const noWork = tags.length === 0
+    const dormant =
+      noWork &&
+      (client.status === "completed_work" || client.status === "lapsed_retainer")
     if (dormant) tags.push("dormant")
 
     const last = lastByClient.get(client.id) ?? null
@@ -263,6 +250,7 @@ export async function loadClientRoster(now = new Date()): Promise<RosterData> {
           liveProducts.length > 0
             ? `${liveProducts.length} product${liveProducts.length === 1 ? "" : "s"}`
             : null,
+          noWork && lastActivity ? `last activity ${lastActivity}` : null,
         ]
 
     const unpaid = invoicesByClient.get(client.id) ?? []
@@ -275,45 +263,6 @@ export async function loadClientRoster(now = new Date()): Promise<RosterData> {
 
     const taskBucket = tasksByClient.get(client.id) ?? { open: 0, overdue: 0 }
     const waiting = waitingByClient.get(client.id)
-
-    /* ---- flags for the "needs attention" strip ---- */
-    if (oldest && outstandingAgeDays != null && outstandingAgeDays >= UNPAID_INVOICE_FLAG_DAYS) {
-      flags.push({
-        key: `unpaid:${client.slug}`,
-        severity: "hot",
-        title: `Invoice ${oldest.number} unpaid ${outstandingAgeDays} days`,
-        sub: `${client.name} · ${money(outstandingCents)} outstanding`,
-        clientSlug: client.slug,
-      })
-    }
-    if (waiting?.oldest) {
-      const age = ticketAgeDays(waiting.oldest, now)
-      flags.push({
-        key: `ticket:${client.slug}`,
-        severity: "hot",
-        title: `Ticket waiting on you ${age} day${age === 1 ? "" : "s"}`,
-        sub: `${client.name} · “${waiting.oldest.title || "untitled"}”`,
-        clientSlug: client.slug,
-      })
-    }
-    for (const r of dueReports.filter((r) => r.clientId === client.id)) {
-      flags.push({
-        key: `report:${client.slug}:${r.title}`,
-        severity: "warn",
-        title: `Report due — ${r.title}`,
-        sub: `${client.name}${r.periodLabel ? ` · ${r.periodLabel}` : ""}`,
-        clientSlug: client.slug,
-      })
-    }
-    if (cap > 0 && logged / cap >= ATTENTION_RULES.retainerNearCapPct) {
-      flags.push({
-        key: `cap:${client.slug}`,
-        severity: "warn",
-        title: `Retainer ${Math.round((logged / cap) * 100)}% burned`,
-        sub: `${client.name} · ${fmtH(logged)} of ${cap} hr this month`,
-        clientSlug: client.slug,
-      })
-    }
 
     return {
       id: client.id,
@@ -341,11 +290,8 @@ export async function loadClientRoster(now = new Date()): Promise<RosterData> {
   rows.sort((a, b) =>
     a.dormant === b.dormant ? a.name.localeCompare(b.name) : a.dormant ? 1 : -1
   )
-  flags.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === "hot" ? -1 : 1))
-
   return {
     rows,
-    flags: flags.slice(0, 6),
     totals: {
       clients: rows.length,
       retainerHours: rows.reduce((sum, r) => sum + (r.hours?.cap ?? 0), 0),

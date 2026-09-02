@@ -121,6 +121,7 @@ export const INVOICE_STATUS_LABEL: Record<InvoiceStatus, string> = {
 
 export const CLIENT_STATUSES: ClientStatus[] = [
   "new",
+  "in_contact",
   "proposal_submitted",
   "in_negotiation",
   "proposal_agreed",
@@ -132,7 +133,7 @@ export const CLIENT_STATUSES: ClientStatus[] = [
   "active_retainer",
   "lapsed_retainer",
   "completed_work",
-  "in_contact",
+  "internal",
 ]
 
 export const CLIENT_STATUS_LABEL: Record<ClientStatus, string> = {
@@ -149,6 +150,7 @@ export const CLIENT_STATUS_LABEL: Record<ClientStatus, string> = {
   lapsed_retainer: "Lapsed retainer",
   completed_work: "Completed work",
   in_contact: "In contact",
+  internal: "Internal",
 }
 
 /** Chip colour for the client lifecycle — same tones the delivery menu uses. */
@@ -168,7 +170,8 @@ export const CLIENT_STATUS_TONE: Record<
   active_retainer: "progress",
   lapsed_retainer: "waiting",
   completed_work: "flat",
-  in_contact: "waiting",
+  in_contact: "progress",
+  internal: "progress",
 }
 
 export const CLIENT_STATUS_GROUPS: { label: string; ids: ClientStatus[] }[] = [
@@ -199,6 +202,10 @@ export const CLIENT_STATUS_GROUPS: { label: string; ids: ClientStatus[] }[] = [
   {
     label: "Closed",
     ids: ["completed_work"],
+  },
+  {
+    label: "Internal",
+    ids: ["internal"],
   },
 ]
 

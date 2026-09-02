@@ -38,6 +38,7 @@ export type NavIconName =
   | "email-settings"
   | "integrations"
   | "vault"
+  | "scaffolds"
 
 export type NavLink = {
   href: string
@@ -87,6 +88,8 @@ export const ROUTES = {
   uptime: "/uptime",
   notebooks: "/notebooks",
   vault: "/vault",
+  scaffolds: "/scaffolds",
+  scaffold: (slug: string) => `/scaffolds/${slug}`,
   settings: "/settings",
   settingsColors: "/settings/colors",
   settingsPortals: "/settings/portals",
@@ -180,6 +183,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
     title: "Workspace",
     items: [
       { href: ROUTES.vault, label: "Vault", icon: "vault" },
+      { href: ROUTES.scaffolds, label: "Scaffolds", icon: "scaffolds" },
       { href: ROUTES.activity, label: "Activity", icon: "activity" },
       {
         href: ROUTES.settings,

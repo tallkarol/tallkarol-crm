@@ -86,8 +86,8 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
 <header class="rpt">
   <p class="eyebrow">Tall Karol &middot; Mineralife Nutraceuticals &middot; mycustommanufacturer.com</p>
   <h1>SEM Report v2</h1>
-  <p class="muted" style="font-size:17px">August 2026 review &mdash; re-verified against the live systems on
-  2 September 2026, after the account rebuild described in section 03.</p>
+  <p class="muted" style="font-size:17px">August 2026 review &mdash; re-run in full against the live systems on
+  2 September 2026, six hours after the account rebuild described in section 03.</p>
   <div class="metastrip">
     <div><span class="k">Shipped since v1</span><span class="v">Everything but two cleanups</span></div>
     <div><span class="k">Still blocking</span><span class="v">Nothing &mdash; cleared 2 Sep</span></div>
@@ -123,7 +123,7 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
     <div class="stat good"><span class="num">2</span><span class="lbl">Campaigns, wired</span><span class="sub">Both bid on Submit lead form only. Nothing else steers them.</span></div>
     <div class="stat good"><span class="num">0</span><span class="lbl">Broad keywords live</span><span class="sub">All thirteen paused. Everything serving is phrase or exact.</span></div>
     <div class="stat good"><span class="num">174</span><span class="lbl">Negative keywords</span><span class="sub">One shared list, attached to both campaigns.</span></div>
-    <div class="stat accent"><span class="num">3</span><span class="lbl">Ads in review</span><span class="sub">The new US campaign's ads, awaiting Google's routine approval.</span></div>
+    <div class="stat good"><span class="num">3</span><span class="lbl">Core Terms ads approved</span><span class="sub">Review cleared overnight. All three eligible; no impressions yet &mdash; section 08.</span></div>
   </div>
 
   <div class="card rail good">
@@ -198,20 +198,24 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
     <table>
       <thead><tr><th>Day</th><th class="r">Real visitors</th><th class="r">Sessions in Analytics</th><th class="r">Seen</th></tr></thead>
       <tbody>
-        <tr><td>31 August</td><td class="r mono">108</td><td class="r mono">3</td><td class="r"><span class="chip crit">2.8%</span></td></tr>
-        <tr><td>1 September</td><td class="r mono">73</td><td class="r mono">0</td><td class="r"><span class="chip crit">0%</span></td></tr>
+        <tr><td>31 August</td><td class="r mono">108</td><td class="r mono">9</td><td class="r"><span class="chip crit">8.3%</span></td></tr>
+        <tr><td>1 September</td><td class="r mono">76</td><td class="r mono">0</td><td class="r"><span class="chip crit">0%</span></td></tr>
+        <tr><td>2 September <span class="small muted">partial day</span></td><td class="r mono">53</td><td class="r mono">0</td><td class="r"><span class="chip crit">0%</span></td></tr>
       </tbody>
     </table>
   </div>
 
   <div class="card rail crit" style="margin-top:16px">
     <h3>Analytics is close to blind, and it is worse than v1 assumed</h3>
-    <p class="small">Version one put it at roughly one paid click in twenty. Measured against a real denominator it is
-    nearer <b>one visitor in thirty-five</b>, and on 1 September it was none at all. Two days is a small
-    sample and zero is not alarming by itself &mdash; but the direction is unambiguous.</p>
+    <p class="small">Version one put it at roughly one paid click in twenty. Measured against a real denominator,
+    31 August settled at <b>one visitor in twelve</b> once Analytics finished processing the day &mdash; the first
+    pass of this report caught it mid-processing at three sessions &mdash; and 1&ndash;2 September show
+    <b>nothing at all</b> against 129 real visitors. The zero days may still fill in (31 August tripled overnight),
+    so read them again on 4 September before treating them as final. The direction is unambiguous either way.</p>
     <p class="small" style="margin-bottom:0">Nothing is broken. The container is on the page, all eight Analytics
-    tags are live, and version 13 is serving &mdash; verified directly. This is the cookie banner doing exactly what
-    it was built to do.</p>
+    tags are live, and version 13 is serving &mdash; verified directly again this morning. The Analytics
+    configuration tag is gated on <code>analytics_storage</code> consent, so a visitor who never touches the banner
+    is never counted. This is the cookie banner doing exactly what it was built to do.</p>
   </div>
 
   <div class="grid g2" style="margin-top:16px">
@@ -228,6 +232,16 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
       is the truth at the top. Analytics only fills in the middle.</p>
     </div>
   </div>
+
+  <div class="card rail good" style="margin-top:16px">
+    <h3>The counter also answers the geography question</h3>
+    <p class="small" style="margin-bottom:0">Of the 237 real visitors between 31 August and 2 September,
+    <b>125 were in the United States</b> &mdash; 53%, against 1.8% of August's paid clicks. The site's audience is
+    American; the advertising was not. Two referrers are worth watching now that Search Partners are off:
+    45 visitors arrived from <code>syndicatedsearch.goog</code> (Google's partner-site ad network) and 16 from
+    Google's video-ad player. A search-only account should send neither. If they persist past this week they are
+    not coming from these campaigns.</p>
+  </div>
 </section>
 
 <section id="s5">
@@ -236,7 +250,7 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
   <div class="grid g4" style="margin:6px 0 18px">
     <div class="stat"><span class="num">$307</span><span class="lbl">Competitors spend</span><span class="sub">791 clicks at 39&cent; average.</span></div>
     <div class="stat warn"><span class="num">7</span><span class="lbl">Real enquiries</span><span class="sub">Ten records, three of them test submissions.</span></div>
-    <div class="stat"><span class="num">2</span><span class="lbl">Carried a click ID</span><span class="sub">Plus two catalogue downloads, both from paid.</span></div>
+    <div class="stat"><span class="num">2</span><span class="lbl">Carried a click ID</span><span class="sub">Plus one paid visitor who downloaded the catalogue twice.</span></div>
     <div class="stat crit"><span class="num">0</span><span class="lbl">Conversions in Ads</span><span class="sub">The account recorded none &mdash; in August, it could not.</span></div>
   </div>
 
@@ -256,16 +270,18 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
   <div class="grid g2" style="margin-top:16px">
     <div class="card">
       <h3>The measured cost of a paid enquiry</h3>
-      <p class="small">August: <b>$307.49</b> produced two enquiries carrying a click ID and two catalogue downloads
-      carrying one. That is <b>$154 per paid enquiry</b>, or <b>$77 per paid action</b> if downloads count.</p>
+      <p class="small">August: <b>$307.49</b> produced two enquiries carrying a click ID and one catalogue download
+      carrying one &mdash; the same visitor fetched it twice, which the first pass of this report counted as two.
+      That is <b>$154 per paid enquiry</b>, or <b>$102 per paid outcome</b> if the download counts.</p>
       <p class="small" style="margin-bottom:0">Higher than the ~$88 quoted in v1, which covered a longer window with a
-      better month in it. Against a $400&ndash;1,000 category benchmark it remains cheap. Four outcomes is far too
+      better month in it. Against a $400&ndash;1,000 category benchmark it remains cheap. Three outcomes is far too
       small a sample to call a rate &mdash; treat it as an order of magnitude, not a figure.</p>
     </div>
     <div class="card">
       <h3>September so far</h3>
-      <p class="small">Through 2 September: Competitors $2.11 and 23 clicks; Core Terms $0 &mdash; launched tonight,
-      its ads still in review. No enquiries yet this month.</p>
+      <p class="small">Through 2 September, account time: Competitors $2.11 and 23 clicks, all on the 1st under the
+      old configuration, then 7 impressions and no clicks on the 2nd; Core Terms $0 &mdash; approved and eligible,
+      no impressions yet. No enquiries this month, and no August enquiry has moved stage in the pipeline.</p>
       <p class="small" style="margin-bottom:0">September's numbers will be a before/after seam: two days of the old
       configuration, then the rebuilt account. Read the month accordingly.</p>
     </div>
@@ -288,13 +304,17 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
     <table>
       <thead><tr><th>Keyword</th><th>Match, then</th><th class="r">Aug spend</th><th class="r">Clicks</th><th class="r">Share</th></tr></thead>
       <tbody>
-        <tr><td><code>nutra labs</code></td><td><span class="chip crit">Broad</span> <span class="chip ok">now phrase</span></td><td class="r mono">$177.98</td><td class="r mono">594</td><td class="r"><b>58%</b></td></tr>
-        <tr><td><code>nutri science</code></td><td><span class="chip crit">Broad</span> <span class="chip ok">now phrase</span></td><td class="r mono">$56.22</td><td class="r mono">90</td><td class="r">18%</td></tr>
-        <tr><td><code>custom vitamin manufacturers</code></td><td><span class="chip crit">Broad</span> <span class="chip ok">now phrase</span></td><td class="r mono">$23.63</td><td class="r mono">38</td><td class="r">8%</td></tr>
-        <tr><td><code>nutriscience labs</code></td><td><span class="chip crit">Broad</span> <span class="chip ok">now phrase</span></td><td class="r mono">$16.73</td><td class="r mono">28</td><td class="r">5%</td></tr>
+        <tr><td><code>nutra labs</code></td><td><span class="chip crit">Broad</span> <span class="chip ok">paused 2 Sep</span></td><td class="r mono">$177.98</td><td class="r mono">594</td><td class="r"><b>58%</b></td></tr>
+        <tr><td><code>nutri science</code></td><td><span class="chip crit">Broad</span> <span class="chip ok">paused 2 Sep</span></td><td class="r mono">$56.22</td><td class="r mono">90</td><td class="r">18%</td></tr>
+        <tr><td><code>custom vitamin manufacturers</code></td><td><span class="chip crit">Broad</span> <span class="chip ok">paused 2 Sep</span></td><td class="r mono">$23.63</td><td class="r mono">38</td><td class="r">8%</td></tr>
+        <tr><td><code>nutriscience labs</code></td><td><span class="chip crit">Broad</span> <span class="chip ok">paused 2 Sep</span></td><td class="r mono">$16.73</td><td class="r mono">28</td><td class="r">5%</td></tr>
       </tbody>
     </table>
   </div>
+
+  <p class="small muted" style="margin-top:10px">The seven NutraScience-family terms were retired outright rather
+  than converted to phrase &mdash; the competitor is closed, and its name accounted for <b>92% of August spend</b>
+  ($283.86 of $307.49). What serves on Competitors now is seven other competitor names on phrase match.</p>
 
   <h3 style="margin-top:22px">What broad matching bought before it was retired</h3>
   <div class="tablecard">
@@ -339,9 +359,9 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
     <h3>The same pattern as v1, one month deeper</h3>
     <p class="small">Rankings improved by more than three positions and impressions rose nearly 9%, and clicks fell a
     fifth. The site is surfacing more often on searches it is not the chosen answer for.</p>
-    <p class="small" style="margin-bottom:0">Of the 66 clicks Google attributes to a specific term in August,
-    <b>61 are the brand name</b>. Everything that is not someone typing &ldquo;mineralife&rdquo; produced
-    <b>five clicks</b> across the whole month.</p>
+    <p class="small" style="margin-bottom:0">Of the 71 clicks Google attributes to a specific term in August,
+    <b>63 are the brand name</b>. Everything that is not someone typing &ldquo;mineralife&rdquo; produced
+    <b>eight clicks</b> across the whole month, spread over seven queries. July was 90 of 97.</p>
   </div>
 
   <div class="tablecard" style="margin-top:16px">
@@ -349,8 +369,11 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
       <thead><tr><th>Non-brand query</th><th class="r">Impressions</th><th class="r">Clicks</th><th class="r">Position</th></tr></thead>
       <tbody>
         <tr><td><code>dietary supplement manufacturers usa</code></td><td class="r mono">150</td><td class="r mono">1</td><td class="r mono">1.0</td></tr>
+        <tr><td><code>supplement manufacturer in the usa</code></td><td class="r mono">89</td><td class="r mono">1</td><td class="r mono">6.8</td></tr>
         <tr><td><code>gmp vs nsf certified</code></td><td class="r mono">33</td><td class="r mono">2</td><td class="r mono">2.9</td></tr>
         <tr><td><code>dietary supplement manufacturers in usa</code></td><td class="r mono">10</td><td class="r mono">1</td><td class="r mono">1.0</td></tr>
+        <tr><td><code>nutrition supplement manufacturers</code></td><td class="r mono">4</td><td class="r mono">1</td><td class="r mono">33.0</td></tr>
+        <tr><td><code>private label supplement manufacturers</code></td><td class="r mono">3</td><td class="r mono">1</td><td class="r mono">44.7</td></tr>
         <tr><td><code>food supplement manufacturers in usa</code></td><td class="r mono">2</td><td class="r mono">1</td><td class="r mono">1.0</td></tr>
       </tbody>
     </table>
@@ -360,16 +383,18 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
   titles-and-descriptions problem on the site. That exact term is now also a paid keyword in the USA Manufacturer ad
   group, so the two can be read against each other.</p>
 
-  <h3 style="margin-top:24px">Index health &mdash; rescanned 1 September</h3>
+  <h3 style="margin-top:24px">Index health &mdash; rescanned 2 September, after the indexing requests</h3>
   <div class="grid g4" style="margin-top:12px">
-    <div class="stat good"><span class="num">59/63</span><span class="lbl">Pages indexed</span><span class="sub">93.7% of the sitemap.</span></div>
-    <div class="stat warn"><span class="num">4</span><span class="lbl">Still not indexed</span><span class="sub">Unchanged from v1 &mdash; none actioned.</span></div>
+    <div class="stat good"><span class="num">60/63</span><span class="lbl">Pages indexed</span><span class="sub">95.2% of the sitemap, up from 59.</span></div>
+    <div class="stat warn"><span class="num">3</span><span class="lbl">Still not indexed</span><span class="sub">One fewer: Las Vegas was indexed within hours of the request.</span></div>
     <div class="stat good"><span class="num">0</span><span class="lbl">Sitemap errors</span><span class="sub">63 URLs submitted, clean.</span></div>
-    <div class="stat good"><span class="num">0</span><span class="lbl">New problems</span><span class="sub">Nothing opened or regressed this month.</span></div>
+    <div class="stat accent"><span class="num">1</span><span class="lbl">New entry</span><span class="sub">The hiring post's clean address &mdash; not yet known to Google, expected.</span></div>
   </div>
-  <p class="small muted" style="margin-top:12px">The same four: the hiring post whose address contains an emoji
-  character, <code>/serving/colorado/boulder</code>, <code>/serving/nevada/las-vegas</code>, and the glutathione blog
-  post. The emoji URL is about fifteen minutes of work and is the only one with an obvious fix.</p>
+  <p class="small muted" style="margin-top:12px">The emoji URL is fixed: the post now lives at
+  <code>/blog/mineralife-is-hiring</code> and the old emoji address redirects to it (verified, 308). Google has not
+  yet seen the new address, so it needs its own indexing request. <code>/serving/colorado/boulder</code> and the
+  glutathione post remain &ldquo;discovered, not indexed&rdquo;; both are now linked from pages Google already
+  crawls (shipped 2 September), which is the standard remedy, and the next scan will show whether it took.</p>
 </section>
 
 <section id="s8">
@@ -389,7 +414,8 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
         <tr><td>Conversion goals</td><td class="mono">campaign-specific: Submit lead form</td><td><span class="chip ok">set at creation</span></td></tr>
         <tr><td>Negatives</td><td class="mono">mineralife-exclusion-2026 (174 terms)</td><td><span class="chip ok">attached</span></td></tr>
         <tr><td>URL suffix</td><td class="mono">utm_campaign=b2b-core-2026-09</td><td><span class="chip ok">verified</span></td></tr>
-        <tr><td>Sitelinks</td><td class="mono">6 attached</td><td><span class="chip ok">live</span></td></tr>
+        <tr><td>Sitelinks</td><td class="mono">6 attached, 5 approved</td><td><span class="chip warn">Toll Filling disapproved</span></td></tr>
+        <tr><td>Serving status</td><td class="mono">Eligible &middot; bidding strategy learning</td><td><span class="chip warn">0 impressions in first 8 hours</span></td></tr>
       </tbody>
     </table>
   </div>
@@ -399,15 +425,16 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
     <table>
       <thead><tr><th>Ad group</th><th>Keywords</th><th>Lands on</th><th>Ad</th></tr></thead>
       <tbody>
-        <tr><td>Nutraceutical</td><td class="small">&ldquo;nutraceutical contract manufacturer&rdquo; (phrase + exact), manufacturing, manufacturer</td><td class="mono small">/lp/nutraceutical-…</td><td><span class="chip warn">in review</span></td></tr>
-        <tr><td>cGMP Certified</td><td class="small">&ldquo;gmp certified supplement manufacturer&rdquo; (phrase + exact), cgmp, nsf certified</td><td class="mono small">/lp/gmp-certified-…</td><td><span class="chip warn">in review</span></td></tr>
-        <tr><td>USA Manufacturer</td><td class="small">supplement manufacturer usa &middot; dietary &middot; best &middot; manufacturers in usa</td><td class="mono small">/lp/contract-manufacturing</td><td><span class="chip warn">in review</span></td></tr>
+        <tr><td>Nutraceutical</td><td class="small">&ldquo;nutraceutical contract manufacturer&rdquo; (phrase + exact), manufacturing, manufacturer</td><td class="mono small">/lp/nutraceutical-…</td><td><span class="chip ok">approved</span></td></tr>
+        <tr><td>cGMP Certified</td><td class="small">&ldquo;gmp certified supplement manufacturer&rdquo; (phrase + exact), cgmp, nsf certified</td><td class="mono small">/lp/gmp-certified-…</td><td><span class="chip ok">approved</span></td></tr>
+        <tr><td>USA Manufacturer</td><td class="small">supplement manufacturer usa &middot; dietary &middot; best &middot; manufacturers in usa</td><td class="mono small">/lp/contract-manufacturing</td><td><span class="chip ok">approved</span></td></tr>
       </tbody>
     </table>
   </div>
-  <p class="small muted" style="margin-top:10px">Ad review is Google's routine check on new ads &mdash; typically
-  hours, occasionally a day. The campaign spends nothing until they clear, which is why September&rsquo;s spend
-  reads $0 tonight. The head term (<code>contract supplement manufacturer</code>, $31 a click) is deliberately held
+  <p class="small muted" style="margin-top:10px">Google approved all three ads overnight, so review is no longer the
+  reason for $0. The campaign has been eligible for roughly eight US hours, overnight, on twelve phrase-and-exact
+  terms with no history &mdash; zero impressions in that window is not yet a signal. If it is still at zero after
+  a full US business day, the $12 cap against $8&ndash;19 estimated clicks is the first thing to raise. The head term (<code>contract supplement manufacturer</code>, $31 a click) is deliberately held
   for October, once there is a conversion signal to justify it. White label stays out with &ldquo;private
   label&rdquo; ruled out.</p>
 
@@ -444,19 +471,26 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
       <h3>The ad was rebuilt, not patched</h3>
       <p class="small" style="margin-bottom:0">Fifteen new headlines drawn from approved site copy, pinned in three
       rotating groups of five &mdash; intent, differentiator, qualifier &mdash; replacing eleven near-duplicates and
-      the pinned competitor-trademark headline. Display path <code>/switch/transfer</code>. Approved and serving.</p>
+      the pinned competitor-trademark headline. Display path <code>/switch/transfer</code>. Approved and serving.
+      Google rates its ad strength <em>Poor</em> (the Switching Intent ad is <em>Average</em>) &mdash; pinning all
+      fifteen headlines into three slots is what drives that rating, and it is a deliberate trade for message
+      control.</p>
     </div>
-    <div class="card rail good">
-      <h3>A second audience, separated</h3>
+    <div class="card rail warn">
+      <h3>A second audience, separated &mdash; but barely eligible</h3>
       <p class="small" style="margin-bottom:0">A new <b>Switching Intent</b> ad group &mdash; eight phrase/exact terms
       like &ldquo;switch supplement manufacturer&rdquo; and &ldquo;supplement manufacturer not responding&rdquo; &mdash;
-      with its own approved ad. Competitor-name searches and I-want-out searches now report separately.</p>
+      with its own approved ad. Competitor-name searches and I-want-out searches now report separately. The
+      caveat this re-run found: Google flags <b>seven of the eight terms as rarely served</b> &mdash; too little
+      search volume to be eligible until it appears. Only <code>new supplement manufacturer</code> is serving. Treat
+      the ad group as a listening post, not a traffic source.</p>
     </div>
     <div class="card rail good">
       <h3>Waste controls, all live</h3>
       <p class="small" style="margin-bottom:0">Broad match paused across the board. 174 negatives attached. Search
       Partners off. Eight rewritten sitelinks (the old set included one pointing at a 404 and four at redirect
-      chains). Five callouts. All verified against the API tonight.</p>
+      chains) &mdash; seven approved; <b>Toll Filling is disapproved on both campaigns</b> although its page returns
+      200, so the reason needs reading in the Ads UI. Five callouts. All re-verified against the API this morning.</p>
     </div>
   </div>
 
@@ -472,17 +506,21 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
     <table>
       <thead><tr><th style="width:34px"></th><th>Task</th><th>Impact</th><th>Where</th></tr></thead>
       <tbody>
-        <tr><td class="mono">1</td><td><b>Move enquiries through pipeline stages, upload outcomes to Google</b><span class="small muted"> &mdash; the compounding one. With Analytics seeing ~3% of visitors, offline upload is close to the only way bidding learns. Not a technical task; needs the pipeline used.</span></td><td><span class="chip crit">Highest value</span></td><td class="small">Sales team</td></tr>
+        <tr><td class="mono">1</td><td><b>Move enquiries through pipeline stages, upload outcomes to Google</b><span class="small muted"> &mdash; the compounding one. With Analytics seeing 8% of visitors at best, offline upload is close to the only way bidding learns. Not a technical task; needs the pipeline used.</span></td><td><span class="chip crit">Highest value</span></td><td class="small">Sales team</td></tr>
         <tr><td class="mono">2</td><td><b>Confirm the &ldquo;FDA Registered Facility&rdquo; claim</b><span class="small muted"> &mdash; live in the ad, absent from site copy</span></td><td><span class="chip warn">High</span></td><td class="small">Mineralife</td></tr>
-        <tr><td class="mono">3</td><td><b>Watch the Core Terms ad review clear, then confirm delivery starts</b></td><td><span class="chip warn">High</span></td><td class="small">Ads UI</td></tr>
+        <tr><td class="mono">3</td><td><b>Confirm Core Terms starts serving</b><span class="small muted"> &mdash; ads approved, campaign eligible, zero impressions in its first eight hours; raise the $12 cap if a full US day passes at zero</span></td><td><span class="chip warn">High</span></td><td class="small">Ads UI</td></tr>
         <tr><td class="mono">4</td><td><b>Delete the demoted form_submission import</b></td><td><span class="chip">Low</span></td><td class="small">Ads UI</td></tr>
-        <tr><td class="mono">5</td><td><b>Republish the emoji-URL blog post and redirect</b></td><td><span class="chip">Low</span></td><td class="small">Site</td></tr>
+        <tr><td class="mono">5</td><td><b>Request indexing for <code>/blog/mineralife-is-hiring</code></b><span class="small muted"> &mdash; republished and redirected on 2 September; Google has not yet seen the new address</span></td><td><span class="chip">Low</span></td><td class="small">Search Console</td></tr>
+        <tr><td class="mono">6</td><td><b>Read the Toll Filling sitelink disapproval and fix or drop it</b><span class="small muted"> &mdash; disapproved on both B2B campaigns</span></td><td><span class="chip">Low</span></td><td class="small">Ads UI</td></tr>
+        <tr><td class="mono">7</td><td><b>Set <code>generate_lead</code> counting to One per click</b><span class="small muted"> &mdash; currently Every, which would count a double submission twice</span></td><td><span class="chip">Low</span></td><td class="small">Ads UI</td></tr>
+        <tr><td class="mono">8</td><td><b>Exclude developer traffic from Analytics</b><span class="small muted"> &mdash; 12 August sessions came from <code>localhost:3000</code></span></td><td><span class="chip">Low</span></td><td class="small">Analytics admin</td></tr>
       </tbody>
     </table>
   </div>
 
   <p class="small muted" style="margin-top:12px">That is the whole list. Ten of the twelve items that stood on this
-  list in the morning draft were closed today.</p>
+  list in the morning draft were closed the same day, and the emoji URL closed a few hours later. This re-run added
+  three small items; none of them blocks anything.</p>
 </section>
 
 <section id="s11">
@@ -514,12 +552,20 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
       roughly 590 searches a month from reach and takes the white-label ad group below the threshold where its
       landing page earns its keep.</p>
     </div>
+    <div class="card">
+      <h3>5. Phone calls from ads <span class="chip warn">new</span></h3>
+      <p class="small" style="margin-bottom:0">Competitors carries a call asset, and &ldquo;Calls from ads&rdquo; is
+      a primary action at account level &mdash; but the campaign's Submit-lead-form-only goal means a phone lead
+      from an ad is not a conversion the campaign can see or bid toward. With 79% of clicks on mobile that is either
+      a real gap or a deliberate choice. Decide which; adding the phone-call category to the campaign goals is a
+      two-minute change if it is the former.</p>
+    </div>
   </div>
 </section>
 
 <section id="s12">
   <div class="sec-label"><span class="n">12</span><h2>Verified configuration, 2 September</h2></div>
-  <p class="small muted">Read directly from the Google systems after the rebuild, late on 2 September.</p>
+  <p class="small muted">Read directly from the Google systems on 2 September, six hours after the rebuild.</p>
 
   <div class="tablecard" style="margin-top:14px">
     <table>
@@ -530,17 +576,23 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
         <tr><td>Campaign goals, Core Terms</td><td class="small">campaign-specific: Submit lead form only</td><td><span class="chip ok">correct</span></td></tr>
         <tr><td>form_submission import</td><td class="small">enabled, demoted from primary</td><td><span class="chip warn">delete when convenient</span></td></tr>
         <tr><td>Competitors keywords</td><td class="small">7 phrase (competitor) + 8 phrase/exact (switching); 13 broad paused</td><td><span class="chip ok">correct</span></td></tr>
+        <tr><td>Switching Intent eligibility</td><td class="small">7 of 8 terms rarely served; 1 serving</td><td><span class="chip warn">listening post</span></td></tr>
+        <tr><td>generate_lead counting</td><td class="small">Every conversion, 90-day click window</td><td><span class="chip warn">set to One per click</span></td></tr>
         <tr><td>Competitors landing page</td><td class="small">/lp/switch-manufacturers</td><td><span class="chip ok">correct</span></td></tr>
         <tr><td>Negative keywords</td><td class="small">mineralife-exclusion-2026, 174 terms, both B2B campaigns</td><td><span class="chip ok">attached</span></td></tr>
         <tr><td>Search Partners</td><td class="small">off on both B2B campaigns</td><td><span class="chip ok">correct</span></td></tr>
         <tr><td>Core Terms targeting</td><td class="small">United States, Presence; $12 CPC cap; suffix set</td><td><span class="chip ok">correct</span></td></tr>
-        <tr><td>Core Terms ads</td><td class="small">3 RSAs, 15 headlines each, correct pages and paths</td><td><span class="chip warn">in review</span></td></tr>
+        <tr><td>Core Terms ads</td><td class="small">3 RSAs, 15 headlines each, correct pages and paths</td><td><span class="chip ok">approved, eligible</span></td></tr>
+        <tr><td>Core Terms delivery</td><td class="small">eligible, bidding strategy learning; 0 impressions in first 8 hours</td><td><span class="chip warn">watch</span></td></tr>
+        <tr><td>Sitelinks, both B2B campaigns</td><td class="small">Competitors 8, Core Terms 6; Toll Filling disapproved on both</td><td><span class="chip warn">one to fix</span></td></tr>
         <tr><td>Regional campaign</td><td class="small">paused</td><td><span class="chip ok">correct</span></td></tr>
         <tr><td>Analytics key events</td><td class="small"><code>generate_lead</code>, <code>catalog_download</code>, <code>purchase</code></td><td><span class="chip warn">purchase cannot be removed</span></td></tr>
         <tr><td>Retention / dimensions / timezone / stream</td><td class="small">14 months / 13 incl. <code>form_location</code> / America/Denver / correct domain</td><td><span class="chip ok">correct</span></td></tr>
         <tr><td>Tag Manager</td><td class="small">version 13 live, forwards <code>form_location</code>, dead tags removed</td><td><span class="chip ok">correct</span></td></tr>
         <tr><td>Landing pages</td><td class="small">6 live, all 200, excluded from the organic index</td><td><span class="chip ok">correct</span></td></tr>
         <tr><td>Enquiry event integrity</td><td class="small"><code>form_submit</code> 9 : <code>generate_lead</code> 9 in August</td><td><span class="chip ok">1:1</span></td></tr>
+        <tr><td>Index coverage</td><td class="small">60 of 63 sitemap URLs indexed; 3 open, 1 new clean-slug URL</td><td><span class="chip ok">improving</span></td></tr>
+        <tr><td>Cookieless counter</td><td class="small">live; 237 visitors 31 Aug&ndash;2 Sep, 53% US</td><td><span class="chip ok">correct</span></td></tr>
       </tbody>
     </table>
   </div>
@@ -555,7 +607,7 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
       <li><b>Sessions and funnel steps</b> &mdash; Google Analytics property 395780153. A floor, not a total; see
       section 04.</li>
       <li><b>Organic search and index health</b> &mdash; Search Console for the domain property, rescanned
-      1 September.</li>
+      2 September; search-analytics rows run to 30 August, the newest Google had published.</li>
       <li><b>Keyword costs</b> &mdash; third-party US estimates pulled 30 August, used only where the account has no
       history of its own yet.</li>
     </ul>
@@ -566,8 +618,8 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
   Tall Karol &middot; SEM Report v2 &middot; Mineralife Nutraceuticals, LLC &middot; supersedes the August 2026
   report &middot; configuration and performance re-verified against Google Ads account 624-370-2566, Google
   Analytics property 395780153, Search Console <code>sc-domain:mycustommanufacturer.com</code>, Tag Manager
-  container GTM-5B83HMG and the production site &middot; last full verification 2 September 2026, following the
-  same-day account rebuild
+  container GTM-5B83HMG and the production site &middot; last full verification 2 September 2026, a complete
+  re-run six hours after the same-day account rebuild
 </footer>
 
 </div>

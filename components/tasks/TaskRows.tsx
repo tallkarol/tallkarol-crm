@@ -31,7 +31,9 @@ export function TaskRows({
   /** Where the peek query lands — the hub, or an entity page. */
   peekBase: string
 }) {
-  const { rows, groups } = layoutRows(tasks, sortBy, grouping)
+  const [hidden, setHidden] = useState<string[]>([])
+  const visible = tasks.filter((task) => !hidden.includes(task.id))
+  const { rows, groups } = layoutRows(visible, sortBy, grouping)
 
   if (rows.length === 0) {
     return (
@@ -67,7 +69,19 @@ export function TaskRows({
             </h3>
             <div className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
               {group.rows.map((row) => (
-                <Row key={row.id} row={row} peekBase={peekBase} />
+                <Row
+                  key={row.id}
+                  row={row}
+                  peekBase={peekBase}
+                  onHide={() =>
+                    setHidden((ids) =>
+                      ids.includes(row.id) ? ids : [...ids, row.id]
+                    )
+                  }
+                  onShow={() =>
+                    setHidden((ids) => ids.filter((id) => id !== row.id))
+                  }
+                />
               ))}
             </div>
           </section>
@@ -79,13 +93,33 @@ export function TaskRows({
   return (
     <div className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
       {rows.map((row) => (
-        <Row key={row.id} row={row} peekBase={peekBase} />
+        <Row
+          key={row.id}
+          row={row}
+          peekBase={peekBase}
+          onHide={() =>
+            setHidden((ids) => (ids.includes(row.id) ? ids : [...ids, row.id]))
+          }
+          onShow={() =>
+            setHidden((ids) => ids.filter((id) => id !== row.id))
+          }
+        />
       ))}
     </div>
   )
 }
 
-function Row({ row, peekBase }: { row: RenderRow; peekBase: string }) {
+function Row({
+  row,
+  peekBase,
+  onHide,
+  onShow,
+}: {
+  row: RenderRow
+  peekBase: string
+  onHide: () => void
+  onShow: () => void
+}) {
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [done, setDone] = useState(row.status === "done")
@@ -100,9 +134,15 @@ function Row({ row, peekBase }: { row: RenderRow; peekBase: string }) {
   function toggle() {
     const next = !done
     setDone(next)
+    if (next) onHide()
+    else onShow()
     startTransition(async () => {
       const result = await setTaskDone(row.id, next)
-      if (!result.ok) setDone(!next)
+      if (!result.ok) {
+        setDone(!next)
+        if (next) onShow()
+        else onHide()
+      }
       router.refresh()
     })
   }

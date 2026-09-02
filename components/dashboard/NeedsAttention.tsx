@@ -59,9 +59,17 @@ export function NeedsAttention({
   const [groups, setGroups] = useState(initialGroups)
   const [layout, setLayout] = useState<Layout>("rows")
   const [completing, setCompleting] = useState<string[]>([])
+  const [dismissed, setDismissed] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => setGroups(initialGroups), [initialGroups])
+  useEffect(() => {
+    setGroups(
+      initialGroups.map((group) => ({
+        ...group,
+        items: group.items.filter((item) => !dismissed.includes(item.id)),
+      }))
+    )
+  }, [initialGroups, dismissed])
   useEffect(() => {
     const saved = window.localStorage.getItem(LAYOUT_KEY)
     if (saved === "rows" || saved === "cards") setLayout(saved)
@@ -104,23 +112,15 @@ export function NeedsAttention({
 
   function complete(groupId: string, itemId: string) {
     setCompleting((ids) => [...ids, itemId])
+    setDismissed((ids) => (ids.includes(itemId) ? ids : [...ids, itemId]))
     startTransition(async () => {
       const result = await setTaskDone(itemId, true)
       setCompleting((ids) => ids.filter((id) => id !== itemId))
       if (!result.ok) {
+        setDismissed((ids) => ids.filter((id) => id !== itemId))
         setError(result.error)
         return
       }
-      setGroups((rows) =>
-        rows.map((group) =>
-          group.id === groupId
-            ? {
-                ...group,
-                items: group.items.filter((item) => item.id !== itemId),
-              }
-            : group
-        )
-      )
       setError(null)
       router.refresh()
     })

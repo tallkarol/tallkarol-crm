@@ -35,6 +35,7 @@ import {
   NotebookText,
   Package,
   KeyRound,
+  Layers,
   ScrollText,
 } from "lucide-react"
 import type { NavIconName } from "@/lib/nav"
@@ -74,6 +75,7 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   uptime: MonitorCheck,
   notebooks: NotebookText,
   vault: KeyRound,
+  scaffolds: Layers,
   product: Package,
   settings: Settings,
   team: UserCog,
