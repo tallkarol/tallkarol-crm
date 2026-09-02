@@ -191,6 +191,7 @@ export function FloatingClock({ initial }: { initial: PunchView[] }) {
   return (
     <div
       ref={ref}
+      data-chrome="clock"
       role="region"
       aria-label="Running clock"
       style={

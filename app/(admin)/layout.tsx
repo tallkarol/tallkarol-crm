@@ -51,6 +51,20 @@ export default async function AdminLayout({
           __html: `window.${COLOR_GLOBAL}=${JSON.stringify(colors)}`,
         }}
       />
+      {/*
+        Embedded chrome. The Mac app's Settings window opens CRM settings
+        pages with `?embed=settings`; that turns off the sidebar, top bar and
+        floating clock (see `[data-chrome]` in globals.css) so the page reads
+        as a settings pane, not the whole CRM inside a settings window. The
+        flag is remembered per browsing context, so client-side navigation
+        inside that web view keeps it without carrying the query string.
+      */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html:
+            "try{var p=new URLSearchParams(location.search).get('embed');if(p)sessionStorage.setItem('tk-embed',p);var m=p||sessionStorage.getItem('tk-embed');if(m)document.documentElement.dataset.embed=m}catch(e){}",
+        }}
+      />
     <AppShell
       email={user.email}
       badges={badges}

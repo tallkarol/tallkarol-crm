@@ -69,3 +69,19 @@ body {
 .tk-payload .tk-add {
   color: #7fd6a5;
 }
+
+/* Embedded settings pane — the Mac app's Settings window (see admin layout). */
+html[data-embed="settings"] [data-chrome] {
+  display: none !important;
+}
+html[data-embed="settings"] body,
+html[data-embed="settings"] main {
+  background: #f3f3f5;
+}
+html[data-embed="settings"] main > div {
+  max-width: 58rem;
+  padding: 1.25rem 1.75rem 2.5rem;
+}
+html[data-embed="settings"] main h1 {
+  font-size: 1.25rem;
+}

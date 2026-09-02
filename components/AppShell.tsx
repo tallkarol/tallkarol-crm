@@ -77,6 +77,7 @@ export function AppShell({
       </a>
 
       <aside
+        data-chrome="sidebar"
         className={cn(
           "hidden h-full shrink-0 flex-col border-r border-tk-slate/10 bg-white md:flex",
           "transition-[width] duration-200 ease-out motion-reduce:transition-none",
@@ -120,7 +121,10 @@ export function AppShell({
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-tk-slate/10 bg-white/95 px-4 backdrop-blur-md md:hidden">
+        <header
+          data-chrome="topbar"
+          className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-tk-slate/10 bg-white/95 px-4 backdrop-blur-md md:hidden"
+        >
           <BrandMark />
           <button
             type="button"

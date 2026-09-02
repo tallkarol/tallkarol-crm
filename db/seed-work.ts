@@ -25,6 +25,12 @@ import { CAPS_LAUNCH_SESSIONS } from "./caps-hours"
 import { GDI_AUGUST_SESSIONS, GDI_JULY_SESSIONS } from "./gdi-hours"
 import { IDS } from "./seed-ids"
 
+/**
+ * Re-runnable: rows are upserted by fixed id. On conflict the seed refreshes
+ * fixture-owned fields only. It never writes `status`, `feeStatus` or `notes`
+ * over an existing row — those are edited live in the CRM, and a seed run on
+ * Sep 2 2026 silently flipped a paid invoice back to "sent" (four times).
+ */
 async function main() {
   loadLocalEnv()
   const url = process.env.DATABASE_URL
@@ -89,7 +95,6 @@ async function main() {
       target: clients.id,
       set: {
         name: sql`excluded.name`,
-        notes: sql`excluded.notes`,
         updatedAt: new Date(),
       },
     })
@@ -132,10 +137,8 @@ async function main() {
       set: {
         hoursPerMonth: sql`excluded.hours_per_month`,
         rateCents: sql`excluded.rate_cents`,
-        status: sql`excluded.status`,
         startsOn: sql`excluded.starts_on`,
         endsOn: sql`excluded.ends_on`,
-        notes: sql`excluded.notes`,
         updatedAt: new Date(),
       },
     })
@@ -253,9 +256,6 @@ async function main() {
     .onConflictDoUpdate({
       target: projects.id,
       set: {
-        status: sql`excluded.status`,
-        feeStatus: sql`excluded.fee_status`,
-        notes: sql`excluded.notes`,
         links: sql`excluded.links`,
         retainerId: sql`excluded.retainer_id`,
         updatedAt: new Date(),
@@ -291,7 +291,6 @@ async function main() {
         slug: sql`excluded.slug`,
         kind: sql`excluded.kind`,
         clientId: sql`excluded.client_id`,
-        notes: sql`excluded.notes`,
         sort: sql`excluded.sort`,
         updatedAt: new Date(),
       },
@@ -351,8 +350,6 @@ async function main() {
       set: {
         name: sql`excluded.name`,
         tagline: sql`excluded.tagline`,
-        status: sql`excluded.status`,
-        notes: sql`excluded.notes`,
         sort: sql`excluded.sort`,
         studioId: sql`excluded.studio_id`,
         clientId: sql`excluded.client_id`,
@@ -486,7 +483,6 @@ async function main() {
     .onConflictDoUpdate({
       target: deliverables.id,
       set: {
-        status: sql`excluded.status`,
         title: sql`excluded.title`,
         dueOn: sql`excluded.due_on`,
       },
@@ -554,7 +550,6 @@ async function main() {
       target: workstreams.id,
       set: {
         title: sql`excluded.title`,
-        notes: sql`excluded.notes`,
         sort: sql`excluded.sort`,
         updatedAt: new Date(),
       },
@@ -785,8 +780,6 @@ async function main() {
       target: tasks.id,
       set: {
         title: sql`excluded.title`,
-        status: sql`excluded.status`,
-        notes: sql`excluded.notes`,
         dueOn: sql`excluded.due_on`,
         snoozedUntil: sql`excluded.snoozed_until`,
         clientId: sql`excluded.client_id`,
@@ -1099,9 +1092,7 @@ async function main() {
       set: {
         amountCents: sql`excluded.amount_cents`,
         hours: sql`excluded.hours`,
-        status: sql`excluded.status`,
         description: sql`excluded.description`,
-        notes: sql`excluded.notes`,
         billTo: sql`excluded.bill_to`,
         updatedAt: new Date(),
       },
@@ -1212,14 +1203,12 @@ async function main() {
       target: contracts.id,
       set: {
         title: sql`excluded.title`,
-        status: sql`excluded.status`,
         feeCents: sql`excluded.fee_cents`,
         counterparty: sql`excluded.counterparty`,
         governingLaw: sql`excluded.governing_law`,
         venue: sql`excluded.venue`,
         extraRateCents: sql`excluded.extra_rate_cents`,
         terms: sql`excluded.terms`,
-        notes: sql`excluded.notes`,
         effectiveOn: sql`excluded.effective_on`,
         updatedAt: new Date(),
       },
@@ -1296,8 +1285,6 @@ async function main() {
         slug: sql`excluded.slug`,
         bodyPath: sql`excluded.body_path`,
         periodLabel: sql`excluded.period_label`,
-        status: sql`excluded.status`,
-        notes: sql`excluded.notes`,
         updatedAt: new Date(),
       },
     })
@@ -1305,6 +1292,20 @@ async function main() {
   await db
     .insert(proposals)
     .values([
+      {
+        id: IDS.proposals.pageToReport,
+        title: "Page to Report",
+        slug: "page-to-report",
+        bodyPath: "proposals/page-to-report.html",
+        clientId: IDS.clients.mineralife,
+        retainerId: IDS.retainers.mineralife,
+        series: "",
+        seriesPart: null,
+        seriesOf: null,
+        status: "draft",
+        notes:
+          "Consolidates the three-part series into one document, rewritten against the systems as they stood on 2 September. Section 07 is a 41-increment ledger with a stable id per increment — 11 done, 1 partial, 1 superseded, 28 outstanding — which is what the tasks are cut from.",
+      },
       {
         id: IDS.proposals.pageToClaim,
         title: "Page to Claim",
@@ -1316,7 +1317,8 @@ async function main() {
         seriesPart: 1,
         seriesOf: 3,
         status: "draft",
-        notes: "Part 1 of 3. Relocated from proposals/wip/page-to-claim.html.",
+        notes:
+          "Part 1 of 3. Superseded by page-to-report; kept for the working it shows. Movement one is still entirely unbuilt as of 2 September.",
       },
       {
         id: IDS.proposals.queryToLead,
@@ -1329,7 +1331,8 @@ async function main() {
         seriesPart: 2,
         seriesOf: 3,
         status: "draft",
-        notes: "Part 2 of 3. Relocated from proposals/wip/query-to-lead.html.",
+        notes:
+          "Part 2 of 3. Superseded by page-to-report. Several findings have since gone stale — the Ads client exists, the landing pages ship a form, and private label was ruled out rather than bought.",
       },
       {
         id: IDS.proposals.pullToReport,
@@ -1342,7 +1345,8 @@ async function main() {
         seriesPart: 3,
         seriesOf: 3,
         status: "draft",
-        notes: "Part 3 of 3. Relocated from proposals/wip/pull-to-report.html.",
+        notes:
+          "Part 3 of 3. Superseded by page-to-report. Its central complaint is fixed: tallkarol-cron runs every 15 minutes. The job registry it assumed still does not exist.",
       },
     ])
     .onConflictDoUpdate({
@@ -1354,8 +1358,6 @@ async function main() {
         series: sql`excluded.series`,
         seriesPart: sql`excluded.series_part`,
         seriesOf: sql`excluded.series_of`,
-        status: sql`excluded.status`,
-        notes: sql`excluded.notes`,
         updatedAt: new Date(),
       },
     })
@@ -1402,12 +1404,10 @@ async function main() {
           instrument: sql`excluded.instrument`,
           version: sql`excluded.version`,
           mode: sql`excluded.mode`,
-          status: sql`excluded.status`,
           filledOn: sql`excluded.filled_on`,
           questionCount: sql`excluded.question_count`,
           openCount: sql`excluded.open_count`,
           internal: sql`excluded.internal`,
-          notes: sql`excluded.notes`,
           updatedAt: new Date(),
         },
       })
