@@ -85,6 +85,13 @@ one per device, shown once, stored as a SHA-256 hash, revocable individually.
 That page also sets the workspace timezone — the zone a punch's timestamps
 resolve into a day and a `4:13 PM` wall-clock string for the sheet.
 
+Clients have zones of their own — what "Friday at 2" means when it is said in
+the client's terms. They live in one `app_settings` row (`client_timezones`:
+a default plus per-slug overrides) and are managed with `npm run client:tz`;
+`GET /api/time/agent-log?client=` returns both zones so `/follow-up` can put a
+client meeting at the right instant while the sheet keeps counting days in the
+workspace zone.
+
 ## Agent hours
 
 `/log-session` (in the daedalus-hive-mind plugin) turns the agent meter — when

@@ -30,6 +30,7 @@
     "smartsheet:sync": "tsx scripts/smartsheet-sync.ts",
     "client:domains": "tsx scripts/client.ts",
     "client:suggest": "tsx scripts/client.ts suggest",
+    "client:tz": "tsx scripts/client-tz.ts",
     "db:dry-run": "tsx scripts/migrate-dry-run.ts",
     "check:punch": "tsx scripts/check-punch.ts",
     "icons": "python3 scripts/make-icons.py",

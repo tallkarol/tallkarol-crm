@@ -12,6 +12,7 @@ import {
   unauthorized,
 } from "@/lib/time-api"
 import { workspaceTimezone } from "@/lib/timezone"
+import { clientTimezoneFor } from "@/lib/client-timezone"
 
 export const dynamic = "force-dynamic"
 
@@ -72,9 +73,11 @@ export async function POST(request: Request) {
 }
 
 /**
- * GET ?client=<slug> — does this slug exist, and what projects can a
- * proposal file under. `/api/time/projects` is not enough here: it lists
- * punch targets, which skip clients with no retainer and no punch history.
+ * GET ?client=<slug> — does this slug exist, what projects can a proposal
+ * file under, the workspace zone (what a day means on the sheet) and the
+ * client's own zone (what a meeting time means). `/api/time/projects` is not
+ * enough here: it lists punch targets, which skip clients with no retainer
+ * and no punch history.
  */
 export async function GET(request: Request) {
   const caller = await authenticateTimeRequest(request)
@@ -96,7 +99,12 @@ export async function GET(request: Request) {
     : []
 
   return NextResponse.json(
-    { client: client ?? null, projects: rows, timezone: await workspaceTimezone() },
+    {
+      client: client ?? null,
+      projects: rows,
+      timezone: await workspaceTimezone(),
+      clientTimezone: client ? await clientTimezoneFor(client.slug) : null,
+    },
     { headers: { "cache-control": "no-store" } }
   )
 }
