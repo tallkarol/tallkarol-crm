@@ -4,6 +4,7 @@ import { db } from "@/db"
 import { magicLinks, portalGrants, sessions, users } from "@/db/schema"
 import {
   SESSION_COOKIE,
+  SESSION_COOKIE_TTL_MS,
   SESSION_TTL_MS,
   MAGIC_LINK_TTL_MS,
   hashToken,
@@ -12,7 +13,17 @@ import {
 } from "@/lib/crypto"
 import { Resend } from "resend"
 
-export async function requestMagicLink(emailRaw: string) {
+/**
+ * `app` marks a request that came from the native TallKarol app. Its link
+ * carries `app=1`, and the callback hands the token back through the
+ * `tallkarol://` URL scheme instead of consuming it in the browser — the
+ * browser's cookie jar is not the app's, so a link finished in Safari would
+ * leave the app signed out.
+ */
+export async function requestMagicLink(
+  emailRaw: string,
+  options: { app?: boolean } = {}
+) {
   const email = emailRaw.trim().toLowerCase()
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { ok: true as const }
@@ -38,7 +49,7 @@ export async function requestMagicLink(emailRaw: string) {
   })
 
   const appUrl = process.env.APP_URL || "http://localhost:3001"
-  const link = `${appUrl}/auth/callback?token=${token}`
+  const link = `${appUrl}/auth/callback?token=${token}${options.app ? "&app=1" : ""}`
   const from = process.env.RESEND_FROM_EMAIL || "hello@tallkarol.com"
   const key = process.env.RESEND_API_KEY
 
@@ -155,6 +166,18 @@ export async function getSessionUser() {
 
   if (!row) return null
   if (row.user.role !== "admin") return null
+
+  // Sliding expiry: a session that keeps being used keeps living. Extended
+  // once it is past halfway rather than on every request, and best-effort —
+  // a failed touch must never cost a page load.
+  if (row.expiresAt.getTime() - now.getTime() < SESSION_TTL_MS / 2) {
+    void db
+      .update(sessions)
+      .set({ expiresAt: new Date(now.getTime() + SESSION_TTL_MS) })
+      .where(eq(sessions.id, row.sessionId))
+      .catch(() => {})
+  }
+
   return row.user
 }
 
@@ -172,6 +195,8 @@ export function sessionCookieOptions(expiresAt: Date) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
     path: "/",
-    expires: expiresAt,
+    // At least a year in the browser; the row's sliding expiry is the real
+    // lifetime. See SESSION_COOKIE_TTL_MS.
+    expires: new Date(Math.max(expiresAt.getTime(), Date.now() + SESSION_COOKIE_TTL_MS)),
   }
 }
