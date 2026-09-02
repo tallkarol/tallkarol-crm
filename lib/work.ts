@@ -1,5 +1,6 @@
 import type {
   Cadence,
+  ClientStatus,
   ContractStatus,
   DeliverableStatus,
   FeeStatus,
@@ -117,6 +118,89 @@ export const INVOICE_STATUS_LABEL: Record<InvoiceStatus, string> = {
   sent: "Sent",
   paid: "Paid",
 }
+
+export const CLIENT_STATUSES: ClientStatus[] = [
+  "new",
+  "proposal_submitted",
+  "in_negotiation",
+  "proposal_agreed",
+  "deposit_paid",
+  "project_started",
+  "deliverable_invoice_submitted",
+  "final_invoice_submitted",
+  "project_finished",
+  "active_retainer",
+  "lapsed_retainer",
+  "completed_work",
+  "in_contact",
+]
+
+export const CLIENT_STATUS_LABEL: Record<ClientStatus, string> = {
+  new: "New",
+  proposal_submitted: "Proposal submitted",
+  in_negotiation: "In negotiation",
+  proposal_agreed: "Proposal agreed",
+  deposit_paid: "Deposit paid",
+  project_started: "Project started",
+  deliverable_invoice_submitted: "Deliverable invoice submitted",
+  final_invoice_submitted: "Final invoice submitted",
+  project_finished: "Project finished",
+  active_retainer: "Active retainer",
+  lapsed_retainer: "Lapsed retainer",
+  completed_work: "Completed work",
+  in_contact: "In contact",
+}
+
+/** Chip colour for the client lifecycle — same tones the delivery menu uses. */
+export const CLIENT_STATUS_TONE: Record<
+  ClientStatus,
+  "progress" | "waiting" | "open" | "done" | "flat"
+> = {
+  new: "flat",
+  proposal_submitted: "progress",
+  in_negotiation: "open",
+  proposal_agreed: "progress",
+  deposit_paid: "done",
+  project_started: "progress",
+  deliverable_invoice_submitted: "open",
+  final_invoice_submitted: "open",
+  project_finished: "done",
+  active_retainer: "progress",
+  lapsed_retainer: "waiting",
+  completed_work: "flat",
+  in_contact: "waiting",
+}
+
+export const CLIENT_STATUS_GROUPS: { label: string; ids: ClientStatus[] }[] = [
+  {
+    label: "Pipeline",
+    ids: [
+      "new",
+      "in_contact",
+      "proposal_submitted",
+      "in_negotiation",
+      "proposal_agreed",
+      "deposit_paid",
+    ],
+  },
+  {
+    label: "Project",
+    ids: [
+      "project_started",
+      "deliverable_invoice_submitted",
+      "final_invoice_submitted",
+      "project_finished",
+    ],
+  },
+  {
+    label: "Retainer",
+    ids: ["active_retainer", "lapsed_retainer"],
+  },
+  {
+    label: "Closed",
+    ids: ["completed_work"],
+  },
+]
 
 export function plural(count: number, word: string) {
   return `${count} ${word}${count === 1 ? "" : "s"}`

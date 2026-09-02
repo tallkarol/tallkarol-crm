@@ -169,10 +169,31 @@ export const contractStatusEnum = pgEnum("contract_status", [
   "signed",
 ])
 
+/**
+ * Where the relationship is, not what work is attached. A client can have a
+ * finished project and an active retainer — this is the one status Karol sets.
+ */
+export const clientStatusEnum = pgEnum("client_status", [
+  "new",
+  "proposal_submitted",
+  "in_negotiation",
+  "proposal_agreed",
+  "deposit_paid",
+  "project_started",
+  "deliverable_invoice_submitted",
+  "final_invoice_submitted",
+  "project_finished",
+  "active_retainer",
+  "lapsed_retainer",
+  "completed_work",
+  "in_contact",
+])
+
 export const clients = pgTable("clients", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  status: clientStatusEnum("status").notNull().default("new"),
   /** Email domains that identify this client on a meeting invite. */
   domains: text("domains").array().notNull().default([]),
   /** Invoice profile: { billTo: string[], customerId, senderEmail }. */
@@ -1061,6 +1082,7 @@ export const worksheetsRelations = relations(worksheets, ({ one }) => ({
 }))
 
 export type Client = typeof clients.$inferSelect
+export type ClientStatus = (typeof clientStatusEnum.enumValues)[number]
 export type Retainer = typeof retainers.$inferSelect
 export type Project = typeof projects.$inferSelect
 export type ProductStudio = typeof productStudios.$inferSelect

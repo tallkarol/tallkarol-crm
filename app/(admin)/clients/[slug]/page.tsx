@@ -8,6 +8,7 @@ import { HoursMeter } from "@/components/clients/HoursMeter"
 import { LocalTime } from "@/components/clients/LocalTime"
 import { MeetingList } from "@/components/clients/MeetingList"
 import { NotesCard } from "@/components/clients/NotesCard"
+import { ClientStatusMenu } from "@/components/clients/ClientStatusMenu"
 import { StatusPill } from "@/components/clients/StatusPill"
 import type { PillTone } from "@/components/clients/StatusPill"
 import { TicketList } from "@/components/clients/TicketList"
@@ -102,7 +103,6 @@ export default async function ClientDetailPage({
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
   const overdueTasks = openTasks.filter((t) => t.dueOn && t.dueOn < today).length
 
-  const activeRetainers = client.retainers.filter((r) => r.status === "active")
   const activeProjects = client.projects.filter((p) => p.status !== "complete")
   // Finished work is worth keeping — the tracker carries months of it — but it
   // belongs behind a fold, not on top of what is still open.
@@ -186,9 +186,7 @@ export default async function ClientDetailPage({
               {client.name}
             </h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-              {activeRetainers.length > 0 ? (
-                <StatusPill tone="teal">Retainer · active</StatusPill>
-              ) : null}
+              <ClientStatusMenu clientId={client.id} status={client.status} />
               {activeProjects.length > 0 ? (
                 <StatusPill tone="neutral" dot={false}>
                   {activeProjects.length} active project
@@ -201,7 +199,6 @@ export default async function ClientDetailPage({
                   {client.products.length === 1 ? "" : "s"}
                 </StatusPill>
               ) : null}
-              {!hasWork ? <StatusPill tone="muted">Dormant</StatusPill> : null}
               {client.domains.map((domain) => (
                 <span key={domain} className="font-mono text-xs text-tk-slate/50">
                   @{domain}

@@ -1,0 +1,6 @@
+CREATE TYPE "public"."client_status" AS ENUM('new', 'proposal_submitted', 'in_negotiation', 'proposal_agreed', 'deposit_paid', 'project_started', 'deliverable_invoice_submitted', 'final_invoice_submitted', 'project_finished', 'active_retainer', 'lapsed_retainer', 'completed_work', 'in_contact');--> statement-breakpoint
+ALTER TABLE "clients" ADD COLUMN "status" "client_status" DEFAULT 'new' NOT NULL;--> statement-breakpoint
+UPDATE "clients" SET "status" = 'active_retainer' WHERE EXISTS (SELECT 1 FROM "retainers" WHERE "retainers"."client_id" = "clients"."id" AND "retainers"."status" = 'active');--> statement-breakpoint
+UPDATE "clients" SET "status" = 'project_started' WHERE "status" = 'new' AND EXISTS (SELECT 1 FROM "projects" WHERE "projects"."client_id" = "clients"."id" AND "projects"."status" <> 'complete');--> statement-breakpoint
+UPDATE "clients" SET "status" = 'lapsed_retainer' WHERE "status" = 'new' AND EXISTS (SELECT 1 FROM "retainers" WHERE "retainers"."client_id" = "clients"."id" AND "retainers"."status" IN ('paused', 'ended'));--> statement-breakpoint
+UPDATE "clients" SET "status" = 'completed_work' WHERE "status" = 'new' AND EXISTS (SELECT 1 FROM "projects" WHERE "projects"."client_id" = "clients"."id" AND "projects"."status" = 'complete');

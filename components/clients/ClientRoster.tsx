@@ -3,11 +3,13 @@
 import Link from "next/link"
 import { useMemo, useState } from "react"
 import { ClientAvatar } from "@/components/clients/ClientAvatar"
+import { ClientStatusMenu } from "@/components/clients/ClientStatusMenu"
 import { HoursMeter } from "@/components/clients/HoursMeter"
+import type { ClientStatus } from "@/db/schema"
 import type { RosterRow } from "@/lib/client-hub"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
-import { formatMoney } from "@/lib/work"
+import { CLIENT_STATUS_LABEL, CLIENT_STATUSES, formatMoney } from "@/lib/work"
 
 const FILTERS = [
   { id: "all", label: "All" },
@@ -33,6 +35,7 @@ function meetingLabel(iso: string) {
 
 export function ClientRoster({ rows }: { rows: RosterRow[] }) {
   const [filter, setFilter] = useState<FilterId>("all")
+  const [status, setStatus] = useState<ClientStatus | "all">("all")
   const [q, setQ] = useState("")
 
   const visible = useMemo(() => {
@@ -40,9 +43,10 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
     return rows.filter(
       (row) =>
         (filter === "all" || row.tags.includes(filter)) &&
+        (status === "all" || row.status === status) &&
         (!term || row.name.toLowerCase().includes(term))
     )
-  }, [rows, filter, q])
+  }, [rows, filter, status, q])
 
   return (
     <>
@@ -65,14 +69,32 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
             </button>
           ))}
         </div>
-        <input
-          type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Find a client…"
-          aria-label="Find a client"
-          className="w-52 rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-sm text-tk-onyx placeholder:text-tk-slate/40 focus:border-tk-teal focus:outline-none"
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="sr-only" htmlFor="roster-status">
+            Status
+          </label>
+          <select
+            id="roster-status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as ClientStatus | "all")}
+            className="rounded-lg border border-tk-slate/20 bg-white px-2.5 py-1.5 text-sm text-tk-onyx focus:border-tk-teal focus:outline-none"
+          >
+            <option value="all">All statuses</option>
+            {CLIENT_STATUSES.map((id) => (
+              <option key={id} value={id}>
+                {CLIENT_STATUS_LABEL[id]}
+              </option>
+            ))}
+          </select>
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Find a client…"
+            aria-label="Find a client"
+            className="w-52 rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-sm text-tk-onyx placeholder:text-tk-slate/40 focus:border-tk-teal focus:outline-none"
+          />
+        </div>
       </div>
 
       <div className="mt-3 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
@@ -112,13 +134,16 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
                     >
                       {row.name}
                     </span>
-                    <span
-                      className={cn(
-                        "block truncate text-xs",
-                        row.dormant ? "text-tk-slate/40" : "text-tk-slate/70"
-                      )}
-                    >
-                      {row.engagement}
+                    <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                      <ClientStatusMenu clientId={row.id} status={row.status} />
+                      <span
+                        className={cn(
+                          "truncate text-xs",
+                          row.dormant ? "text-tk-slate/40" : "text-tk-slate/70"
+                        )}
+                      >
+                        {row.engagement}
+                      </span>
                     </span>
                   </span>
                 </span>

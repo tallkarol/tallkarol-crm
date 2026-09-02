@@ -1,4 +1,5 @@
 import { AttentionStrip } from "@/components/clients/AttentionStrip"
+import { ClientComposer } from "@/components/clients/ClientComposer"
 import { ClientRoster } from "@/components/clients/ClientRoster"
 import { PageHeader } from "@/components/PageHeader"
 import { loadClientRoster } from "@/lib/client-hub"
@@ -21,7 +22,7 @@ export default async function ClientsPage() {
 
   return (
     <>
-      <PageHeader title="Clients" />
+      <PageHeader title="Clients" actions={<ClientComposer />} />
       <p className="mt-1 text-sm text-tk-slate/70">{subtitle}</p>
 
       <AttentionStrip flags={flags} />

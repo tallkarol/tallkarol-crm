@@ -15,6 +15,7 @@ import {
 import type {
   CalendarAttendee,
   Client,
+  ClientStatus,
   Contract,
   Deliverable,
   Invoice,
@@ -71,6 +72,7 @@ export type RosterRow = {
   name: string
   slug: string
   color: string
+  status: ClientStatus
   /** "Retainer 20 hr/mo · 2 projects · 1 product" */
   engagement: string
   tags: ("retainer" | "project" | "product" | "dormant")[]
@@ -318,6 +320,7 @@ export async function loadClientRoster(now = new Date()): Promise<RosterData> {
       name: client.name,
       slug: client.slug,
       color: clientColor(client.slug),
+      status: client.status,
       engagement: engagementParts.filter(Boolean).join(" · "),
       tags,
       hours: cap > 0 ? { logged, cap } : null,
