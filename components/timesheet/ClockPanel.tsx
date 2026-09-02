@@ -6,6 +6,7 @@ import { clockLabel, useElapsed } from "@/components/timesheet/useElapsed"
 import { clientColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { startPunch, stopPunch } from "@/lib/punch-actions"
+import { announcePunchChange } from "@/lib/punch-signal"
 import type { PunchTarget, PunchView } from "@/lib/punches"
 
 /**
@@ -51,7 +52,10 @@ export function ClockPanel({
       })
       setPendingKey(null)
       if (!result.ok) setError(result.error)
-      else setNote("")
+      else {
+        setNote("")
+        announcePunchChange()
+      }
     })
   }
 
@@ -60,7 +64,10 @@ export function ClockPanel({
     startTransition(async () => {
       const result = await stopPunch({ punchId, note })
       if (!result.ok) setError(result.error)
-      else setNote("")
+      else {
+        setNote("")
+        announcePunchChange()
+      }
     })
   }
 

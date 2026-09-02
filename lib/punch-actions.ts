@@ -12,6 +12,7 @@ import {
   clockIn,
   clockOut,
   discardPunch,
+  runningPunches,
   updatePunch,
   type PunchView,
 } from "@/lib/punches"
@@ -52,6 +53,13 @@ export async function startPunch(input: {
   }
   revalidateTime()
   return { ok: true, data: result.data.punch }
+}
+
+/** What is running right now — the floating clock polls this. */
+export async function runningNow(): Promise<PunchView[]> {
+  const user = await getSessionUser()
+  if (!user) return []
+  return runningPunches(user.id)
 }
 
 export async function stopPunch(input: {

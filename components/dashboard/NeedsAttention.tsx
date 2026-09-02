@@ -47,7 +47,21 @@ const TONE: Record<AttentionTone, string> = {
 type Layout = "rows" | "cards"
 
 const LAYOUT_KEY = "dashboard-needs-attention-layout"
-const NOTE_COLORS = ["bg-[#FFF7C7]", "bg-[#F7EFD9]", "bg-[#EAF3E9]"]
+
+/**
+ * Card view is colour-coded by client: a solid top edge in the client colour,
+ * and the same colour washed to a tint for the paper and border, so a glance
+ * across the board groups cards by who they belong to. Colours are six-digit
+ * hex everywhere (`isHexColor` guards the overrides), so an alpha suffix is
+ * safe.
+ */
+function clientTint(color: string) {
+  return {
+    borderTopColor: color,
+    borderColor: `${color}40`,
+    backgroundColor: `${color}14`,
+  }
+}
 
 export function NeedsAttention({
   groups: initialGroups,
@@ -345,16 +359,12 @@ function AttentionItemView({
   const line = [meta, item.detail].filter(Boolean).join(" · ")
 
   if (layout === "cards") {
-    const colorIndex =
-      Array.from(item.id).reduce((sum, char) => sum + char.charCodeAt(0), 0) %
-      NOTE_COLORS.length
     return (
       <li
         ref={itemRef}
-        style={{ ...style, borderTopColor: item.color }}
+        style={{ ...style, ...clientTint(item.color) }}
         className={cn(
-          "relative flex min-h-36 flex-col rounded-sm border border-tk-slate/10 border-t-4 shadow-[0_5px_12px_rgba(31,45,42,0.10)] transition-[box-shadow,transform]",
-          NOTE_COLORS[colorIndex],
+          "relative flex min-h-36 flex-col rounded-sm border border-t-4 bg-white shadow-[0_5px_12px_rgba(31,45,42,0.10)] transition-[box-shadow,transform]",
           className
         )}
       >

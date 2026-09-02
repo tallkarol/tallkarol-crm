@@ -5,8 +5,9 @@ import { ROUTES } from "@/lib/nav"
 import { clearedLabel, type UnreadGroup, type UnreadSummary, type UnreadTone } from "@/lib/unread"
 
 /**
- * "Did something arrive that I haven't seen?" — answered above everything
- * else on the homepage, in two numbers and an age.
+ * "Did something arrive that I haven't seen?" — answered at the top of the
+ * dashboard's left column, in two numbers and an age. The tiles stack, one
+ * per row, so the card fits the narrow column without squeezing the numbers.
  *
  * The card is built to be read peripherally, which is why it is *silent* when
  * nothing is waiting: at zero it collapses to a single line and drops all
@@ -198,7 +199,7 @@ export function Unread({ summary }: { summary: UnreadSummary }) {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-[9px] md:gap-3">
+            <div className="grid grid-cols-1 gap-[9px] md:gap-3">
               <Tile label="Leads" group={summary.leads} />
               <Tile label="Tickets" group={summary.tickets} />
             </div>

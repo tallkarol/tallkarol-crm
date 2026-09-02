@@ -6,7 +6,6 @@ import { MonthBilled } from "@/components/dashboard/MonthBilled"
 import { NeedsAttention } from "@/components/dashboard/NeedsAttention"
 import { Unread } from "@/components/dashboard/Unread"
 import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings"
-import { YearBilled } from "@/components/dashboard/YearBilled"
 import { PeekRouter, peekHref } from "@/components/peek/PeekRouter"
 import { db } from "@/db"
 import { getUpcomingMeetings } from "@/lib/calendar"
@@ -86,22 +85,7 @@ export default async function DashboardPage({
 
   const billedThisMonth = invoices.filter((i) => i.issuedOn.startsWith(thisMonth))
   const billedCents = billedThisMonth.reduce((s, i) => s + i.amountCents, 0)
-  const yearKey = String(now.getFullYear())
-  const billedThisYear = invoices.filter((i) => i.issuedOn.startsWith(yearKey))
-  const ytdCents = billedThisYear.reduce((s, i) => s + i.amountCents, 0)
-  const yearMonths = Array.from({ length: now.getMonth() + 1 }, (_, month) => {
-    const key = `${yearKey}-${String(month + 1).padStart(2, "0")}`
-    return {
-      key,
-      label: new Date(Number(yearKey), month, 1).toLocaleDateString("en-US", {
-        month: "long",
-      }),
-      cents: billedThisYear
-        .filter((i) => i.issuedOn.startsWith(key))
-        .reduce((s, i) => s + i.amountCents, 0),
-    }
-  })
-  /* ---- year forecast: greyed rows for the rest of the year + landing total ---- */
+  /* ---- what this month is still expected to produce ---- */
   const rateByRetainer = new Map(
     retainers.map((r) => [r.id, retainerRateCents(r, invoices)])
   )
@@ -111,27 +95,7 @@ export default async function DashboardPage({
       loggedThisMonth.set(e.retainerId, (loggedThisMonth.get(e.retainerId) ?? 0) + Number(e.hours))
     }
   }
-  const openDeliverables = projects.flatMap((p) =>
-    p.deliverables.filter(
-      (d) => (d.status === "pending" || d.status === "done") && d.feeCents
-    )
-  )
-  const retainerExpectation = (key: string, isCurrent: boolean) => {
-    let sum = 0
-    for (const r of retainers) {
-      const rate = rateByRetainer.get(r.id)
-      if (!rate) continue
-      if (invoices.some((i) => i.retainerId === r.id && i.issuedOn.slice(0, 7) === key)) continue
-      if (retainerCoversMonth(r, key)) sum += rate * r.hoursPerMonth
-      else if (isCurrent) {
-        // outside its window but actively logging (e.g. early-start month)
-        const logged = loggedThisMonth.get(r.id) ?? 0
-        if (logged > 0) sum += Math.round(logged * rate)
-      }
-    }
-    return sum
-  }
-  /* Itemized "still expected" lines — feed both the month card and the year rows. */
+  /* Itemized "still expected" lines for the month card. */
   const monthExpectedLines: { label: string; sub: string | null; cents: number }[] = []
   for (const r of retainers) {
     const rate = rateByRetainer.get(r.id)
@@ -166,33 +130,6 @@ export default async function DashboardPage({
     }
   }
   const currentRemainderCents = monthExpectedLines.reduce((s, l) => s + l.cents, 0)
-  const forecastMonths: { key: string; label: string; cents: number; remainder?: boolean }[] = []
-  if (currentRemainderCents > 0) {
-    forecastMonths.push({
-      key: `${thisMonth}-remainder`,
-      label: now.toLocaleDateString("en-US", { month: "long" }),
-      cents: currentRemainderCents,
-      remainder: true,
-    })
-  }
-  for (let month = now.getMonth() + 1; month < 12; month++) {
-    const key = `${yearKey}-${String(month + 1).padStart(2, "0")}`
-    const cents =
-      retainerExpectation(key, false) +
-      openDeliverables
-        .filter((d) => d.status === "pending" && d.dueOn?.slice(0, 7) === key)
-        .reduce((s, d) => s + (d.feeCents ?? 0), 0)
-    forecastMonths.push({
-      key,
-      label: new Date(Number(yearKey), month, 1).toLocaleDateString("en-US", { month: "long" }),
-      cents,
-    })
-  }
-  const expectedTotalCents =
-    ytdCents + forecastMonths.reduce((s, m) => s + m.cents, 0)
-
-  const annualGoalCents =
-    goals.annualCents ?? (goals.monthlyCents != null ? goals.monthlyCents * 12 : null)
   const monthlyGoalCents = goals.annualCents
     ? Math.round(goals.annualCents / 12)
     : goals.monthlyCents
@@ -268,12 +205,9 @@ export default async function DashboardPage({
         <PeekRouter peek={searchParams.peek} closeHref="/" />
       ) : null}
 
-      <div className="mt-5 min-w-0 md:mt-8">
-        <Unread summary={unread} />
-      </div>
-
-      <div className="mt-3 grid min-w-0 gap-3 xl:grid-cols-[1fr_3fr]">
+      <div className="mt-5 grid min-w-0 gap-3 md:mt-8 xl:grid-cols-[1fr_3fr]">
         <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
+          <Unread summary={unread} />
           <MonthBilled
             monthLabel={now.toLocaleDateString("en-US", { month: "long" })}
             billedCents={billedCents}
@@ -287,16 +221,6 @@ export default async function DashboardPage({
             expected={monthExpectedLines}
             expectedTotalCents={billedCents + currentRemainderCents}
           />
-          <div className="hidden md:block">
-            <YearBilled
-              year={yearKey}
-              ytdCents={ytdCents}
-              annualGoalCents={annualGoalCents}
-              months={yearMonths}
-              forecastMonths={forecastMonths}
-              expectedTotalCents={expectedTotalCents}
-            />
-          </div>
           <div className="hidden rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm md:block">
             <p className="text-xs font-semibold uppercase tracking-wider text-tk-slate/70">
               Retainer load{loadMonth ? ` · ${loadMonth}` : ""}

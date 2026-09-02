@@ -15,8 +15,8 @@ export type MonthExpectedLine = {
   cents: number
 }
 
-/** Twin of YearBilled, scoped to the current month — the dropdown itemizes
-    what was billed and what the month is still expected to produce. */
+/** Billed this month — the dropdown itemizes what was billed and what the
+    month is still expected to produce. */
 export function MonthBilled({
   monthLabel,
   billedCents,
