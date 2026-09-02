@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SEM Report — Mineralife — August 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#F4F2EC;--surface:#FFF;--surface-2:#EDE9DE;--ink:#0F1615;--ink-2:#3D4947;--muted:#6E7A77;--line:rgba(15,22,21,.13);--line-soft:rgba(15,22,21,.07);--accent:#006965;--accent-ink:#00504D;--accent-soft:rgba(0,105,101,.10);--warn:#A45A1E;--warn-soft:rgba(164,90,30,.12);--crit:#8E3521;--crit-soft:rgba(142,53,33,.12);--good:#2E7D57;--good-soft:rgba(46,125,87,.12);--display:"Archivo",ui-sans-serif,system-ui,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:ui-sans-serif,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6}
+.wrap{max-width:880px;margin:0 auto;padding:0 32px}
+@media(max-width:720px){.wrap{padding:0 20px}}
+h1,h2,h3,h4,.eyebrow,.chip,.num,th,.ui{font-family:var(--display)}
+h1{font-size:clamp(28px,4.2vw,40px);line-height:1.08;letter-spacing:-.02em;font-weight:700;margin:0 0 10px}
+h2{font-size:20px;line-height:1.2;letter-spacing:-.01em;font-weight:600;margin:0 0 12px}
+h3{font-size:15px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 14px}p:last-child{margin-bottom:0}
+code,.mono{font-family:var(--mono);font-size:.85em;background:var(--surface-2);padding:.1em .34em;border-radius:3px}
+.small{font-size:13.5px;line-height:1.5}.muted{color:var(--muted)}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 14px}
+header.rpt{padding:56px 0 28px;border-bottom:2px solid var(--ink)}
+section{padding:34px 0;border-bottom:1px solid var(--line)}
+.sec-label{display:flex;align-items:baseline;gap:10px;margin:0 0 16px}
+.sec-label .n{font-family:var(--mono);font-size:12px;color:var(--accent-ink)}
+.metastrip{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;margin-top:22px}
+.metastrip>div{flex:1 1 160px;padding:12px 16px;border-right:1px solid var(--line-soft)}
+.metastrip>div:last-child{border-right:0}
+.metastrip .k{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px}
+.metastrip .v{font-family:var(--display);font-size:14px;font-weight:500}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:720px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g2{grid-template-columns:1fr}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.stat .num{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block;font-variant-numeric:tabular-nums}
+.stat .lbl{font-family:var(--ui);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:5px;display:block}
+.stat .sub{font-size:12.5px;color:var(--ink-2);margin-top:5px;display:block;line-height:1.35}
+.stat.good .num{color:var(--good)}.stat.warn .num{color:var(--warn)}.stat.crit .num{color:var(--crit)}.stat.accent .num{color:var(--accent-ink)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+.tablecard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 10px 6px;overflow-x:auto}
+th{text-align:left;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);font-family:var(--ui);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12px}
+.r{text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);font-family:var(--ui)}
+.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.accent{background:var(--accent-soft);color:var(--accent-ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.card.tint{background:var(--surface-2);border-color:var(--line-soft)}
+.rail{border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.rail.crit{border-left-color:var(--crit)}.rail.good{border-left-color:var(--good)}
+.up{color:var(--good);font-weight:600}.down{color:var(--crit);font-weight:600}
+.empty{border:1px dashed var(--line);border-radius:8px;padding:18px 20px;background:rgba(255,255,255,.6)}
+.illus{border:1px dashed rgba(0,105,101,.4);border-radius:8px;background:var(--accent-soft);padding:6px 12px;font-family:var(--ui);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);display:inline-block;margin-bottom:10px}
+ul.tight{margin:0;padding-left:19px}ul.tight li{margin-bottom:5px}
+footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(--ui)}
+@media print{body{background:#fff;font-size:12pt}section{page-break-inside:avoid}header.rpt{padding-top:0}}
+</style>
+<style>
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:15px 17px}
+.kpi .n{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block;font-variant-numeric:tabular-nums;font-family:var(--display)}
+.kpi .l{font-family:var(--ui);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:5px;display:block}
+.kpi .s{font-size:12.5px;color:var(--ink-2);margin-top:5px;display:block;line-height:1.35}
+.kpi.good .n{color:var(--good)}.kpi.warn .n{color:var(--warn)}.kpi.crit .n{color:var(--crit)}.kpi.accent .n{color:var(--accent-ink)}
+.toc{background:var(--surface-2);border:1px solid var(--line-soft);border-radius:8px;padding:16px 20px;margin-top:26px}
+.toc ol{margin:0;padding-left:20px;columns:2;column-gap:30px}
+.toc li{margin-bottom:5px;font-size:14px}
+@media(max-width:640px){.toc ol{columns:1}}
+.status{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
+.status.ok{background:var(--good)}.status.bad{background:var(--crit)}.status.mid{background:var(--warn)}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+<header class="rpt">
+  <p class="eyebrow">Tall Karol &middot; Mineralife Nutraceuticals &middot; mycustommanufacturer.com</p>
+  <h1>SEM Report</h1>
+  <p class="small muted" style="font-family:var(--ui);font-size:15px">August 2026 &mdash; search engine marketing review and plan</p>
+  <div class="metastrip">
+    <div><span class="k">Work item</span><span class="v">Google systems sync</span></div>
+    <div><span class="k">Covering</span><span class="v">Tag Manager &middot; Analytics &middot; Ads &middot; Search Console</span></div>
+    <div><span class="k">Enquiries from paid</span><span class="v">5 &middot; ~$88 each</span></div>
+    <div><span class="k">Verdict</span><span class="v">good plumbing, broken wiring</span></div>
+  </div>
+  <div class="toc">
+    <p class="small" style="font-family:var(--ui);font-weight:600;margin-bottom:8px">Contents</p>
+    <ol>
+      <li>Summary</li>
+      <li>What we found &mdash; systems health</li>
+      <li>What we connected and fixed</li>
+      <li>The funnel, reconciled across four systems</li>
+      <li>Google Ads &mdash; account analysis</li>
+      <li>The paid enquiries</li>
+      <li>Organic search performance</li>
+      <li>Site and index health</li>
+      <li>The geography question</li>
+      <li>Recommended campaign build</li>
+      <li>What to fix, in order</li>
+      <li>Decisions we need from you</li>
+      <li>Appendix &mdash; tag and analytics configuration</li>
+      <li>How these numbers were measured</li>
+    </ol>
+  </div>
+</header>
+
+<section>
+  <div class="sec-label"><span class="n">01</span><h2>Summary</h2></div>
+  <p style="max-width:68ch">
+    This month's work was a synchronisation exercise: getting Google Tag Manager, Analytics, Ads and
+    Search Console into one connected system that can be measured, reported on and improved. Four
+    tools were running. None could see each other, two could not be read at all, and the one carrying
+    the advertising budget had never been told what a successful outcome looks like.
+  </p>
+  <p style="max-width:68ch">
+    They are now connected, and the finding is a hopeful one. <strong>The tracking built into the new
+    website in July is genuinely good.</strong> The site records the right events with the right
+    detail, and every enquiry is stored with the advertisement click that produced it. What is broken
+    is everything downstream of the website &mdash; a dozen configuration settings, not a rebuild.
+  </p>
+  <div class="grid g4" style="margin-top:22px">
+    <div class="kpi good"><span class="n">~$88</span><span class="l">per paid enquiry</span>
+      <span class="s">Against a $400–1,000 category benchmark. Five to ten times cheaper.</span></div>
+    <div class="kpi crit"><span class="n">0</span><span class="l">working conversion signals</span>
+      <span class="s">Of 33 conversion actions in Ads and 2 key events in Analytics, none fired for a real enquiry.</span></div>
+    <div class="kpi crit"><span class="n">4.5%</span><span class="l">of paid clicks visible</span>
+      <span class="s">1,028 clicks billed since the site launch; Analytics recorded 45 paid visits.</span></div>
+    <div class="kpi warn"><span class="n">2 mo</span><span class="l">analytics retention</span>
+      <span class="s">Event history is being deleted after two months. The free maximum is fourteen.</span></div>
+  </div>
+
+  <div class="callout warn" style="margin-top:18px">
+    <h4>An important correction &mdash; the advertising did not slow down</h4>
+    <p class="small" style="margin-top:6px">Read through Analytics alone, paid traffic appeared to
+      collapse in August. The advertising account says the opposite: <strong>clicks rose every
+      month</strong> &mdash; 418 in June, 533 in July, <strong>746 in August</strong> &mdash; on
+      roughly $300 of spend a month throughout.</p>
+    <p class="small" style="margin-top:10px">What collapsed was measurement. The new site asks for
+      cookie consent and most visitors never answer, so Analytics stopped seeing them. The campaign is
+      healthier than it appeared; the tracking is worse. This is the single clearest illustration of
+      why the systems needed connecting.</p>
+  </div>
+
+  <div class="card rail crit" style="margin-top:18px">
+    <h3>The four things that matter most</h3>
+    <ol class="tight small" style="margin-top:8px;padding-left:18px">
+      <li style="margin-bottom:8px"><strong>The advertising has never been able to count a
+        lead.</strong> Both business campaigns run &ldquo;maximise conversions&rdquo; bidding, and the
+        only lead conversion available to them is wired to an event the new website stopped sending in
+        July. Google has been told to maximise something it has never once observed. The five
+        enquiries happened <em>despite</em> the setup, not because of it.</li>
+      <li style="margin-bottom:8px"><strong>Half the advertising budget rides on one broad
+        keyword.</strong> A single term took $470 of $900 over ninety days, and broad matching
+        stretched it to searches like <em>custom gummy vitamin manufacturer</em> &mdash; 194 clicks
+        for a format Mineralife does not make.</li>
+      <li style="margin-bottom:8px"><strong>Analytics is deleting your history.</strong> Event-level
+        retention is set to two months rather than the fourteen available at no cost. June detail is
+        already gone. Every day of delay loses another day permanently.</li>
+      <li><strong>Organic visibility is high and currently worthless.</strong> The site was shown
+        32,878 times in August and earned 131 clicks. Excluding brand searches, 28,964 impressions
+        produced 8.</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">02</span><h2>What we found &mdash; systems health</h2></div>
+  <div class="tablecard" style="margin-top:6px">
+    <table>
+      <thead><tr><th>System</th><th>State found</th><th>Consequence</th></tr></thead>
+      <tbody>
+        <tr><td class="small"><span class="status ok"></span><strong>Website tracking</strong></td>
+          <td class="small">Well built. Seven event tags firing from the site's own data layer, each carrying useful detail &mdash; which form, which enquiry type, which step, which button. Click identifiers stored server-side at submission.</td>
+          <td class="small">Better instrumentation than most sites of this size ever get. It is why the enquiries can be proved at all.</td></tr>
+        <tr><td class="small"><span class="status bad"></span><strong>Tag Manager</strong></td>
+          <td class="small">No Google Ads conversion tag at all. The cross-domain list names a staging address and the retired WordPress host. Leftover tags from three previous eras still loading.</td>
+          <td class="small">The return signal to the advertising account was never connected.</td></tr>
+        <tr><td class="small"><span class="status bad"></span><strong>Analytics</strong></td>
+          <td class="small">Two key events configured, both obsolete. Retention at two months. Eleven descriptive fields collected and none usable in reports. Enquiries counted twice. Roughly a quarter of traffic automated.</td>
+          <td class="small">Every channel and campaign showed zero conversions, permanently, while real enquiries sat unmarked in the event list.</td></tr>
+        <tr><td class="small"><span class="status bad"></span><strong>Google Ads</strong></td>
+          <td class="small">33 conversion actions accumulated over years. Six steer bidding and four of those belong to the Zemvelo shop &mdash; including &ldquo;Page view&rdquo;. No negative keyword control. A funded campaign serving no impressions.</td>
+          <td class="small">Spend could not be tied to enquiries, and retail goals were steering business-to-business bidding.</td></tr>
+        <tr><td class="small"><span class="status bad"></span><strong>Search Console</strong></td>
+          <td class="small">No read access to either property. The legacy host property had never been verified.</td>
+          <td class="small">No organic reporting was possible. History was ageing out of Google's window unrecorded.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid g2" style="margin-top:18px">
+    <div class="card rail crit">
+      <h3>A quarter of the traffic was not human</h3>
+      <p class="small">Google's own search-syndication network and a development machine sending live
+        data together accounted for <strong>28% of August visits and 47% of all button clicks</strong>,
+        while never once starting an enquiry form. Left in, they made the site look busier and far
+        worse at converting. The August enquiry rate reads 3.8% with them and <strong>5.1%</strong>
+        without.</p>
+    </div>
+    <div class="card rail crit">
+      <h3>A funded campaign serving nothing</h3>
+      <p class="small"><strong>B2B &ndash; Search &ndash; Regional</strong> holds a $5 daily budget and
+        has not shown a single advertisement in ninety days &mdash; its bids lose over 90% of the
+        auctions it enters. The keyword research explains why: all seven regional terms tested have no
+        measurable search volume. It is reserving budget and attention and producing nothing.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">03</span><h2>What we connected and fixed</h2></div>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Done</th><th>Effect</th></tr></thead>
+      <tbody>
+        <tr><td class="small"><strong>Search Console verified and connected</strong> as a domain property</td>
+          <td class="small">Organic reporting possible for the first time. Because it is a domain property it also carries history from before the site migration, so before-and-after comparison is available after all.</td></tr>
+        <tr><td class="small"><strong>16 months of search history archived</strong> &mdash; 2,514 clicks and 338,190 impressions across 18 windows</td>
+          <td class="small">Google discards this on a rolling window. A durable copy now exists, and it is the only record of the pre-migration baseline.</td></tr>
+        <tr><td class="small"><strong>Analytics property linked</strong> into reporting; the real enquiry event marked as a key event</td>
+          <td class="small">Enquiries can be counted as outcomes rather than page activity. The two obsolete key events still need removing.</td></tr>
+        <tr><td class="small"><strong>Google Ads account connected</strong> &mdash; spend, clicks, impression share, search terms, devices, geography</td>
+          <td class="small">Cost per enquiry is a measured figure rather than an estimate, and the search-term waste became visible.</td></tr>
+        <tr><td class="small"><strong>Tag Manager container audited</strong> &mdash; every tag, trigger and setting reviewed against what the site actually sends</td>
+          <td class="small">Produced the fix list in section 11. Nothing needs rebuilding.</td></tr>
+        <tr><td class="small"><strong>Automated traffic filtered</strong> from all reporting, historical and new</td>
+          <td class="small">Every rate reported here is calculated on real visits, and past months remain comparable.</td></tr>
+        <tr><td class="small"><strong>Automated index monitoring built</strong> &mdash; every sitemap page checked against Google's index monthly</td>
+          <td class="small">Indexing problems are found and tracked to resolution, with a record of what was fixed and when.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">04</span><h2>The funnel, reconciled across four systems</h2></div>
+  <p class="small" style="max-width:68ch">Six weeks of the new website, read across all four systems.
+    Where they disagree, the website's own records are the truth at the bottom of the funnel and the
+    advertising account is the truth at the top. Analytics sits in the middle and undercounts
+    everything, for the consent reasons above.</p>
+  <div class="tablecard" style="margin-top:16px">
+    <table>
+      <thead><tr><th>Stage</th><th class="r">Count</th><th>Counted by</th><th>What it says</th></tr></thead>
+      <tbody>
+        <tr><td>Paid clicks billed</td><td class="r mono">1,028</td><td class="small">Google Ads</td>
+          <td class="small">More clicks than Analytics recorded visits from every channel combined.</td></tr>
+        <tr><td>Visits seen by Analytics</td><td class="r mono">~600</td><td class="small">Analytics</td>
+          <td class="small">All channels. A floor, not a truth &mdash; most visitors never answer the cookie banner.</td></tr>
+        <tr><td>Button clicks</td><td class="r mono">~147</td><td class="small">Analytics</td>
+          <td class="small">After removing 111 automated clicks and 5 from a development machine.</td></tr>
+        <tr><td>Enquiry forms started</td><td class="r mono">46</td><td class="small">Analytics</td>
+          <td class="small">39 of them on the contact page. The homepage took roughly 1,400 visits in ninety days and produced four.</td></tr>
+        <tr><td>Forms submitted</td><td class="r mono">17</td><td class="small">Analytics</td>
+          <td class="small">A 37% completion rate through a multi-step wizard. <strong>The form is not the problem.</strong></td></tr>
+        <tr><td>Enquiries recorded</td><td class="r mono"><strong>16</strong></td><td class="small">Website records</td>
+          <td class="small">August produced 10 &mdash; the best month on record, against 46 all-time since April 2024.</td></tr>
+        <tr><td>Carrying a paid click identifier</td><td class="r mono">5 + 3</td><td class="small">Website records</td>
+          <td class="small">Five enquiries and all three catalogue downloads. Two further enquiries came from ChatGPT.</td></tr>
+        <tr><td>Advanced past first stage</td><td class="r mono">0</td><td class="small">Sales tracking</td>
+          <td class="small">Everything below this line is still invisible to the advertising.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid g3" style="margin-top:18px">
+    <div class="card rail good">
+      <h3>Where it is strong</h3>
+      <p class="small">Once someone starts the form it works &mdash; 46 starts became 16 enquiries, and
+        the mix is right, mostly custom manufacturing. August was the best month the business has
+        recorded.</p>
+    </div>
+    <div class="card rail crit">
+      <h3>Where it leaks</h3>
+      <p class="small">Above the form. The homepage takes most of the traffic and hands almost none of
+        it to an enquiry form, because it does not have one on it. Roughly 1,400 homepage visits in
+        ninety days produced four form starts.</p>
+    </div>
+    <div class="card rail">
+      <h3>One channel worth watching</h3>
+      <p class="small">ChatGPT sent nine measured visits in ninety days and two became enquiries
+        &mdash; the best visit-to-enquiry rate of any channel, on a very small sample. It costs
+        nothing and asks only that page addresses stay stable.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">05</span><h2>Google Ads &mdash; account analysis</h2></div>
+  <p class="small" style="max-width:68ch">The account serves both Mineralife and Zemvelo. Three
+    campaigns are enabled; the rest were removed or paused in previous years.</p>
+  <div class="tablecard" style="margin-top:16px">
+    <table>
+      <thead><tr><th>Enabled campaign</th><th class="r">Budget/day</th><th class="r">90-day spend</th><th class="r">Clicks</th><th class="r">Avg CPC</th><th class="r">Conversions</th></tr></thead>
+      <tbody>
+        <tr><td><strong>B2B &ndash; Search &ndash; Competitors</strong><br><span class="small muted">the only campaign producing enquiries</span></td>
+          <td class="r mono">$10.00</td><td class="r mono">$902.86</td><td class="r mono">1,697</td><td class="r mono">$0.53</td>
+          <td class="r mono">0 recorded<br><span class="small">5 + 3 in the CRM</span></td></tr>
+        <tr><td><strong>2023 &ndash; Performance Max</strong><br><span class="small muted">Zemvelo retail, same account</span></td>
+          <td class="r mono">$15.93</td><td class="r mono">$1,355.37</td><td class="r mono">679</td><td class="r mono">$2.00</td><td class="r mono">31 purchases</td></tr>
+        <tr><td><strong>B2B &ndash; Search &ndash; Regional</strong><br><span class="small muted">enabled, but never shown</span></td>
+          <td class="r mono">$5.00</td><td class="r mono">$0.00</td><td class="r mono">0</td><td class="r mono">&mdash;</td><td class="r mono">0</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid g4" style="margin-top:18px">
+    <div class="kpi good"><span class="n">~$88</span><span class="l">per enquiry, measured</span>
+      <span class="s">$441.51 since the site launch → 5 enquiries and 3 catalogue downloads.</span></div>
+    <div class="kpi accent"><span class="n">+78%</span><span class="l">clicks, June to August</span>
+      <span class="s">418 → 533 → 746, on flat spend. The campaign grew.</span></div>
+    <div class="kpi warn"><span class="n">27%</span><span class="l">impressions lost to budget</span>
+      <span class="s">Budget-limited, not demand-limited. It would spend more if allowed.</span></div>
+    <div class="kpi crit"><span class="n">72%</span><span class="l">of clicks are mobile</span>
+      <span class="s">At 27¢ each. Cheap for a reason.</span></div>
+  </div>
+
+  <div class="card rail crit" style="margin-top:18px">
+    <h3>Where the $900 went</h3>
+    <p class="small">One ad group, broad-matched competitor keywords. <strong>The single keyword
+      &ldquo;nutra labs&rdquo; took $470 &mdash; half the spend and two-thirds of the clicks</strong>
+      &mdash; and broad matching stretched it well beyond competitor searches:</p>
+    <div class="tablecard" style="margin-top:12px">
+      <table>
+        <thead><tr><th>Search term paid for</th><th class="r">Clicks</th><th>Assessment</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">custom gummy vitamin manufacturer</td><td class="r mono">194</td><td class="small"><strong>a format Mineralife does not offer</strong></td></tr>
+          <tr><td class="mono">best supplement supplier</td><td class="r mono">74</td><td class="small">not a manufacturing enquiry</td></tr>
+          <tr><td class="mono">food supplements manufacturers</td><td class="r mono">53</td><td class="small">generic</td></tr>
+          <tr><td class="mono">outsource supplement manufacturing</td><td class="r mono">42</td><td class="small">on target</td></tr>
+          <tr><td class="mono">third party supplement manufacturers</td><td class="r mono">30</td><td class="small">on target</td></tr>
+          <tr><td class="mono">supplement industry</td><td class="r mono">23</td><td class="small">research intent, not buying intent</td></tr>
+          <tr><td class="mono">pharmaceutical manufacturing</td><td class="r mono">10</td><td class="small">wrong industry</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small" style="margin-top:12px">The five enquiries almost certainly came from the genuine
+      competitor searches buried in this. Without a conversion signal, Google cannot tell those from
+      the rest &mdash; which is precisely why the conversion wiring matters more than the budget.</p>
+  </div>
+
+  <div class="card rail crit" style="margin-top:18px">
+    <h3>What is steering the bidding</h3>
+    <p class="small">Six conversion actions are enabled and marked primary, meaning they influence how
+      Google bids:</p>
+    <div class="tablecard" style="margin-top:12px">
+      <table>
+        <thead><tr><th>Primary conversion action</th><th>Belongs to</th><th class="r">Fired in 90 days</th><th>Problem</th></tr></thead>
+        <tbody>
+          <tr><td class="small">Purchase</td><td class="small">Zemvelo retail</td><td class="r mono">31</td><td class="small">retail signal in a shared account</td></tr>
+          <tr><td class="small">Add to cart</td><td class="small">Zemvelo retail</td><td class="r mono">167</td><td class="small">not a conversion &mdash; an intention</td></tr>
+          <tr><td class="small">Begin checkout</td><td class="small">Zemvelo retail</td><td class="r mono">133</td><td class="small">the same</td></tr>
+          <tr><td class="small">Page view</td><td class="small">Zemvelo retail</td><td class="r mono">&mdash;</td><td class="small"><strong>a page view, marked as a primary conversion</strong></td></tr>
+          <tr><td class="small">Form submission import</td><td class="small">the B2B site</td><td class="r mono">0</td><td class="small">imports an event the new site never sends</td></tr>
+          <tr><td class="small">Calls from ads</td><td class="small">the B2B site</td><td class="r mono">2</td><td class="small">the only real business signal that reached the account</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small" style="margin-top:12px">Both business campaigns use &ldquo;maximise
+      conversions&rdquo; bidding while the only lead conversion available to them fires zero times. The
+      account has been optimising toward retail shopping behaviour and a dead form event.</p>
+  </div>
+
+  <div class="card tint" style="margin-top:18px">
+    <h3>The economics, honestly stated</h3>
+    <p class="small">Since the site launch, $441.51 of spend produced five enquiries and three
+      catalogue downloads, all verified by click identifier. That is roughly <strong>$88 per
+      enquiry</strong> for the highest-value enquiry type the business receives, against a published
+      benchmark of $400&ndash;1,000 for business-to-business manufacturing.</p>
+    <p class="small" style="margin-top:10px">Even if half the spend is junk, the half that works is
+      exceptional. <strong>The case for spending more is strong &mdash; but after the conversion
+      wiring exists</strong>, so the additional budget learns from its first day rather than repeating
+      three months of blind bidding. Five enquiries remains a small sample: treat $88 as a first
+      reading, not a law.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">06</span><h2>The paid enquiries</h2></div>
+  <p class="small" style="max-width:68ch">Each carries an unbroken chain from advertisement to form
+    submission &mdash; a Google click identifier, the campaign identifier in the landing address, and
+    a Google referrer, all stored at the moment the form was sent.</p>
+  <div class="tablecard" style="margin-top:16px">
+    <table>
+      <thead><tr><th>Company</th><th>Enquiry</th><th class="r">Message</th><th>Current stage</th><th class="r">Probability</th></tr></thead>
+      <tbody>
+        <tr><td class="small"><strong>Health Care Nutrition (Pvt) Ltd</strong><br><span class="muted">Pakistan</span></td>
+          <td class="small">Effervescent tablets, 20-count</td><td class="r mono">765</td>
+          <td class="small">Longterm Nurture &middot; Evaluation</td><td class="r mono"><strong>50%</strong></td></tr>
+        <tr><td class="small"><strong>AWWA International</strong><br><span class="muted">Bangladesh</span></td>
+          <td class="small">Liquid product, 9&nbsp;oz PET bottles</td><td class="r mono">1,056</td>
+          <td class="small">Ongoing Discussion &middot; Interest</td><td class="r mono">25%</td></tr>
+        <tr><td class="small"><strong>Not yet incorporated</strong><br><span class="muted">first-time founder</span></td>
+          <td class="small">Powder tubs and packets, 2&nbsp;oz</td><td class="r mono">824</td>
+          <td class="small">First Touch &middot; Interest</td><td class="r mono">10%</td></tr>
+        <tr><td class="small"><strong>EuroAfric Consultant Ltd</strong><br><span class="muted">Nigeria</span></td>
+          <td class="small">Government supply contract</td><td class="r mono">1,456</td>
+          <td class="small"><span class="chip crit">Dead</span></td><td class="r mono">&mdash;</td></tr>
+        <tr><td class="small"><strong>SARSTEDT AG &amp; Co. KG</strong><br><span class="muted">Germany</span></td>
+          <td class="small">Export enquiry, written in German</td><td class="r mono">924</td>
+          <td class="small"><span class="chip warn">not recorded in tracking</span></td><td class="r mono">&mdash;</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:8px 10px 4px">
+      Stages and probabilities taken from your own lead tracking, unedited. Three catalogue downloads
+      also carry paid click identifiers and are not listed here.
+    </p>
+  </div>
+  <div class="grid g2" style="margin-top:18px">
+    <div class="card rail good">
+      <h3>These are not automated submissions</h3>
+      <p class="small">All five completed the multi-step wizard &mdash; roughly twenty-five fields
+        including product type, bottle size, unit counts and whether the project meets minimum order
+        quantities. All five gave a telephone number and passed the hidden spam trap. Three named a
+        company website. Messages averaged just over a thousand characters. Two are live opportunities
+        being actively worked.</p>
+    </div>
+    <div class="card rail crit">
+      <h3>Two process gaps worth closing</h3>
+      <p class="small"><strong>One enquiry never reached the tracking sheet</strong> &mdash; the German
+        enquiry sits in the website's records and in no sales tracking, apparently never seen.</p>
+      <p class="small" style="margin-top:10px"><strong>The July enquiries were entered five to eight
+        days after they arrived.</strong> Nothing was lost, but a same-week reply is a different
+        conversation from a next-week one, particularly for an overseas enquiry.</p>
+    </div>
+  </div>
+  <div class="callout warn" style="margin-top:18px">
+    <h4>Analytics saw two of these five</h4>
+    <p class="small" style="margin-top:6px">Analytics only records a conversion when the visitor
+      accepts the cookie banner. The website stores the click identifier on the server either way. A
+      report drawn from Analytics alone would have understated this campaign by 60% &mdash; and that
+      is the number most reporting would have quoted.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">07</span><h2>Organic search performance</h2></div>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Four weeks to late August</th><th class="r">This period</th><th class="r">Previous</th><th class="r">Change</th></tr></thead>
+      <tbody>
+        <tr><td>Times shown in Google</td><td class="r mono">32,878</td><td class="r mono">29,542</td><td class="r"><span class="up">+11.3%</span></td></tr>
+        <tr><td>Clicks</td><td class="r mono">131</td><td class="r mono">157</td><td class="r"><span class="down">&minus;16.6%</span></td></tr>
+        <tr><td>Click-through rate</td><td class="r mono">0.40%</td><td class="r mono">0.53%</td><td class="r"><span class="down">&minus;0.13pt</span></td></tr>
+        <tr><td>Average position</td><td class="r mono">12.9</td><td class="r mono">16.1</td><td class="r"><span class="up">3.2 better</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card rail crit" style="margin-top:18px">
+    <h3>The site is found by strangers and chosen by people who already know it</h3>
+    <p class="small">Google attributes 68 of the period's clicks to a specific search term, withholding
+      the remainder to protect rare searches. Of those 68:</p>
+    <div class="grid g2" style="margin-top:12px">
+      <div class="kpi"><span class="n">60</span><span class="l">clicks on your own name</span>
+        <span class="s">7 search terms. Shown 219 times &mdash; a 27% click rate.</span></div>
+      <div class="kpi crit"><span class="n">8</span><span class="l">clicks on everything else</span>
+        <span class="s">1,108 search terms. Shown 28,964 times &mdash; a 0.03% click rate.</span></div>
+    </div>
+    <p class="small" style="margin-top:12px">Rankings improved by more than three positions and
+      impressions rose 11%, yet clicks fell. The site is surfacing more often on searches it is not
+      the chosen answer for.</p>
+  </div>
+  <div class="tablecard" style="margin-top:16px">
+    <table>
+      <thead><tr><th>Shown most, clicked least</th><th class="r">Shown</th><th class="r">Clicks</th><th class="r">Position</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">supplement manufacturer</td><td class="r mono">654</td><td class="r mono">0</td><td class="r mono">9.3</td><td class="small">the core term</td></tr>
+        <tr><td class="mono">supplement manufacturers</td><td class="r mono">513</td><td class="r mono">0</td><td class="r mono">11.4</td><td class="small"></td></tr>
+        <tr><td class="mono">nutraceutical manufacturing</td><td class="r mono">475</td><td class="r mono">0</td><td class="r mono">12.3</td><td class="small"></td></tr>
+        <tr><td class="mono">custom supplement manufacturer</td><td class="r mono">473</td><td class="r mono">0</td><td class="r mono">8.7</td><td class="small">closest to page one</td></tr>
+        <tr><td class="mono">nutraceutical</td><td class="r mono">383</td><td class="r mono">0</td><td class="r mono">3.1</td><td class="small">ranks well; people looking up a word</td></tr>
+        <tr><td class="mono">probiotic manufacturer</td><td class="r mono">315</td><td class="r mono">0</td><td class="r mono">4.6</td><td class="small">a category your FAQ declines</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card tint" style="margin-top:18px">
+    <h3>What this means, plainly</h3>
+    <p class="small">This is not a ranking problem in the usual sense &mdash; the pages are found and
+      climbing. A listing at position nine is competing with eight results above it, and nothing in the
+      title or description is winning the click. That is a titles, descriptions and positioning
+      question, and the numbers involved are large enough that a fractional improvement is worth more
+      than most other work available.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">08</span><h2>Site and index health</h2></div>
+  <div class="grid g4">
+    <div class="kpi good"><span class="n">59/63</span><span class="l">pages indexed</span>
+      <span class="s">93.7% of the sitemap.</span></div>
+    <div class="kpi warn"><span class="n">4</span><span class="l">pages never crawled</span>
+      <span class="s">In the sitemap, but Google has not visited them.</span></div>
+    <div class="kpi good"><span class="n">0</span><span class="l">sitemap errors</span>
+      <span class="s">63 URLs submitted, no errors or warnings.</span></div>
+    <div class="kpi good"><span class="n">0</span><span class="l">canonical conflicts</span>
+      <span class="s">No page where Google disagrees with your chosen address.</span></div>
+  </div>
+  <div class="tablecard" style="margin-top:18px">
+    <table>
+      <thead><tr><th>Page</th><th>Issue</th><th>Recommendation</th></tr></thead>
+      <tbody>
+        <tr><td class="mono small">/blog/mineralife-is-hiring&hellip;</td><td class="small">Unknown to Google</td>
+          <td class="small">The address contains an emoji character carried over from the old site. Republish at a clean address and redirect. Around fifteen minutes.</td></tr>
+        <tr><td class="mono small">/serving/colorado/boulder</td><td class="small">Never crawled</td>
+          <td class="small" rowspan="3">Google has crawled 59 other pages recently, so passing these over is a judgement about their strength rather than an accident. Either strengthen them with internal links from pages Google visits often, or remove them from the sitemap.</td></tr>
+        <tr><td class="mono small">/serving/nevada/las-vegas</td><td class="small">Never crawled</td></tr>
+        <tr><td class="mono small">/blog/glutathione-reduced-vs-liposomal</td><td class="small">Never crawled</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid g2" style="margin-top:18px">
+    <div class="card rail">
+      <h3>Two things not worth chasing</h3>
+      <p class="small">Thirteen pages carry FAQ structured data and none earns a rich result, because
+        Google restricted that feature to government and health sites. Mobile usability reports return
+        no verdict because Google retired the report. Nothing is wrong in either case.</p>
+    </div>
+    <div class="card rail">
+      <h3>One thing to watch, not fix</h3>
+      <p class="small">The homepage still appears under both the www and non-www addresses. The
+        redirect is correctly in place and Google merges them over the months after a site move. It is
+        on the monthly monitoring list.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">09</span><h2>The geography question</h2></div>
+  <p style="max-width:68ch">
+    Almost none of the paid traffic is American, and the enquiries follow it. This determines what next
+    month's budget should do, and it is a commercial question rather than a technical one.
+  </p>
+  <div class="grid g2" style="margin-top:18px">
+    <div class="card rail crit">
+      <h3>The case for restricting to the United States</h3>
+      <p class="small">Only 3.4% of paid visits were American. The ideal client profile describes
+        established brands shipping 40,000&ndash;300,000 units a year, and overseas enquiries carry
+        freight, regulatory and payment complexity that domestic ones do not. One of the five had to be
+        marked dead as a solicitation.</p>
+    </div>
+    <div class="card rail warn">
+      <h3>The case against</h3>
+      <p class="small">The strongest enquiry is Pakistani and sits at 50% probability in evaluation.
+        The second strongest is Bangladeshi. Restricted to the United States this campaign would have
+        produced almost nothing &mdash; the American audience has not been reached at this budget with
+        these keywords.</p>
+    </div>
+  </div>
+  <div class="card tint" style="margin-top:18px">
+    <h3>Why this cannot be settled by a split test</h3>
+    <p class="small">Proving one audience converts better than another, at the difference worth caring
+      about, requires roughly <strong>390 clicks in each arm</strong> &mdash; and only to detect a gap
+      as crude as one converting at half the rate of the other. At American click prices that is
+      $20,000&ndash;24,000 before anything is learned; a realistic, smaller difference costs into six
+      figures. The current campaign also cannot be split by geography, because its American half would
+      contain almost no traffic.</p>
+    <p class="small" style="margin-top:10px"><strong>What is affordable is a comparison rather than a
+      proof.</strong> Cost per enquiry firms up quickly &mdash; ten enquiries gives a usable figure,
+      twenty a solid one &mdash; and whether the enquiries are better is a judgement your sales team
+      can make by looking at them. At this sample size that judgement is more reliable than any
+      statistical test the budget could buy.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">10</span><h2>Recommended campaign build</h2></div>
+  <p style="max-width:68ch">
+    Nothing in the account addresses people searching for the service itself. Keyword research puts
+    that demand at <strong>4,230 searches a month</strong> in the United States, and there is idle
+    budget to reach it with.
+  </p>
+  <div class="tablecard" style="margin-top:16px">
+    <table>
+      <thead><tr><th>Ad group</th><th class="r">Searches/mo</th><th class="r">Cost per click</th><th>Landing page</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1. Contract manufacturing</strong><br><span class="small muted">nutraceutical contract manufacturer &middot; contract supplement manufacturer &middot; dietary supplement manufacturer usa</span></td>
+          <td class="r mono"><strong>2,480</strong></td><td class="r mono">$7.95&ndash;31.03</td><td class="small">Contract manufacturing</td></tr>
+        <tr><td><strong>2. White label / catalogue</strong><br><span class="small muted">private label supplement manufacturer &middot; white label supplement manufacturer</span></td>
+          <td class="r mono">790</td><td class="r mono">$16.65&ndash;28.23</td><td class="small">White label</td></tr>
+        <tr><td><strong>3. Certifications</strong><br><span class="small muted">gmp certified supplement manufacturer &middot; sports nutrition manufacturer &middot; organic supplement manufacturer</span></td>
+          <td class="r mono">550</td><td class="r mono">$10.83&ndash;34.10</td><td class="small">Certifications</td></tr>
+        <tr><td><strong>4. Custom manufacturing</strong><br><span class="small muted">custom supplement manufacturer &middot; turnkey supplement manufacturing</span></td>
+          <td class="r mono">410</td><td class="r mono">$38.28</td><td class="small">Custom manufacturing</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="padding:8px 10px 4px">
+      Ad group 1 goes first not because it is largest but because
+      <em>nutraceutical contract manufacturer</em> is 720 searches a month at $7.95 &mdash; a quarter
+      the price of the term beneath it at similar competition. It is the cheapest genuine demand
+      available, which makes the first month of learning the least expensive it will ever be.
+      <em>gmp certified supplement manufacturer</em> also stands out: 210 searches at the lowest
+      competition of any term tested.
+    </p>
+  </div>
+  <div class="card rail warn" style="margin-top:18px">
+    <h3>Deliberately excluded</h3>
+    <p class="small"><strong>Toll filling by name.</strong> Fifteen terms tested, 30 searches a month
+      between them, and all 30 belong to a term that is not supplements. It is the flagship service and
+      the highest-margin division, and there is no paid demand for the words &mdash; so it is sold on
+      the contract manufacturing page rather than given a campaign of its own.</p>
+    <p class="small" style="margin-top:10px"><strong>Anything geographic.</strong> All seven regional
+      terms return no volume, which is exactly why the Regional campaign has never shown an
+      advertisement. The regional pages may still earn their keep organically; there is nothing to bid
+      on.</p>
+  </div>
+  <h3 style="margin-top:26px">Landing pages</h3>
+  <p class="small" style="max-width:68ch">Four pages, one per ad group, assembled from sections the
+    website already publishes and given an enquiry form on the page itself. This is the single largest
+    identified leak: the homepage took roughly 1,400 visits in ninety days and produced four form
+    starts, because it has no form on it.</p>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card rail good">
+      <h3>Why this pays for itself</h3>
+      <p class="small">Google scores how well a landing page answers the search that reached it, and
+        that score feeds the price of the click. A page built for the term is usually cheaper to
+        advertise than a homepage, so the work can pay back before any improvement in enquiries.</p>
+    </div>
+    <div class="card rail">
+      <h3>Two rules when building them</h3>
+      <p class="small">Copy assembled only from what the site already publishes, so nothing new needs
+        approval and nothing drifts from what has been signed off. And excluded from the organic index,
+        so they cannot compete with the service pages for the same searches.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">11</span><h2>What to fix, in order</h2></div>
+  <p style="max-width:68ch">
+    Everything in the first two groups is configuration rather than construction. Two items need your
+    Google Ads sign-in to approve.
+  </p>
+  <div class="card" style="margin-top:18px">
+    <p class="small" style="font-family:var(--ui);font-weight:600;color:var(--crit);margin-bottom:4px">This week &mdash; turns the lights on</p>
+    <div class="step"><div class="n">1</div><div class="c">
+      <h4>Analytics: fix the key events</h4>
+      <p class="small">Mark the real enquiry and catalogue-download events; remove the two obsolete
+        ones that never fire. Fifteen minutes, and every report gains a conversions column that
+        works.</p></div></div>
+    <div class="step"><div class="n">2</div><div class="c">
+      <h4>Google Ads: import them and set the primary goal</h4>
+      <p class="small">Make the enquiry the primary goal for both business campaigns at campaign level,
+        so the Zemvelo retail goals stop steering business bidding and vice versa. Demote
+        &ldquo;Page view&rdquo; from primary regardless.</p></div></div>
+    <div class="step"><div class="n">3</div><div class="c">
+      <h4>Analytics: raise data retention from two months to fourteen</h4>
+      <p class="small">One dropdown. It only affects data collected from that day forward, which is why
+        every day of delay loses a day permanently.</p></div></div>
+    <div class="step"><div class="n">4</div><div class="c">
+      <h4>Google Ads: add negative keywords and tighten the broad match</h4>
+      <p class="small">Gummy, pharmaceutical, startup and similar; and restrict the one keyword carrying
+        half the budget from broad to phrase match.</p></div></div>
+    <div class="step"><div class="n">5</div><div class="c">
+      <h4>Google Ads: pause or rebuild the Regional campaign</h4>
+      <p class="small">It has not shown an advertisement in ninety days. Currently it only reserves
+        budget and attention.</p></div></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <p class="small" style="font-family:var(--ui);font-weight:600;color:var(--warn);margin-bottom:4px">Next &mdash; makes the data trustworthy</p>
+    <div class="step"><div class="n">6</div><div class="c">
+      <h4>Register the collected detail as reportable dimensions</h4>
+      <p class="small">Eleven descriptive fields are already collected and none can be used in a
+        report. Registering them answers &ldquo;which button, which form, which enquiry type&rdquo;
+        without any new tracking.</p></div></div>
+    <div class="step"><div class="n">7</div><div class="c">
+      <h4>Stop the enquiry double-count and clean the container</h4>
+      <p class="small">Enquiries currently fire twice when cookies are accepted. Also: correct the
+        cross-domain list, which names a staging address and the retired host, and remove the disused
+        tags from previous years.</p></div></div>
+    <div class="step"><div class="n">8</div><div class="c">
+      <h4>Correct the property settings</h4>
+      <p class="small">The web stream is registered against a misspelled domain that is not yours, and
+        the timezone is set to Los Angeles while the business runs on Mountain time.</p></div></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <p class="small" style="font-family:var(--ui);font-weight:600;color:var(--accent-ink);margin-bottom:4px">Then &mdash; strategy</p>
+    <div class="step"><div class="n">9</div><div class="c">
+      <h4>Build the contract manufacturing landing page and point both campaigns at it</h4>
+      <p class="small">Both campaigns on a proper landing page keeps next month's comparison about the
+        audience rather than about page quality.</p></div></div>
+    <div class="step"><div class="n">10</div><div class="c">
+      <h4>Launch ad group 1 on the Regional campaign's freed budget</h4>
+      <p class="small">United States, cheapest genuine demand, own budget so it can be judged
+        separately.</p></div></div>
+    <div class="step"><div class="n">11</div><div class="c">
+      <h4>Return enquiry outcomes to Google, and review</h4>
+      <p class="small">Qualified, quoted and won outcomes recorded and sent back, so bidding learns
+        which clicks became business. Full review repeated next month.</p></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">12</span><h2>Decisions we need from you</h2></div>
+  <div class="stack">
+    <div class="card rail">
+      <h3>1. Do we advertise on &ldquo;private label&rdquo;?</h3>
+      <p class="small">590 searches a month at $24.30 &mdash; the second-largest block in the plan and
+        larger than the entire custom manufacturing group. The terminology does not match how
+        Mineralife describes itself, which is a sound reason to avoid it in organic content, where you
+        cannot rank on a word your copy refuses to use.</p>
+      <p class="small" style="margin-top:10px">Paid is different: the keyword is what the buyer types,
+        while the advertisement and the page still answer in your words.
+        <strong>Our recommendation:</strong> advertise on it, in its own ad group so it can be judged
+        and switched off cleanly. Excluded, ad group 2 falls from 790 searches a month to 200 and no
+        longer justifies its own landing page.</p>
+    </div>
+    <div class="card rail">
+      <h3>2. Do you want to manufacture for overseas brands?</h3>
+      <p class="small">Restricting to the United States makes the advertising match the ideal client
+        profile and removes the solicitations &mdash; and would also have excluded the two strongest
+        enquiries received this period.</p>
+      <p class="small" style="margin-top:10px"><strong>Our recommendation:</strong> do not restrict the
+        existing campaign yet. Leave it running, launch the American campaign alongside it on a
+        separate budget, and let two months of cost-per-enquiry figures and your sales team's read on
+        quality answer it with evidence rather than instinct.</p>
+    </div>
+    <div class="card rail">
+      <h3>3. What is the monthly advertising budget?</h3>
+      <p class="small">The existing campaign loses 27% of its available impressions to its $10 daily
+        cap, so it would spend more if allowed. At $88 an enquiry the arithmetic is attractive
+        &mdash; but a third more of what it is currently buying is not obviously worth having until the
+        negative keywords and the conversion signal are in place.</p>
+      <p class="small" style="margin-top:10px"><strong>Our recommendation:</strong> complete this
+        week's fixes first, then fund the American campaign at a level that produces around ten
+        enquiries in sixty to ninety days. Below ten, the cost figure is too imprecise to decide
+        from.</p>
+    </div>
+  </div>
+  <div class="callout warn" style="margin-top:20px">
+    <h4>One thing that needs your team rather than a decision</h4>
+    <p class="small" style="margin-top:6px">No enquiry has yet moved beyond the first stage in
+      tracking, so nothing below the form can be judged. Once qualified, quoted and won outcomes are
+      recorded and returned to Google, the advertising optimises toward the kind of enquiry that
+      becomes a purchase order rather than toward whoever fills in a form. With five enquiries a month
+      that takes one short conversation to maintain, and it is the difference between buying traffic
+      and buying customers.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">13</span><h2>Appendix &mdash; tag and analytics configuration</h2></div>
+  <p class="small" style="max-width:68ch">Detail behind sections 02 and 11, from a direct read of the
+    Tag Manager container and the Analytics property.</p>
+
+  <h3 style="margin-top:20px">Tag Manager</h3>
+  <div class="card rail good" style="margin-top:10px">
+    <h3>The core is clean</h3>
+    <p class="small">Seven event tags fire from the website's own data layer &mdash; button clicks,
+      form starts, form steps, form submissions, enquiries, catalogue downloads and single-page
+      navigation &mdash; each carrying useful detail about which form, which enquiry type, which step
+      and which button. This is better instrumentation than most sites of this size ever receive.</p>
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card rail crit">
+      <span class="chip crit">the big one</span>
+      <h3 style="margin-top:10px">No Google Ads conversion tag exists</h3>
+      <p class="small">A linker tag dutifully stores the advertisement click identifier on every visit
+        &mdash; and then nothing ever reports a conversion back. The plumbing for the return signal was
+        never connected. This is the highest-value change in the report.</p>
+    </div>
+    <div class="card rail warn">
+      <span class="chip warn">stale</span>
+      <h3 style="margin-top:10px">The linker names the wrong websites</h3>
+      <p class="small">Its cross-domain list contains a staging address and the retired WordPress host.
+        Neither is the live site. Harmless day to day, but it records that nobody has looked inside the
+        container since the migration.</p>
+    </div>
+    <div class="card rail warn">
+      <span class="chip warn">dead weight</span>
+      <h3 style="margin-top:10px">Leftover tags from three eras</h3>
+      <p class="small">A paused Universal Analytics tag for a product Google retired in 2023, a paused
+        Hotjar tag, a Facebook pixel waiting for a job-fair page from a past hiring push, and a
+        LinkedIn tag still loading on every page. None measures anything; all of it is weight.</p>
+    </div>
+    <div class="card rail">
+      <span class="chip">design trade-off</span>
+      <h3 style="margin-top:10px">Tags load late, and only after consent</h3>
+      <p class="small">The site loads Tag Manager after the page finishes rendering, which protects the
+        speed scores, and keeps analytics off until cookies are accepted, which protects compliance.
+        The cost is that Analytics sees about one in twenty paid clicks. The site partly compensates by
+        sending enquiries server-side &mdash; the right architecture, with the wiring faults noted
+        above.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:26px">Analytics</h3>
+  <div class="tablecard" style="margin-top:10px">
+    <table>
+      <thead><tr><th>Finding</th><th>Detail</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td class="small"><strong>Both configured conversions are obsolete</strong></td>
+          <td class="small">The property's two key events date from 2023: the old WordPress form event, which the new site never sends, and an e-commerce purchase event with no meaning on a business-to-business site. Every channel and campaign therefore showed zero conversions permanently, while the real enquiry event sat unmarked.</td>
+          <td class="small">Mark the real events; delete the obsolete pair.</td></tr>
+        <tr><td class="small"><strong>History is being deleted</strong></td>
+          <td class="small">Event-level retention set to two months rather than the free maximum of fourteen. June detail is already gone.</td>
+          <td class="small">One dropdown. Urgent, because it is not retrospective.</td></tr>
+        <tr><td class="small"><strong>Useful detail collected then ignored</strong></td>
+          <td class="small">Eleven descriptive fields are sent with each event and none is registered, so none can appear in a report. The only two registered are Universal Analytics leftovers that nothing sends.</td>
+          <td class="small">Register the fields that matter.</td></tr>
+        <tr><td class="small"><strong>Enquiries counted twice</strong></td>
+          <td class="small">When cookies are accepted an enquiry fires from both the browser and the server backstop &mdash; 23 recorded against 16 real. The server copy also carries no page or channel context, so several float unattached.</td>
+          <td class="small">A small change to the server call solves both.</td></tr>
+        <tr><td class="small"><strong>Property settings</strong></td>
+          <td class="small">The web stream is registered against a misspelled domain that is not yours. The timezone is Los Angeles; the business runs on Mountain time.</td>
+          <td class="small">Minutes each.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small muted" style="margin-top:14px;max-width:70ch">
+    Together these explain the reporting discrepancies noted through this report: why enquiry counts
+    differ between systems, why July's figures do not reconcile, and why every conversion rate drawn
+    from Analytics alone has been wrong in the same direction.
+  </p>
+</section>
+
+<section>
+  <div class="sec-label"><span class="n">14</span><h2>How these numbers were measured</h2></div>
+  <ul class="tight small" style="max-width:72ch">
+    <li><strong>Advertising figures</strong> &mdash; the Google Ads API directly. Spend, clicks,
+      impression share, search terms, devices and geography are the account's own numbers.</li>
+    <li><strong>Enquiries</strong> &mdash; the website's own records, where the Google click identifier
+      is stored on the server when a form is submitted. More complete than Analytics, which loses
+      visitors who decline the cookie banner.</li>
+    <li><strong>Enquiry stages</strong> &mdash; your lead tracking sheets, unedited.</li>
+    <li><strong>Organic search</strong> &mdash; Google Search Console for the domain property. Google
+      withholds the terms behind roughly half of all clicks, which is why the brand split is expressed
+      as a share of attributed clicks rather than of all clicks.</li>
+    <li><strong>Visits and funnel steps</strong> &mdash; Google Analytics, with automated traffic
+      excluded. Treat these as a floor rather than a total, for the consent reasons above.</li>
+    <li><strong>Keyword volumes and click prices</strong> &mdash; third-party United States estimates,
+      used only for planning the campaign that does not yet exist. Market estimates, not figures from
+      your account.</li>
+    <li><strong>Category benchmarks</strong> &mdash; published business-to-business industrial figures,
+      used only where this account has no data of its own, and labelled where used.</li>
+    <li><strong>Known data-quality caveats.</strong> Test records were created and removed while
+      systems were being configured, and enquiries were double-counted in Analytics, so July's event
+      counts do not reconcile; August is the first clean baseline. Analytics recorded far fewer paid
+      visits than the advertising account billed clicks &mdash; explained in the appendix, and being
+      corrected.</li>
+  </ul>
+</section>
+
+<footer>
+  Tall Karol &middot; SEM Report &middot; Mineralife Nutraceuticals, LLC &middot; August 2026<br>
+  Work item: Google systems sync &mdash; Tag Manager, Analytics, Ads, Search Console
+</footer>
+
+</div>
+</body>
+</html>
