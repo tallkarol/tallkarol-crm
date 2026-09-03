@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { isLeftOffEvent, isSurface, type LeftOffEvent, type Surface } from "@/lib/leftoff"
+import { isLeftOffEvent, isSurface, type AgentEvent, type LeftOffEvent, type Surface } from "@/lib/leftoff"
 import { authenticateLeftOff, unauthorized } from "@/lib/leftoff-auth"
 import { loadLeftOff, recordNote, type IncomingNote } from "@/lib/leftoff-data"
 
@@ -14,10 +14,14 @@ export const dynamic = "force-dynamic"
  *     body?, pinned?, meta? }            — or { notes: [ …up to 50 ] }
  *
  * `event` is the hook's own name (UserPromptSubmit, Stop, Notification,
- * SessionEnd, SubagentStop; Cursor's beforeSubmitPrompt, afterAgentResponse,
+ * SessionEnd, SubagentStart, SubagentStop; Cursor's beforeSubmitPrompt, afterAgentResponse,
  * stop, sessionEnd), or `gone` (a dead process), `note` (a post-it — no
  * sessionRef makes a fresh one), `snapshot` (the browser row), `touch`.
  * `at` orders events: an older one never overwrites a newer row.
+ * `agent` = { id, type, op: start | stop | clear } keeps the row's set of
+ * running subagents; `meta.handoff` = { done, blocked, next } is the chat's
+ * own three-line post-it, parsed by the hook. A `sessionRef` of
+ * `agent:<type>:<client>` is an agent lane, surface `agent`.
  *
  *   GET /api/leftoff — the same payload the widget reads, for the CLI.
  */
@@ -33,6 +37,17 @@ function instant(value: unknown): Date | null {
 
 function str(value: unknown) {
   return typeof value === "string" ? value : undefined
+}
+
+function parseAgent(raw: unknown): AgentEvent | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined
+  const a = raw as Record<string, unknown>
+  const op = a.op
+  if (op !== "start" && op !== "stop" && op !== "clear") return undefined
+  const id = str(a.id)?.trim().slice(0, 100) ?? ""
+  if (op !== "clear" && !id) return undefined
+  const description = str(a.description)?.slice(0, 200)
+  return { id, type: str(a.type)?.trim().slice(0, 100) ?? "", op, ...(description ? { description } : {}) }
 }
 
 function parseNote(raw: unknown, now: Date): IncomingNote | { error: string } {
@@ -66,6 +81,7 @@ function parseNote(raw: unknown, now: Date): IncomingNote | { error: string } {
     meta,
     client: str(body.client),
     blockedOn: str(body.blockedOn),
+    agent: parseAgent(body.agent),
   }
 }
 

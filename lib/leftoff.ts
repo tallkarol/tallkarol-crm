@@ -26,9 +26,13 @@ export const LEFTOFF_RULES = {
   /** Prompt / reply text is clipped to this many characters on the way in. */
   maxText: 400,
   maxBody: 2000,
+  /** A running-agent entry older than this is a lost SubagentStop, not a live agent. */
+  agentStaleHours: 6,
+  /** Each line of a Done / Blocked on / Next handoff is clipped to this. */
+  maxHandoffLine: 300,
 } as const
 
-export const SURFACES = ["claude", "cursor", "manual", "browser"] as const
+export const SURFACES = ["claude", "cursor", "manual", "browser", "agent"] as const
 export type Surface = (typeof SURFACES)[number]
 
 export const STORED_STATES = ["working", "waiting", "blocked", "gone"] as const
@@ -43,6 +47,7 @@ export const LEFTOFF_EVENTS = [
   "Stop",
   "Notification",
   "SessionEnd",
+  "SubagentStart",
   "SubagentStop",
   "beforeSubmitPrompt",
   "afterAgentResponse",
@@ -66,6 +71,7 @@ const EVENT_STATE: Record<LeftOffEvent, StoredState | null> = {
   SessionEnd: "gone",
   sessionEnd: "gone",
   gone: "gone",
+  SubagentStart: null,
   SubagentStop: null,
   touch: null,
   note: null,
@@ -122,6 +128,13 @@ export type NoteFacts = {
 
 export type LeftOffClient = { slug: string; name: string; color: string }
 
+/** The three-line post-it a chat (or a lane agent) ends its turn with. */
+export type Handoff = { done: string; blocked: string; next: string }
+/** Subagents running under a chat right now, from `meta.agents`. */
+export type AgentsView = { running: number; types: string[]; since: string | null }
+/** A SubagentStart / SubagentStop / SessionEnd, as the hook reports it. */
+export type AgentEvent = { id: string; type: string; op: "start" | "stop" | "clear"; description?: string }
+
 const MIN = 60_000
 const HOUR = 60 * MIN
 
@@ -131,6 +144,9 @@ export function deriveState(n: NoteFacts, now: Date): NoteState {
     : "waiting"
   // A post-it has no process behind it; it is simply there.
   if (n.surface === "manual" || n.surface === "browser") return "waiting"
+  // An agent lane waits for a pick; it is not parked by the clock. Only a
+  // lane left "working" ages out, like a chat that lost its Stop.
+  if (n.surface === "agent" && stored !== "working" && stored !== "gone") return "waiting"
   if (stored === "gone") return "gone"
   const age = now.getTime() - n.eventAt.getTime()
   if (stored === "working") {
@@ -224,6 +240,8 @@ export type LeftOffNoteView = {
   pendingReply: string
   taskId: string | null
   ticketId: string | null
+  handoff: Handoff | null
+  agents: AgentsView | null
 }
 
 export type BrowserTab = { title: string; url: string; active: boolean }
@@ -261,6 +279,8 @@ export function toView(n: NoteFacts, now: Date): LeftOffNoteView {
     pendingReply: n.reply ?? "",
     taskId: n.taskId ?? null,
     ticketId: n.ticketId ?? null,
+    handoff: readHandoff(n.meta),
+    agents: readAgents(n.meta, now, n.state),
   }
 }
 
@@ -293,6 +313,49 @@ export function sortViews(views: LeftOffNoteView[]) {
     if (rank !== 0) return rank
     return a.eventAt < b.eventAt ? 1 : a.eventAt > b.eventAt ? -1 : 0
   })
+}
+
+function handoffLine(value: unknown) {
+  return typeof value === "string" ? clip(value, LEFTOFF_RULES.maxHandoffLine) : ""
+}
+
+/**
+ * `meta.handoff` as the hook stored it — validated, never parsed from prose
+ * (the hook is the one parser). A JSON null, a non-object, or a block with
+ * neither Done nor Next all read as "no handoff".
+ */
+export function readHandoff(meta: Record<string, unknown>): Handoff | null {
+  const raw = meta.handoff
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null
+  const h = raw as Record<string, unknown>
+  const out = { done: handoffLine(h.done), blocked: handoffLine(h.blocked), next: handoffLine(h.next) }
+  return out.done || out.next ? out : null
+}
+
+/**
+ * `meta.agents` is `{ <agent_id>: { type, since, description? } }`, kept by
+ * the server as commutative set operations. An entry older than
+ * `agentStaleHours` is a lost SubagentStop and is not counted; a gone chat
+ * has no live agents whatever the row says.
+ */
+export function readAgents(meta: Record<string, unknown>, now: Date, state: string): AgentsView | null {
+  if (state === "gone") return null
+  const raw = meta.agents
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null
+  const live: { id: string; type: string; since: number }[] = []
+  for (const [id, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (!v || typeof v !== "object") continue
+    const e = v as Record<string, unknown>
+    const since = typeof e.since === "string" ? new Date(e.since).getTime() : NaN
+    if (Number.isNaN(since)) continue
+    if (now.getTime() - since > LEFTOFF_RULES.agentStaleHours * HOUR) continue
+    live.push({ id, type: typeof e.type === "string" && e.type ? e.type : "agent", since })
+  }
+  if (!live.length) return null
+  live.sort((a, b) => a.since - b.since || (a.id < b.id ? -1 : 1))
+  const types: string[] = []
+  for (const a of live) if (!types.includes(a.type) && types.length < 3) types.push(a.type)
+  return { running: live.length, types, since: new Date(live[0].since).toISOString() }
 }
 
 function readBrowser(n: NoteFacts | undefined): BrowserSnapshot | null {

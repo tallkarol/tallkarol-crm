@@ -12,7 +12,10 @@ import {
  * "Where did I leave things?" — one band under the dashboard header, grouped
  * by client because that is how the day gets switched between, and inside a
  * client in the order you should look: blocked on a yes, parked, waiting on
- * you, still working. Every row is the chat's own last exchange, untouched.
+ * you, still working. Every row is the chat's own last exchange, untouched —
+ * or, when the chat ended its turn with a Done / Blocked on / Next post-it,
+ * that post-it. A row from an agent lane (purser, caretaker…) is the agent's
+ * own report, waiting on a pick.
  *
  * The row acts: a reply typed here is delivered by that chat's own hooks at
  * its next turn; a parked thread you will not get back to becomes a task or
@@ -32,6 +35,7 @@ const SURFACE_LABEL: Record<string, string> = {
   claude: "Claude",
   cursor: "Cursor",
   manual: "Note",
+  agent: "Agent",
 }
 
 const ICON_BTN =
@@ -46,11 +50,32 @@ function countsLine(counts: LeftOffPayload["counts"]) {
   return parts.join(" · ")
 }
 
+/** The handoff's lead line: what it is blocked on, else what comes next. */
+function handoffLead(n: LeftOffNoteView) {
+  const h = n.handoff
+  if (!h) return null
+  if (h.blocked) return { label: "Blocked on", text: h.blocked, warn: true }
+  if (h.next) return { label: "Next", text: h.next, warn: false }
+  return { label: "Done", text: h.done, warn: false }
+}
+
 function headline(n: LeftOffNoteView) {
   if (n.state === "blocked" && n.blockedOn) return `Wants: ${n.blockedOn}`
   if (n.body) return n.body
+  const lead = handoffLead(n)
+  if (lead) return `${lead.label}: ${lead.text}`
   if (n.lastReply) return n.lastReply
   return n.lastPrompt
+}
+
+/** "3 agents running (Explore, qa)" under a working chat; "2 still running" under one that stopped. */
+function agentsLine(n: LeftOffNoteView) {
+  if (!n.agents) return ""
+  const count = `${n.agents.running} ${n.agents.running === 1 ? "agent" : "agents"}`
+  if (n.state === "working") {
+    return ` · ${count} running${n.agents.types.length ? ` (${n.agents.types.join(", ")})` : ""}`
+  }
+  return ` · ${count} still running`
 }
 
 function Row({ note }: { note: LeftOffNoteView }) {
@@ -63,11 +88,19 @@ function Row({ note }: { note: LeftOffNoteView }) {
   const toTask = convertLeftOffAction.bind(null, note.sessionRef, "task")
   const toTicket = convertLeftOffAction.bind(null, note.sessionRef, "ticket")
   const blocked = note.state === "blocked" && !!note.blockedOn
+  const lead = handoffLead(note)
+  const handoffWarn = !blocked && !note.body && !!lead?.warn
+  // The Done line rides under the headline unless it already is the headline.
+  const doneLine = note.handoff?.done && (note.body || lead?.label !== "Done") ? note.handoff.done : ""
   return (
-    <li className="group grid grid-cols-[auto_1fr_auto] items-start gap-x-3 px-5 py-3">
+    // The state column is a fixed width, not `auto`: each row is its own grid,
+    // so an auto column sizes to that row's own label and "Parked" and
+    // "Waiting on you" start their titles in different places. The one thing
+    // this band is for is running your eye down the titles.
+    <li className="group grid grid-cols-[112px_1fr_auto] items-start gap-x-3 px-5 py-3">
       <span
         className={cn(
-          "mt-0.5 inline-flex h-5 items-center rounded-full px-2 text-[11px] font-semibold ring-1 ring-inset",
+          "mt-0.5 inline-flex h-5 items-center justify-self-start rounded-full px-2 text-[11px] font-semibold ring-1 ring-inset",
           CHIP[note.state]
         )}
       >
@@ -81,14 +114,21 @@ function Row({ note }: { note: LeftOffNoteView }) {
             {SURFACE_LABEL[note.surface] ?? note.surface}
             {where ? ` · ${where}` : ""}
             {` · ${note.ago}`}
+            {agentsLine(note)}
           </span>
         </p>
         {headline(note) ? (
-          <p className={cn("mt-0.5 line-clamp-2 text-sm", blocked ? "font-medium text-[#A62228]" : "text-tk-slate/80")}>
+          <p
+            className={cn(
+              "mt-0.5 line-clamp-2 text-sm",
+              blocked ? "font-medium text-[#A62228]" : handoffWarn ? "font-medium text-[#8A5A05]" : "text-tk-slate/80"
+            )}
+          >
             {headline(note)}
           </p>
         ) : null}
-        {note.body && note.lastPrompt ? (
+        {doneLine ? <p className="mt-0.5 truncate text-xs text-tk-slate/50">Done: {doneLine}</p> : null}
+        {note.body && note.lastPrompt && !doneLine ? (
           <p className="mt-0.5 truncate text-xs text-tk-slate/50">You: {note.lastPrompt}</p>
         ) : null}
         {note.pendingReply ? (
@@ -96,22 +136,39 @@ function Row({ note }: { note: LeftOffNoteView }) {
             <CornerDownLeft className="size-3" aria-hidden />
             Reply queued, delivered when the chat next runs: <span className="truncate text-tk-onyx">{note.pendingReply}</span>
           </p>
-        ) : note.surface !== "manual" ? (
-          <form action={reply} className="mt-1.5 hidden max-w-md items-center gap-1.5 group-hover:flex group-focus-within:flex">
-            <input
-              name="text"
-              type="text"
-              placeholder="Reply to this chat…"
-              aria-label={`Reply to ${note.title}`}
-              className="h-7 min-w-0 flex-1 rounded-md border border-tk-slate/20 bg-white px-2 text-xs text-tk-onyx placeholder:text-tk-slate/40 focus:border-tk-teal focus:outline-none"
-            />
-            <button type="submit" className="h-7 rounded-md bg-tk-teal px-2.5 text-xs font-semibold text-white hover:brightness-95">
-              Send
-            </button>
-          </form>
         ) : null}
       </div>
-      <div className="flex items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+      <div className="flex items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 has-[details[open]]:opacity-100">
+        {!note.pendingReply && note.surface !== "manual" && note.surface !== "agent" ? (
+          // Opened by a click, not by hover: a field that unfolds under the
+          // cursor grows the row and pushes every row below it down, so
+          // reading down the list made it walk. As a popover it never moves
+          // anything, and it stays open when the pointer leaves.
+          <details className="relative">
+            <summary
+              aria-label={`Reply to ${note.title}`}
+              title="Reply"
+              className={cn(ICON_BTN, "flex cursor-pointer list-none [&::-webkit-details-marker]:hidden")}
+            >
+              <CornerDownLeft className="size-4" />
+            </summary>
+            <form
+              action={reply}
+              className="absolute right-0 top-7 z-20 flex w-72 items-center gap-1.5 rounded-lg border border-tk-slate/15 bg-white p-1.5 shadow-lg"
+            >
+              <input
+                name="text"
+                type="text"
+                placeholder="Reply to this chat…"
+                aria-label={`Reply to ${note.title}`}
+                className="h-7 min-w-0 flex-1 rounded-md border border-tk-slate/20 bg-white px-2 text-xs text-tk-onyx placeholder:text-tk-slate/40 focus:border-tk-teal focus:outline-none"
+              />
+              <button type="submit" className="h-7 rounded-md bg-tk-teal px-2.5 text-xs font-semibold text-white hover:brightness-95">
+                Send
+              </button>
+            </form>
+          </details>
+        ) : null}
         <form action={toTask}>
           <button type="submit" aria-label="Turn into a task" title="Turn into a task" className={ICON_BTN}>
             <ListChecks className="size-4" />
@@ -152,7 +209,9 @@ function groups(notes: LeftOffNoteView[]): Group[] {
 }
 
 export function LeftOff({ payload }: { payload: LeftOffPayload }) {
-  if (!payload.notes.length && !payload.browser) return null
+  // The tab snapshot is context for the threads, not a row of its own: a lone
+  // Chrome line under an empty board reads as a bug rather than a reminder.
+  if (!payload.notes.length) return null
   const tabs = payload.browser ? payload.browser.windows.reduce((sum, w) => sum + w.tabs.length, 0) : 0
   const byClient = groups(payload.notes)
   const showHeaders = byClient.length > 1 || (byClient.length === 1 && byClient[0].key !== "")

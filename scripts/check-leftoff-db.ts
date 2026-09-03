@@ -137,6 +137,53 @@ async function main() {
       row = (await tx.execute(sql`select reply, reply_at from session_notes where session_ref = ${REF}`))[0] as Record<string, unknown>
       check("queue cleared after take", [row.reply, row.reply_at], ["", null])
 
+      console.log("agents + handoff")
+      r = await recordNote({ sessionRef: REF, surface: "claude", event: "SubagentStart", at: at(90), agent: { id: "a1", type: "Explore", op: "start" } }, tx)
+      check("first subagent start applies the touch", [r.applied, r.state], [true, null])
+      r = await recordNote({ sessionRef: REF, surface: "claude", event: "SubagentStart", at: at(90), agent: { id: "a2", type: "qa", op: "start", description: "verify the build" } }, tx)
+      check("same-millisecond second start: touch dropped…", r.applied, false)
+      row = (await tx.execute(sql`select meta->'agents' as agents from session_notes where session_ref = ${REF}`))[0] as Record<string, unknown>
+      check("…but both agents are in the set", Object.keys((row.agents as Record<string, unknown>) ?? {}).sort(), ["a1", "a2"])
+      r = await recordNote({ sessionRef: REF, surface: "claude", event: "SubagentStop", at: at(89), agent: { id: "a1", type: "Explore", op: "stop" } }, tx)
+      row = (await tx.execute(sql`select meta->'agents' as agents, event_at from session_notes where session_ref = ${REF}`))[0] as Record<string, unknown>
+      check("an older stop still removes its agent", [r.applied, Object.keys((row.agents as Record<string, unknown>) ?? {})], [false, ["a2"]])
+      check("…without moving event_at", new Date(row.event_at as string).toISOString(), at(90).toISOString())
+      let view = (await loadLeftOff(at(95), tx)).notes.find((n) => n.sessionRef === REF)
+      check("view counts the live agent", view?.agents, { running: 1, types: ["qa"], since: at(90).toISOString() })
+
+      const handoff = { done: "shipped the endpoint", blocked: "your pick of the SLA tier", next: "wire the Mac panel" }
+      await recordNote({ sessionRef: REF, surface: "claude", event: "Stop", at: at(100), reply: "prose", meta: { handoff } }, tx)
+      view = (await loadLeftOff(at(101), tx)).notes.find((n) => n.sessionRef === REF)
+      check("stop stores the handoff", view?.handoff, handoff)
+      r = await recordNote({ sessionRef: REF, surface: "claude", event: "SubagentStop", at: at(105), agent: { id: "a2", type: "qa", op: "stop" } }, tx)
+      const collided = await recordNote({ sessionRef: REF, surface: "claude", event: "Stop", at: at(105), reply: "same millisecond as the subagent stop", meta: { handoff: { done: "d2", blocked: "", next: "n2" } } }, tx)
+      view = (await loadLeftOff(at(106), tx)).notes.find((n) => n.sessionRef === REF)
+      check("a Stop the guard drops still lands its handoff", [collided.applied, view?.handoff?.next], [false, "n2"])
+      await recordNote({ sessionRef: REF, surface: "claude", event: "Stop", at: at(50), reply: "stale", meta: { handoff: { done: "OLD", blocked: "", next: "OLD" } } }, tx)
+      view = (await loadLeftOff(at(107), tx)).notes.find((n) => n.sessionRef === REF)
+      check("…but a genuinely older Stop does not", view?.handoff?.next, "n2")
+
+      await recordNote({ sessionRef: REF, surface: "claude", event: "SessionEnd", at: at(110), agent: { id: "", type: "", op: "clear" } }, tx)
+      row = (await tx.execute(sql`select state, meta ? 'agents' as has_agents, meta ? 'handoff' as has_handoff from session_notes where session_ref = ${REF}`))[0] as Record<string, unknown>
+      check("session end clears the agent set, keeps the handoff", [row.state, row.has_agents, row.has_handoff], ["gone", false, true])
+      await recordNote({ sessionRef: REF, surface: "claude", event: "UserPromptSubmit", at: at(120), prompt: "next thing" }, tx)
+      row = (await tx.execute(sql`select state, meta ? 'handoff' as has_handoff from session_notes where session_ref = ${REF}`))[0] as Record<string, unknown>
+      check("a new prompt drops the stale handoff", [row.state, row.has_handoff], ["working", false])
+
+      console.log("agent lane")
+      const LANE = "agent:purser:" + REF
+      await recordNote(
+        { sessionRef: LANE, surface: "claude", event: "Stop", at: at(130), title: "LEDGER REPORT — mineralife — Aug", reply: "3 flags", client: anyClient?.slug, meta: { handoff, agent: { type: "purser", parent: REF } } },
+        tx
+      )
+      row = (await tx.execute(sql`select surface, state from session_notes where session_ref = ${LANE}`))[0] as Record<string, unknown>
+      check("an agent: ref is an agent lane whatever surface was sent", [row.surface, row.state], ["agent", "waiting"])
+      view = (await loadLeftOff(at(130 + 4 * 3600), tx)).notes.find((n) => n.sessionRef === LANE)
+      check("a lane still waits four hours later", [view?.state, view?.handoff?.blocked], ["waiting", handoff.blocked])
+      await recordNote({ sessionRef: LANE, surface: "agent", event: "SessionEnd", at: at(140) }, tx)
+      row = (await tx.execute(sql`select state, ended_at from session_notes where session_ref = ${LANE}`))[0] as Record<string, unknown>
+      check("a closed lane is gone with ended_at", [row.state, row.ended_at != null], ["gone", true])
+
       console.log("snapshot")
       // The browser row is a singleton the real hook may have written moments
       // ago, so the test snapshot must be newer than anything real.

@@ -15,6 +15,8 @@ import {
   eventState,
   isVisible,
   projectFromCwd,
+  readAgents,
+  readHandoff,
   resumeCommand,
   sortViews,
   toView,
@@ -65,6 +67,7 @@ check("Cursor stop → waiting", eventState("stop"), "waiting")
 check("Notification permission_prompt → blocked", eventState("Notification", "permission_prompt"), "blocked")
 check("Notification idle_prompt → waiting", eventState("Notification", "idle_prompt"), "waiting")
 check("Notification other → touch only", eventState("Notification", "auth_success"), null)
+check("SubagentStart → touch only", eventState("SubagentStart"), null)
 check("SubagentStop → touch only", eventState("SubagentStop"), null)
 check("SessionEnd → gone", eventState("SessionEnd"), "gone")
 check("gone → gone", eventState("gone"), "gone")
@@ -175,6 +178,45 @@ check("browser snapshot surfaces separately", payload.browser?.windows[0]?.tabs[
 check("manual note titled from its body", payload.notes.find((n) => n.surface === "manual")?.title, "call Joe")
 check("dismissed row absent", payload.notes.some((n) => n.sessionRef === "e"), false)
 check("ago label", payload.notes.find((n) => n.sessionRef === "b")?.ago, "40m")
+
+console.log("handoff")
+const h = { done: "shipped the endpoint", blocked: "your pick of the SLA tier", next: "wire the Mac panel" }
+check("handoff read back", readHandoff({ handoff: h }), h)
+check("JSON null handoff is none", readHandoff({ handoff: null }), null)
+check("missing handoff is none", readHandoff({}), null)
+check("array is none", readHandoff({ handoff: ["x"] }), null)
+check("only a blocked line is none", readHandoff({ handoff: { blocked: "x" } }), null)
+check("blocked defaults empty", readHandoff({ handoff: { done: "a", next: "b" } }), { done: "a", blocked: "", next: "b" })
+check("lines clipped", readHandoff({ handoff: { done: "x".repeat(400), next: "b" } })?.done.length, LEFTOFF_RULES.maxHandoffLine)
+check("view carries handoff", toView(note({ meta: { handoff: h } }), NOW).handoff, h)
+check("view without one", toView(note(), NOW).handoff, null)
+
+console.log("agents")
+const agents = {
+  a1: { type: "Explore", since: minAgo(3).toISOString() },
+  a2: { type: "qa", since: minAgo(1).toISOString() },
+  a0: { type: "Plan", since: minAgo(2).toISOString(), description: "design it" },
+}
+check("three live agents, oldest first", readAgents({ agents }, NOW, "working"), { running: 3, types: ["Explore", "Plan", "qa"], since: minAgo(3).toISOString() })
+check("a 7 h old entry is a lost stop", readAgents({ agents: { a1: { type: "Explore", since: minAgo(7 * 60).toISOString() }, a2: agents.a2 } }, NOW, "working"), { running: 1, types: ["qa"], since: minAgo(1).toISOString() })
+check("all stale → none", readAgents({ agents: { a1: { type: "x", since: minAgo(7 * 60).toISOString() } } }, NOW, "working"), null)
+check("gone chat has no live agents", readAgents({ agents }, NOW, "gone"), null)
+check("not an object → none", readAgents({ agents: 3 }, NOW, "working"), null)
+check("garbage entries skipped", readAgents({ agents: { a1: "x", a2: { since: "nope" }, a3: { since: minAgo(1).toISOString() } } }, NOW, "working"), { running: 1, types: ["agent"], since: minAgo(1).toISOString() })
+check(
+  "types cap at three",
+  readAgents({ agents: { a: { type: "A", since: minAgo(4).toISOString() }, b: { type: "B", since: minAgo(3).toISOString() }, c: { type: "C", since: minAgo(2).toISOString() }, d: { type: "D", since: minAgo(1).toISOString() } } }, NOW, "working")?.types,
+  ["A", "B", "C"]
+)
+check("view carries agents", toView(note({ state: "working", meta: { agents } }), NOW).agents?.running, 3)
+
+console.log("agent lane")
+const lane = note({ sessionRef: "agent:purser:mineralife", surface: "agent", title: "LEDGER REPORT — mineralife — Aug", cwd: "", project: "", meta: { handoff: h } })
+check("a lane waiting 10 h never parks", deriveState({ ...lane, eventAt: minAgo(600) }, NOW), "waiting")
+check("a lane left working 3 h parks", deriveState({ ...lane, state: "working", eventAt: minAgo(180) }, NOW), "parked")
+check("a closed lane is gone", deriveState({ ...lane, state: "gone" }, NOW), "gone")
+check("no resume command for a lane", toView(lane, NOW).resumeCommand, "")
+check("lane counts as waiting", buildPayload([lane, note({ sessionRef: "x", state: "working", eventAt: minAgo(1) })], NOW).counts, { working: 1, waiting: 1, blocked: 0, parked: 0 })
 
 console.log("helpers")
 check("resume command for claude", resumeCommand(note()), "cd '/Users/karolbuczek/Work/tallkarol' && claude --resume e1d87fb2-0db4-48dc-a848-f8cafe29cd9d")

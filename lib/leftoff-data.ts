@@ -20,6 +20,8 @@ import {
   eventState,
   localDay,
   projectFromCwd,
+  readHandoff,
+  type AgentEvent,
   type Briefing,
   type LeftOffClient,
   type LeftOffEvent,
@@ -60,6 +62,8 @@ export type IncomingNote = {
   /** The repo's `.claude/client` slug, resolved by the hook. */
   client?: string
   blockedOn?: string
+  /** A subagent starting or stopping under this chat, or `clear` at session end. */
+  agent?: AgentEvent
 }
 
 export type RecordResult = { sessionRef: string; applied: boolean; state: string | null }
@@ -84,7 +88,13 @@ export async function recordNote(note: IncomingNote, client: Executor = db): Pro
   if (!sessionRef) throw new Error("`sessionRef` is required.")
 
   const surface: Surface =
-    sessionRef === BROWSER_REF ? "browser" : sessionRef.startsWith("manual:") ? "manual" : note.surface
+    sessionRef === BROWSER_REF
+      ? "browser"
+      : sessionRef.startsWith("manual:")
+        ? "manual"
+        : sessionRef.startsWith("agent:")
+          ? "agent"
+          : note.surface
   const state = eventState(note.event, notificationType(note.meta))
   const cwd = (note.cwd ?? "").trim().slice(0, 500)
   const branch = (note.branch ?? "").trim().slice(0, 200)
@@ -125,7 +135,10 @@ export async function recordNote(note: IncomingNote, client: Executor = db): Pro
                        else null
                      end,
       dismissed_at = case when ${state}::text = 'working' then null else session_notes.dismissed_at end,
-      meta         = session_notes.meta || excluded.meta,
+      meta         = case
+                       when ${state}::text = 'working' then (session_notes.meta - 'handoff') || excluded.meta
+                       else session_notes.meta || excluded.meta
+                     end,
       updated_at   = now()
     where excluded.event_at > session_notes.event_at
     returning state
@@ -151,7 +164,60 @@ export async function recordNote(note: IncomingNote, client: Executor = db): Pro
       .where(eq(sessionNotes.sessionRef, sessionRef))
   }
 
+  // The post-it is the point of the turn, so it must not be collateral damage
+  // when the guard drops the Stop — a SubagentStop landing in the same
+  // millisecond is enough. Re-applied outside the guard, but never from an
+  // event OLDER than the row: a genuinely stale Stop still loses.
+  const handoff = readHandoff((note.meta ?? {}) as Record<string, unknown>)
+  if (handoff && !applied) {
+    await client.execute(sql`
+      update session_notes set
+        meta = meta || jsonb_build_object('handoff', ${JSON.stringify(handoff)}::jsonb),
+        updated_at = now()
+      where session_ref = ${sessionRef} and event_at <= ${at}::timestamptz`)
+  }
+
+  if (note.agent) await applyAgentEvent(sessionRef, note.agent, at, client)
+
   return { sessionRef, applied, state }
+}
+
+/**
+ * The set of subagents running under a chat, kept in `meta.agents` as
+ * `{ <agent_id>: { type, since, description? } }`. Written OUTSIDE the
+ * event_at guard on purpose: three agents spawned by one message start in the
+ * same millisecond, and the guard would drop all but the first touch. Adding
+ * and removing distinct keys commute, so order and duplicates do not matter.
+ * `jsonb_set` is never used — it is a no-op when the parent key is missing.
+ */
+async function applyAgentEvent(sessionRef: string, ev: AgentEvent, at: string, client: Executor) {
+  if (ev.op === "clear") {
+    await client.execute(sql`
+      update session_notes set meta = meta - 'agents', updated_at = now()
+      where session_ref = ${sessionRef}`)
+    return
+  }
+  const id = ev.id.trim().slice(0, 100)
+  if (!id) return
+  if (ev.op === "start") {
+    const entry = JSON.stringify({
+      type: ev.type.trim().slice(0, 100) || "agent",
+      since: at,
+      ...(ev.description ? { description: clip(ev.description, 200) } : {}),
+    })
+    await client.execute(sql`
+      update session_notes set
+        meta = meta || jsonb_build_object('agents',
+                 coalesce(meta->'agents', '{}'::jsonb) || jsonb_build_object(${id}::text, ${entry}::jsonb)),
+        updated_at = now()
+      where session_ref = ${sessionRef}`)
+    return
+  }
+  await client.execute(sql`
+    update session_notes set
+      meta = meta || jsonb_build_object('agents', coalesce(meta->'agents', '{}'::jsonb) - ${id}::text),
+      updated_at = now()
+    where session_ref = ${sessionRef}`)
 }
 
 export async function dismissNote(sessionRef: string, now = new Date(), client: Executor = db) {
@@ -312,6 +378,10 @@ function resumeNotes(n: NoteFacts) {
   if (n.lastPrompt) lines.push(`Last asked: ${n.lastPrompt}`)
   if (n.lastReply) lines.push(`Last reply: ${n.lastReply}`)
   if (n.body) lines.push(`Note: ${n.body}`)
+  const h = readHandoff(n.meta)
+  if (h?.done) lines.push(`Done: ${h.done}`)
+  if (h?.blocked) lines.push(`Blocked on: ${h.blocked}`)
+  if (h?.next) lines.push(`Next: ${h.next}`)
   return lines.join("\n")
 }
 
