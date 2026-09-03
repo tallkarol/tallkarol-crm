@@ -189,13 +189,20 @@ export async function recordNote(note: IncomingNote, client: Executor = db): Pro
   if (keepsMessages(surface)) {
     const text = messageText(note.event, note.prompt ?? "", note.reply ?? "")
     const role = messageRole(note.event)
-    if (role && text) {
-      await client
-        .insert(sessionMessages)
-        .values({ sessionRef, surface, role, at: note.at, text, origin: "hook" })
-        .onConflictDoNothing()
+    // History must never cost the board a note. If this half fails — the
+    // table is not migrated yet, the write races — the row above still stands
+    // and the hook still returns in time.
+    try {
+      if (role && text) {
+        await client
+          .insert(sessionMessages)
+          .values({ sessionRef, surface, role, at: note.at, text, origin: "hook" })
+          .onConflictDoNothing()
+      }
+      if (state === "gone") await ensureAgentSession(sessionRef, note.at, client)
+    } catch (err) {
+      console.error("leftoff: kept the note, lost the history:", err)
     }
-    if (state === "gone") await ensureAgentSession(sessionRef, note.at, client)
   }
 
   return { sessionRef, applied, state }
