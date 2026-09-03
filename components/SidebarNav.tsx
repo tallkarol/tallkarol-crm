@@ -14,15 +14,18 @@ import {
 import { navIcon } from "@/lib/nav-icons"
 import type { UnreadTone } from "@/lib/unread"
 
+/**
+ * The rail is onyx in both themes, so everything here is painted with the
+ * rail tokens rather than the page ones. Active is a teal wash with a white
+ * label and a lifted-teal icon; hover is a faint linen wash.
+ */
 function leafClass(active: boolean, collapsed?: boolean) {
   return cn(
-    "relative flex items-center rounded-r-lg text-[13px] font-medium transition-colors duration-150",
-    collapsed
-      ? "justify-center px-2 py-[5px]"
-      : "justify-between gap-2 px-3 py-[5px]",
+    "relative flex items-center rounded-lg font-ui text-[13px] font-medium transition-colors duration-150",
+    collapsed ? "justify-center px-2 py-[7px]" : "justify-between gap-2.5 px-2.5 py-[6px]",
     active
-      ? "bg-tk-teal/10 text-tk-onyx before:absolute before:inset-y-1 before:left-0 before:w-0.5 before:rounded-full before:bg-tk-teal"
-      : "text-tk-slate hover:bg-tk-linen hover:text-tk-onyx"
+      ? "bg-[--rail-active] font-semibold text-white"
+      : "text-rail-ink/70 hover:bg-rail-ink/[0.06] hover:text-rail-ink"
   )
 }
 
@@ -40,8 +43,8 @@ function NavItemIcon({
     <Icon
       aria-hidden
       className={cn(
-        "size-4 shrink-0",
-        active ? "text-tk-teal" : "text-tk-slate/70",
+        "size-4 shrink-0 transition-colors",
+        active ? "text-[--rail-active-icon]" : "text-rail-ink/50",
         className
       )}
       strokeWidth={active ? 2.25 : 2}
@@ -57,10 +60,10 @@ function NavItemIcon({
 export type NavBadge = { count: number; tone?: UnreadTone }
 
 const BADGE_TONE: Record<UnreadTone, string> = {
-  clear: "bg-tk-slate/40",
+  clear: "bg-rail-ink/30",
   lead: "bg-tk-teal",
   warn: "bg-[#8A5A05]",
-  bad: "bg-[#A62228]",
+  bad: "bg-tk-tomato",
 }
 
 function Badge({ badge, compact }: { badge?: NavBadge; compact?: boolean }) {
@@ -70,7 +73,7 @@ function Badge({ badge, compact }: { badge?: NavBadge; compact?: boolean }) {
   if (compact) {
     return (
       <span
-        className={cn("absolute top-1 right-1 size-1.5 rounded-full", tone)}
+        className={cn("absolute right-1 top-1 size-1.5 rounded-full", tone)}
         aria-hidden
       />
     )
@@ -78,7 +81,7 @@ function Badge({ badge, compact }: { badge?: NavBadge; compact?: boolean }) {
   return (
     <span
       className={cn(
-        "rounded-full px-1.5 py-px text-[10px] font-semibold text-tk-linen",
+        "grid h-[18px] min-w-[20px] place-items-center rounded-full px-1.5 text-[10.5px] font-bold text-tk-linen",
         tone
       )}
     >
@@ -105,6 +108,7 @@ function NavLeaf({
       href={item.href}
       onClick={onNavigate}
       title={collapsed ? item.label : undefined}
+      aria-current={active ? "page" : undefined}
       className={leafClass(active, collapsed)}
     >
       {collapsed ? (
@@ -115,7 +119,7 @@ function NavLeaf({
         </>
       ) : (
         <>
-          <span className="flex min-w-0 flex-1 items-center gap-2 truncate">
+          <span className="flex min-w-0 flex-1 items-center gap-2.5 truncate">
             <NavItemIcon item={item} active={active} />
             <span className="truncate">{item.label}</span>
           </span>
@@ -164,9 +168,10 @@ function NavGroup({
         <Link
           href={item.href}
           onClick={onNavigate}
+          aria-current={parentActive ? "page" : undefined}
           className={cn(leafClass(parentActive), "min-w-0 flex-1")}
         >
-          <span className="flex min-w-0 flex-1 items-center gap-2 truncate">
+          <span className="flex min-w-0 flex-1 items-center gap-2.5 truncate">
             <NavItemIcon item={item} active={parentActive} />
             <span className="truncate">{item.label}</span>
           </span>
@@ -177,10 +182,7 @@ function NavGroup({
           aria-controls={panelId}
           aria-label={`${open ? "Collapse" : "Expand"} ${item.label}`}
           onClick={() => setOpen((current) => !current)}
-          className={cn(
-            "flex shrink-0 items-center justify-center rounded-lg px-1.5",
-            "text-tk-slate/70 hover:bg-tk-linen hover:text-tk-onyx"
-          )}
+          className="flex shrink-0 items-center justify-center rounded-lg px-1.5 text-rail-ink/50 hover:bg-rail-ink/[0.06] hover:text-rail-ink"
         >
           <ChevronDown
             aria-hidden
@@ -194,7 +196,7 @@ function NavGroup({
       {open ? (
         <ul
           id={panelId}
-          className="ml-3 flex flex-col gap-0.5 border-l border-tk-slate/15 pl-3"
+          className="ml-4 flex flex-col gap-0.5 border-l border-rail-ink/10 pl-2"
           aria-label={`${item.label} pages`}
         >
           {item.children!.map((child) => {
@@ -204,9 +206,10 @@ function NavGroup({
                 <Link
                   href={child.href}
                   onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
                   className={leafClass(active)}
                 >
-                  <span className="flex min-w-0 flex-1 items-center gap-2 truncate">
+                  <span className="flex min-w-0 flex-1 items-center gap-2.5 truncate">
                     <NavItemIcon item={child} active={active} />
                     <span className="truncate">{child.label}</span>
                   </span>
@@ -238,27 +241,22 @@ export function SidebarNav({
 
   return (
     <nav
-      className={cn("flex flex-col gap-3.5", collapsed && "gap-3", className)}
+      className={cn("flex flex-col gap-4", collapsed && "gap-3", className)}
       aria-label="Admin"
     >
       {sections.map((section, index) => (
         <div key={`${section.title ?? "root"}-${index}`}>
           {section.title && !collapsed ? (
-            <h2 className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-tk-slate/70">
+            <h2 className="mb-1.5 px-2.5 font-ui text-[10px] font-bold uppercase tracking-[0.14em] text-rail-ink/45">
               {section.title}
             </h2>
           ) : section.title && collapsed ? (
             <div
-              className="mx-auto mb-2 w-6 border-t border-tk-slate/15"
+              className="mx-auto mb-2 w-6 border-t border-rail-ink/10"
               aria-hidden
             />
           ) : null}
-          <div
-            className={cn(
-              "flex flex-col gap-0.5",
-              !collapsed && "ml-2 border-l border-tk-slate/15 pl-3"
-            )}
-          >
+          <div className="flex flex-col gap-0.5">
             {section.items.map((item) => {
               if (item.children?.length) {
                 return (

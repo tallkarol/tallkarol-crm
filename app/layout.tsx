@@ -1,6 +1,27 @@
 import type { Metadata, Viewport } from "next"
+import { Inter, Inter_Tight, Plus_Jakarta_Sans } from "next/font/google"
 import { PwaRegister } from "@/components/PwaRegister"
 import "./globals.css"
+
+/* The site's own faces: Inter Tight for headings and big numbers, Plus
+   Jakarta Sans for UI labels, Inter for running text. */
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+})
+const interTight = Inter_Tight({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-inter-tight",
+  display: "swap",
+})
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-jakarta",
+  display: "swap",
+})
 
 export const metadata: Metadata = {
   title: {
@@ -38,7 +59,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    /* Light by default so the portal and login never go dark; the admin
+       layout's boot script overrides this with the signed-in user's choice. */
+    <html
+      lang="en"
+      data-theme="light"
+      className={`${inter.variable} ${interTight.variable} ${jakarta.variable}`}
+    >
       <body className="min-h-screen font-sans">
         {children}
         <PwaRegister />

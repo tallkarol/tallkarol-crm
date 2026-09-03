@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SEM Report v3 — Mineralife — September 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#F4F2EC;--surface:#FFF;--surface-2:#EDE9DE;--ink:#0F1615;--ink-2:#3D4947;--muted:#6E7A77;--line:rgba(15,22,21,.13);--line-soft:rgba(15,22,21,.07);--accent:#006965;--accent-ink:#00504D;--accent-soft:rgba(0,105,101,.10);--warn:#A45A1E;--warn-soft:rgba(164,90,30,.12);--crit:#8E3521;--crit-soft:rgba(142,53,33,.12);--good:#2E7D57;--good-soft:rgba(46,125,87,.12);--display:"Archivo",ui-sans-serif,system-ui,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:ui-sans-serif,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6}
+.wrap{max-width:880px;margin:0 auto;padding:0 32px}
+@media(max-width:720px){.wrap{padding:0 20px}}
+h1,h2,h3,h4,.eyebrow,.chip,.num,th,.ui{font-family:var(--display)}
+h1{font-size:clamp(28px,4.2vw,40px);line-height:1.08;letter-spacing:-.02em;font-weight:700;margin:0 0 10px}
+h2{font-size:20px;line-height:1.2;letter-spacing:-.01em;font-weight:600;margin:0 0 12px}
+h3{font-size:15px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 14px}p:last-child{margin-bottom:0}
+code,.mono{font-family:var(--mono);font-size:.85em;background:var(--surface-2);padding:.1em .34em;border-radius:3px}
+.small{font-size:13.5px;line-height:1.5}.muted{color:var(--muted)}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 14px}
+header.rpt{padding:56px 0 28px;border-bottom:2px solid var(--ink)}
+section{padding:34px 0;border-bottom:1px solid var(--line)}
+.sec-label{display:flex;align-items:baseline;gap:10px;margin:0 0 16px}
+.sec-label .n{font-family:var(--mono);font-size:12px;color:var(--accent-ink)}
+.metastrip{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;margin-top:22px}
+.metastrip>div{flex:1 1 160px;padding:12px 16px;border-right:1px solid var(--line-soft)}
+.metastrip>div:last-child{border-right:0}
+.metastrip .k{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px}
+.metastrip .v{font-family:var(--display);font-size:14px;font-weight:500}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:720px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:1fr}.g2{grid-template-columns:1fr}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.stat .num{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block;font-variant-numeric:tabular-nums}
+.stat .lbl{font-family:var(--ui);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:5px;display:block}
+.stat .sub{font-size:12.5px;color:var(--ink-2);margin-top:5px;display:block;line-height:1.35}
+.stat.good .num{color:var(--good)}.stat.warn .num{color:var(--warn)}.stat.crit .num{color:var(--crit)}.stat.accent .num{color:var(--accent-ink)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+.tablecard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 10px 6px;overflow-x:auto}
+th{text-align:left;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);font-family:var(--ui);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12px}
+.r{text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);font-family:var(--ui)}
+.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.accent{background:var(--accent-soft);color:var(--accent-ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.card.tint{background:var(--surface-2);border-color:var(--line-soft)}
+.rail{border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.rail.crit{border-left-color:var(--crit)}.rail.good{border-left-color:var(--good)}.rail.warn{border-left-color:var(--warn)}
+.up{color:var(--good);font-weight:600}.down{color:var(--crit);font-weight:600}
+ul.tight{margin:0;padding-left:19px}ul.tight li{margin-bottom:5px}
+footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(--ui)}
+@media print{body{background:#fff;font-size:12pt}section{page-break-inside:avoid}header.rpt{padding-top:0}}
+.toc{background:var(--surface-2);border:1px solid var(--line-soft);border-radius:8px;padding:16px 20px;margin-top:26px}
+.toc ol{margin:0;padding-left:20px;columns:2;column-gap:30px}
+.toc li{margin-bottom:5px;font-size:14px}
+.toc a{color:var(--ink);text-decoration:none}
+.toc a:hover{color:var(--accent-ink);text-decoration:underline}
+@media(max-width:640px){.toc ol{columns:1}}
+.statusrow{display:grid;grid-template-columns:88px 1fr;gap:14px;padding:11px 0;border-bottom:1px solid var(--line-soft);align-items:start}
+.statusrow:last-child{border-bottom:0}
+.statusrow .st{font-family:var(--ui);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:4px;text-align:center;white-space:nowrap}
+.st.done{background:var(--good-soft);color:var(--good)}
+.st.part{background:var(--warn-soft);color:var(--warn)}
+.st.open{background:var(--crit-soft);color:var(--crit)}
+.statusrow .what{font-size:14px}
+.statusrow .what b{font-weight:600}
+.statusrow .what .why{display:block;font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.45}
+.stack{display:grid;gap:14px}
+.new{background:var(--warn-soft);color:var(--warn);font-family:var(--ui);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:2px 7px;border-radius:4px;display:inline-block;vertical-align:middle;margin-left:7px}
+.fixed{background:var(--good-soft);color:var(--good);font-family:var(--ui);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:2px 7px;border-radius:4px;display:inline-block;vertical-align:middle;margin-left:7px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="rpt">
+  <p class="eyebrow">Tall Karol &middot; Mineralife Nutraceuticals &middot; mycustommanufacturer.com</p>
+  <h1>SEM Report v3</h1>
+  <p class="muted" style="font-size:17px">Re-run in full against the live systems on 3 September 2026 &mdash; index
+  scan, Analytics, Search Console, Google Ads and site health, twenty-four hours after the account rebuild.
+  This run found one thing that changes how every previous number in this series should be read.</p>
+  <div class="metastrip">
+    <div><span class="k">Headline</span><span class="v">Analytics has been under-counting since 17 July</span></div>
+    <div><span class="k">Since 2 Sept</span><span class="v">GA4 recording nothing at all</span></div>
+    <div><span class="k">New campaign</span><span class="v">Live 2 Sept &middot; $22.93 &middot; 6 clicks</span></div>
+    <div><span class="k">Index</span><span class="v">60 of 63 &middot; 3 open</span></div>
+  </div>
+  <div class="toc">
+    <ol>
+      <li><a href="#s1">What this re-run found</a></li>
+      <li><a href="#s2">Analytics is not measuring the site</a></li>
+      <li><a href="#s3">Why August looked like a collapse</a></li>
+      <li><a href="#s4">The new campaign&rsquo;s first two days</a></li>
+      <li><a href="#s5">What the rebuild did to Competitors</a></li>
+      <li><a href="#s6">Where the money is going</a></li>
+      <li><a href="#s7">Two paid enquiries Ads never counted</a></li>
+      <li><a href="#s8">Index check &mdash; 3 September</a></li>
+      <li><a href="#s9">Organic search</a></li>
+      <li><a href="#s10">Site health</a></li>
+      <li><a href="#s11">What to do, in order</a></li>
+      <li><a href="#s12">How this was verified</a></li>
+    </ol>
+  </div>
+</header>
+
+<section id="s1">
+  <div class="sec-label"><span class="n">01</span><h2>What this re-run found</h2></div>
+  <p>Version two reported that August traffic had fallen sharply and that Google Analytics had recorded nothing
+  yet for 1&ndash;2 September. It read those as a traffic problem and a reporting lag. Both readings were wrong,
+  and this run can prove it.</p>
+  <p>Analytics stopped measuring most of the site on <b>17 July</b>, the day a cookie consent banner shipped.
+  Since then Google Analytics has only ever seen the visitors who click &ldquo;accept&rdquo; &mdash; roughly one
+  in twelve. Every number in the v1 and v2 reports drawn from Analytics after 17 July is a sample of about eight
+  per cent of reality, not a measurement of it. August did not lose ninety per cent of its traffic. It lost ninety
+  per cent of its <i>measurement</i>.</p>
+  <p>On top of that, Analytics has recorded <b>nothing whatsoever</b> since 1 September, while the site has
+  continued to serve real visitors throughout. That is a second, separate fault, and it is almost certainly
+  something in the 1&ndash;2 September hero rebuild.</p>
+  <div class="card rail crit" style="margin-top:16px">
+    <h3>The one-line version</h3>
+    <p class="small">The advertising account is now built correctly and is spending on the right searches. The
+    measurement underneath it has been broken since mid-July and completely dark since 1 September, so nothing
+    the campaign does can currently be judged. Fixing measurement comes before every other decision in this
+    report.</p>
+  </div>
+</section>
+
+<section id="s2">
+  <div class="sec-label"><span class="n">02</span><h2>Analytics is not measuring the site</h2></div>
+  <p>Two independent counters run on mycustommanufacturer.com. Google Analytics needs a cookie, and so needs
+  consent. Vercel Analytics is cookieless and counts everyone. They should move together. They do not.</p>
+  <div class="tablecard">
+  <table>
+    <thead><tr><th>Day</th><th class="r">Vercel visitors</th><th class="r">Vercel pageviews</th><th class="r">GA4 users</th><th class="r">GA4 sessions</th><th>Reading</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">31 Aug</td><td class="r">108</td><td class="r">207</td><td class="r">8</td><td class="r">9</td><td><span class="chip warn">7% captured</span></td></tr>
+      <tr><td class="mono">1 Sep</td><td class="r">76</td><td class="r">106</td><td class="r">6</td><td class="r">7</td><td><span class="chip warn">8% captured</span></td></tr>
+      <tr><td class="mono">2 Sep</td><td class="r">92</td><td class="r">157</td><td class="r">0</td><td class="r">0</td><td><span class="chip crit">nothing recorded</span></td></tr>
+      <tr><td class="mono">3 Sep</td><td class="r">53</td><td class="r">73</td><td class="r">0</td><td class="r">0</td><td><span class="chip crit">nothing recorded</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="small muted" style="margin-top:10px">Vercel Analytics was switched on 31 August, which is why the
+  comparison starts there. Before that date there was no independent counter to catch the problem &mdash; which
+  is precisely why it went unnoticed for six weeks.</p>
+
+  <h3 style="margin-top:22px">This is not a reporting delay</h3>
+  <p>Google Analytics can take up to two days to finish processing, so an empty yesterday proves nothing on its
+  own. The Zemvelo property settles it. It sits in the same Analytics account, is read by the same service
+  account, on the same standard (unpaid) service tier:</p>
+  <div class="grid g3" style="margin-top:12px">
+    <div class="stat good"><span class="num">176</span><span class="lbl">Zemvelo users, 2 Sept</span><span class="sub">Already processed and reported</span></div>
+    <div class="stat good"><span class="num">11</span><span class="lbl">Zemvelo, live right now</span><span class="sub">Realtime is answering normally</span></div>
+    <div class="stat crit"><span class="num">0</span><span class="lbl">Mineralife, 2&ndash;3 Sept &amp; live</span><span class="sub">No rows at all, realtime empty</span></div>
+  </div>
+  <p style="margin-top:14px">Processing is current. Mineralife&rsquo;s property is not being sent anything.</p>
+
+  <h3 style="margin-top:22px">What is verified working</h3>
+  <ul class="tight small">
+    <li>The Tag Manager snippet is on the page &mdash; container <code>GTM-5B83HMG</code> loads.</li>
+    <li>The container holds the correct measurement ID, <code>G-VM816RCN4R</code>, in eight places.</li>
+    <li>The Analytics data stream and the Google Ads link both exist and are configured.</li>
+    <li>The consent banner component is still rendered on every non-admin route in the code.</li>
+  </ul>
+  <p style="margin-top:14px">So the fault is not a missing tag or a wrong ID. It is that the tag never receives
+  permission to fire. Consent defaults to <code>analytics_storage: 'denied'</code>, and Analytics only starts
+  recording once a visitor presses accept.</p>
+  <div class="card tint rail warn" style="margin-top:16px">
+    <h3>The most likely cause of the total blackout</h3>
+    <p class="small">Four deploys went out on 1 and 2 September, and all of them rebuilt page heroes &mdash;
+    <i>Add condensed intake form to the homepage hero</i>, <i>Put the enquiry form in the landing page hero</i>.
+    Analytics went silent immediately afterwards. If the new hero covers, hides or breaks the consent banner,
+    nobody can press accept, and the acceptance rate falls from eight per cent to zero &mdash; which is exactly
+    what the numbers show. <b>This needs two minutes in a browser to confirm:</b> open the site in a private
+    window and check whether the cookie banner still appears and still works.</p>
+  </div>
+</section>
+
+<section id="s3">
+  <div class="sec-label"><span class="n">03</span><h2>Why August looked like a collapse</h2></div>
+  <p>The consent banner shipped on 17 July. The effect on measurement is visible to the day.</p>
+  <div class="tablecard">
+  <table>
+    <thead><tr><th>Date</th><th class="r">Ad clicks</th><th class="r">Paid sessions in GA4</th><th class="r">All sessions</th><th>&nbsp;</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">14 Jul</td><td class="r">13</td><td class="r">22</td><td class="r">52</td><td><span class="chip ok">normal</span></td></tr>
+      <tr><td class="mono">15 Jul</td><td class="r">6</td><td class="r">14</td><td class="r">47</td><td><span class="chip ok">normal</span></td></tr>
+      <tr><td class="mono">16 Jul</td><td class="r">30</td><td class="r">29</td><td class="r">53</td><td><span class="chip ok">normal</span></td></tr>
+      <tr><td class="mono">17 Jul</td><td class="r">22</td><td class="r">10</td><td class="r">25</td><td><span class="chip warn">banner deploys, 22:26</span></td></tr>
+      <tr><td class="mono">18 Jul</td><td class="r">28</td><td class="r">0</td><td class="r">3</td><td><span class="chip crit">measurement gone</span></td></tr>
+      <tr><td class="mono">19 Jul</td><td class="r">30</td><td class="r">1</td><td class="r">5</td><td><span class="chip crit">&nbsp;</span></td></tr>
+      <tr><td class="mono">20 Jul</td><td class="r">26</td><td class="r">2</td><td class="r">8</td><td><span class="chip crit">&nbsp;</span></td></tr>
+      <tr><td class="mono">21 Jul</td><td class="r">30</td><td class="r">1</td><td class="r">7</td><td><span class="chip crit">&nbsp;</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="small muted" style="margin-top:10px">Before 17 July, recorded paid sessions tracked ad clicks closely
+  and daily sessions ran between 25 and 55. From 18 July they run between 3 and 8, while ad clicks carry on
+  unchanged. Nothing about the traffic changed. The counter changed.</p>
+  <div class="grid g4" style="margin-top:18px">
+    <div class="stat"><span class="num">791</span><span class="lbl">Ad clicks, August</span></div>
+    <div class="stat crit"><span class="num">34</span><span class="lbl">Paid sessions recorded</span><span class="sub">4.3% of the clicks</span></div>
+    <div class="stat"><span class="num">533</span><span class="lbl">Ad clicks, July</span></div>
+    <div class="stat good"><span class="num">364</span><span class="lbl">Paid sessions recorded</span><span class="sub">Most of it before the 17th</span></div>
+  </div>
+  <p style="margin-top:16px">This is the single most consequential finding in the series. It means the
+  &ldquo;paid traffic is not reaching the site&rdquo; conclusion in the earlier reports was measuring the consent
+  banner, not the advertising. It also means <b>August cannot be compared to July</b>, and the monthly performance
+  report for August should carry a warning to that effect.</p>
+</section>
+
+<section id="s4">
+  <div class="sec-label"><span class="n">04</span><h2>The new campaign&rsquo;s first two days</h2></div>
+  <p><b>B2B &mdash; Search &mdash; Core Terms</b> was approved and started serving on 2 September. It has now run
+  for one full day and part of a second. These are its complete numbers.</p>
+  <div class="grid g4" style="margin-top:14px">
+    <div class="stat accent"><span class="num">94</span><span class="lbl">Impressions</span></div>
+    <div class="stat accent"><span class="num">6</span><span class="lbl">Clicks</span><span class="sub">6.4% click-through</span></div>
+    <div class="stat accent"><span class="num">$22.93</span><span class="lbl">Spent</span><span class="sub">$3.82 per click</span></div>
+    <div class="stat warn"><span class="num">0</span><span class="lbl">Conversions</span><span class="sub">Far too early to judge</span></div>
+  </div>
+  <div class="tablecard" style="margin-top:16px">
+  <table>
+    <thead><tr><th>Day</th><th class="r">Impressions</th><th class="r">Clicks</th><th class="r">CTR</th><th class="r">Spend</th><th class="r">Cost per click</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">2 Sep</td><td class="r">83</td><td class="r">5</td><td class="r">6.0%</td><td class="r">$19.79</td><td class="r">$3.96</td></tr>
+      <tr><td class="mono">3 Sep <span class="muted">(part day)</span></td><td class="r">11</td><td class="r">1</td><td class="r">9.1%</td><td class="r">$3.14</td><td class="r">$3.14</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <h3 style="margin-top:22px">Which keywords actually spent</h3>
+  <div class="tablecard">
+  <table>
+    <thead><tr><th>Keyword</th><th>Ad group</th><th>Match</th><th class="r">Imps</th><th class="r">Clicks</th><th class="r">Spend</th></tr></thead>
+    <tbody>
+      <tr><td>nutraceutical contract manufacturing</td><td class="muted">Nutraceutical</td><td><span class="chip">phrase</span></td><td class="r">15</td><td class="r">2</td><td class="r">$8.00</td></tr>
+      <tr><td>nutraceutical manufacturer</td><td class="muted">Nutraceutical</td><td><span class="chip">phrase</span></td><td class="r">31</td><td class="r">2</td><td class="r">$6.92</td></tr>
+      <tr><td>supplement manufacturers in usa</td><td class="muted">USA Manufacturer</td><td><span class="chip">phrase</span></td><td class="r">19</td><td class="r">1</td><td class="r">$4.99</td></tr>
+      <tr><td>dietary supplement manufacturer usa</td><td class="muted">USA Manufacturer</td><td><span class="chip">phrase</span></td><td class="r">22</td><td class="r">1</td><td class="r">$3.02</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="small muted" style="margin-top:10px">The cGMP Certified ad group has served five impressions and taken
+  no clicks yet. Nothing is wrong with it &mdash; there simply has not been enough time.</p>
+
+  <h3 style="margin-top:22px">What people actually typed</h3>
+  <p>The three searches that took a paid click were <code>wholesale protein powder manufacturers</code> ($4.99),
+  <code>turnkey supplement manufacturing</code> ($4.86) and <code>nutraceuticals company</code> ($2.04). All three
+  are genuine contract-manufacturing intent. On the evidence of two days, the campaign is reaching the right
+  people.</p>
+  <div class="card tint" style="margin-top:14px">
+    <h3>Negatives worth adding now</h3>
+    <p class="small">The campaign is also picking up impressions on company-name lookups &mdash;
+    <code>bni pure</code>, <code>ocean formulations inc</code>, <code>brand nutraceuticals inc</code>,
+    <code>qingdao vital nutraceutical ingredients bioscience</code>. None has taken a click yet, so none has cost
+    anything, but at $3&ndash;4 a click they are worth excluding before one does.</p>
+  </div>
+  <div class="card rail warn" style="margin-top:16px">
+    <h3>The honest caveat</h3>
+    <p class="small">Six clicks is not a result. It is not enough to judge cost per click, click-through rate,
+    landing pages or ad copy, and it certainly is not enough to conclude anything from zero conversions. What can
+    be said after two days is only this: the campaign serves, the ads are approved, the searches it matches are
+    the right ones, and the money is going to relevant clicks rather than junk. Give it two full weeks.</p>
+  </div>
+</section>
+
+<section id="s5">
+  <div class="sec-label"><span class="n">05</span><h2>What the rebuild did to Competitors</h2></div>
+  <p>The older campaign changed character completely on 2 September. This is the most dramatic movement in the
+  account, and it needs explaining carefully, because at first glance it looks like a disaster.</p>
+  <div class="tablecard">
+  <table>
+    <thead><tr><th>Day</th><th class="r">Impressions</th><th class="r">Clicks</th><th class="r">CTR</th><th class="r">Spend</th><th class="r">Cost per click</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">28 Aug</td><td class="r">171</td><td class="r">50</td><td class="r">29.2%</td><td class="r">$10.70</td><td class="r">$0.21</td></tr>
+      <tr><td class="mono">29 Aug</td><td class="r">258</td><td class="r">70</td><td class="r">27.1%</td><td class="r">$9.24</td><td class="r">$0.13</td></tr>
+      <tr><td class="mono">30 Aug</td><td class="r">181</td><td class="r">58</td><td class="r">32.0%</td><td class="r">$6.44</td><td class="r">$0.11</td></tr>
+      <tr><td class="mono">31 Aug</td><td class="r">82</td><td class="r">19</td><td class="r">23.2%</td><td class="r">$9.11</td><td class="r">$0.48</td></tr>
+      <tr><td class="mono">1 Sep</td><td class="r">108</td><td class="r">23</td><td class="r">21.3%</td><td class="r">$2.11</td><td class="r">$0.09</td></tr>
+      <tr><td class="mono"><b>2 Sep</b></td><td class="r">31</td><td class="r">1</td><td class="r">3.2%</td><td class="r">$4.64</td><td class="r">$4.64</td></tr>
+      <tr><td class="mono"><b>3 Sep</b></td><td class="r">5</td><td class="r">0</td><td class="r">&mdash;</td><td class="r">$0.00</td><td class="r">&mdash;</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="margin-top:14px">Impressions fell by about ninety-five per cent and the cost per click went up
+  twenty-five fold. That reads like the campaign broke. It did not. Look at what the cheap clicks were.</p>
+  <p>Through 1 September a single broad-match keyword, <code>nutra labs</code>, produced 92 impressions and 20
+  clicks for $1.67. The searches behind those clicks were things like
+  <code>nutrition manufacturing companies</code> (3 clicks, $0.08), <code>food supplements manufacturers</code>
+  (3 clicks, $0.07), <code>supplement manufacturers</code> (2 clicks, $0.05) and <code>nutraceuticals</code>
+  (1 click, $0.02). Clicks at two to eight cents with a twenty-to-thirty per cent click-through rate are not
+  buyers on Google Search. Analytics confirms the source: sessions arriving from
+  <code>syndicatedsearch.goog</code> &mdash; Google&rsquo;s search partner network, not Google itself.</p>
+  <div class="card rail good" style="margin-top:16px">
+    <h3>So the collapse is the fix working</h3>
+    <p class="small">Turning off the search partner network and moving broad match to phrase match removed almost
+    all the volume, because almost all the volume was worthless. The account now buys a handful of expensive,
+    relevant clicks instead of hundreds of cheap, irrelevant ones. That is the right trade &mdash; but it does mean
+    every historical click, cost-per-click and click-through figure for Competitors is not comparable to anything
+    from 2 September onward.</p>
+  </div>
+</section>
+
+<section id="s6">
+  <div class="sec-label"><span class="n">06</span><h2>Where the money is going</h2></div>
+  <div class="grid g4">
+    <div class="stat"><span class="num">$307.49</span><span class="lbl">B2B spend, August</span><span class="sub">791 clicks &middot; 7,161 impressions</span></div>
+    <div class="stat"><span class="num">$303.47</span><span class="lbl">B2B spend, July</span><span class="sub">533 clicks &middot; 8,164 impressions</span></div>
+    <div class="stat warn"><span class="num">$24.43</span><span class="lbl">B2B spend, 2 Sept</span><span class="sub">Against ~$20/day budget</span></div>
+    <div class="stat crit"><span class="num">0</span><span class="lbl">Conversions in Ads</span><span class="sub">July and August, every campaign</span></div>
+  </div>
+  <p style="margin-top:16px">September&rsquo;s budget of $600 a month works out at roughly $20 a day. The first
+  full day of the rebuilt account spent $24.43. One day over pace is not a problem in itself &mdash; new campaigns
+  bid aggressively while they learn &mdash; but at $3.82 a click the budget buys about five clicks a day, so it is
+  worth watching daily rather than monthly.</p>
+  <div class="card rail warn" style="margin-top:16px">
+    <h3>A question that needs an answer: the Performance Max campaign</h3>
+    <p class="small">The shared Ads account also runs <b>2023 &mdash; Performance Max &mdash; Maximize</b>. Between
+    28 August and 3 September it spent <b>$82.35</b> &mdash; more than the two B2B search campaigns spent together
+    ($55.33) over the same week. Because the reporting splits this account by campaign name, and that campaign has
+    no &ldquo;B2B&rdquo; in its name, every cent of it is currently attributed to Zemvelo and none of it appears in
+    Mineralife&rsquo;s figures.</p>
+    <p class="small">If that campaign is in fact Mineralife&rsquo;s, real Mineralife spend is roughly double what
+    is being reported, and the $600 budget is already being exceeded substantially. If it is Zemvelo&rsquo;s, the
+    reporting is correct and no action is needed. <b>Somebody needs to confirm which.</b> It is the only open
+    question in this report that could change the numbers by a factor of two.</p>
+  </div>
+</section>
+
+<section id="s7">
+  <div class="sec-label"><span class="n">07</span><h2>Two paid enquiries Ads never counted</h2></div>
+  <p>Google Ads reports zero conversions for July and August across every campaign. Analytics disagrees. Between
+  1 August and 3 September it recorded nine <code>generate_lead</code> events:</p>
+  <div class="tablecard">
+  <table>
+    <thead><tr><th>Date</th><th>Source</th><th>Campaign</th><th>&nbsp;</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">2 Aug</td><td>google / cpc</td><td>B2B &mdash; Search &mdash; Competitors</td><td><span class="chip accent">paid enquiry</span></td></tr>
+      <tr><td class="mono">3 Aug</td><td>direct</td><td class="muted">&mdash;</td><td></td></tr>
+      <tr><td class="mono">5 Aug</td><td>google / organic</td><td class="muted">&mdash;</td><td></td></tr>
+      <tr><td class="mono">13 Aug</td><td>google / organic</td><td class="muted">&mdash;</td><td></td></tr>
+      <tr><td class="mono">14 Aug</td><td>direct</td><td class="muted">&mdash;</td><td></td></tr>
+      <tr><td class="mono">17 Aug</td><td>google / cpc</td><td>B2B &mdash; Search &mdash; Competitors</td><td><span class="chip accent">paid enquiry</span></td></tr>
+      <tr><td class="mono">19 Aug</td><td class="muted">localhost:3000 / referral</td><td class="muted">&mdash;</td><td><span class="chip crit">test traffic</span></td></tr>
+      <tr><td class="mono">30 Aug</td><td>direct</td><td class="muted">&mdash;</td><td></td></tr>
+      <tr><td class="mono">30 Aug</td><td class="muted">localhost:3000 / referral</td><td class="muted">&mdash;</td><td><span class="chip crit">test traffic</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="margin-top:14px">Two of these came from paid search, both from the Competitors campaign. So the goal
+  stated in version two &mdash; the first attributable US enquiry &mdash; was in fact reached twice in August.
+  Google Ads simply never counted it, so no bidding decision has ever been able to use it.</p>
+  <p>The plumbing explains why. <code>generate_lead</code> was only marked as a key event in Analytics on
+  <b>30 August</b>, after both enquiries had already happened, and Analytics does not apply that designation
+  retrospectively. <code>catalog_download</code> was marked on 1 September. The Google Ads link exists and was
+  last touched on 1 September, but no conversion from it is being counted in Ads.</p>
+  <div class="card tint" style="margin-top:14px">
+    <h3>Two smaller things in the same table</h3>
+    <p class="small">Two of the nine enquiries came from <code>localhost:3000</code> &mdash; a developer machine
+    filing test leads into the production Analytics property and into the lead records. Those need excluding, and
+    the internal-traffic cookie the site already supports is the mechanism for it.</p>
+  </div>
+</section>
+
+<section id="s8">
+  <div class="sec-label"><span class="n">08</span><h2>Index check &mdash; 3 September</h2></div>
+  <p>The scan ran this morning against Search Console. Sixty of sixty-three submitted URLs are indexed. Nothing
+  new broke, and nothing was fixed since yesterday.</p>
+  <div class="grid g4">
+    <div class="stat good"><span class="num">60/63</span><span class="lbl">Indexed</span><span class="sub">95% of the sitemap</span></div>
+    <div class="stat"><span class="num">0</span><span class="lbl">Newly opened</span></div>
+    <div class="stat"><span class="num">0</span><span class="lbl">Resolved today</span></div>
+    <div class="stat warn"><span class="num">3</span><span class="lbl">Still open</span></div>
+  </div>
+  <div class="tablecard" style="margin-top:16px">
+  <table>
+    <thead><tr><th>Scan</th><th class="r">Indexed</th><th>Movement</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">30 Aug</td><td class="r">59 / 63</td><td class="muted">baseline</td></tr>
+      <tr><td class="mono">1 Sep</td><td class="r">59 / 63</td><td class="muted">no change</td></tr>
+      <tr><td class="mono">2 Sep</td><td class="r">60 / 63</td><td><span class="chip ok">Las Vegas page indexed</span></td></tr>
+      <tr><td class="mono">3 Sep</td><td class="r">60 / 63</td><td class="muted">no change</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <h3 style="margin-top:22px">The three that remain</h3>
+  <div class="stack">
+    <div class="statusrow"><span class="st open">7 scans</span><span class="what">
+      <b>/blog/glutathione-reduced-vs-liposomal</b>
+      <span class="why">Google reports &ldquo;URL is unknown to Google&rdquo; &mdash; it has never been crawled at
+      all, despite being in the sitemap since 30 August. This is the worst of the three: unknown is a step behind
+      discovered.</span></span></div>
+    <div class="statusrow"><span class="st open">7 scans</span><span class="what">
+      <b>/serving/colorado/boulder</b>
+      <span class="why">&ldquo;Discovered &mdash; currently not indexed&rdquo;. Google knows it exists and has
+      chosen not to crawl it yet. Typical for a thin location page with few internal links.</span></span></div>
+    <div class="statusrow"><span class="st open">2 scans</span><span class="what">
+      <b>/blog/mineralife-is-hiring</b>
+      <span class="why">&ldquo;Discovered &mdash; currently not indexed&rdquo;, first seen 2 September when the
+      clean slug replaced the previous emoji URL. Two days old &mdash; give it a week before treating it as a
+      problem.</span></span></div>
+  </div>
+  <p style="margin-top:16px">Internal crawl paths for these were deployed on 2 September. One day is not enough
+  time for Google to act on that, so the right response for now is to wait rather than to intervene again. If
+  the glutathione post is still unknown a week from now, request indexing for it directly.</p>
+  <p class="small muted">Filed against maintenance task <code>b008884d</code> for the September period.</p>
+</section>
+
+<section id="s9">
+  <div class="sec-label"><span class="n">09</span><h2>Organic search</h2></div>
+  <p>Search Console is the one data source in this report that has been unaffected by the tracking problems, and
+  it shows the site&rsquo;s visibility improving while its clicks slip.</p>
+  <div class="grid g4">
+    <div class="stat good"><span class="num">36,968</span><span class="lbl">Impressions, August</span><span class="sub">32,580 in July &middot; <span class="up">+13%</span></span></div>
+    <div class="stat warn"><span class="num">140</span><span class="lbl">Clicks, August</span><span class="sub">170 in July &middot; <span class="down">&minus;18%</span></span></div>
+    <div class="stat good"><span class="num">12.9</span><span class="lbl">Average position</span><span class="sub">16.6 in July &middot; <span class="up">improving</span></span></div>
+    <div class="stat"><span class="num">0.38%</span><span class="lbl">Click-through rate</span><span class="sub">Low for these positions</span></div>
+  </div>
+
+  <h3 style="margin-top:22px">The brand name lost its first position</h3>
+  <p>This is new since version two and it matters more than the totals above. The company&rsquo;s own name held
+  position one solidly from early July until 17 August, then fell:</p>
+  <div class="tablecard">
+  <table>
+    <thead><tr><th>Fortnight</th><th class="r">Clicks</th><th class="r">Impressions</th><th class="r">Average position</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">7&ndash;20 Jul</td><td class="r">36</td><td class="r">58</td><td class="r">1.02</td></tr>
+      <tr><td class="mono">21 Jul &ndash; 3 Aug</td><td class="r">22</td><td class="r">37</td><td class="r">1.00</td></tr>
+      <tr><td class="mono">4&ndash;17 Aug</td><td class="r">16</td><td class="r">29</td><td class="r">1.00</td></tr>
+      <tr><td class="mono"><b>18&ndash;31 Aug</b></td><td class="r">18</td><td class="r">33</td><td class="r"><span class="down">8.52</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="small muted" style="margin-top:10px">Query: <code>mineralife nutraceuticals</code>. The related
+  <code>mineralife nutraceuticals, llc</code> moved from position 1.1 to 21.8 over the same period.</p>
+  <p style="margin-top:14px">Dropping from first to eighth on your own company name is unusual and worth
+  investigating on its own. It coincides with the second half of August, when the site was being rebuilt heavily.</p>
+
+  <h3 style="margin-top:22px">The site is still split across two hostnames</h3>
+  <div class="tablecard">
+  <table>
+    <thead><tr><th>Homepage URL in Search Console</th><th class="r">Impressions</th><th class="r">Clicks</th><th class="r">Position</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">https://www.mycustommanufacturer.com/</td><td class="r">10,639</td><td class="r">58</td><td class="r">31.3</td></tr>
+      <tr><td class="mono">https://mycustommanufacturer.com/</td><td class="r">23,236</td><td class="r">40</td><td class="r">4.7</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="margin-top:14px">Two thirds of all homepage impressions still resolve to the address without
+  <code>www</code>. The site side is correct &mdash; that address returns a permanent 308 redirect to the
+  <code>www</code> version, and both serve a canonical tag pointing at <code>www</code>. So this is Google
+  consolidating slowly rather than a configuration error, and it should resolve itself. It is worth knowing
+  about, though, because it means position and impression figures for the homepage are being reported as two
+  different pages, and the brand-term movement above may be a symptom of the same consolidation.</p>
+
+  <h3 style="margin-top:22px">Ranking well on terms that earn no clicks</h3>
+  <p>The commercial terms the business cares about are now ranking, and are being ignored:</p>
+  <div class="tablecard">
+  <table>
+    <thead><tr><th>Query</th><th class="r">Impressions</th><th class="r">Position</th><th class="r">Clicks</th></tr></thead>
+    <tbody>
+      <tr><td>dietary supplement manufacturers</td><td class="r">175</td><td class="r">2.1</td><td class="r">1</td></tr>
+      <tr><td>dietary supplement manufacturers usa</td><td class="r">143</td><td class="r">1.0</td><td class="r">1</td></tr>
+      <tr><td>supplement manufacturers in usa</td><td class="r">91</td><td class="r">6.7</td><td class="r">1</td></tr>
+      <tr><td>supplement manufacturer in the usa</td><td class="r">70</td><td class="r">4.4</td><td class="r">1</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="margin-top:14px">Position one on <code>dietary supplement manufacturers usa</code> with 143
+  impressions and a single click is a title and description problem, not a ranking problem. These four queries are
+  the cheapest available win in this report: the ranking is already paid for.</p>
+</section>
+
+<section id="s10">
+  <div class="sec-label"><span class="n">10</span><h2>Site health</h2></div>
+  <p>Measured live this morning. Nothing here needs attention.</p>
+  <div class="grid g4">
+    <div class="stat good"><span class="num">90</span><span class="lbl">Performance, mobile</span><span class="sub">99 on desktop</span></div>
+    <div class="stat good"><span class="num">100</span><span class="lbl">Accessibility, mobile</span><span class="sub">97 on desktop</span></div>
+    <div class="stat good"><span class="num">100</span><span class="lbl">SEO, both</span><span class="sub">Best practices 100 / 92</span></div>
+    <div class="stat good"><span class="num">100%</span><span class="lbl">Uptime, 30 days</span><span class="sub">156 ms average response</span></div>
+  </div>
+  <p class="small muted" style="margin-top:14px">Google still has no field data from real visitors for this site
+  &mdash; loading speeds above are laboratory measurements. That needs sustained real traffic before it changes,
+  and it is not something to act on.</p>
+</section>
+
+<section id="s11">
+  <div class="sec-label"><span class="n">11</span><h2>What to do, in order</h2></div>
+  <div class="stack">
+    <div class="statusrow"><span class="st open">now</span><span class="what">
+      <b>Find out why the consent banner stopped being accepted</b>
+      <span class="why">Open the site in a private browser window and check the banner appears, is clickable, and
+      is not covered by the new hero. Until this is fixed nothing about the campaign can be measured. Two minutes
+      of work; it blocks everything else.</span></span></div>
+    <div class="statusrow"><span class="st open">now</span><span class="what">
+      <b>Confirm who owns the Performance Max campaign</b>
+      <span class="why">$82.35 in seven days is currently booked to Zemvelo on the strength of a campaign name. If
+      it is Mineralife&rsquo;s, the budget picture in this report is wrong by a factor of two.</span></span></div>
+    <div class="statusrow"><span class="st part">this week</span><span class="what">
+      <b>Get conversions into Google Ads</b>
+      <span class="why">Two paid enquiries in August were never counted. Import <code>generate_lead</code> from
+      Analytics as an Ads conversion so bidding can finally use it &mdash; and note it will only count enquiries
+      from 30 August onward, when the key event was created.</span></span></div>
+    <div class="statusrow"><span class="st part">this week</span><span class="what">
+      <b>Exclude developer traffic from the production property</b>
+      <span class="why">Two of nine August enquiries came from <code>localhost:3000</code>. The
+      internal-traffic cookie already exists in the site; it just needs to be applied.</span></span></div>
+    <div class="statusrow"><span class="st part">this week</span><span class="what">
+      <b>Add company-name negatives to Core Terms</b>
+      <span class="why">Competitor and supplier lookups are drawing impressions. They cost nothing yet, but a
+      single click is nearly $4.</span></span></div>
+    <div class="statusrow"><span class="st part">this week</span><span class="what">
+      <b>Rewrite four titles and descriptions</b>
+      <span class="why">The four commercial queries in section 09 rank between position 1 and 6.7 and take one
+      click each. The ranking is already earned; only the listing text is losing the click.</span></span></div>
+    <div class="statusrow"><span class="st open">watch</span><span class="what">
+      <b>The brand-term position drop</b>
+      <span class="why">First to eighth on the company&rsquo;s own name, dated to the second half of August.
+      Check again next week &mdash; if it has not recovered as the hostname consolidation completes, it needs
+      its own investigation.</span></span></div>
+    <div class="statusrow"><span class="st done">hold</span><span class="what">
+      <b>Judging the new campaign</b>
+      <span class="why">Six clicks and $22.93 is not a result. Do not change bids, budgets, copy or landing pages
+      on this evidence. Two full weeks, or roughly a hundred clicks, before any of that is worth
+      discussing.</span></span></div>
+  </div>
+</section>
+
+<section id="s12">
+  <div class="sec-label"><span class="n">12</span><h2>How this was verified</h2></div>
+  <p class="small">Every figure in this report was read from the live systems on 3 September 2026, not from a
+  cached report or a previous version. Specifically:</p>
+  <ul class="tight small">
+    <li><b>Index scan</b> &mdash; URL Inspection API against Search Console property
+      <code>sc-domain:mycustommanufacturer.com</code>, 63 sitemap URLs, run 3 September.</li>
+    <li><b>Advertising</b> &mdash; Google Ads API v25, account 624-370-2566, campaign, keyword and search-term
+      reports queried per day for 28 August to 3 September.</li>
+    <li><b>Analytics</b> &mdash; Analytics Data API against property 395780153, daily and realtime, cross-checked
+      against properties 305233533 (Zemvelo), 498136327 and 551968841 to rule out processing delay.</li>
+    <li><b>Search Console</b> &mdash; Search Analytics API, queries and pages, compared fortnight by fortnight
+      from 7 July.</li>
+    <li><b>Site</b> &mdash; live HTTP checks of the homepage, redirects and canonical tags; the Tag Manager
+      container <code>GTM-5B83HMG</code> downloaded and inspected; deploy history and source history read
+      directly from the site repository.</li>
+    <li><b>Speed and uptime</b> &mdash; PageSpeed Insights, live mobile and desktop audits; UptimeRobot monitor
+      803863309.</li>
+  </ul>
+  <p class="small" style="margin-top:14px">One conclusion in this report is stated as a likelihood rather than a
+  fact: that the 1&ndash;2 September hero rebuild is what stopped consent being granted. The blackout itself is
+  proven, and the timing match is exact, but confirming the mechanism requires opening the site in a browser,
+  which is the first action listed in section 11.</p>
+</section>
+
+<footer>
+  Tall Karol &middot; SEM Report v3 &middot; Mineralife Nutraceuticals, LLC &middot; supersedes SEM report v2 of
+  2 September 2026 &middot; re-verified against Google Ads account 624-370-2566, Google Analytics property
+  395780153, Search Console <code>sc-domain:mycustommanufacturer.com</code>, Tag Manager container GTM-5B83HMG
+  and the production site &middot; full re-run 3 September 2026
+</footer>
+
+</div>
+</body>
+</html>

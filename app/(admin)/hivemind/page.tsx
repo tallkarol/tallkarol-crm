@@ -1,0 +1,53 @@
+import { PageHeader } from "@/components/PageHeader"
+import { HivemindGraph } from "@/components/hivemind/HivemindGraph"
+import { HIVE, KIND_STYLE, scanAge, type NodeKind } from "@/lib/hivemind"
+
+export const metadata = { title: "Hive mind" }
+
+/* The counts worth reading as numbers rather than hunting for in the graph. */
+const HEADLINE: NodeKind[] = ["agent", "skill", "command", "routine"]
+
+export default function HivemindPage() {
+  const { counts, plugin, scannedAt } = HIVE
+
+  return (
+    <>
+      <PageHeader
+        title="Hive mind"
+        actions={
+          <p className="font-mono text-[11px] text-tk-slate/55">
+            {plugin.name} v{plugin.version} · scanned {scanAge(scannedAt)}
+          </p>
+        }
+      />
+
+      <p className="mt-2 max-w-[68ch] text-[13px] leading-relaxed text-tk-slate/75">
+        Every skill, specialist, command and routine currently wired into the
+        plugin, and what each one loads. Read from{" "}
+        <span className="font-mono text-[12px]">{plugin.root}</span> by{" "}
+        <span className="font-mono text-[12px]">npm run hivemind:scan</span> — rerun
+        it after changing the hive and this map changes with it.
+      </p>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {HEADLINE.map((kind) => (
+          <div
+            key={kind}
+            className="rounded-xl border border-tk-slate/12 bg-white px-4 py-2.5 shadow-card"
+          >
+            <p className="font-display text-2xl font-semibold tabular-nums leading-none text-tk-onyx">
+              {counts[kind] ?? 0}
+            </p>
+            <p className="mt-1 text-[11px] uppercase tracking-wide text-tk-slate/55">
+              {KIND_STYLE[kind].label}s
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <section className="mt-5">
+        <HivemindGraph graph={HIVE} />
+      </section>
+    </>
+  )
+}

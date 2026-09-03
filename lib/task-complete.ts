@@ -12,6 +12,12 @@ import { isoDay, periodKey } from "@/lib/task-view"
  * it also records the period that tick satisfied, and un-ticking inside the
  * same period retracts that record. A second implementation would get this
  * wrong on the first edit.
+ *
+ * Reopening also returns the row to `queue`. Without that, un-ticking a task
+ * that was finished from `doing` brought it back mid-flight, and one finished
+ * from `waiting` reappeared in the waiting lens with a fresh `updated_at` —
+ * so it would not even read as rotting. `reopenDueRecurring()` has always
+ * done this for repeats; the two paths agree now.
  */
 
 export type CompleteResult =
@@ -32,6 +38,7 @@ export async function completeTask(
     .set({
       status: done ? "done" : "open",
       completedAt: done ? now : null,
+      ...(done ? {} : { boardStage: "queue" as const }),
       updatedAt: now,
     })
     .where(eq(tasks.id, id))

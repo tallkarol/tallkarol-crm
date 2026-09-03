@@ -32,6 +32,8 @@ export type UnreadGroup = {
   shortState: string
   /** "oldest 4 hours ago · Acme Co, Jane Doe" */
   detail: string
+  /** Age of the oldest unread, short — "111d". Null when nothing is unread. */
+  oldest: string | null
   href: string
 }
 
@@ -41,6 +43,11 @@ export type UnreadSummary = {
   /** Unread mail and info-level events — the quiet line, never a tile. */
   otherCount: number
   otherLabel: string
+  /** The quiet line, split — the dashboard table gives each its own row. */
+  otherMail: number
+  otherEvents: number
+  otherMailOldest: string | null
+  otherEventsOldest: string | null
   /** Everything unread, whichever bucket: the Inbox badge and the loud/quiet switch. */
   total: number
   /** Still waiting on a reply from us, read or not. Survives the quiet state. */
@@ -103,6 +110,7 @@ const EMPTY = (href: string, state: string, detail: string): UnreadGroup => ({
   state,
   shortState: state,
   detail,
+  oldest: null,
   href,
 })
 
@@ -137,6 +145,7 @@ function leadsGroup(all: InboxItem[], unread: InboxItem[], now: Date): UnreadGro
     state: `new ${plural(unread.length, "enquiry", "enquiries")}`,
     shortState: `new · ${ago(age, true)}`,
     detail,
+    oldest: ago(age, true),
     href: ROUTES.leads,
   }
 }
@@ -188,6 +197,7 @@ function ticketsGroup(all: InboxItem[], unread: InboxItem[], now: Date): UnreadG
     state,
     shortState,
     detail,
+    oldest: ago(age, true),
     href: ROUTES.support,
   }
 }
@@ -220,8 +230,13 @@ export function summarizeUnread(
   )
 
   const other = inBucket(unread, "other")
-  const mail = other.filter((i) => i.kind === "mail").length
-  const events = other.length - mail
+  const mailItems = other.filter((i) => i.kind === "mail")
+  const eventItems = other.filter((i) => i.kind !== "mail")
+  const mail = mailItems.length
+  const events = eventItems.length
+  // Newest-first, so the last one in a bucket is its oldest.
+  const oldestOf = (rows: InboxItem[]) =>
+    rows.length ? ago(ageMs(rows[rows.length - 1], now), true) : null
   const otherLabel = [
     mail > 0 ? `${mail} ${plural(mail, "email")}` : null,
     events > 0 ? `${events} ${plural(events, "event")}` : null,
@@ -234,6 +249,10 @@ export function summarizeUnread(
     tickets,
     otherCount: other.length,
     otherLabel,
+    otherMail: mail,
+    otherEvents: events,
+    otherMailOldest: oldestOf(mailItems),
+    otherEventsOldest: oldestOf(eventItems),
     total: unread.length,
     needsReply: live.filter((i) => i.needsReply && i.state !== "snoozed").length,
     clearedAt: clearedAt ? clearedAt.toISOString() : null,

@@ -266,6 +266,7 @@ export async function allTasks(now = new Date()): Promise<HubTask[]> {
       productId: row.productId,
       productName: row.product?.name ?? null,
       productSlug: row.product?.slug ?? null,
+      retainerId: row.retainerId,
       retainerName: row.retainer?.name ?? null,
       deliverableLabel: row.deliverable?.label ?? null,
       items: { total: items.length, done: items.filter((i) => i.done).length },
@@ -292,7 +293,11 @@ export async function listTasks(
   return rows.filter((task) => taskMatches(task, criteria, options.q ?? "", today))
 }
 
-/** Open tasks filed against one project or client — the entity-page lists. */
+/**
+ * Tasks filed against one entity — the entity-page lists. Narrowest scope
+ * wins. `retainerId` was in the signature from the start but had no branch,
+ * so the retainer page had to run its own query and intersect by hand.
+ */
 export async function tasksFor(
   scope: {
     projectId?: string
@@ -306,6 +311,7 @@ export async function tasksFor(
   return rows.filter((task) => {
     if (scope.productId) return task.productId === scope.productId
     if (scope.projectId) return task.projectId === scope.projectId
+    if (scope.retainerId) return task.retainerId === scope.retainerId
     if (scope.clientId) return task.clientId === scope.clientId
     return false
   })

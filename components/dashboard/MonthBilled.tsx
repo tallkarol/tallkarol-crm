@@ -1,10 +1,13 @@
-import { ChevronDown } from "lucide-react"
 import Link from "next/link"
+import { clientColor } from "@/lib/client-colors"
+import { cn } from "@/lib/cn"
+import { ROUTES } from "@/lib/nav"
 import { formatMoney } from "@/lib/work"
 
 export type MonthInvoiceLine = {
   number: string
   clientName: string
+  clientSlug: string
   amountCents: number
   status: string
 }
@@ -13,10 +16,15 @@ export type MonthExpectedLine = {
   label: string
   sub: string | null
   cents: number
+  /** Client slug when the line belongs to one — colours its chip. */
+  slug?: string | null
 }
 
-/** Billed this month — the dropdown itemizes what was billed and what the
-    month is still expected to produce. */
+/**
+ * Billed this month: the number against the goal, a two-tone bar (billed
+ * solid, expected hatched), then every line that makes up the expectation.
+ * Nothing folds away — the card earns its height with the itemization.
+ */
 export function MonthBilled({
   monthLabel,
   billedCents,
@@ -32,116 +40,156 @@ export function MonthBilled({
   expected: MonthExpectedLine[]
   expectedTotalCents: number
 }) {
+  const pct = monthlyGoalCents ? Math.round((billedCents / monthlyGoalCents) * 100) : null
+  const expectedPct = monthlyGoalCents
+    ? Math.round((expectedTotalCents / monthlyGoalCents) * 100)
+    : null
+
   return (
-    <details className="group min-w-0 rounded-2xl border border-tk-slate/15 bg-white shadow-sm open:[&_svg]:rotate-0">
-      <summary className="flex min-w-0 cursor-pointer list-none flex-col px-5 py-4 [&::-webkit-details-marker]:hidden">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-tk-slate/70">
-            Billed in {monthLabel}
-          </p>
-          <ChevronDown
-            aria-hidden
-            className="size-4 shrink-0 -rotate-90 text-tk-slate/50 transition-transform duration-200 motion-reduce:transition-none"
-          />
-        </div>
-        <div className="mt-2 flex min-w-0 items-end justify-between gap-3">
-          <p className="shrink-0 text-2xl font-semibold tracking-tight text-tk-onyx tabular-nums">
+    <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-card">
+      <div className="flex items-center justify-between gap-3 border-b border-tk-slate/10 px-[18px] py-3">
+        <h2 className="font-ui text-[13.5px] font-bold tracking-tight text-tk-onyx">
+          Billed · {monthLabel}
+        </h2>
+        <Link
+          href={ROUTES.invoices}
+          className="font-ui text-xs font-bold text-tk-slate/70 hover:text-tk-onyx hover:underline"
+        >
+          Invoices →
+        </Link>
+      </div>
+      <div className="px-[18px] pb-3 pt-4">
+        <p className="flex items-baseline gap-2.5">
+          <span className="font-display text-[34px] font-semibold leading-none tracking-[-0.035em] text-tk-onyx tabular-nums">
             {formatMoney(billedCents)}
-          </p>
-          <p className="min-w-0 truncate text-right text-xs text-tk-slate/60">
+          </span>
+          <span className="font-ui text-sm font-medium text-tk-slate/70">
             {monthlyGoalCents ? (
               <>
-                <span className="font-semibold text-tk-teal">
-                  {Math.round((billedCents / monthlyGoalCents) * 100)}%
-                </span>{" "}
-                of {formatMoney(monthlyGoalCents)} month goal
+                <b className="font-bold text-tk-onyx">{pct}%</b> of {formatMoney(monthlyGoalCents)} goal
               </>
             ) : invoices.length === 0 ? (
-              "No invoices yet this month"
+              "nothing invoiced yet"
             ) : (
               "this month"
             )}
-          </p>
-        </div>
-        {monthlyGoalCents ? <MonthBar fraction={billedCents / monthlyGoalCents} /> : null}
-      </summary>
-      <div className="border-t border-tk-slate/10 px-5 py-3">
-        <ul className="space-y-1.5">
-          {invoices.length === 0 ? (
-            <li className="text-xs text-tk-slate/60">Nothing invoiced yet this month.</li>
-          ) : (
-            invoices.map((i) => (
-              <li
-                key={i.number}
-                className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"
-              >
-                <span className="min-w-0 truncate text-tk-slate/70">
-                  <Link
-                    href={`/?peek=invoice:${encodeURIComponent(i.number)}`}
-                    scroll={false}
-                    className="font-medium text-tk-teal hover:underline"
-                  >
-                    {i.number}
-                  </Link>{" "}
-                  · {i.clientName}
-                  {i.status !== "paid" ? (
-                    <span
-                      className={
-                        i.status === "sent"
-                          ? "ml-1.5 font-semibold text-red-700"
-                          : "ml-1.5 font-semibold text-amber-800"
-                      }
-                    >
-                      {i.status}
-                    </span>
-                  ) : null}
-                </span>
-                <span className="tabular-nums font-medium text-tk-onyx">
-                  {formatMoney(i.amountCents)}
-                </span>
-              </li>
-            ))
-          )}
-          {expected.map((line) => (
-            <li
-              key={line.label}
-              className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs opacity-50"
+          </span>
+        </p>
+
+        {monthlyGoalCents ? (
+          <GoalBar
+            billed={billedCents / monthlyGoalCents}
+            expected={expectedTotalCents / monthlyGoalCents}
+          />
+        ) : null}
+
+        <div className="mt-3 border-t border-tk-slate/10 text-[12.5px]">
+          {invoices.length === 0 && expected.length === 0 ? (
+            <p className="py-3 text-xs text-tk-slate/70">Nothing invoiced or expected yet this month.</p>
+          ) : null}
+          {invoices.map((i) => (
+            <Link
+              key={i.number}
+              href={`/?peek=invoice:${encodeURIComponent(i.number)}`}
+              scroll={false}
+              className="grid h-8 grid-cols-[96px_1fr_auto] items-center gap-2.5 border-b border-tk-slate/10 hover:bg-tk-linen"
             >
-              <span className="min-w-0 truncate italic text-tk-slate/70">
-                {line.label}
-                {line.sub ? (
-                  <span className="ml-1 text-[10px] not-italic">· {line.sub}</span>
-                ) : null}
-                <span className="ml-1 text-[10px] uppercase tracking-wide">expected</span>
+              <ClientChip name={i.clientName} slug={i.clientSlug} />
+              <span className="min-w-0 truncate text-tk-slate/70">
+                {i.number}
+                {i.status !== "paid" ? (
+                  <span
+                    className={cn(
+                      "ml-1.5 font-semibold",
+                      i.status === "sent" ? "text-bad" : "text-warn"
+                    )}
+                  >
+                    {i.status}
+                  </span>
+                ) : (
+                  <span className="ml-1.5 text-tk-slate/70">paid</span>
+                )}
               </span>
-              <span className="tabular-nums font-medium text-tk-slate">
+              <span className="font-semibold tabular-nums text-tk-onyx">
+                {formatMoney(i.amountCents)}
+              </span>
+            </Link>
+          ))}
+          {expected.map((line) => (
+            <div
+              key={line.label}
+              className="grid h-8 grid-cols-[96px_1fr_auto] items-center gap-2.5 border-b border-tk-slate/10"
+            >
+              {line.slug ? (
+                <ClientChip name={line.label} slug={line.slug} />
+              ) : (
+                <span className="min-w-0 truncate font-ui text-[11px] font-bold text-tk-onyx">
+                  {line.label}
+                </span>
+              )}
+              <span className="min-w-0 truncate italic text-tk-slate/70">
+                {line.sub ?? line.label}
+                <span className="ml-1 text-[10px] uppercase tracking-wide not-italic">expected</span>
+              </span>
+              <span className="font-medium tabular-nums text-tk-slate">
                 +{formatMoney(line.cents)}
               </span>
-            </li>
+            </div>
           ))}
           {expected.length > 0 ? (
-            <li className="mt-1.5 grid grid-cols-[1fr_auto] items-center gap-3 border-t border-tk-slate/10 pt-2 text-xs">
-              <span className="font-semibold text-tk-slate">
-                Expected {monthLabel} total
+            <div className="grid h-9 grid-cols-[96px_1fr_auto] items-center gap-2.5">
+              <span className="font-ui text-xs font-bold text-tk-slate">Expected</span>
+              <span className="text-tk-slate/70">
+                {expectedPct != null ? (
+                  <>
+                    <b className="font-bold text-tk-onyx">{expectedPct}%</b> of goal
+                  </>
+                ) : (
+                  `by end of ${monthLabel}`
+                )}
               </span>
-              <span className="tabular-nums font-bold text-tk-teal">
+              <span className="font-bold tabular-nums text-tk-onyx">
                 {formatMoney(expectedTotalCents)}
               </span>
-            </li>
+            </div>
           ) : null}
-        </ul>
+        </div>
       </div>
-    </details>
+    </section>
   )
 }
 
-function MonthBar({ fraction }: { fraction: number }) {
-  const f = Math.max(0, Math.min(1, fraction))
+function ClientChip({ name, slug }: { name: string; slug: string }) {
   return (
-    <span className="mt-2.5 block h-2 overflow-hidden rounded-full bg-tk-linen">
+    <span
+      className="tk-client-tint tk-client-ink inline-flex h-[18px] max-w-full items-center gap-1 self-center justify-self-start rounded-md px-1.5 font-ui text-[10px] font-bold"
+      style={{ "--c": clientColor(slug) } as React.CSSProperties}
+    >
+      <span aria-hidden className="size-1.5 shrink-0 rounded-full" style={{ background: "var(--c)" }} />
+      <span className="truncate">{name}</span>
+    </span>
+  )
+}
+
+function GoalBar({ billed, expected }: { billed: number; expected: number }) {
+  const clamp = (f: number) => Math.max(0, Math.min(1, f))
+  return (
+    <span
+      role="img"
+      aria-label={`${Math.round(billed * 100)}% billed, ${Math.round(expected * 100)}% expected`}
+      className="relative mt-3 block h-2 overflow-hidden rounded-full border border-tk-slate/10 bg-tk-linen"
+    >
       <span
-        className="block h-full rounded-full bg-tk-teal"
-        style={{ width: `${(f * 100).toFixed(1)}%` }}
+        className="absolute inset-y-0 left-0 rounded-full border-r border-tk-teal transition-[width] duration-700 ease-out"
+        style={{
+          width: `${(clamp(expected) * 100).toFixed(1)}%`,
+          backgroundImage:
+            "repeating-linear-gradient(135deg, rgb(var(--accent-rgb) / 0.22) 0 4px, transparent 4px 8px)",
+        }}
+      />
+      <span
+        className="absolute inset-y-0 left-0 rounded-full bg-tk-teal transition-[width] duration-700 ease-out"
+        style={{ width: `${(clamp(billed) * 100).toFixed(1)}%` }}
       />
     </span>
   )

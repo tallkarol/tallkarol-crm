@@ -22,26 +22,39 @@ export type AttentionItem = {
   href: string
   color: string
   title: string
+  /** The client's name — rendered as a coloured chip. */
   meta?: string
   detail?: string
   amount?: string
   tone: AttentionTone
+  /** Right-hand label: "1 day", "Tomorrow", "Sat 5". */
+  when?: string
+  whenTone?: AttentionTone
 }
 
 export type AttentionGroup = {
   id: string
   label: string
   total?: string
+  tone?: "bad" | "warn" | "neutral"
   reorderable?: boolean
   completable?: boolean
   items: AttentionItem[]
 }
 
+/** What the list leaves out, summarised in the footer. */
+export type AttentionMore = {
+  count: number
+  label: string
+  byClient: { name: string; count: number }[]
+  href: string
+}
+
 const TONE: Record<AttentionTone, string> = {
-  bad: "text-[#A62228]",
-  warn: "text-amber-800",
+  bad: "text-bad",
+  warn: "text-warn",
   ok: "text-tk-teal",
-  neutral: "text-tk-slate/55",
+  neutral: "text-tk-slate/70",
 }
 
 type Layout = "rows" | "cards"
@@ -63,15 +76,23 @@ function clientTint(color: string) {
   }
 }
 
+/**
+ * The homepage's to-do, grouped by urgency and capped at what matters this
+ * week. Filter chips narrow to one group; the footer names what was left
+ * out. Row view keeps drag-to-reorder and one-tap done.
+ */
 export function NeedsAttention({
   groups: initialGroups,
+  more,
 }: {
   groups: AttentionGroup[]
+  more?: AttentionMore | null
 }) {
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [groups, setGroups] = useState(initialGroups)
   const [layout, setLayout] = useState<Layout>("rows")
+  const [filter, setFilter] = useState<string | null>(null)
   const [completing, setCompleting] = useState<string[]>([])
   const [dismissed, setDismissed] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -89,8 +110,10 @@ export function NeedsAttention({
     if (saved === "rows" || saved === "cards") setLayout(saved)
   }, [])
 
-  const visible = groups.filter((group) => group.items.length > 0)
-  const count = visible.reduce((sum, group) => sum + group.items.length, 0)
+  const count = groups.reduce((sum, group) => sum + group.items.length, 0)
+  const visible = groups.filter(
+    (group) => group.items.length > 0 && (filter == null || group.id === filter)
+  )
 
   function chooseLayout(next: Layout) {
     setLayout(next)
@@ -141,60 +164,80 @@ export function NeedsAttention({
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-      <div className="flex items-center justify-between gap-3 px-5 py-3.5">
-        <h2 className="text-sm font-semibold text-tk-onyx">Needs attention</h2>
-        <div className="flex items-center gap-2">
-          {count > 0 ? (
-            <span className="rounded-full bg-tk-linen px-2 py-0.5 text-[11px] font-semibold tabular-nums text-tk-slate/70">
-              {count}
-            </span>
-          ) : null}
-          <span className="inline-flex rounded-lg border border-tk-slate/15 bg-tk-linen/40 p-0.5">
-            <LayoutButton
-              active={layout === "rows"}
-              label="Row view"
-              onClick={() => chooseLayout("rows")}
-              icon="rows"
-            />
-            <LayoutButton
-              active={layout === "cards"}
-              label="Card view"
-              onClick={() => chooseLayout("cards")}
-              icon="cards"
-            />
+    <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-card">
+      <div className="flex items-center gap-2.5 border-b border-tk-slate/10 px-[18px] py-3">
+        <h2 className="font-ui text-[13.5px] font-bold tracking-tight text-tk-onyx">Needs attention</h2>
+        {count > 0 ? (
+          <span className="grid h-5 min-w-5 place-items-center rounded-full border border-tk-slate/15 bg-tk-linen px-1.5 font-ui text-[11px] font-bold tabular-nums text-tk-slate">
+            {count}
           </span>
-        </div>
+        ) : null}
+        <span className="ml-auto inline-flex rounded-lg border border-tk-slate/15 bg-tk-linen p-0.5">
+          <LayoutButton
+            active={layout === "rows"}
+            label="Row view"
+            onClick={() => chooseLayout("rows")}
+            icon="rows"
+          />
+          <LayoutButton
+            active={layout === "cards"}
+            label="Card view"
+            onClick={() => chooseLayout("cards")}
+            icon="cards"
+          />
+        </span>
       </div>
+
+      {count > 0 ? (
+        <div className="flex flex-wrap gap-1 px-3.5 pt-2.5" role="group" aria-label="Filter">
+          <FilterChip active={filter == null} onClick={() => setFilter(null)}>
+            Everything
+          </FilterChip>
+          {groups.map((group) => (
+            <FilterChip
+              key={group.id}
+              active={filter === group.id}
+              onClick={() => setFilter(filter === group.id ? null : group.id)}
+              count={group.items.length}
+              tone={group.tone}
+            >
+              {group.label}
+            </FilterChip>
+          ))}
+        </div>
+      ) : null}
 
       {error ? (
         <p
           role="status"
-          className="border-t border-[#B4322A]/15 bg-[#B4322A]/5 px-5 py-2 text-xs font-semibold text-[#B4322A]"
+          className="mx-[18px] mt-2 rounded-lg bg-bad/10 px-3 py-2 text-xs font-semibold text-bad"
         >
           {error}
         </p>
       ) : null}
 
       {count === 0 ? (
-        <p className="border-t border-tk-slate/10 px-5 py-8 text-sm text-tk-slate/70">
+        <p className="px-[18px] py-8 text-sm text-tk-slate/70">
           All clear — nothing waiting on you.
         </p>
+      ) : visible.length === 0 ? (
+        <p className="px-[18px] py-6 text-sm text-tk-slate/70">Nothing in that group.</p>
       ) : (
-        <div className="border-t border-tk-slate/10">
+        <div className="pb-1.5">
           {visible.map((group) => (
             <div key={group.id}>
-              <div className="flex items-baseline justify-between gap-3 bg-tk-linen/55 px-5 py-2">
-                <p className="text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/50">
-                  {group.label}
-                  <span className="ml-1.5 tabular-nums text-tk-slate/35">
-                    {group.items.length}
-                  </span>
-                </p>
+              <div
+                className={cn(
+                  "flex items-baseline gap-2 px-[18px] pb-1 pt-3 font-ui text-[10.5px] font-bold uppercase tracking-[0.12em]",
+                  group.tone === "bad" ? "text-bad" : group.tone === "warn" ? "text-warn" : "text-tk-slate/70"
+                )}
+              >
+                {group.label}
+                <span className="tabular-nums opacity-70">{group.items.length}</span>
                 {group.total ? (
-                  <p className="text-xs font-semibold tabular-nums text-tk-onyx">
+                  <span className="ml-auto text-xs font-semibold normal-case tracking-normal tabular-nums text-tk-onyx">
                     {group.total}
-                  </p>
+                  </span>
                 ) : null}
               </div>
               {group.reorderable ? (
@@ -209,7 +252,7 @@ export function NeedsAttention({
                 <ul
                   className={cn(
                     layout === "rows"
-                      ? "divide-y divide-tk-slate/10"
+                      ? "grid gap-0.5 px-2"
                       : "grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3"
                   )}
                 >
@@ -226,7 +269,68 @@ export function NeedsAttention({
           ))}
         </div>
       )}
+
+      {more && more.count > 0 ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-tk-slate/10 px-[18px] py-2.5 text-xs text-tk-slate/70">
+          <span className="min-w-0 truncate">
+            {more.count} more {more.label}
+            {more.byClient.length
+              ? ` — ${more.byClient.map((c) => `${c.count} ${c.name}`).join(", ")}`
+              : ""}
+          </span>
+          <Link
+            href={more.href}
+            className="shrink-0 font-ui font-bold text-tk-teal hover:underline"
+          >
+            All tasks →
+          </Link>
+        </div>
+      ) : null}
     </section>
+  )
+}
+
+function FilterChip({
+  active,
+  onClick,
+  count,
+  tone,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  count?: number
+  tone?: AttentionGroup["tone"]
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(
+        "inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 font-ui text-xs font-semibold transition-colors",
+        active
+          ? "border border-tk-slate/15 bg-tk-linen text-tk-onyx"
+          : "border border-transparent text-tk-slate hover:bg-tk-linen hover:text-tk-onyx"
+      )}
+    >
+      {children}
+      {count != null ? (
+        <span
+          className={cn(
+            "grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10.5px] tabular-nums",
+            count > 0 && tone === "bad"
+              ? "bg-bad/10 text-bad"
+              : count > 0 && tone === "warn"
+                ? "bg-warn/10 text-warn"
+                : "border border-tk-slate/15 bg-white text-tk-slate/70"
+          )}
+        >
+          {count}
+        </span>
+      ) : null}
+    </button>
   )
 }
 
@@ -257,7 +361,7 @@ function ReorderableItems({
       <ul
         className={cn(
           layout === "rows"
-            ? "divide-y divide-tk-slate/10"
+            ? "grid gap-0.5 px-2"
             : "grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3"
         )}
       >
@@ -308,7 +412,7 @@ function SortableAttentionItem({
       dragHandle={
         <button
           type="button"
-          className="grid size-8 shrink-0 touch-none cursor-grab place-items-center rounded-lg text-tk-slate/35 transition-colors hover:bg-tk-slate/5 hover:text-tk-slate active:cursor-grabbing"
+          className="grid size-7 shrink-0 touch-none cursor-grab place-items-center rounded-md text-tk-slate/35 opacity-0 transition-opacity hover:bg-tk-slate/5 hover:text-tk-slate focus-visible:opacity-100 group-hover:opacity-100 active:cursor-grabbing"
           aria-label={`Drag to reorder ${item.title}`}
           {...listeners}
           {...attributes}
@@ -334,6 +438,18 @@ function SortableAttentionItem({
   )
 }
 
+function ClientChip({ name, color }: { name: string; color: string }) {
+  return (
+    <span
+      className="tk-client-tint tk-client-ink inline-flex h-[18px] max-w-[180px] items-center gap-1 rounded-md px-1.5 font-ui text-[10px] font-bold"
+      style={{ "--c": color } as React.CSSProperties}
+    >
+      <span aria-hidden className="size-1.5 shrink-0 rounded-full" style={{ background: color }} />
+      <span className="truncate">{name}</span>
+    </span>
+  )
+}
+
 function AttentionItemView({
   item,
   layout,
@@ -356,15 +472,15 @@ function AttentionItemView({
   className?: string
 }) {
   const meta = item.meta && item.meta !== item.title ? item.meta : undefined
-  const line = [meta, item.detail].filter(Boolean).join(" · ")
 
   if (layout === "cards") {
+    const line = [meta, item.detail].filter(Boolean).join(" · ")
     return (
       <li
         ref={itemRef}
         style={{ ...style, ...clientTint(item.color) }}
         className={cn(
-          "relative flex min-h-36 flex-col rounded-sm border border-t-4 bg-white shadow-[0_5px_12px_rgba(31,45,42,0.10)] transition-[box-shadow,transform]",
+          "relative flex min-h-36 flex-col rounded-lg border border-t-4 bg-white shadow-card transition-[box-shadow,transform]",
           className
         )}
       >
@@ -394,7 +510,7 @@ function AttentionItemView({
             </span>
           ) : null}
           {item.amount ? (
-            <span className="mt-auto pt-4 text-right text-sm font-bold tabular-nums text-tk-onyx">
+            <span className="mt-auto pt-4 text-right font-display text-sm font-bold tabular-nums text-tk-onyx">
               {item.amount}
             </span>
           ) : null}
@@ -408,49 +524,56 @@ function AttentionItemView({
       ref={itemRef}
       style={style}
       className={cn(
-        "group flex items-center gap-1 bg-white px-3 py-2 transition-[box-shadow,background-color,transform] hover:bg-tk-linen/50",
+        "group grid grid-cols-[28px_22px_minmax(0,1fr)_auto] items-center gap-2 rounded-lg bg-white px-1.5 py-1.5 transition-[box-shadow,background-color,transform] hover:bg-tk-linen",
         className
       )}
     >
-      {dragHandle}
+      {dragHandle ?? <span />}
       {completable ? (
         <CompleteButton
           title={item.title}
           completing={completing}
           onClick={onComplete}
         />
-      ) : null}
+      ) : (
+        <span
+          aria-hidden
+          className="size-[18px] justify-self-center rounded-full border-[1.5px] border-dashed border-tk-slate/25"
+        />
+      )}
       <Link
         href={item.href}
         scroll={false}
-        className="flex min-w-0 flex-1 items-stretch gap-3 py-1"
+        className="grid min-w-0 gap-[3px]"
       >
-        <span
-          className="w-0.5 shrink-0 self-stretch rounded-full"
-          style={{ background: item.color }}
-          aria-hidden
-        />
-        <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-0.5">
-          <span className="min-w-0 truncate text-sm font-medium text-tk-onyx">
-            {item.title}
-          </span>
-          {item.amount ? (
-            <span className="text-sm font-semibold tabular-nums text-tk-onyx">
-              {item.amount}
-            </span>
-          ) : null}
-          {line ? (
-            <span
-              className={cn(
-                "col-span-2 min-w-0 truncate text-xs",
-                TONE[item.tone]
-              )}
-            >
-              {line}
+        <span className="min-w-0 truncate text-[13.5px] font-medium text-tk-onyx">
+          {item.title}
+        </span>
+        <span className="flex min-w-0 items-center gap-2 text-[11.5px] text-tk-slate/70">
+          {meta ? <ClientChip name={meta} color={item.color} /> : null}
+          {item.detail ? (
+            <span className={cn("min-w-0 truncate", item.tone === "neutral" ? "" : cn("font-semibold", TONE[item.tone]))}>
+              {item.detail}
             </span>
           ) : null}
         </span>
       </Link>
+      <span className="pr-2 text-right">
+        {item.amount ? (
+          <span className="font-display text-[15px] font-semibold tracking-tight tabular-nums text-tk-onyx">
+            {item.amount}
+          </span>
+        ) : item.when ? (
+          <span
+            className={cn(
+              "whitespace-nowrap font-ui text-[11.5px] font-semibold",
+              item.whenTone ? TONE[item.whenTone] : "text-tk-slate/70"
+            )}
+          >
+            {item.when}
+          </span>
+        ) : null}
+      </span>
     </li>
   )
 }
@@ -472,7 +595,7 @@ function CompleteButton({
       aria-label={`Mark ${title} done`}
       title="Mark done"
       className={cn(
-        "group/check grid size-[22px] shrink-0 place-items-center rounded-full border-[1.5px] text-transparent transition-all",
+        "group/check grid size-[20px] shrink-0 place-items-center justify-self-center rounded-full border-[1.5px] text-transparent transition-all",
         "border-tk-slate/25 hover:border-tk-teal hover:bg-tk-teal hover:text-white hover:shadow-sm",
         "disabled:cursor-wait disabled:border-tk-teal disabled:bg-tk-teal disabled:text-white disabled:opacity-70"
       )}
@@ -530,7 +653,7 @@ function LayoutButton({
       className={cn(
         "grid size-7 place-items-center rounded-md transition-colors",
         active
-          ? "bg-white text-tk-onyx shadow-sm"
+          ? "bg-white text-tk-onyx shadow-card"
           : "text-tk-slate/45 hover:text-tk-slate"
       )}
     >

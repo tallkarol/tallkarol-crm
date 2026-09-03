@@ -1,0 +1,1495 @@
+{
+  "scannedAt": "2026-09-03T16:59:17.519Z",
+  "plugin": {
+    "name": "daedalus-hive-mind",
+    "version": "0.10.0",
+    "root": "~/Work/daedalus-hive-mind"
+  },
+  "counts": {
+    "root": 1,
+    "lane": 7,
+    "agent": 8,
+    "skill": 18,
+    "reference": 6,
+    "script": 25,
+    "command": 12,
+    "routine": 7,
+    "pipeline": 1
+  },
+  "nodes": [
+    {
+      "id": "root",
+      "label": "PM",
+      "kind": "root",
+      "blurb": "The main session. Decomposes, delegates, reviews reports, integrates — and is the only one that talks to Karol.",
+      "source": "skills/team-charter/SKILL.md",
+      "meta": {
+        "plugin": "daedalus-hive-mind",
+        "version": "0.10.0"
+      }
+    },
+    {
+      "id": "lane:build",
+      "label": "Build",
+      "kind": "lane",
+      "lane": "lane:build",
+      "blurb": "Design and implementation in one context; security and QA review the result in parallel, not as a relay.",
+      "source": "README.md"
+    },
+    {
+      "id": "lane:content",
+      "label": "Content",
+      "kind": "lane",
+      "lane": "lane:content",
+      "blurb": "Drafts from approved claims and from evidence — supply (what was built) and demand (what people search).",
+      "source": "README.md"
+    },
+    {
+      "id": "lane:delivery",
+      "label": "Delivery",
+      "kind": "lane",
+      "lane": "lane:delivery",
+      "blurb": "Handoff and training material for the people who will use what shipped.",
+      "source": "README.md"
+    },
+    {
+      "id": "lane:care",
+      "label": "Care",
+      "kind": "lane",
+      "lane": "lane:care",
+      "blurb": "The healing routine: weekly audit → Karol picks → approved maintenance → monthly report from the log.",
+      "source": "README.md"
+    },
+    {
+      "id": "lane:ledger",
+      "label": "Ledger",
+      "kind": "lane",
+      "lane": "lane:ledger",
+      "blurb": "Work becomes evidence becomes money: the clock, the reconcile, the estimate, the invoice.",
+      "source": "README.md"
+    },
+    {
+      "id": "lane:planning",
+      "label": "Planning & intake",
+      "kind": "lane",
+      "lane": "lane:planning",
+      "blurb": "Turning a request into a scoped, priced, tracked thing before anyone builds it.",
+      "source": "README.md"
+    },
+    {
+      "id": "lane:foundation",
+      "label": "Foundation",
+      "kind": "lane",
+      "lane": "lane:foundation",
+      "blurb": "What every lane loads first: the operating manual and the brand layer.",
+      "source": "README.md"
+    },
+    {
+      "id": "agent:caretaker",
+      "label": "caretaker",
+      "kind": "agent",
+      "lane": "lane:care",
+      "blurb": "Website-care auditor and maintainer for sites on a WebsiteCare plan — runs the recurring read-only audit (reachability/SSL, security posture, updates, error logs, backups; SEO checks on car…",
+      "source": "agents/caretaker.md",
+      "meta": {
+        "tools": "inherits the session's tools",
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "agent:content-runner",
+      "label": "content-runner",
+      "kind": "agent",
+      "lane": "lane:content",
+      "blurb": "Content pod runner — executes Blogo (ranking content) and CaseStudio (case studies) work from briefs and harvest mine reports, and runs Scout to find and pitch timely blog nuggets from curr…",
+      "source": "agents/content-runner.md",
+      "meta": {
+        "tools": "Read, Grep, Glob, Edit, Write, Bash",
+        "model": "inherit"
+      }
+    },
+    {
+      "id": "agent:db-specialist",
+      "label": "db-specialist",
+      "kind": "agent",
+      "lane": "lane:build",
+      "blurb": "Database specialist — schema design, migrations, query performance, data modeling.",
+      "source": "agents/db-specialist.md",
+      "meta": {
+        "tools": "Read, Grep, Glob, Edit, Write, Bash",
+        "model": "inherit"
+      }
+    },
+    {
+      "id": "agent:docent",
+      "label": "docent",
+      "kind": "agent",
+      "lane": "lane:delivery",
+      "blurb": "Feature-guide writer for app delivery/handoff — surveys a shipped app (any app directory, Cursor workspace, or Claude project) for features that need a how-to guide, recommends a picklist,…",
+      "source": "agents/docent.md",
+      "meta": {
+        "tools": "inherits the session's tools",
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "agent:purser",
+      "label": "purser",
+      "kind": "agent",
+      "lane": "lane:ledger",
+      "blurb": "Accounting/payroll agent for the ledger lane — reconciles the timeclock before money moves.",
+      "source": "agents/purser.md",
+      "meta": {
+        "tools": "inherits the session's tools",
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "agent:qa",
+      "label": "qa",
+      "kind": "agent",
+      "lane": "lane:build",
+      "blurb": "QA verifier — runs builds and tests, checks acceptance criteria, hunts regressions, and is trusted to fix SMALL issues directly (copy edits, typos, obvious one-liners) instead of filing the…",
+      "source": "agents/qa.md",
+      "meta": {
+        "tools": "Read, Grep, Glob, Bash, Edit",
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "agent:security-reviewer",
+      "label": "security-reviewer",
+      "kind": "agent",
+      "lane": "lane:build",
+      "blurb": "Read-only security specialist — reviews auth flows, security headers, secrets handling, dependency risk, and client data handling.",
+      "source": "agents/security-reviewer.md",
+      "meta": {
+        "tools": "Read, Grep, Glob",
+        "model": "inherit"
+      }
+    },
+    {
+      "id": "agent:ux-builder",
+      "label": "ux-builder",
+      "kind": "agent",
+      "lane": "lane:build",
+      "blurb": "Front-end builder who owns both design fidelity and implementation — turns designs/briefs into accessible, performant UI in one context.",
+      "source": "agents/ux-builder.md",
+      "meta": {
+        "tools": "Read, Grep, Glob, Edit, Write, Bash",
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "skill:blogo",
+      "label": "blogo",
+      "kind": "skill",
+      "lane": "lane:content",
+      "blurb": "Rankmaster content writer — turns raw material (harvest mine reports, briefs, topics, research) into AIEO/SEO-optimized ranking content for any destination with a client pack (tallkarol.com…",
+      "source": "skills/blogo/SKILL.md"
+    },
+    {
+      "id": "reference:blogo/aieo-playbook.md",
+      "label": "aieo-playbook.md",
+      "kind": "reference",
+      "lane": "lane:content",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/blogo/references/aieo-playbook.md"
+    },
+    {
+      "id": "skill:blueprint",
+      "label": "blueprint",
+      "kind": "skill",
+      "lane": "lane:planning",
+      "blurb": "Plan a client's website before anything gets built — a guided intake interview (live Q&A) or a fillable workbook the client completes alone, both producing one Website Blueprint (goal, audi…",
+      "source": "skills/blueprint/SKILL.md"
+    },
+    {
+      "id": "reference:blueprint/question-bank.md",
+      "label": "question-bank.md",
+      "kind": "reference",
+      "lane": "lane:planning",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/blueprint/references/question-bank.md"
+    },
+    {
+      "id": "reference:blueprint/workbook-template.html",
+      "label": "workbook-template.html",
+      "kind": "reference",
+      "lane": "lane:planning",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/blueprint/references/workbook-template.html"
+    },
+    {
+      "id": "skill:browser-check",
+      "label": "browser-check",
+      "kind": "skill",
+      "lane": "lane:build",
+      "blurb": "Drive the Mac's own Chrome headless over the DevTools Protocol to check a real page — navigate, wait, click, type, evaluate, screenshot, and collect console errors and failed requests — wit…",
+      "source": "skills/browser-check/SKILL.md"
+    },
+    {
+      "id": "script:browser-check/cdp-check.mjs",
+      "label": "cdp-check.mjs",
+      "kind": "script",
+      "lane": "lane:build",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/browser-check/scripts/cdp-check.mjs"
+    },
+    {
+      "id": "skill:casestudio",
+      "label": "casestudio",
+      "kind": "skill",
+      "lane": "lane:content",
+      "blurb": "Ingests a codebase plus project context (briefs, notes, metrics, testimonials) and produces case studies — the site card for tallkarol.com, a long-form case study page, and a portfolio blur…",
+      "source": "skills/casestudio/SKILL.md"
+    },
+    {
+      "id": "reference:casestudio/output-contracts.md",
+      "label": "output-contracts.md",
+      "kind": "reference",
+      "lane": "lane:content",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/casestudio/references/output-contracts.md"
+    },
+    {
+      "id": "skill:client-pack",
+      "label": "client-pack",
+      "kind": "skill",
+      "lane": "lane:foundation",
+      "blurb": "Loads a brand/client context pack (voice, vocabulary, offer, approved claims, compliance, tokens, stack, integrations, gates) so the session works as that client's PM without being told the…",
+      "source": "skills/client-pack/SKILL.md"
+    },
+    {
+      "id": "script:client-pack/pack-status.py",
+      "label": "pack-status.py",
+      "kind": "script",
+      "lane": "lane:foundation",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/client-pack/scripts/pack-status.py"
+    },
+    {
+      "id": "skill:demand-scout",
+      "label": "demand-scout",
+      "kind": "skill",
+      "lane": "lane:content",
+      "blurb": "Turns observed search demand into evidence-backed content briefs — reads a site's ranked opportunity queue (Search Console + analytics, via the insights CLI), cross-references the client pa…",
+      "source": "skills/demand-scout/SKILL.md"
+    },
+    {
+      "id": "reference:demand-scout/insights-cli.md",
+      "label": "insights-cli.md",
+      "kind": "reference",
+      "lane": "lane:content",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/demand-scout/references/insights-cli.md"
+    },
+    {
+      "id": "skill:design-system",
+      "label": "design-system",
+      "kind": "skill",
+      "lane": "lane:build",
+      "blurb": "Universal accessibility floors and the rules for working with a brand's design tokens.",
+      "source": "skills/design-system/SKILL.md"
+    },
+    {
+      "id": "skill:estimator",
+      "label": "estimator",
+      "kind": "skill",
+      "lane": "lane:ledger",
+      "blurb": "Estimate future projects from the ledger's real history — comparables, leverage trend, and estimate-vs-actual calibration — and price them under Karol's rate philosophy (as capability rises…",
+      "source": "skills/estimator/SKILL.md"
+    },
+    {
+      "id": "skill:follow-up",
+      "label": "follow-up",
+      "kind": "skill",
+      "lane": "lane:planning",
+      "blurb": "Turn the follow-ups from a conversation, an agent session, a reply or an email into tallkarol CRM tasks, calendar events, or both — proposed as a numbered list Karol approves before anythin…",
+      "source": "skills/follow-up/SKILL.md"
+    },
+    {
+      "id": "script:follow-up/__pycache__",
+      "label": "__pycache__",
+      "kind": "script",
+      "lane": "lane:planning",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/follow-up/scripts/__pycache__"
+    },
+    {
+      "id": "script:follow-up/follow-up.py",
+      "label": "follow-up.py",
+      "kind": "script",
+      "lane": "lane:planning",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/follow-up/scripts/follow-up.py"
+    },
+    {
+      "id": "skill:leftoff",
+      "label": "leftoff",
+      "kind": "skill",
+      "lane": "lane:planning",
+      "blurb": "The \"where I left off\" board — every Claude Code and Cursor conversation, plus a Chrome tab snapshot, reported to the tallkarol CRM so Karol can see what is waiting on him, what is still wo…",
+      "source": "skills/leftoff/SKILL.md"
+    },
+    {
+      "id": "script:leftoff/browser-tabs.sh",
+      "label": "browser-tabs.sh",
+      "kind": "script",
+      "lane": "lane:planning",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/leftoff/scripts/browser-tabs.sh"
+    },
+    {
+      "id": "script:leftoff/cursor-leftoff-hook.sh",
+      "label": "cursor-leftoff-hook.sh",
+      "kind": "script",
+      "lane": "lane:planning",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/leftoff/scripts/cursor-leftoff-hook.sh"
+    },
+    {
+      "id": "script:leftoff/git-dirty.sh",
+      "label": "git-dirty.sh",
+      "kind": "script",
+      "lane": "lane:planning",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/leftoff/scripts/git-dirty.sh"
+    },
+    {
+      "id": "script:leftoff/leftoff-backfill.py",
+      "label": "leftoff-backfill.py",
+      "kind": "script",
+      "lane": "lane:planning",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/leftoff/scripts/leftoff-backfill.py"
+    },
+    {
+      "id": "script:leftoff/leftoff-hook.sh",
+      "label": "leftoff-hook.sh",
+      "kind": "script",
+      "lane": "lane:planning",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/leftoff/scripts/leftoff-hook.sh"
+    },
+    {
+      "id": "script:leftoff/leftoff.sh",
+      "label": "leftoff.sh",
+      "kind": "script",
+      "lane": "lane:planning",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/leftoff/scripts/leftoff.sh"
+    },
+    {
+      "id": "skill:log-session",
+      "label": "log-session",
+      "kind": "skill",
+      "lane": "lane:ledger",
+      "blurb": "Log agent hours into the tallkarol CRM timesheet — the agent meter's unlogged time for a client, weighted so six concurrent agents are not six hours, proposed with client/project/summary/ho…",
+      "source": "skills/log-session/SKILL.md"
+    },
+    {
+      "id": "script:log-session/__pycache__",
+      "label": "__pycache__",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/log-session/scripts/__pycache__"
+    },
+    {
+      "id": "script:log-session/log-session.py",
+      "label": "log-session.py",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/log-session/scripts/log-session.py"
+    },
+    {
+      "id": "skill:punchlist",
+      "label": "punchlist",
+      "kind": "skill",
+      "lane": "lane:planning",
+      "blurb": "Turn an email, a document or a call transcript into a tallkarol CRM punch list — one numbered item per thing that has to happen, each becoming a CRM task, proposed for Karol to approve befo…",
+      "source": "skills/punchlist/SKILL.md"
+    },
+    {
+      "id": "script:punchlist/punchlist.py",
+      "label": "punchlist.py",
+      "kind": "script",
+      "lane": "lane:planning",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/punchlist/scripts/punchlist.py"
+    },
+    {
+      "id": "skill:scout",
+      "label": "scout",
+      "kind": "skill",
+      "lane": "lane:content",
+      "blurb": "Timely-content scout — mines a project's recent work (today's commits, uncommitted diff, or \"what I just fixed\") for search-relevant technical nuggets (bug fixes, error resolutions, version…",
+      "source": "skills/scout/SKILL.md"
+    },
+    {
+      "id": "skill:session-log",
+      "label": "session-log",
+      "kind": "skill",
+      "lane": "lane:ledger",
+      "blurb": "Draft what a Claude Code or Cursor conversation actually did — one invoice-voice line per session, built from its transcript, edited files, commits and metered hours, stored locally and pus…",
+      "source": "skills/session-log/SKILL.md"
+    },
+    {
+      "id": "script:session-log/session-log.py",
+      "label": "session-log.py",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/session-log/scripts/session-log.py"
+    },
+    {
+      "id": "skill:spec-sheet",
+      "label": "spec-sheet",
+      "kind": "skill",
+      "lane": "lane:planning",
+      "blurb": "What a codebase is built with, read from the codebase itself — components (Node apps, WordPress installs and themes, Shopify themes, Composer, Python, Docker), versions from manifests and l…",
+      "source": "skills/spec-sheet/SKILL.md"
+    },
+    {
+      "id": "script:spec-sheet/__pycache__",
+      "label": "__pycache__",
+      "kind": "script",
+      "lane": "lane:planning",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/spec-sheet/scripts/__pycache__"
+    },
+    {
+      "id": "script:spec-sheet/spec-sheet.py",
+      "label": "spec-sheet.py",
+      "kind": "script",
+      "lane": "lane:planning",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/spec-sheet/scripts/spec-sheet.py"
+    },
+    {
+      "id": "skill:team-charter",
+      "label": "team-charter",
+      "kind": "skill",
+      "lane": "lane:foundation",
+      "blurb": "PM/orchestrator charter for Karol's hive mind — delegation rules, review gates, and handoff formats for running the build pod (db-specialist, security-reviewer, ux-builder, qa), content pod…",
+      "source": "skills/team-charter/SKILL.md"
+    },
+    {
+      "id": "skill:timeclock",
+      "label": "timeclock",
+      "kind": "skill",
+      "lane": "lane:ledger",
+      "blurb": "The ledger lane's data layer — clock in/out per client/project from any session, attach work evidence (commits, diffs, meetings), and produce invoice math.",
+      "source": "skills/timeclock/SKILL.md"
+    },
+    {
+      "id": "script:timeclock/__pycache__",
+      "label": "__pycache__",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/timeclock/scripts/__pycache__"
+    },
+    {
+      "id": "script:timeclock/client-for.py",
+      "label": "client-for.py",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/timeclock/scripts/client-for.py"
+    },
+    {
+      "id": "script:timeclock/cursor-hook.sh",
+      "label": "cursor-hook.sh",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/timeclock/scripts/cursor-hook.sh"
+    },
+    {
+      "id": "script:timeclock/meter-hook.sh",
+      "label": "meter-hook.sh",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/timeclock/scripts/meter-hook.sh"
+    },
+    {
+      "id": "script:timeclock/meter-math.py",
+      "label": "meter-math.py",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/timeclock/scripts/meter-math.py"
+    },
+    {
+      "id": "script:timeclock/reattribute.py",
+      "label": "reattribute.py",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/timeclock/scripts/reattribute.py"
+    },
+    {
+      "id": "script:timeclock/tclib.py",
+      "label": "tclib.py",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/timeclock/scripts/tclib.py"
+    },
+    {
+      "id": "script:timeclock/timeclock.sh",
+      "label": "timeclock.sh",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/timeclock/scripts/timeclock.sh"
+    },
+    {
+      "id": "script:timeclock/turn-tokens.py",
+      "label": "turn-tokens.py",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/timeclock/scripts/turn-tokens.py"
+    },
+    {
+      "id": "reference:timeclock/invoice-template.html",
+      "label": "invoice-template.html",
+      "kind": "reference",
+      "lane": "lane:ledger",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/timeclock/references/invoice-template.html"
+    },
+    {
+      "id": "skill:website-care",
+      "label": "website-care",
+      "kind": "skill",
+      "lane": "lane:care",
+      "blurb": "PM playbook for WebsiteCare — Karol's recurring site-maintenance product.",
+      "source": "skills/website-care/SKILL.md"
+    },
+    {
+      "id": "command:blueprint",
+      "label": "/blueprint",
+      "kind": "command",
+      "lane": "lane:planning",
+      "blurb": "Plan a client's website — run the intake interview, generate the client workbook, or digest returned answers into the Website Blueprint",
+      "source": "commands/blueprint.md",
+      "meta": {
+        "arguments": "<slug> [workbook|digest] — e.g. \"zemvelo\" (live interview), \"zemvelo workbook\" (generate the fillable workbook), \"zemvelo digest\" (parse returned answers). No argument lists clients with plans."
+      }
+    },
+    {
+      "id": "command:briefs",
+      "label": "/briefs",
+      "kind": "command",
+      "lane": "lane:content",
+      "blurb": "Turn a client's search-demand queue into evidence-backed content briefs, ranked and cadence-aware, for Karol to pick",
+      "source": "commands/briefs.md",
+      "meta": {
+        "arguments": "<slug> [--month YYYY-MM] [--limit N] — e.g. /briefs mineralife. No argument lists sites with data."
+      }
+    },
+    {
+      "id": "command:care",
+      "label": "/care",
+      "kind": "command",
+      "lane": "lane:care",
+      "blurb": "Run the WebsiteCare cycle for a client — weekly audit + fix picklist, or compile the monthly care report",
+      "source": "commands/care.md",
+      "meta": {
+        "arguments": "<slug> [report] — e.g. \"zemvelo\" (weekly audit), \"zemvelo report\" (monthly draft). No argument lists clients on care plans."
+      }
+    },
+    {
+      "id": "command:client",
+      "label": "/client",
+      "kind": "command",
+      "lane": "lane:foundation",
+      "blurb": "Activate a client/brand context pack for this session (voice, claims, compliance, tokens, stack, gates)",
+      "source": "commands/client.md",
+      "meta": {
+        "arguments": "<slug> — e.g. zemvelo, artist-house, tallkarol. No argument lists available packs."
+      }
+    },
+    {
+      "id": "command:clock",
+      "label": "/clock",
+      "kind": "command",
+      "lane": "lane:ledger",
+      "blurb": "Timeclock — clock in/out of billable work for a client/project, check what's running, or backfill a session",
+      "source": "commands/clock.md",
+      "meta": {
+        "arguments": "in <client> [project] | out [client] | status | log <client> [YYYY-MM] — e.g. \"in gdi tba\", \"out\", \"status\""
+      }
+    },
+    {
+      "id": "command:estimate",
+      "label": "/estimate",
+      "kind": "command",
+      "lane": "lane:ledger",
+      "blurb": "Estimate a future project from ledger history — comparables, calibrated p50/p80 range, and three price options under the raise-rate-work-less philosophy",
+      "source": "commands/estimate.md",
+      "meta": {
+        "arguments": "[client] <what the work is> — e.g. \"gdi uwd-style preprod build, 6 templates\" or \"new client, shopify theme refresh\""
+      }
+    },
+    {
+      "id": "command:follow-up",
+      "label": "/follow-up",
+      "kind": "command",
+      "lane": "lane:planning",
+      "blurb": "Turn this conversation's follow-ups into tallkarol CRM tasks, calendar events, or both — numbered proposal → Karol approves → submit",
+      "source": "commands/follow-up.md",
+      "meta": {
+        "arguments": "[client] [--project <slug>] [what to follow up on] — e.g. \"gdi\", \"gdi chase hero images by friday\", or nothing to use this repo's pin and this session's next steps"
+      }
+    },
+    {
+      "id": "command:invoice",
+      "label": "/invoice",
+      "kind": "command",
+      "lane": "lane:ledger",
+      "blurb": "Draft a client invoice from the timeclock — purser reconciles the period, Karol picks fixes, then the invoice renders from the template",
+      "source": "commands/invoice.md",
+      "meta": {
+        "arguments": "<client> [YYYY-MM] — e.g. \"gdi\", \"gdi 2026-08\". Month defaults to the current one; period starts after the last recorded invoice."
+      }
+    },
+    {
+      "id": "command:log-session",
+      "label": "/log-session",
+      "kind": "command",
+      "lane": "lane:ledger",
+      "blurb": "Log agent hours for a client into the tallkarol CRM timesheet — proposal (client, project, summary, concurrency-weighted hours, the conversations behind them) → Karol approves → submit",
+      "source": "commands/log-session.md",
+      "meta": {
+        "arguments": "[client] [--project <slug>] [--since <ISO>] — e.g. \"gdi\", \"gdi --project gdi-wordpress\", or nothing to use this repo's .claude/client pin"
+      }
+    },
+    {
+      "id": "command:punchlist",
+      "label": "/punchlist",
+      "kind": "command",
+      "lane": "lane:planning",
+      "blurb": "Turn an email, a doc or a transcript into a tallkarol CRM punch list — numbered items → Karol approves → every item becomes a task.",
+      "source": "commands/punchlist.md",
+      "meta": {
+        "arguments": "<client> --from <file|mail-id|-> [--project <slug>] · or \"test [--pending|<run-id>]\" · or \"status\""
+      }
+    },
+    {
+      "id": "command:session-log",
+      "label": "/session-log",
+      "kind": "command",
+      "lane": "lane:ledger",
+      "blurb": "Draft what a conversation did — one invoice-voice line per session from its transcript, edited files, commits and metered hours; stored locally, pushed to the CRM",
+      "source": "commands/session-log.md",
+      "meta": {
+        "arguments": "\"[ref | --sweep] — e.g. nothing (this session), \\\"73ff9397\\\", or \\\"--sweep\\\" to catch up the last week\""
+      }
+    },
+    {
+      "id": "command:spec-sheet",
+      "label": "/spec-sheet",
+      "kind": "command",
+      "lane": "lane:planning",
+      "blurb": "Spec sheet for a codebase — components, versions, deploy, env names, git — read from the files and stored per client in the CRM; rerun to update",
+      "source": "commands/spec-sheet.md",
+      "meta": {
+        "arguments": "[path] [--client <slug>] [--codebase <slug>] [--md SPEC.md] — e.g. \"\", \". --codebase gdi-multisite\", \"~/Work/daedalus --client tallkarol\""
+      }
+    },
+    {
+      "id": "routine:meter",
+      "label": "Agent meter",
+      "kind": "routine",
+      "blurb": "Records agent-active turns and token usage per client across every session, so hours exist before anyone tries to remember them.",
+      "source": "skills/timeclock/SKILL.md",
+      "meta": {
+        "cadence": "every prompt, stop, subagent start/stop, session end",
+        "hook events": "SessionEnd, Stop, SubagentStart, SubagentStop, UserPromptSubmit",
+        "script": "meter-hook.sh"
+      }
+    },
+    {
+      "id": "routine:leftoff",
+      "label": "Left-off reporter",
+      "kind": "routine",
+      "blurb": "Reports what every conversation is doing to the CRM board — working, waiting on Karol, blocked on a permission prompt, parked.",
+      "source": "skills/leftoff/SKILL.md",
+      "meta": {
+        "cadence": "same five events, plus permission prompts",
+        "hook events": "Notification, SessionEnd, Stop, SubagentStart, SubagentStop, UserPromptSubmit",
+        "script": "leftoff-hook.sh"
+      }
+    },
+    {
+      "id": "routine:summarize",
+      "label": "Session summarizer",
+      "kind": "routine",
+      "blurb": "At session end a headless call turns the transcript into one invoice-voice line, while the transcript is still on disk.",
+      "source": "skills/session-log/SKILL.md",
+      "meta": {
+        "cadence": "session end, plus a weekly sweep"
+      }
+    },
+    {
+      "id": "routine:care",
+      "label": "Care cycle",
+      "kind": "routine",
+      "blurb": "Read-only audit → fix picklist → Karol picks → approved ops only, backup-first.",
+      "source": "skills/website-care/SKILL.md",
+      "meta": {
+        "cadence": "weekly, per care client"
+      }
+    },
+    {
+      "id": "routine:scout",
+      "label": "Daily scout",
+      "kind": "routine",
+      "blurb": "Mines the day's work for a search-relevant nugget. Zero good nuggets is a correct outcome — it never invents one.",
+      "source": "skills/scout/SKILL.md",
+      "meta": {
+        "cadence": "daily, or right after a notable fix"
+      }
+    },
+    {
+      "id": "routine:briefs",
+      "label": "Demand briefs",
+      "kind": "routine",
+      "blurb": "Reads the ranked search-opportunity queue and pitches cadence-aware briefs against the claim bank.",
+      "source": "skills/demand-scout/SKILL.md",
+      "meta": {
+        "cadence": "monthly, per site"
+      }
+    },
+    {
+      "id": "routine:invoice",
+      "label": "Month-end close",
+      "kind": "routine",
+      "blurb": "Purser reconciles the period, Karol picks the fixes, then the invoice renders from the timeclock.",
+      "source": "commands/invoice.md",
+      "meta": {
+        "cadence": "monthly, per client"
+      }
+    },
+    {
+      "id": "pipeline:harvester",
+      "label": "HARVESTER",
+      "kind": "pipeline",
+      "lane": "lane:content",
+      "blurb": "Run once when a project ships: one mining pass produces one report every content lane reads.",
+      "source": "HARVESTER.md",
+      "meta": {
+        "stages": "MINE → MINE REPORT → PITCH → DISPATCH → QA GATES"
+      }
+    }
+  ],
+  "links": [
+    {
+      "source": "root",
+      "target": "skill:team-charter",
+      "rel": "loads"
+    },
+    {
+      "source": "root",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "root",
+      "target": "lane:build",
+      "rel": "contains"
+    },
+    {
+      "source": "root",
+      "target": "lane:content",
+      "rel": "contains"
+    },
+    {
+      "source": "root",
+      "target": "lane:delivery",
+      "rel": "contains"
+    },
+    {
+      "source": "root",
+      "target": "lane:care",
+      "rel": "contains"
+    },
+    {
+      "source": "root",
+      "target": "lane:ledger",
+      "rel": "contains"
+    },
+    {
+      "source": "root",
+      "target": "lane:planning",
+      "rel": "contains"
+    },
+    {
+      "source": "root",
+      "target": "lane:foundation",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:care",
+      "target": "agent:caretaker",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:content",
+      "target": "agent:content-runner",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:build",
+      "target": "agent:db-specialist",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:delivery",
+      "target": "agent:docent",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:ledger",
+      "target": "agent:purser",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:build",
+      "target": "agent:qa",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:build",
+      "target": "agent:security-reviewer",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:build",
+      "target": "agent:ux-builder",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:content",
+      "target": "skill:blogo",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:blogo",
+      "target": "reference:blogo/aieo-playbook.md",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:planning",
+      "target": "skill:blueprint",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:blueprint",
+      "target": "reference:blueprint/question-bank.md",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:blueprint",
+      "target": "reference:blueprint/workbook-template.html",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:build",
+      "target": "skill:browser-check",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:browser-check",
+      "target": "script:browser-check/cdp-check.mjs",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:content",
+      "target": "skill:casestudio",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:casestudio",
+      "target": "reference:casestudio/output-contracts.md",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:foundation",
+      "target": "skill:client-pack",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:client-pack",
+      "target": "script:client-pack/pack-status.py",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:content",
+      "target": "skill:demand-scout",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:demand-scout",
+      "target": "reference:demand-scout/insights-cli.md",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:build",
+      "target": "skill:design-system",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:ledger",
+      "target": "skill:estimator",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:planning",
+      "target": "skill:follow-up",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:follow-up",
+      "target": "script:follow-up/__pycache__",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:follow-up",
+      "target": "script:follow-up/follow-up.py",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:planning",
+      "target": "skill:leftoff",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:leftoff",
+      "target": "script:leftoff/browser-tabs.sh",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:leftoff",
+      "target": "script:leftoff/cursor-leftoff-hook.sh",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:leftoff",
+      "target": "script:leftoff/git-dirty.sh",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:leftoff",
+      "target": "script:leftoff/leftoff-backfill.py",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:leftoff",
+      "target": "script:leftoff/leftoff-hook.sh",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:leftoff",
+      "target": "script:leftoff/leftoff.sh",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:ledger",
+      "target": "skill:log-session",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:log-session",
+      "target": "script:log-session/__pycache__",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:log-session",
+      "target": "script:log-session/log-session.py",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:planning",
+      "target": "skill:punchlist",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:punchlist",
+      "target": "script:punchlist/punchlist.py",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:content",
+      "target": "skill:scout",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:ledger",
+      "target": "skill:session-log",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:session-log",
+      "target": "script:session-log/session-log.py",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:planning",
+      "target": "skill:spec-sheet",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:spec-sheet",
+      "target": "script:spec-sheet/__pycache__",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:spec-sheet",
+      "target": "script:spec-sheet/spec-sheet.py",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:foundation",
+      "target": "skill:team-charter",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:ledger",
+      "target": "skill:timeclock",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
+      "target": "script:timeclock/__pycache__",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
+      "target": "script:timeclock/client-for.py",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
+      "target": "script:timeclock/cursor-hook.sh",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
+      "target": "script:timeclock/meter-hook.sh",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
+      "target": "script:timeclock/meter-math.py",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
+      "target": "script:timeclock/reattribute.py",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
+      "target": "script:timeclock/tclib.py",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
+      "target": "script:timeclock/timeclock.sh",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
+      "target": "script:timeclock/turn-tokens.py",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
+      "target": "reference:timeclock/invoice-template.html",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:care",
+      "target": "skill:website-care",
+      "rel": "contains"
+    },
+    {
+      "source": "agent:caretaker",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:caretaker",
+      "target": "skill:website-care",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:content-runner",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:content-runner",
+      "target": "skill:scout",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:db-specialist",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:docent",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:purser",
+      "target": "skill:timeclock",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:qa",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:qa",
+      "target": "skill:browser-check",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:ux-builder",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:ux-builder",
+      "target": "skill:design-system",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:blogo",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:browser-check",
+      "target": "skill:punchlist",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:casestudio",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:demand-scout",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:design-system",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:estimator",
+      "target": "skill:timeclock",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:follow-up",
+      "target": "skill:log-session",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:log-session",
+      "target": "skill:session-log",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:log-session",
+      "target": "skill:timeclock",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:punchlist",
+      "target": "skill:log-session",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:punchlist",
+      "target": "agent:qa",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:scout",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:session-log",
+      "target": "skill:leftoff",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:team-charter",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:team-charter",
+      "target": "skill:demand-scout",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:team-charter",
+      "target": "skill:scout",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:team-charter",
+      "target": "skill:website-care",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:team-charter",
+      "target": "skill:timeclock",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:team-charter",
+      "target": "skill:estimator",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:team-charter",
+      "target": "skill:leftoff",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:team-charter",
+      "target": "agent:docent",
+      "rel": "loads"
+    },
+    {
+      "source": "command:blueprint",
+      "target": "skill:blueprint",
+      "rel": "loads"
+    },
+    {
+      "source": "command:blueprint",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "command:briefs",
+      "target": "skill:demand-scout",
+      "rel": "loads"
+    },
+    {
+      "source": "command:briefs",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "command:care",
+      "target": "skill:website-care",
+      "rel": "loads"
+    },
+    {
+      "source": "command:care",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "command:care",
+      "target": "agent:caretaker",
+      "rel": "loads"
+    },
+    {
+      "source": "command:client",
+      "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "command:clock",
+      "target": "skill:timeclock",
+      "rel": "loads"
+    },
+    {
+      "source": "command:estimate",
+      "target": "skill:estimator",
+      "rel": "loads"
+    },
+    {
+      "source": "command:estimate",
+      "target": "skill:timeclock",
+      "rel": "loads"
+    },
+    {
+      "source": "command:follow-up",
+      "target": "skill:follow-up",
+      "rel": "loads"
+    },
+    {
+      "source": "command:invoice",
+      "target": "skill:timeclock",
+      "rel": "loads"
+    },
+    {
+      "source": "command:invoice",
+      "target": "agent:purser",
+      "rel": "loads"
+    },
+    {
+      "source": "command:log-session",
+      "target": "skill:log-session",
+      "rel": "loads"
+    },
+    {
+      "source": "command:punchlist",
+      "target": "skill:punchlist",
+      "rel": "loads"
+    },
+    {
+      "source": "command:punchlist",
+      "target": "skill:browser-check",
+      "rel": "loads"
+    },
+    {
+      "source": "command:punchlist",
+      "target": "agent:qa",
+      "rel": "loads"
+    },
+    {
+      "source": "command:session-log",
+      "target": "skill:session-log",
+      "rel": "loads"
+    },
+    {
+      "source": "command:spec-sheet",
+      "target": "skill:spec-sheet",
+      "rel": "loads"
+    },
+    {
+      "source": "root",
+      "target": "routine:meter",
+      "rel": "contains"
+    },
+    {
+      "source": "routine:meter",
+      "target": "skill:timeclock",
+      "rel": "fires"
+    },
+    {
+      "source": "routine:meter",
+      "target": "skill:log-session",
+      "rel": "fires"
+    },
+    {
+      "source": "root",
+      "target": "routine:leftoff",
+      "rel": "contains"
+    },
+    {
+      "source": "routine:leftoff",
+      "target": "skill:leftoff",
+      "rel": "fires"
+    },
+    {
+      "source": "root",
+      "target": "routine:summarize",
+      "rel": "contains"
+    },
+    {
+      "source": "routine:summarize",
+      "target": "skill:session-log",
+      "rel": "fires"
+    },
+    {
+      "source": "root",
+      "target": "routine:care",
+      "rel": "contains"
+    },
+    {
+      "source": "routine:care",
+      "target": "agent:caretaker",
+      "rel": "fires"
+    },
+    {
+      "source": "routine:care",
+      "target": "skill:website-care",
+      "rel": "fires"
+    },
+    {
+      "source": "root",
+      "target": "routine:scout",
+      "rel": "contains"
+    },
+    {
+      "source": "routine:scout",
+      "target": "skill:scout",
+      "rel": "fires"
+    },
+    {
+      "source": "root",
+      "target": "routine:briefs",
+      "rel": "contains"
+    },
+    {
+      "source": "routine:briefs",
+      "target": "skill:demand-scout",
+      "rel": "fires"
+    },
+    {
+      "source": "root",
+      "target": "routine:invoice",
+      "rel": "contains"
+    },
+    {
+      "source": "routine:invoice",
+      "target": "agent:purser",
+      "rel": "fires"
+    },
+    {
+      "source": "routine:invoice",
+      "target": "skill:timeclock",
+      "rel": "fires"
+    },
+    {
+      "source": "routine:invoice",
+      "target": "skill:estimator",
+      "rel": "fires"
+    },
+    {
+      "source": "lane:content",
+      "target": "pipeline:harvester",
+      "rel": "contains"
+    },
+    {
+      "source": "pipeline:harvester",
+      "target": "skill:blogo",
+      "rel": "feeds"
+    },
+    {
+      "source": "pipeline:harvester",
+      "target": "skill:casestudio",
+      "rel": "feeds"
+    },
+    {
+      "source": "pipeline:harvester",
+      "target": "skill:scout",
+      "rel": "feeds"
+    }
+  ]
+}

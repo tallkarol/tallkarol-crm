@@ -5,11 +5,15 @@ export function BrandMark({
   href = "/",
   compact,
   onClick,
+  tone = "card",
 }: {
   href?: string
   compact?: boolean
   onClick?: () => void
+  /** `rail` on the onyx sidebar, `card` on light chrome (the mobile top bar). */
+  tone?: "rail" | "card"
 }) {
+  const rail = tone === "rail"
   return (
     <Link
       href={href}
@@ -38,10 +42,20 @@ export function BrandMark({
         <span className="sr-only">Tall Karol CRM</span>
       ) : (
         <span className="min-w-0">
-          <span className="block truncate text-[15px] font-semibold tracking-tight text-tk-onyx">
+          <span
+            className={cn(
+              "block truncate font-ui text-[14.5px] font-bold tracking-tight",
+              rail ? "text-rail-ink" : "text-tk-onyx"
+            )}
+          >
             Tall Karol
           </span>
-          <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-tk-slate/70">
+          <span
+            className={cn(
+              "block font-ui text-[9.5px] font-bold uppercase tracking-[0.18em]",
+              rail ? "text-rail-ink/50" : "text-tk-slate/70"
+            )}
+          >
             CRM
           </span>
         </span>

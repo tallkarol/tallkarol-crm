@@ -42,6 +42,8 @@ export type UpcomingMeeting = {
   url: string
   color: string
   source: string
+  /** The calendar source row — what the dashboard's filter chips key on. */
+  sourceId: string
   attendees: { name: string; email: string }[]
 }
 

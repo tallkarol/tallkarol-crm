@@ -1,11 +1,11 @@
 /**
- * Checks for the task grammar and the recurrence periods — the two pieces
- * where a quiet mistake would be invisible in the UI.
+ * Checks for the task grammar, the recurrence periods and the lens filter —
+ * the pieces where a quiet mistake would be invisible in the UI.
  * Run with `npm run check:tasks`.
  */
 
 import { parseTaskInput, parseWhen, type ParseTarget } from "../lib/task-parse"
-import { periodKey } from "../lib/task-view"
+import { periodKey, taskMatches, type HubTask } from "../lib/task-view"
 
 let failures = 0
 function check(label: string, actual: unknown, expected: unknown) {
@@ -205,6 +205,72 @@ console.log("\nrecurrence periods — this is what weekly-means-monthly cost")
   check("once has no period", periodKey("none", sep1), null)
   check("monthly key shape", periodKey("monthly", sep1), "2026-09")
   check("weekly key shape", periodKey("weekly", sep1), "2026-W36")
+}
+
+console.log("\nlens filtering — a wrong predicate hides work silently")
+{
+  const base: HubTask = {
+    id: "t1",
+    title: "chase hero images",
+    notes: "",
+    labels: [],
+    status: "open",
+    stage: "queue",
+    cadence: "none",
+    priority: 2,
+    dueOn: null,
+    snoozedUntil: null,
+    completedAt: null,
+    updatedAt: "2026-09-01T00:00:00.000Z",
+    createdAt: "2026-09-01T00:00:00.000Z",
+    source: "manual",
+    clientId: "c-gdi",
+    clientName: "GDI",
+    clientSlug: "gdi",
+    projectId: null,
+    projectName: null,
+    projectSlug: null,
+    productId: null,
+    productName: null,
+    productSlug: null,
+    retainerId: null,
+    retainerName: null,
+    deliverableLabel: null,
+    items: { total: 0, done: 0 },
+    waitingDays: null,
+    overdueDays: null,
+    periodNote: null,
+  }
+  const today = "2026-09-03"
+  const task = (over: Partial<HubTask>): HubTask => ({ ...base, ...over })
+
+  check("no criteria matches everything", taskMatches(base, {}, "", today), true)
+
+  const chip = task({ labels: ["change request", "theme PR"] })
+  check("label any-of hits", taskMatches(chip, { labels: ["theme PR"] }, "", today), true)
+  check("label any-of misses", taskMatches(chip, { labels: ["bundle"] }, "", today), false)
+  check("unlabelled row fails a label filter", taskMatches(base, { labels: ["theme PR"] }, "", today), false)
+  check("a label is searchable text", taskMatches(chip, {}, "change request", today), true)
+
+  const snoozed = task({ snoozedUntil: "2026-09-10" })
+  check("snoozed hides by default", taskMatches(snoozed, { state: "open" }, "", today), false)
+  check("includeSnoozed shows it", taskMatches(snoozed, { state: "open", includeSnoozed: true }, "", today), true)
+
+  const late = task({ dueOn: "2026-09-01" })
+  check("overdue", taskMatches(late, { due: "overdue" }, "", today), true)
+  check("today is not overdue", taskMatches(task({ dueOn: today }), { due: "overdue" }, "", today), false)
+
+  const waiting = task({ stage: "waiting" })
+  check("waiting state", taskMatches(waiting, { state: "waiting" }, "", today), true)
+  check("waiting is still open", taskMatches(waiting, { state: "open" }, "", today), true)
+  check("done is not open", taskMatches(task({ status: "done" }), { state: "open" }, "", today), false)
+
+  // needsMe is the one composite, and the widget deliberately refuses it.
+  check("needsMe: undated normal one-off is not it", taskMatches(base, { needsMe: true }, "", today), false)
+  check("needsMe: due today is", taskMatches(task({ dueOn: today }), { needsMe: true }, "", today), true)
+  check("needsMe: high priority is", taskMatches(task({ priority: 1 }), { needsMe: true }, "", today), true)
+  check("needsMe: in progress is", taskMatches(task({ stage: "doing" }), { needsMe: true }, "", today), true)
+  check("needsMe: any repeat is", taskMatches(task({ cadence: "monthly" }), { needsMe: true }, "", today), true)
 }
 
 console.log(

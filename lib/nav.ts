@@ -41,6 +41,7 @@ export type NavIconName =
   | "integrations"
   | "vault"
   | "scaffolds"
+  | "hivemind"
 
 export type NavLink = {
   href: string
@@ -94,6 +95,7 @@ export const ROUTES = {
   notebooks: "/notebooks",
   vault: "/vault",
   scaffolds: "/scaffolds",
+  hivemind: "/hivemind",
   scaffold: (slug: string) => `/scaffolds/${slug}`,
   settings: "/settings",
   settingsColors: "/settings/colors",
@@ -192,6 +194,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
     items: [
       { href: ROUTES.vault, label: "Vault", icon: "vault" },
       { href: ROUTES.scaffolds, label: "Scaffolds", icon: "scaffolds" },
+      { href: ROUTES.hivemind, label: "Hive mind", icon: "hivemind" },
       { href: ROUTES.activity, label: "Activity", icon: "activity" },
       {
         href: ROUTES.settings,

@@ -16,7 +16,7 @@ import {
   ym,
 } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
-import { allTasks, taskTargets } from "@/lib/tasks"
+import { taskTargets, tasksFor } from "@/lib/tasks"
 import { formatDay, formatMoney } from "@/lib/work"
 import { draftRetainerInvoice } from "../actions"
 
@@ -47,16 +47,12 @@ export default async function RetainerDetailPage({
   const color = clientColor(retainer.client.slug)
   const rate = retainerRateCents(retainer, invoices)
 
-  const retainerRows = await db.query.tasks.findMany({
-    columns: { id: true },
-    where: (t, { eq }) => eq(t.retainerId, retainer.id),
-  })
-  const retainerTaskIds = new Set(retainerRows.map((r) => r.id))
-  const [allTaskRows, targets] = await Promise.all([allTasks(), taskTargets()])
-  const boardTasks = allTaskRows.filter(
-    (t) =>
-      retainerTaskIds.has(t.id) &&
-      (t.status === "open" || (t.completedAt ?? "") >= monthStart.toISOString())
+  const [retainerTasks, targets] = await Promise.all([
+    tasksFor({ retainerId: retainer.id }),
+    taskTargets(),
+  ])
+  const boardTasks = retainerTasks.filter(
+    (t) => t.status === "open" || (t.completedAt ?? "") >= monthStart.toISOString()
   )
 
   const byMonth = hoursByMonth(entries, retainer.id)

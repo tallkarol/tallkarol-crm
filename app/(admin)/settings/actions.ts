@@ -6,6 +6,7 @@ import { getSessionUser } from "@/lib/auth"
 import { HIDE_MONEY_COOKIE } from "@/lib/money-privacy"
 import { setGoals } from "@/lib/goals"
 import { ROUTES } from "@/lib/nav"
+import { isTheme, THEME_COOKIE } from "@/lib/theme"
 
 function parseDollars(raw: FormDataEntryValue | null): number | null {
   const n = Number(String(raw ?? "").replace(/[$,]/g, "").trim())
@@ -38,6 +39,27 @@ export async function setHideMoney(
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: on ? 60 * 60 * 24 * 365 : 0,
+  })
+  return { ok: true }
+}
+
+/**
+ * Appearance, per browser like demo mode. The toggle applies the choice to
+ * the document itself, so no revalidate and no reload — the cookie only has
+ * to be right for the next server render.
+ */
+export async function setTheme(
+  theme: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const user = await getSessionUser()
+  if (!user) return { ok: false, error: "Not signed in" }
+  if (!isTheme(theme)) return { ok: false, error: "Unknown theme" }
+  cookies().set(THEME_COOKIE, theme, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
   })
   return { ok: true }
 }

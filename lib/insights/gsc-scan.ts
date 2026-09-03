@@ -3,6 +3,7 @@ import { getDb } from "@/db"
 import { gscFindings, gscScans, sites, tasks, type Site } from "@/db/schema"
 import { scanSite } from "@/lib/insights/gsc-index"
 import { findingsFrom, isTicketable, RULE_LABELS } from "@/lib/insights/gsc-rules"
+import { insertTaskRow, resolveTaskTarget } from "@/lib/task-insert"
 
 /**
  * Run a scan, diff it against what we already knew, and leave behind three
@@ -104,20 +105,21 @@ async function upsertMaintenanceTask(params: {
     return existing[0].id
   }
 
-  const [created] = await db
-    .insert(tasks)
-    .values({
-      title,
-      clientId: site.clientId,
-      cadence: "monthly",
-      priority: ticketable.some((f) => f.severity === 1) ? 1 : 2,
-      source: "api",
-      refKind: "gsc-scan",
-      refId: scanId,
-      notes,
-    })
-    .returning({ id: tasks.id })
-  return created?.id ?? null
+  // Through the shared writer so the maintenance line picks up the client's
+  // active retainer — which is the thing it bills against.
+  const target = await resolveTaskTarget({ clientId: site.clientId })
+  if ("error" in target) return null
+  return insertTaskRow(db, {
+    title,
+    userId: null,
+    target,
+    cadence: "monthly",
+    priority: ticketable.some((f) => f.severity === 1) ? 1 : 2,
+    source: "api",
+    refKind: "gsc-scan",
+    refId: scanId,
+    notes,
+  })
 }
 
 export async function runGscScan(slug: string): Promise<ScanSummary> {

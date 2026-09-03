@@ -8,6 +8,8 @@ import { COLOR_GLOBAL } from "@/lib/client-colors"
 import { hydrateClientColors } from "@/lib/client-colors-store"
 import { HIDE_MONEY_GLOBAL } from "@/lib/money-privacy"
 import { readHideMoneyCookie } from "@/lib/money-privacy-server"
+import { themeBootScript } from "@/lib/theme"
+import { readThemeCookie } from "@/lib/theme-server"
 import { loadUnread } from "@/lib/unread-data"
 import { worstTone } from "@/lib/unread"
 import { runningPunches } from "@/lib/punches"
@@ -23,6 +25,9 @@ export default async function AdminLayout({
   // Demo mode — see `lib/money-privacy.ts`. Read here for the script tag and
   // the shell's switch; server components read the same cookie themselves.
   const hideMoney = readHideMoneyCookie()
+  // Appearance — see `lib/theme.ts`. The root layout stamps light; this
+  // overrides it with the user's choice before first paint.
+  const theme = readThemeCookie()
 
   // One read behind every badge and behind the dashboard's Unread card, so a
   // badge can never disagree with the card or the page it points at. The call
@@ -77,6 +82,7 @@ export default async function AdminLayout({
         flag is remembered per browsing context, so client-side navigation
         inside that web view keeps it without carrying the query string.
       */}
+      <script dangerouslySetInnerHTML={{ __html: themeBootScript(theme) }} />
       <script
         dangerouslySetInnerHTML={{
           __html:
@@ -88,6 +94,7 @@ export default async function AdminLayout({
       badges={badges}
       nav={adminNav(flattenProducts(catalog))}
       hideMoney={hideMoney}
+      theme={theme}
     >
       {children}
     </AppShell>

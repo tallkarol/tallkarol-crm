@@ -3,11 +3,12 @@
 import { revalidatePath } from "next/cache"
 import { eq } from "drizzle-orm"
 import { db } from "@/db"
-import { notionLinks, notionProposals, tasks } from "@/db/schema"
+import { notionLinks, notionProposals } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { ROUTES } from "@/lib/nav"
 import { fetchPageMeta, syncLink } from "@/lib/notion"
 import { scanLink } from "@/lib/notion-scan"
+import { insertTaskRow, resolveTaskTarget } from "@/lib/task-insert"
 
 export async function syncNotebook(linkId: string) {
   const user = await getSessionUser()
@@ -70,18 +71,18 @@ async function decideProposal(proposalId: string, accept: boolean) {
 
   let taskId: string | null = null
   if (accept) {
-    const [task] = await db
-      .insert(tasks)
-      .values({
-        title: proposal.title,
-        userId: user.id,
-        clientId: proposal.link.clientId,
-        source: "notion",
-        refKind: "notion_page",
-        refId: proposal.pageId,
-      })
-      .returning({ id: tasks.id })
-    taskId = task.id
+    // Through the shared writer so an accepted page picks up the client's
+    // active retainer, same as every other captured task.
+    const target = await resolveTaskTarget({ clientId: proposal.link.clientId })
+    if ("error" in target) return
+    taskId = await insertTaskRow(db, {
+      title: proposal.title,
+      userId: user.id,
+      target,
+      source: "notion",
+      refKind: "notion_page",
+      refId: proposal.pageId,
+    })
   }
 
   await db

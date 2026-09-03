@@ -5,11 +5,13 @@ import { usePathname } from "next/navigation"
 import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react"
 import { BrandMark } from "@/components/BrandMark"
 import { SidebarNav, type NavBadge } from "@/components/SidebarNav"
+import { ThemeToggle } from "@/components/ThemeToggle"
 import { logoutAction } from "@/lib/actions"
 import { cn } from "@/lib/cn"
 import { HideMoneyToggle } from "@/components/HideMoneyToggle"
 import { ADMIN_NAV, type NavSection } from "@/lib/nav"
 import { primeHideMoney } from "@/lib/money-privacy"
+import type { Theme } from "@/lib/theme"
 
 const STORAGE_KEY = "tk-crm-sidebar-collapsed"
 
@@ -18,6 +20,7 @@ export function AppShell({
   badges = {},
   nav = ADMIN_NAV,
   hideMoney = false,
+  theme = "system",
   children,
 }: {
   email: string
@@ -26,6 +29,8 @@ export function AppShell({
   nav?: readonly NavSection[]
   /** Demo mode, from the cookie the admin layout read. */
   hideMoney?: boolean
+  /** Appearance, from the cookie the admin layout read. */
+  theme?: Theme
   children: React.ReactNode
 }) {
   // Primes the server pass of every client component below this one, which
@@ -86,27 +91,29 @@ export function AppShell({
         Skip to main content
       </a>
 
+      {/* The rail: onyx in both themes, so the brand chrome is the one
+          constant while the canvas flips. */}
       <aside
         data-chrome="sidebar"
         className={cn(
-          "hidden h-full shrink-0 flex-col border-r border-tk-slate/10 bg-white md:flex",
+          "hidden h-full shrink-0 flex-col border-r border-rail-ink/10 bg-rail text-rail-ink md:flex",
           "transition-[width] duration-200 ease-out motion-reduce:transition-none",
-          collapsed ? "w-[4.25rem]" : "w-64"
+          collapsed ? "w-[4.25rem]" : "w-[15.5rem]"
         )}
       >
         <div
           className={cn(
-            "flex items-center gap-2 pt-5 pb-2.5",
-            collapsed ? "flex-col px-2" : "justify-between px-5"
+            "flex items-center gap-2 pb-2 pt-[18px]",
+            collapsed ? "flex-col px-2" : "justify-between pl-[18px] pr-3"
           )}
         >
-          <BrandMark compact={collapsed} />
+          <BrandMark compact={collapsed} tone="rail" />
           <button
             type="button"
             onClick={toggleCollapsed}
             aria-expanded={!collapsed}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-tk-slate/70 hover:bg-tk-linen hover:text-tk-onyx"
+            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-rail-ink/50 hover:bg-rail-ink/[0.06] hover:text-rail-ink"
           >
             {collapsed ? (
               <PanelLeftOpen className="size-4" aria-hidden />
@@ -117,8 +124,8 @@ export function AppShell({
         </div>
         <div
           className={cn(
-            "min-h-0 flex-1 overflow-y-auto py-4",
-            collapsed ? "px-1.5" : "px-3"
+            "tk-nav-scroll min-h-0 flex-1 overflow-y-auto py-3",
+            collapsed ? "tk-nav-scroll--compact px-1.5" : "px-2.5"
           )}
         >
           <SidebarNav
@@ -127,7 +134,12 @@ export function AppShell({
             badges={badges}
           />
         </div>
-        <UserFooter email={email} collapsed={collapsed} hideMoney={hideMoney} />
+        <UserFooter
+          email={email}
+          collapsed={collapsed}
+          hideMoney={hideMoney}
+          theme={theme}
+        />
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -173,30 +185,30 @@ export function AppShell({
           />
           <aside
             id="tk-crm-mobile-nav"
-            className="relative flex h-full w-[min(18rem,88vw)] flex-col bg-white shadow-2xl"
+            className="relative flex h-full w-[min(18rem,88vw)] flex-col bg-rail text-rail-ink shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-label="Navigation menu"
           >
-            <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-tk-slate/10 px-4">
-              <BrandMark onClick={() => setMenuOpen(false)} />
+            <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-rail-ink/10 px-4">
+              <BrandMark onClick={() => setMenuOpen(false)} tone="rail" />
               <button
                 type="button"
-                className="flex size-9 items-center justify-center rounded-lg text-tk-onyx hover:bg-tk-linen"
+                className="flex size-9 items-center justify-center rounded-lg text-rail-ink/70 hover:bg-rail-ink/[0.06] hover:text-rail-ink"
                 aria-label="Close menu"
                 onClick={() => setMenuOpen(false)}
               >
                 <X className="size-5" aria-hidden />
               </button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
+            <div className="tk-nav-scroll min-h-0 flex-1 overflow-y-auto px-2.5 py-3">
               <SidebarNav
                 sections={nav}
                 badges={badges}
                 onNavigate={() => setMenuOpen(false)}
               />
             </div>
-            <UserFooter email={email} hideMoney={hideMoney} />
+            <UserFooter email={email} hideMoney={hideMoney} theme={theme} />
           </aside>
         </div>
       ) : null}
@@ -208,25 +220,28 @@ function UserFooter({
   email,
   collapsed,
   hideMoney,
+  theme,
 }: {
   email: string
   collapsed?: boolean
   hideMoney: boolean
+  theme: Theme
 }) {
   const initial = email.slice(0, 1).toUpperCase()
 
   return (
     <div
       className={cn(
-        "mt-auto border-t border-tk-slate/10 bg-white py-4",
-        collapsed ? "px-2" : "px-4"
+        "mt-auto border-t border-rail-ink/10 bg-rail-2 py-3.5",
+        collapsed ? "px-2" : "px-3.5"
       )}
     >
       {collapsed ? (
         <div className="flex flex-col items-center gap-2">
           <HideMoneyToggle initial={hideMoney} collapsed />
+          <ThemeToggle initial={theme} collapsed />
           <span
-            className="flex size-8 items-center justify-center rounded-full bg-tk-teal/10 text-xs font-semibold text-tk-teal"
+            className="flex size-8 items-center justify-center rounded-full bg-[--rail-active] text-xs font-bold text-[--rail-active-icon]"
             title={email}
           >
             {initial}
@@ -234,26 +249,27 @@ function UserFooter({
           <form action={logoutAction}>
             <button
               type="submit"
-              className="text-[11px] font-semibold text-tk-slate hover:text-tk-teal hover:underline"
+              className="text-[11px] font-semibold text-rail-ink/60 hover:text-rail-ink hover:underline"
             >
               Out
             </button>
           </form>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           <HideMoneyToggle initial={hideMoney} />
-          <div className="flex items-center justify-between gap-3">
+          <ThemeToggle initial={theme} />
+          <div className="flex items-center justify-between gap-3 pt-0.5">
             <div className="flex min-w-0 items-center gap-2.5">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-tk-teal/10 text-xs font-semibold text-tk-teal">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[--rail-active] text-[11px] font-bold text-[--rail-active-icon]">
                 {initial}
               </span>
-              <span className="truncate text-xs text-tk-slate/70">{email}</span>
+              <span className="truncate text-xs text-rail-ink/70">{email}</span>
             </div>
             <form action={logoutAction}>
               <button
                 type="submit"
-                className="shrink-0 text-xs font-semibold text-tk-slate hover:text-tk-teal hover:underline"
+                className="shrink-0 text-xs font-semibold text-rail-ink/70 hover:text-rail-ink hover:underline"
               >
                 Sign out
               </button>

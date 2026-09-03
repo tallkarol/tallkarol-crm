@@ -3,12 +3,14 @@
 import { and, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { db } from "@/db"
-import { calendarSources } from "@/db/schema"
+import { calendarEvents, calendarSources } from "@/db/schema"
 import type { CalendarSourceKind } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
+import { getMeetingsInWindow, type MeetingSource } from "@/lib/calendar"
+import { moveGoogleEvent } from "@/lib/calendar-providers"
 import { syncAllCalendars } from "@/lib/calendar-sync"
 import { writeCalendarEvent } from "@/lib/calendar-write"
-import { SOURCE_PALETTE } from "@/lib/calendar-types"
+import { SOURCE_PALETTE, type UpcomingMeeting } from "@/lib/calendar-types"
 
 type Result<T = unknown> = ({ ok: true } & T) | { ok: false; error: string }
 
@@ -157,4 +159,73 @@ export async function createCalendarEvent(input: {
   if (!result.ok) return { ok: false, error: result.error }
   revalidateCalendar()
   return { ok: true, url: result.url }
+}
+
+/* ------------------------------------------------------ dashboard week ---- */
+
+/** The dashboard's five-day window, paged by its arrows. ISO bounds. */
+export async function meetingsInWindow(
+  fromIso: string,
+  toIso: string
+): Promise<Result<{ data: { meetings: UpcomingMeeting[]; sources: MeetingSource[] } }>> {
+  const denied = await requireAdmin()
+  if (denied) return { ok: false, error: denied }
+  const from = new Date(fromIso)
+  const to = new Date(toIso)
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || to <= from) {
+    return { ok: false, error: "That window is not valid." }
+  }
+  const { meetings, sources } = await getMeetingsInWindow(from, to)
+  return { ok: true, data: { meetings, sources } }
+}
+
+/**
+ * Drag an event to another day. The time of day and the length are kept; only
+ * the date moves. Written to Google first — if that fails nothing changes
+ * locally, so the cache never disagrees with the calendar it mirrors.
+ */
+export async function moveMeeting(
+  id: string,
+  dayShift: number
+): Promise<Result<{ data: { startsAt: string; endsAt: string } }>> {
+  const denied = await requireAdmin()
+  if (denied) return { ok: false, error: denied }
+  if (!Number.isInteger(dayShift) || Math.abs(dayShift) > 60) {
+    return { ok: false, error: "That move is not valid." }
+  }
+  const event = await db.query.calendarEvents.findFirst({
+    where: eq(calendarEvents.id, id),
+    with: { source: true },
+  })
+  if (!event) return { ok: false, error: "That event is gone." }
+  if (event.source.kind !== "google" || !event.source.writable) {
+    const where = event.source.kind === "cal_com" ? "Cal.com" : "its own calendar"
+    return { ok: false, error: `${event.source.label} is read-only here — move it in ${where}.` }
+  }
+  if (dayShift === 0) {
+    return {
+      ok: true,
+      data: { startsAt: event.startsAt.toISOString(), endsAt: event.endsAt.toISOString() },
+    }
+  }
+
+  const day = 86_400_000
+  const startsAt = new Date(event.startsAt.getTime() + dayShift * day)
+  const endsAt = new Date(event.endsAt.getTime() + dayShift * day)
+  try {
+    await moveGoogleEvent(event.source.externalId, event.externalId, {
+      startsAt,
+      endsAt,
+      allDay: event.allDay,
+    })
+  } catch (error) {
+    return { ok: false, error: message(error) || "Google did not accept the move." }
+  }
+  await db
+    .update(calendarEvents)
+    .set({ startsAt, endsAt })
+    .where(eq(calendarEvents.id, id))
+  revalidatePath("/")
+  revalidateCalendar()
+  return { ok: true, data: { startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() } }
 }

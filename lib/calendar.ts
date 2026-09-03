@@ -35,18 +35,54 @@ function dayBounds(iso: string) {
   }
 }
 
+/** A calendar the dashboard can filter by — one chip per enabled source. */
+export type MeetingSource = {
+  id: string
+  label: string
+  color: string
+  kind: "google" | "cal_com" | "ics"
+  /** Events on it can be dragged to another day (Google, writable). */
+  movable: boolean
+}
+
 /** Synced events overlapping the next 7 local days, for the dashboard week. */
 export async function getUpcomingMeetings(): Promise<{
   configured: boolean
   meetings: UpcomingMeeting[]
+  sources: MeetingSource[]
 }> {
-  const sources = await db.query.calendarSources.findMany()
-  const enabled = sources.filter((source) => source.enabled)
-  if (enabled.length === 0) return { configured: false, meetings: [] }
-
   const day = 86_400_000
-  const from = new Date(Date.now() - 2 * day)
-  const to = new Date(Date.now() + 9 * day)
+  return getMeetingsInWindow(
+    new Date(Date.now() - 2 * day),
+    new Date(Date.now() + 9 * day)
+  )
+}
+
+/**
+ * Synced events overlapping [from, to], read from the local cache the cron
+ * keeps — so the dashboard can page through weeks without touching Google.
+ */
+export async function getMeetingsInWindow(
+  from: Date,
+  to: Date
+): Promise<{
+  configured: boolean
+  meetings: UpcomingMeeting[]
+  sources: MeetingSource[]
+}> {
+  const all = await db.query.calendarSources.findMany({
+    orderBy: [asc(calendarSources.sort), asc(calendarSources.label)],
+  })
+  const enabled = all.filter((source) => source.enabled)
+  const sources: MeetingSource[] = enabled.map((source) => ({
+    id: source.id,
+    label: source.label,
+    color: source.color,
+    kind: source.kind,
+    movable: source.kind === "google" && source.writable,
+  }))
+  if (enabled.length === 0) return { configured: false, meetings: [], sources }
+
   const rows = await db.query.calendarEvents.findMany({
     where: and(
       inArray(
@@ -63,6 +99,7 @@ export async function getUpcomingMeetings(): Promise<{
   const bySource = new Map(enabled.map((source) => [source.id, source]))
   return {
     configured: true,
+    sources,
     meetings: rows.map((event) => ({
       id: event.id,
       title: event.title,
@@ -74,6 +111,7 @@ export async function getUpcomingMeetings(): Promise<{
       url: event.url,
       color: bySource.get(event.sourceId)?.color ?? "#006965",
       source: bySource.get(event.sourceId)?.label ?? "",
+      sourceId: event.sourceId,
       attendees: event.attendees,
     })),
   }

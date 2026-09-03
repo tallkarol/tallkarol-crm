@@ -90,6 +90,8 @@ export function periodLabel(cadence: Cadence, at = new Date()): string {
 export type TaskCriteria = {
   clients?: string[]
   projects?: string[]
+  /** Any-of, like clients: "feature request" OR "covered under warranty". */
+  labels?: string[]
   /** open | doing | waiting | done | all */
   state?: string
   /** any | overdue | today | week | none */
@@ -139,6 +141,7 @@ export type HubTask = {
   productId: string | null
   productName: string | null
   productSlug: string | null
+  retainerId: string | null
   retainerName: string | null
   deliverableLabel: string | null
   items: { total: number; done: number }
@@ -176,6 +179,9 @@ export function taskMatches(
   if (criteria.projects?.length) {
     if (!task.projectId || !criteria.projects.includes(task.projectId)) return false
   }
+  if (criteria.labels?.length) {
+    if (!task.labels.some((label) => criteria.labels!.includes(label))) return false
+  }
   if (criteria.priority?.length && !criteria.priority.includes(task.priority)) {
     return false
   }
@@ -209,6 +215,7 @@ export function taskMatches(
       task.clientName ?? "",
       task.projectName ?? "",
       task.productName ?? "",
+      task.labels.join(" "),
     ]
       .join(" ")
       .toLowerCase()

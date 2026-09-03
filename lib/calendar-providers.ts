@@ -210,6 +210,39 @@ export async function createGoogleEvent(
   return { id: json.id, htmlLink: json.htmlLink || "" }
 }
 
+/** Reschedules an event in place — the dashboard's drag-to-another-day. */
+export async function moveGoogleEvent(
+  calendarId: string,
+  eventId: string,
+  input: { startsAt: Date; endsAt: Date; allDay: boolean }
+): Promise<void> {
+  const token = await googleAccessToken(CALENDAR_SCOPES)
+  const day = (d: Date) => d.toISOString().slice(0, 10)
+  const res = await fetch(
+    `${GOOGLE_API}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+      body: JSON.stringify(
+        input.allDay
+          ? { start: { date: day(input.startsAt) }, end: { date: day(input.endsAt) } }
+          : {
+              start: { dateTime: input.startsAt.toISOString() },
+              end: { dateTime: input.endsAt.toISOString() },
+            }
+      ),
+    }
+  )
+  if (!res.ok) {
+    const json = (await res.json().catch(() => ({}))) as { error?: { message?: string } }
+    throw new Error(json.error?.message || `Google Calendar ${res.status}`)
+  }
+}
+
 /* --------------------------------------------------------------- Cal.com -- */
 
 type CalComBooking = {

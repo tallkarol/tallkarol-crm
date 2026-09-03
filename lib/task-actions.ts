@@ -1,21 +1,14 @@
 "use server"
 
-import { and, asc, eq, sql } from "drizzle-orm"
+import { and, eq, sql } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { db } from "@/db"
-import {
-  clients,
-  deliverables,
-  products,
-  projects,
-  taskItems,
-  taskViews,
-  tasks,
-} from "@/db/schema"
+import { taskItems, taskViews, tasks } from "@/db/schema"
 import type { Cadence } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { ROUTES } from "@/lib/nav"
 import { completeTask } from "@/lib/task-complete"
+import { cleanLabels, resolveTaskTarget } from "@/lib/task-insert"
 
 type Ok<T = undefined> = T extends undefined
   ? { ok: true }
@@ -38,98 +31,6 @@ function isDay(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value)
 }
 
-/**
- * A project or deliverable fills in its client. A product may stand alone
- * (Tall Karol products have no client). The same rule the composer follows.
- */
-async function resolveTarget(input: {
-  clientId?: string | null
-  projectId?: string | null
-  productId?: string | null
-  deliverableId?: string | null
-}): Promise<
-  | {
-      clientId: string | null
-      projectId: string | null
-      productId: string | null
-      retainerId: string | null
-      deliverableId: string | null
-    }
-  | { error: string }
-> {
-  const projectId = input.projectId || null
-  const productId = input.productId || null
-  const deliverableId = input.deliverableId || null
-
-  if (deliverableId) {
-    const deliverable = await db.query.deliverables.findFirst({
-      where: eq(deliverables.id, deliverableId),
-      with: { project: true },
-    })
-    if (!deliverable) return { error: "That deliverable does not exist." }
-    return {
-      clientId: deliverable.project.clientId,
-      projectId: deliverable.projectId,
-      productId: null,
-      retainerId: deliverable.project.retainerId,
-      deliverableId,
-    }
-  }
-
-  if (projectId) {
-    const project = await db.query.projects.findFirst({
-      where: eq(projects.id, projectId),
-    })
-    if (!project) return { error: "That project does not exist." }
-    return {
-      clientId: project.clientId,
-      projectId: project.id,
-      productId: null,
-      retainerId: project.retainerId,
-      deliverableId: null,
-    }
-  }
-
-  if (productId) {
-    const product = await db.query.products.findFirst({
-      where: eq(products.id, productId),
-    })
-    if (!product) return { error: "That product does not exist." }
-    return {
-      clientId: product.clientId,
-      projectId: null,
-      productId: product.id,
-      retainerId: null,
-      deliverableId: null,
-    }
-  }
-
-  if (input.clientId) {
-    const client = await db.query.clients.findFirst({
-      where: eq(clients.id, input.clientId),
-      with: { retainers: true },
-    })
-    if (!client) return { error: "That client does not exist." }
-    const retainer =
-      client.retainers.find((r) => r.status === "active") ?? null
-    return {
-      clientId: client.id,
-      projectId: null,
-      productId: null,
-      retainerId: retainer?.id ?? null,
-      deliverableId: null,
-    }
-  }
-
-  return {
-    clientId: null,
-    projectId: null,
-    productId: null,
-    retainerId: null,
-    deliverableId: null,
-  }
-}
-
 export type CreateTaskInput = {
   title: string
   clientId?: string | null
@@ -141,6 +42,7 @@ export type CreateTaskInput = {
   cadence?: Cadence
   priority?: number
   notes?: string
+  labels?: string[]
   source?: string
   refKind?: string | null
   refId?: string | null
@@ -155,7 +57,7 @@ export async function createTask(
   const title = input.title.trim().slice(0, 300)
   if (!title) return { ok: false, error: "A task needs a title." }
 
-  const target = await resolveTarget(input)
+  const target = await resolveTaskTarget(input)
   if ("error" in target) return { ok: false, error: target.error }
 
   if (input.dueOn && !isDay(input.dueOn)) {
@@ -182,6 +84,7 @@ export async function createTask(
       cadence,
       priority,
       notes: (input.notes ?? "").slice(0, 4000),
+      labels: cleanLabels(input.labels),
       source: input.source ?? "manual",
       refKind: input.refKind ?? null,
       refId: input.refId ?? null,
@@ -261,6 +164,7 @@ export async function reorderAttentionTasks(ids: string[]): Promise<Result> {
 export type TaskPatch = {
   title?: string
   notes?: string
+  labels?: string[]
   dueOn?: string | null
   snoozedUntil?: string | null
   cadence?: Cadence
@@ -287,6 +191,7 @@ export async function updateTask(id: string, patch: TaskPatch): Promise<Result> 
     values.title = title
   }
   if (patch.notes !== undefined) values.notes = patch.notes.slice(0, 4000)
+  if (patch.labels !== undefined) values.labels = cleanLabels(patch.labels)
 
   if (patch.dueOn !== undefined) {
     if (patch.dueOn && !isDay(patch.dueOn)) {
@@ -319,7 +224,7 @@ export async function updateTask(id: string, patch: TaskPatch): Promise<Result> 
     patch.productId !== undefined ||
     patch.deliverableId !== undefined
   if (retargeting) {
-    const target = await resolveTarget({
+    const target = await resolveTaskTarget({
       clientId:
         patch.clientId !== undefined ? patch.clientId : existing.clientId,
       projectId:
