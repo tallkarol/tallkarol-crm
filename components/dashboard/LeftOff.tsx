@@ -1,5 +1,7 @@
-import { CornerDownLeft, ListChecks, LifeBuoy, Pin, PinOff, X } from "lucide-react"
+import Link from "next/link"
+import { CornerDownLeft, ListChecks, LifeBuoy, Pin, PinOff, Search, X } from "lucide-react"
 import { cn } from "@/lib/cn"
+import { ROUTES } from "@/lib/nav"
 import { STATE_LABEL, type LeftOffNoteView, type LeftOffPayload, type NoteState } from "@/lib/leftoff"
 import {
   convertLeftOffAction,
@@ -217,9 +219,31 @@ export function LeftOff({ payload }: { payload: LeftOffPayload }) {
   const showHeaders = byClient.length > 1 || (byClient.length === 1 && byClient[0].key !== "")
   return (
     <section className="mt-5 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm md:mt-8">
-      <div className="flex items-center justify-between border-b border-tk-slate/10 px-5 py-3.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-tk-slate/10 px-5 py-3.5">
         <h2 className="text-sm font-semibold text-tk-onyx">Where I left off</h2>
         <p className="text-xs text-tk-slate/60">{countsLine(payload.counts) || "Nothing parked"}</p>
+        {/* A plain GET form: no action function, so nothing crosses into a
+            client component. It hands the query to the history page, which is
+            where every conversation ever had still lives. */}
+        <form method="get" action={ROUTES.timesheetSessions} className="relative ml-auto">
+          <Search
+            aria-hidden
+            className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-tk-slate/40"
+          />
+          <input
+            type="search"
+            name="q"
+            placeholder="Search every session…"
+            aria-label="Search every session"
+            className="w-52 rounded-lg border border-tk-slate/20 bg-white py-1.5 pl-8 pr-3 text-xs text-tk-onyx outline-none placeholder:text-tk-slate/40 focus:border-tk-teal"
+          />
+        </form>
+        <Link
+          href={ROUTES.timesheetSessions}
+          className="text-xs font-semibold text-tk-teal hover:underline"
+        >
+          History
+        </Link>
       </div>
       {byClient.map((g) => (
         <div key={g.key || "house"}>

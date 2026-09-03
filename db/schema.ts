@@ -2344,7 +2344,9 @@ export type NotificationLogRow = typeof notificationLog.$inferSelect
  * see. The Mac writes the summary after the session ends (`session-log` in
  * daedalus-hive-mind); `/log-session` links the hours it bills to the
  * sessions that earned them through `time_entry_sessions`. Only the
- * model-written summary lands here — never prompts or transcript text.
+ * model-written summary lands here — what was actually said lives one table
+ * over, in `session_messages`. A finished chat with no summary still gets a
+ * stub row (from the `gone` hook), so history is never missing a session.
  */
 export const agentSessions = pgTable(
   "agent_sessions",
@@ -2676,7 +2678,8 @@ export type PunchlistStatus = (typeof punchlistStatusEnum.enumValues)[number]
  * One sticky note per agent conversation, overwritten by its own hooks.
  * `session_ref` matches `agent_sessions.session_ref` (bare Claude session id,
  * `cursor:<id>`), so a note can join to the meter and the punch lists; it is
- * a separate table because notes are purged and session records are not.
+ * a separate table because a note is one overwritten line of present state
+ * and a session record is the durable one.
  * `state` is what the last hook said (working | waiting | blocked | gone) —
  * "parked" is derived at read time in `lib/leftoff.ts`, never stored.
  */
@@ -2722,3 +2725,52 @@ export const sessionNotes = pgTable(
 )
 
 export type SessionNote = typeof sessionNotes.$inferSelect
+
+/* ------------------------------------------------------------------ */
+/* session messages — what was actually said, so the board remembers   */
+/* ------------------------------------------------------------------ */
+
+/** Postgres `tsvector`. Only ever read through the search helpers. */
+const tsvector = customType<{ data: string; driverData: string }>({
+  dataType: () => "tsvector",
+})
+
+/**
+ * One row per message: the prompt you sent, the reply you got back, keyed by
+ * the same `session_ref` the board and the timeclock already use. This is the
+ * memory the board is built on — notes overwrite themselves and age out of the
+ * 14-day window, messages never do.
+ *
+ * Only the two ends of a turn land here, from the hooks that already run: the
+ * prompt at UserPromptSubmit and the closing reply at Stop. Tool calls, tool
+ * results and thinking stay on the Mac. `origin` says whether a row came from
+ * a live hook or from the one-time transcript backfill; a session the hooks
+ * have ever written is never backfilled over.
+ */
+export const sessionMessages = pgTable(
+  "session_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    /** Bare Claude session id, `cursor:<composerId>`, or `agent:<lane>`. */
+    sessionRef: text("session_ref").notNull(),
+    surface: text("surface").notNull().default("claude"),
+    /** user | assistant */
+    role: text("role").notNull(),
+    at: timestamp("at", { withTimezone: true }).notNull(),
+    text: text("text").notNull().default(""),
+    /** hook | backfill */
+    origin: text("origin").notNull().default("hook"),
+    /** Generated in the database so it can never drift from `text`. */
+    tsv: tsvector("tsv").generatedAlwaysAs(
+      sql`to_tsvector('english', "text")`
+    ),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    /** The idempotency key: a retried hook is the same message at the same instant. */
+    key: uniqueIndex("session_messages_key").on(table.sessionRef, table.role, table.at),
+    search: index("session_messages_tsv_idx").using("gin", table.tsv),
+  })
+)
+
+export type SessionMessage = typeof sessionMessages.$inferSelect

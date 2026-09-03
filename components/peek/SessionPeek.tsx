@@ -2,7 +2,9 @@ import Link from "next/link"
 import { desc, eq } from "drizzle-orm"
 import { Fact, Facts, GonePeek, PeekSection } from "@/components/peek/bits"
 import { db } from "@/db"
-import { agentSessions, punchlistTestRuns, punchlists } from "@/db/schema"
+import { agentSessions, punchlistTestRuns, punchlists, sessionNotes } from "@/db/schema"
+import { STATE_LABEL, deriveState, resumeCommand, type NoteFacts } from "@/lib/leftoff"
+import { messagesForSession, type SessionMessageView } from "@/lib/leftoff-history"
 import { ROUTES } from "@/lib/nav"
 import { RUN_STATUS_LABEL, type RunStatus } from "@/lib/punchlist"
 import { formatDay } from "@/lib/work"
@@ -14,6 +16,23 @@ function stamp(d: Date | null) {
 function hours(n: string | number) {
   const v = Number(n)
   return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/0$/, "")
+}
+
+/** One stored message: who said it, when, and what — clipped for a card. */
+function Message({ message }: { message: SessionMessageView }) {
+  const text = message.text.length > 600 ? `${message.text.slice(0, 599)}…` : message.text
+  return (
+    <li className="text-[12.5px] leading-relaxed">
+      <p className="font-mono text-[10px] font-semibold uppercase tracking-wide text-tk-slate/45">
+        {message.role === "user" ? "You" : "It"}
+        {message.at
+          ? ` · ${new Date(message.at).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}`
+          : ""}
+        {message.origin === "backfill" ? " · from the transcript" : ""}
+      </p>
+      <p className="mt-0.5 whitespace-pre-wrap text-tk-slate">{text}</p>
+    </li>
+  )
 }
 
 /**
@@ -37,7 +56,13 @@ export async function SessionPeek({ sessionRef }: { sessionRef: string }) {
       },
     },
   })
-  if (!session) return <GonePeek />
+  const [note, conversation] = await Promise.all([
+    db.query.sessionNotes.findFirst({ where: eq(sessionNotes.sessionRef, sessionRef) }),
+    messagesForSession(sessionRef, { head: 2, tail: 4 }),
+  ])
+  // History reaches further back than either table alone: a chat can have a
+  // note and no session row, or messages and neither.
+  if (!session && !note && conversation.total === 0) return <GonePeek />
 
   const [lists, runs] = await Promise.all([
     db.query.punchlists.findMany({
@@ -56,33 +81,54 @@ export async function SessionPeek({ sessionRef }: { sessionRef: string }) {
     }),
   ])
 
+  // One view over three sources: the summarised record, the note the board
+  // kept, and the messages themselves. Any one of them can be missing.
+  const info = {
+    name: session?.name || note?.title || "Untitled conversation",
+    surface: session?.surface || note?.surface || "claude",
+    client: session?.client ?? null,
+    project: session?.project ?? null,
+    summary: session?.summary ?? "",
+    startedAt: session?.startedAt ?? note?.startedAt ?? null,
+    endedAt: session?.endedAt ?? note?.endedAt ?? null,
+    meterHours: session?.meterHours ?? "0",
+    tokensIn: session?.tokensIn ?? 0,
+    tokensOut: session?.tokensOut ?? 0,
+    cwd: session?.cwd || note?.cwd || "",
+    highlights: session?.highlights ?? [],
+    filesTouched: session?.filesTouched ?? [],
+    repos: session?.repos ?? [],
+    entries: session?.entries ?? [],
+  }
+  const resume = resumeCommand({ sessionRef, surface: info.surface, cwd: info.cwd })
+
   return (
     <>
       <div className="px-6 pt-5">
-        <p className="text-base font-semibold text-tk-onyx">{session.name || "Untitled conversation"}</p>
+        <p className="text-base font-semibold text-tk-onyx">{info.name || "Untitled conversation"}</p>
         <p className="mt-1 text-sm text-tk-slate/70">
-          {session.surface}
+          {info.surface}
           {" · "}
-          <span className="font-mono text-[12px]">{session.sessionRef.slice(0, 8)}</span>
-          {session.client ? (
+          <span className="font-mono text-[12px]">{sessionRef.slice(0, 8)}</span>
+          {info.client ? (
             <>
               {" · "}
-              <Link href={ROUTES.client(session.client.slug)} className="font-semibold text-tk-teal hover:underline">
-                {session.client.name}
+              <Link href={ROUTES.client(info.client.slug)} className="font-semibold text-tk-teal hover:underline">
+                {info.client.name}
               </Link>
             </>
           ) : null}
-          {session.project ? (
+          {info.project ? (
             <>
               {" · "}
-              <Link href={ROUTES.project(session.project.slug)} className="font-semibold text-tk-teal hover:underline">
-                {session.project.name}
+              <Link href={ROUTES.project(info.project.slug)} className="font-semibold text-tk-teal hover:underline">
+                {info.project.name}
               </Link>
             </>
           ) : null}
         </p>
-        {session.summary ? (
-          <p className="mt-3 text-[13.5px] leading-relaxed text-tk-onyx">{session.summary}</p>
+        {info.summary ? (
+          <p className="mt-3 text-[13.5px] leading-relaxed text-tk-onyx">{info.summary}</p>
         ) : (
           <p className="mt-3 text-[13px] italic text-tk-slate/60">
             No summary yet — the Mac writes one when the session ends, or on the next
@@ -93,40 +139,99 @@ export async function SessionPeek({ sessionRef }: { sessionRef: string }) {
 
       <PeekSection title="Span">
         <Facts>
-          <Fact label="Started">{stamp(session.startedAt)}</Fact>
-          <Fact label="Ended">{stamp(session.endedAt)}</Fact>
-          <Fact label="Metered">{hours(session.meterHours)} h</Fact>
+          <Fact label="Started">{stamp(info.startedAt)}</Fact>
+          <Fact label="Ended">{stamp(info.endedAt)}</Fact>
+          <Fact label="Metered">{hours(info.meterHours)} h</Fact>
           <Fact label="Tokens">
-            {session.tokensIn || session.tokensOut
-              ? `${session.tokensIn.toLocaleString()} in · ${session.tokensOut.toLocaleString()} out`
+            {info.tokensIn || info.tokensOut
+              ? `${info.tokensIn.toLocaleString()} in · ${info.tokensOut.toLocaleString()} out`
               : "—"}
           </Fact>
-          {session.cwd ? (
+          {info.cwd ? (
             <Fact label="Folder" wide>
-              <span className="break-all font-mono text-[12px]">{session.cwd}</span>
+              <span className="break-all font-mono text-[12px]">{info.cwd}</span>
             </Fact>
           ) : null}
         </Facts>
       </PeekSection>
 
-      {session.highlights.length > 0 ? (
+      {note ? (
+        <PeekSection title="Where it left off">
+          <p className="text-[12.5px] text-tk-slate">
+            <span className="font-semibold text-tk-onyx">
+              {STATE_LABEL[deriveState(note as unknown as NoteFacts, new Date())]}
+            </span>
+            {note.blockedOn ? ` — wanted ${note.blockedOn}` : ""}
+          </p>
+          {note.body ? (
+            <p className="mt-1.5 whitespace-pre-wrap text-[12.5px] text-tk-onyx">{note.body}</p>
+          ) : null}
+          {note.lastPrompt ? (
+            <p className="mt-1.5 text-[12.5px] text-tk-slate">
+              <span className="font-semibold">You:</span> {note.lastPrompt}
+            </p>
+          ) : null}
+          {note.lastReply ? (
+            <p className="mt-1 text-[12.5px] text-tk-slate">
+              <span className="font-semibold">It:</span> {note.lastReply}
+            </p>
+          ) : null}
+          {resume ? (
+            <p className="mt-2 break-all rounded bg-tk-linen px-2 py-1.5 font-mono text-[11px] text-tk-slate">
+              {resume}
+            </p>
+          ) : null}
+          {note.taskId || note.ticketId ? (
+            <p className="mt-1.5 text-[12.5px]">
+              <Link
+                href={note.taskId ? `${ROUTES.tasks}?peek=task:${note.taskId}` : ROUTES.support}
+                className="font-semibold text-tk-teal hover:underline"
+              >
+                {note.taskId ? "Became a task" : "Became a ticket"}
+              </Link>
+            </p>
+          ) : null}
+        </PeekSection>
+      ) : null}
+
+      {conversation.total > 0 ? (
+        <PeekSection title={`Conversation · ${conversation.total} message${conversation.total === 1 ? "" : "s"}`}>
+          <ul className="space-y-2">
+            {conversation.head.map((m) => (
+              <Message key={`h-${m.role}-${m.at}`} message={m} />
+            ))}
+            {conversation.tail.length &&
+            conversation.total > conversation.head.length + conversation.tail.length ? (
+              <li className="text-[11.5px] italic text-tk-slate/50">
+                {conversation.total - conversation.head.length - conversation.tail.length} more in
+                between — search finds them.
+              </li>
+            ) : null}
+            {conversation.tail.map((m) => (
+              <Message key={`t-${m.role}-${m.at}`} message={m} />
+            ))}
+          </ul>
+        </PeekSection>
+      ) : null}
+
+      {info.highlights.length > 0 ? (
         <PeekSection title="Highlights">
           <ul className="list-disc space-y-0.5 pl-4 text-[12.5px] text-tk-slate">
-            {session.highlights.map((h, i) => (
+            {info.highlights.map((h, i) => (
               <li key={i}>{h}</li>
             ))}
           </ul>
         </PeekSection>
       ) : null}
 
-      {session.filesTouched.length > 0 || session.repos.length > 0 ? (
+      {info.filesTouched.length > 0 || info.repos.length > 0 ? (
         <PeekSection title="Touched">
-          {session.repos.length > 0 ? (
-            <p className="text-[12.5px] text-tk-slate">{session.repos.join(" · ")}</p>
+          {info.repos.length > 0 ? (
+            <p className="text-[12.5px] text-tk-slate">{info.repos.join(" · ")}</p>
           ) : null}
-          {session.filesTouched.length > 0 ? (
+          {info.filesTouched.length > 0 ? (
             <ul className="mt-1 max-h-48 overflow-auto font-mono text-[11.5px] leading-relaxed text-tk-slate/80">
-              {session.filesTouched.map((f, i) => (
+              {info.filesTouched.map((f, i) => (
                 <li key={i} className="break-all">{f}</li>
               ))}
             </ul>
@@ -135,11 +240,11 @@ export async function SessionPeek({ sessionRef }: { sessionRef: string }) {
       ) : null}
 
       <PeekSection title="Billed as">
-        {session.entries.length === 0 ? (
+        {info.entries.length === 0 ? (
           <p className="text-[12.5px] text-tk-slate/60">Not on the timesheet yet.</p>
         ) : (
           <ul className="space-y-1.5 text-[12.5px] text-tk-slate">
-            {session.entries.map((link) => (
+            {info.entries.map((link) => (
               <li key={link.timeEntryId} className="flex items-start justify-between gap-3">
                 <span className="min-w-0">
                   <Link

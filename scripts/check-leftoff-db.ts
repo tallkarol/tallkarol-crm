@@ -31,6 +31,7 @@ async function main() {
   const { db } = await import("../db")
   const { recordNote, dismissNote, pinNote, loadLeftOff, sweepSessionNotes, queueReply, readReply } =
     await import("../lib/leftoff-data")
+  const { listSessionHistory, searchSessions, messagesForSession } = await import("../lib/leftoff-history")
 
   const T0 = new Date("2026-09-02T18:00:00.000Z")
   const at = (s: number) => new Date(T0.getTime() + s * 1000)
@@ -53,6 +54,10 @@ async function main() {
         sql`select 1 from information_schema.columns where table_name = 'session_notes' and column_name = 'reply'`
       )
       if (!hasReply.length) await apply("0049_leftoff_act")
+      const hasMessages = await tx.execute(
+        sql`select 1 from information_schema.tables where table_name = 'session_messages'`
+      )
+      if (!hasMessages.length) await apply("0050_session_messages")
       if (exists.length && hasReply.length) console.log("  (table and columns already exist)")
 
       console.log("hook sequence")
@@ -201,22 +206,104 @@ async function main() {
       check("chat row shows its body over the reply, pinned", [mine.find((n) => n.sessionRef === REF)?.body, mine.find((n) => n.sessionRef === REF)?.pinned], ["finish the widget", true])
       check("browser snapshot in payload", payload.browser?.windows[0]?.title, "Railway")
 
-      console.log("sweep")
-      // Two days silent: presumed gone, but far too young to purge.
-      await tx.execute(sql`update session_notes set event_at = ${at(-2 * 86400).toISOString()}::timestamptz, pinned = false, body = '' where session_ref = ${REF}`)
+      console.log("messages")
+      let msgs = (await tx.execute(
+        sql`select role, text, origin from session_messages where session_ref = ${REF} order by at`
+      )) as unknown as { role: string; text: string; origin: string }[]
+      check("the prompt and every reply were kept", msgs.length >= 3, true)
+      check("the first is what was asked", [msgs[0].role, msgs[0].text], ["user", "do the thing"])
+      check("hook rows are marked as such", msgs[0].origin, "hook")
+      check(
+        "the reply the guard dropped was still stored",
+        msgs.some((m) => m.role === "assistant" && m.text === "same millisecond as the subagent stop"),
+        true
+      )
+      check(
+        "a retried Stop is not a second message",
+        msgs.filter((m) => m.text === "done, your call").length,
+        1
+      )
+      // The board keeps the newest thing said; history keeps everything said.
+      // A Stop that arrives out of order is a turn that really happened, just
+      // late — dropping it would put a hole in the record.
+      check(
+        "a reply the board rejected as stale is still history",
+        msgs.some((m) => m.text === "STALE"),
+        true
+      )
+      const manualMsgs = await tx.execute(
+        sql`select 1 from session_messages where session_ref = ${manual.sessionRef}`
+      )
+      check("a post-it is not a conversation", manualMsgs.length, 0)
+
+      const convo = await messagesForSession(REF, { head: 1, tail: 2 }, tx)
+      check("the peek reads the start and the end", [convo.head.length, convo.tail.length], [1, 2])
+      check("…and knows how many there are", convo.total, msgs.length)
+
+      console.log("a session that ends is remembered")
+      let sess = (await tx.execute(
+        sql`select surface, name, ended_at, summary from agent_sessions where session_ref = ${REF}`
+      )) as unknown as Record<string, unknown>[]
+      check("SessionEnd left an agent_sessions row", sess.length, 1)
+      check("…named from the note, with no invented summary", [sess[0].name, sess[0].summary], ["Thing doing", ""])
+
+      // A summary already written must never be clobbered by the stub.
+      await tx.execute(sql`update agent_sessions set summary = 'real summary' where session_ref = ${REF}`)
+      await recordNote({ sessionRef: REF, surface: "claude", event: "SessionEnd", at: at(200) }, tx)
+      sess = (await tx.execute(
+        sql`select summary from agent_sessions where session_ref = ${REF}`
+      )) as unknown as Record<string, unknown>[]
+      check("a later stub leaves a written summary alone", sess[0].summary, "real summary")
+
+      console.log("backfill ownership")
+      const OLD = REF + "-old"
+      await tx.execute(sql`
+        insert into session_messages (session_ref, surface, role, at, text, origin)
+        values (${OLD}, 'cursor', 'user', ${at(-9999).toISOString()}::timestamptz, 'an ancient question', 'backfill')`)
+      const owned = (await tx.execute(sql`
+        select count(*)::int as n from session_messages where session_ref = ${REF} and origin = 'hook'`)) as unknown as { n: number }[]
+      check("the hooks own this session, so a backfill must skip it", Number(owned[0].n) > 0, true)
+      await tx.execute(sql`
+        insert into session_messages (session_ref, surface, role, at, text, origin)
+        values (${REF}, 'claude', 'user', ${at(0).toISOString()}::timestamptz, 'do the thing', 'backfill')
+        on conflict (session_ref, role, at) do nothing`)
+      msgs = (await tx.execute(
+        sql`select role from session_messages where session_ref = ${REF} and at = ${at(0).toISOString()}::timestamptz`
+      )) as unknown as { role: string; text: string; origin: string }[]
+      check("the same turn cannot be stored twice", msgs.length, 1)
+
+      console.log("search")
+      const hits = await searchSessions("ancient question", {}, at(100), tx)
+      check("a message is findable by its words", hits.some((h) => h.sessionRef === OLD), true)
+      const hit = hits.find((h) => h.sessionRef === OLD)
+      check("…and says where it matched", hit?.hits[0]?.snippet.some((p) => p.hit), true)
+      const byTitle = await searchSessions("Thing doing", {}, at(100), tx)
+      check("a title is findable too", byTitle.some((h) => h.sessionRef === REF), true)
+      check("a stop-word-only query does not explode", (await searchSessions("how do i", {}, at(100), tx)).length >= 0, true)
+
+      console.log("history")
+      const history = await listSessionHistory({ from: at(-20000) }, at(100), tx)
+      check("the chat is in history", history.some((h) => h.sessionRef === REF), true)
+      check("so is a session that only ever had messages", history.some((h) => h.sessionRef === OLD), true)
+      check("post-its stay out of history", history.some((h) => h.sessionRef === manual.sessionRef), false)
+      const mine2 = history.find((h) => h.sessionRef === REF)
+      check("history counts the conversation", (mine2?.messageCount ?? 0) > 0, true)
+
+      console.log("sweep keeps everything")
+      // Two days silent: presumed gone, and it gets its history row.
+      await tx.execute(sql`update session_notes set event_at = ${at(-2 * 86400).toISOString()}::timestamptz, state = 'waiting', pinned = false, body = '' where session_ref = ${REF}`)
       const swept = await sweepSessionNotes(at(100), tx)
       check("a silent chat is presumed gone", swept.presumedGone >= 1, true)
       row = (await tx.execute(sql`select state, ended_at from session_notes where session_ref = ${REF}`))[0] as Record<string, unknown>
       check("…and reads as gone, ended when last heard from", [row.state, row.ended_at != null], ["gone", true])
-      // Thirty days gone: purged. A pinned twin survives.
-      await tx.execute(sql`update session_notes set ended_at = ${at(-30 * 86400).toISOString()}::timestamptz where session_ref = ${REF}`)
-      await tx.execute(sql`insert into session_notes (session_ref, surface, state, pinned, event_at, ended_at) values (${REF + "-pinned"}, 'claude', 'gone', true, ${at(-30 * 86400).toISOString()}::timestamptz, ${at(-30 * 86400).toISOString()}::timestamptz)`)
+      // A month later it is still there: history is not swept.
+      await tx.execute(sql`update session_notes set ended_at = ${at(-30 * 86400).toISOString()}::timestamptz, dismissed_at = ${at(-30 * 86400).toISOString()}::timestamptz where session_ref = ${REF}`)
       const swept2 = await sweepSessionNotes(at(100), tx)
-      check("…then purged after two weeks", swept2.purged >= 1, true)
-      const pinnedLeft = await tx.execute(sql`select 1 from session_notes where session_ref = ${REF + "-pinned"}`)
-      check("pinned twin survives the purge", pinnedLeft.length, 1)
+      check("nothing is deleted any more", swept2.purged, 0)
       const left = await tx.execute(sql`select 1 from session_notes where session_ref = ${REF}`)
-      check("row is gone", left.length, 0)
+      check("a month-old dismissed note is still on file", left.length, 1)
+      const stillSaid = await tx.execute(sql`select 1 from session_messages where session_ref = ${REF}`)
+      check("and so is what was said", stillSaid.length > 0, true)
 
       throw new Rollback("rollback")
     })

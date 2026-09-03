@@ -6,6 +6,11 @@
 
 import {
   LEFTOFF_RULES,
+  clipHead,
+  clipTail,
+  keepsMessages,
+  messageRole,
+  messageText,
   buildBriefing,
   buildPayload,
   localDay,
@@ -225,6 +230,39 @@ check("no resume for cursor", resumeCommand(note({ surface: "cursor", sessionRef
 check("no resume for a junk id", resumeCommand(note({ sessionRef: "x; rm -rf /" })), "")
 check("project from cwd", projectFromCwd("/Users/karolbuczek/Work/tallkarol/"), "tallkarol")
 check("clip flattens and caps", clip("a\n\n b   c".repeat(200), 10), "a b ca b …")
+
+console.log("messages")
+check("a prompt is the user's half", messageRole("UserPromptSubmit"), "user")
+check("Cursor's prompt too", messageRole("beforeSubmitPrompt"), "user")
+check("a Stop is the agent's half", messageRole("Stop"), "assistant")
+check("Cursor's stop too", messageRole("stop"), "assistant")
+check("every Cursor response is its own message", messageRole("afterAgentResponse"), "assistant")
+check("a permission prompt says nothing", messageRole("Notification"), null)
+check("a subagent finishing says nothing", messageRole("SubagentStop"), null)
+check("the end of a session says nothing", messageRole("SessionEnd"), null)
+check("a post-it is not a message", messageRole("note"), null)
+check("post-its are not conversations", keepsMessages("manual"), false)
+check("the tab snapshot is not either", keepsMessages("browser"), false)
+check("an agent lane is", keepsMessages("agent"), true)
+
+check("a prompt keeps its newlines", clipHead("do this\n\nthen that", 100), "do this\n\nthen that")
+check("a long prompt keeps its opening", clipHead("abcdefghij", 5), "abcd…")
+check("a long reply keeps its ending", clipTail("abcdefghij", 5), "…ghij")
+check("a short reply is untouched", clipTail("  done  ", 50), "done")
+check("a prompt event carries the prompt", messageText("UserPromptSubmit", "the ask", "the answer"), "the ask")
+check("a stop carries the reply", messageText("Stop", "the ask", "the answer"), "the answer")
+check("a touch carries nothing", messageText("touch", "the ask", "the answer"), "")
+check(
+  "a prompt is cut at the message limit, not the note limit",
+  messageText("UserPromptSubmit", "x".repeat(9000), "").length,
+  LEFTOFF_RULES.maxMessagePrompt
+)
+check(
+  "a reply is cut at its own limit",
+  messageText("Stop", "", "y".repeat(9000)).length,
+  LEFTOFF_RULES.maxMessageReply
+)
+check("the board window replaced the purge", LEFTOFF_RULES.boardWindowDays, 14)
 
 console.log("")
 if (failures) {

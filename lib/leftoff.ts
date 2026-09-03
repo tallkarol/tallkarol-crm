@@ -21,11 +21,15 @@ export const LEFTOFF_RULES = {
   presumedGoneHours: 24,
   /** A finished chat stays on the list this long, then hides. */
   hideGoneAfterHours: 12,
-  /** Hidden rows are deleted after this. Pinned and manual notes never are. */
-  purgeAfterDays: 14,
-  /** Prompt / reply text is clipped to this many characters on the way in. */
+  /** How far back the board looks. Nothing is deleted; older rows are history. */
+  boardWindowDays: 14,
+  /** The note's own prompt / reply line is clipped to this many characters. */
   maxText: 400,
   maxBody: 2000,
+  /** A stored message keeps this much of a prompt (from the start)… */
+  maxMessagePrompt: 6000,
+  /** …and this much of a reply (from the end — the answer is at the end). */
+  maxMessageReply: 3000,
   /** A running-agent entry older than this is a lost SubagentStop, not a live agent. */
   agentStaleHours: 6,
   /** Each line of a Done / Blocked on / Next handoff is clipped to this. */
@@ -215,6 +219,58 @@ export function resumeCommand(n: Pick<NoteFacts, "sessionRef" | "surface" | "cwd
 export function clip(text: string, max: number = LEFTOFF_RULES.maxText) {
   const flat = text.replace(/\s+/g, " ").trim()
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat
+}
+
+/* --------------------------------------------------------------- messages */
+
+/**
+ * Which half of a turn an event carries, or null when it carries none.
+ * A chat can answer twice for one prompt — Claude's Stop hook returns
+ * `decision: block` to deliver a reply from the board, so the agent runs on
+ * and Stops again; Cursor's `afterAgentResponse` fires per response before its
+ * `stop`. Every one of those is its own assistant message, never an overwrite.
+ */
+export function messageRole(event: LeftOffEvent): MessageRole | null {
+  if (event === "UserPromptSubmit" || event === "beforeSubmitPrompt") return "user"
+  if (event === "Stop" || event === "stop" || event === "afterAgentResponse") return "assistant"
+  return null
+}
+
+export const MESSAGE_ROLES = ["user", "assistant"] as const
+export type MessageRole = (typeof MESSAGE_ROLES)[number]
+
+export function isMessageRole(value: unknown): value is MessageRole {
+  return value === "user" || value === "assistant"
+}
+
+/**
+ * Message text keeps its shape — `clip()` flattens whitespace because a note
+ * is one line in a list, but a stored message is read as itself. A prompt is
+ * cut from the end (you said the ask first); a reply is cut from the front
+ * (the agent answers last).
+ */
+export function clipHead(text: string, max: number) {
+  const trimmed = text.trim()
+  return trimmed.length > max ? `${trimmed.slice(0, max - 1)}…` : trimmed
+}
+
+export function clipTail(text: string, max: number) {
+  const trimmed = text.trim()
+  return trimmed.length > max ? `…${trimmed.slice(trimmed.length - max + 1)}` : trimmed
+}
+
+/** The text a message row stores for this event, already clipped. */
+export function messageText(event: LeftOffEvent, prompt: string, reply: string) {
+  const role = messageRole(event)
+  if (!role) return ""
+  return role === "user"
+    ? clipHead(prompt, LEFTOFF_RULES.maxMessagePrompt)
+    : clipTail(reply, LEFTOFF_RULES.maxMessageReply)
+}
+
+/** Manual post-its and the browser row are not conversations. */
+export function keepsMessages(surface: string) {
+  return surface !== "manual" && surface !== "browser"
 }
 
 /* ---------------------------------------------------------------- payload */

@@ -23,6 +23,7 @@ export type NavIconName =
   | "review"
   | "sheets"
   | "ledger"
+  | "sessions"
   | "devices"
   | "attribution"
   | "analytics"
@@ -80,6 +81,7 @@ export const ROUTES = {
   timesheetReview: "/timesheet/review",
   timesheetSheets: "/timesheet/sheets",
   timesheetEntries: "/timesheet/entries",
+  timesheetSessions: "/timesheet/sessions",
   timesheetMeetings: "/timesheet/review?tab=meetings",
   attribution: "/settings/attribution",
   insights: "/insights",
@@ -136,6 +138,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
           { href: ROUTES.timesheetReview, label: "Review", icon: "review" },
           { href: ROUTES.timesheetSheets, label: "Sheets", icon: "sheets" },
           { href: ROUTES.timesheetEntries, label: "Ledger", icon: "ledger" },
+          { href: ROUTES.timesheetSessions, label: "Sessions", icon: "sessions" },
         ],
       },
     ],

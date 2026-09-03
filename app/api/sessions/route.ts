@@ -18,8 +18,8 @@ export const dynamic = "force-dynamic"
  * Session summaries from `session-log` (daedalus-hive-mind): what a
  * conversation did, keyed by the session id the meter hooks already record.
  * Upsert on `sessionRef`; a non-empty summary is never overwritten by an
- * empty one. Only the model-written summary lands here — prompts and
- * transcript text stay on the Mac.
+ * empty one. Only the model-written summary lands here — the prompts and
+ * replies themselves are `session_messages`, written by the board's hooks.
  *
  * POST { sessionRef, surface?, name?, clientSlug? | clientId?, projectSlug?,
  *        cwd?, repos?, filesTouched?, startedAt?, endedAt?, summary?,
@@ -171,9 +171,23 @@ export async function GET(request: Request) {
     limit: 200,
   })
 
+  // How much of the conversation itself survives, so the ledger side can tell
+  // a session with evidence from one that rests on the summary alone.
+  const refs = rows.map((row) => row.sessionRef)
+  const counts = new Map<string, number>()
+  if (refs.length) {
+    const counted = (await db.execute(sql`
+      select session_ref, count(*)::int as n from session_messages
+      where session_ref in (select jsonb_array_elements_text(${JSON.stringify(refs)}::jsonb))
+      group by session_ref
+    `)) as unknown as { session_ref: string; n: number }[]
+    for (const row of counted) counts.set(row.session_ref, Number(row.n))
+  }
+
   const sessions = rows
     .filter((row) => !unlinked || row.entries.length === 0)
     .map((row) => ({
+      messageCount: counts.get(row.sessionRef) ?? 0,
       sessionRef: row.sessionRef,
       surface: row.surface,
       name: row.name,

@@ -5,6 +5,7 @@ import {
   agentSessions,
   clients,
   notificationLog,
+  sessionMessages,
   sessionNotes,
   supportTickets,
   type SessionNote,
@@ -18,7 +19,10 @@ import {
   buildPayload,
   clip,
   eventState,
+  keepsMessages,
   localDay,
+  messageRole,
+  messageText,
   projectFromCwd,
   readHandoff,
   type AgentEvent,
@@ -179,7 +183,47 @@ export async function recordNote(note: IncomingNote, client: Executor = db): Pro
 
   if (note.agent) await applyAgentEvent(sessionRef, note.agent, at, client)
 
+  // What was said outlives the note. Written whether or not the guard applied
+  // the upsert: a Stop that lost a millisecond race to a SubagentStop still
+  // carries the reply, and losing it would put a hole in the history.
+  if (keepsMessages(surface)) {
+    const text = messageText(note.event, note.prompt ?? "", note.reply ?? "")
+    const role = messageRole(note.event)
+    if (role && text) {
+      await client
+        .insert(sessionMessages)
+        .values({ sessionRef, surface, role, at: note.at, text, origin: "hook" })
+        .onConflictDoNothing()
+    }
+    if (state === "gone") await ensureAgentSession(sessionRef, note.at, client)
+  }
+
   return { sessionRef, applied, state }
+}
+
+/**
+ * Every conversation that ends gets a row in `agent_sessions`, even one the
+ * summarizer never reached (an unassigned chat, a crashed Mac, a Cursor chat
+ * that has no summarizer at all). Without this, history could only show the
+ * sessions that happened to be billable. Never touches `summary` or
+ * `highlights` — those belong to `session-log`, and an empty one must not
+ * overwrite a written one.
+ */
+export async function ensureAgentSession(sessionRef: string, endedAt: Date, client: Executor = db) {
+  await client.execute(sql`
+    insert into agent_sessions (session_ref, surface, name, client_id, cwd, started_at, ended_at)
+    select n.session_ref, n.surface, left(n.title, 300), n.client_id, left(n.cwd, 500),
+           n.started_at, coalesce(n.ended_at, ${endedAt.toISOString()}::timestamptz)
+    from session_notes n
+    where n.session_ref = ${sessionRef}
+    on conflict (session_ref) do update set
+      name       = case when excluded.name = '' then agent_sessions.name else excluded.name end,
+      client_id  = coalesce(agent_sessions.client_id, excluded.client_id),
+      cwd        = case when excluded.cwd = '' then agent_sessions.cwd else excluded.cwd end,
+      started_at = coalesce(agent_sessions.started_at, excluded.started_at),
+      ended_at   = coalesce(excluded.ended_at, agent_sessions.ended_at),
+      updated_at = now()
+  `)
 }
 
 /**
@@ -287,7 +331,7 @@ function facts(row: SessionNote, clientRow?: ClientLite): NoteFacts {
  */
 export async function loadNoteFacts(now: Date, client: Executor = db): Promise<NoteFacts[]> {
   await ensureClientColors().catch(() => ({}))
-  const since = new Date(now.getTime() - LEFTOFF_RULES.purgeAfterDays * 86_400_000)
+  const since = new Date(now.getTime() - LEFTOFF_RULES.boardWindowDays * 86_400_000)
   const rows = await client
     .select({
       note: sessionNotes,
@@ -514,14 +558,16 @@ export async function sendBriefing(now = new Date()): Promise<BriefingResult> {
 }
 
 /**
- * Housekeeping for `tick()`: a chat nobody has heard from in a day is
- * presumed gone (its laptop died before SessionEnd could fire); hidden rows
- * are deleted after two weeks. Pinned and hand-written notes are never
- * touched.
+ * Housekeeping for `tick()`: a chat nobody has heard from in a day is presumed
+ * gone (its laptop died before SessionEnd could fire), and gets its
+ * `agent_sessions` row so it still appears in history.
+ *
+ * Nothing is deleted. Notes used to be purged after two weeks, which is what
+ * made "what was I doing on Tuesday" unanswerable; they now simply fall out of
+ * the board's `boardWindowDays` read window and stay as history.
  */
 export async function sweepSessionNotes(now = new Date(), client: Executor = db) {
   const goneBefore = new Date(now.getTime() - LEFTOFF_RULES.presumedGoneHours * 3_600_000)
-  const purgeBefore = new Date(now.getTime() - LEFTOFF_RULES.purgeAfterDays * 86_400_000)
 
   const presumed = await client
     .update(sessionNotes)
@@ -533,19 +579,19 @@ export async function sweepSessionNotes(now = new Date(), client: Executor = db)
         sql`${sessionNotes.eventAt} < ${goneBefore.toISOString()}::timestamptz`
       )
     )
-    .returning({ id: sessionNotes.id })
+    .returning({
+      sessionRef: sessionNotes.sessionRef,
+      surface: sessionNotes.surface,
+      title: sessionNotes.title,
+      clientId: sessionNotes.clientId,
+      cwd: sessionNotes.cwd,
+      startedAt: sessionNotes.startedAt,
+      endedAt: sessionNotes.endedAt,
+    })
 
-  const purged = await client
-    .delete(sessionNotes)
-    .where(
-      and(
-        eq(sessionNotes.pinned, false),
-        eq(sessionNotes.body, ""),
-        sql`(${sessionNotes.dismissedAt} < ${purgeBefore.toISOString()}::timestamptz
-             or (${sessionNotes.state} = 'gone' and ${sessionNotes.endedAt} < ${purgeBefore.toISOString()}::timestamptz))`
-      )
-    )
-    .returning({ id: sessionNotes.id })
+  for (const row of presumed) {
+    await ensureAgentSession(row.sessionRef, row.endedAt ?? now, client).catch(() => {})
+  }
 
-  return { presumedGone: presumed.length, purged: purged.length }
+  return { presumedGone: presumed.length, purged: 0 }
 }
