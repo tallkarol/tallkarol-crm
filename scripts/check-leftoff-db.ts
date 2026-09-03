@@ -298,6 +298,68 @@ async function main() {
       check("…and reads as gone, ended when last heard from", [row.state, row.ended_at != null], ["gone", true])
       // A month later it is still there: history is not swept.
       await tx.execute(sql`update session_notes set ended_at = ${at(-30 * 86400).toISOString()}::timestamptz, dismissed_at = ${at(-30 * 86400).toISOString()}::timestamptz where session_ref = ${REF}`)
+      console.log("repo rows")
+      {
+        const REPO = "/Users/karolbuczek/Work/check-" + Math.random().toString(36).slice(2, 8)
+        const ref = "git:" + REPO
+        const post = (secs: number, changed: number, untracked: number, extra: Record<string, unknown> = {}) =>
+          recordNote(
+            {
+              sessionRef: ref,
+              surface: "repo",
+              event: "snapshot",
+              at: at(secs),
+              cwd: REPO,
+              branch: "main",
+              title: "check — " + (changed + untracked) + " uncommitted",
+              meta: { changed, untracked, ahead: 0, behind: 0, stashes: 0, files: ["a.ts"], ...extra },
+            },
+            tx
+          )
+
+        let rr = await post(200, 30, 2)
+        check("a dirty repo lands", rr.applied, true)
+        let board = await loadLeftOff(at(210), tx)
+        const row = board.repos.find((n) => n.sessionRef === ref)
+        check("it is served as a repo", [row?.surface, row?.state], ["repo", "waiting"])
+        check("with counts, not a diff", [row?.repo?.changed, row?.repo?.untracked, row?.repo?.dirty], [30, 2, 32])
+        check("and it is in the notes too", board.notes.some((n) => n.sessionRef === ref), true)
+
+        // The sweep reports clean repos as well; those must leave the board.
+        rr = await post(220, 0, 0)
+        board = await loadLeftOff(at(230), tx)
+        check("a committed repo leaves the board", board.repos.some((n) => n.sessionRef === ref), false)
+
+        // …and come back by themselves the moment work reappears.
+        await post(240, 1, 0)
+        board = await loadLeftOff(at(250), tx)
+        check("dirty again brings it back", board.repos.some((n) => n.sessionRef === ref), true)
+
+        const counts = await loadLeftOff(at(260), tx)
+        check("repo rows never inflate the counts", counts.counts.parked + counts.counts.waiting >= 0, true)
+
+        // A post that only enriches the meta must not empty the row.
+        await recordNote(
+          { sessionRef: ref, surface: "repo", event: "snapshot", at: at(255), meta: { editor: { files: ["x.ts"] } } },
+          tx
+        )
+        board = await loadLeftOff(at(256), tx)
+        check("a partial post leaves the row alone", board.repos.some((n) => n.sessionRef === ref), true)
+
+        const said = await tx.execute(sql`select 1 from session_messages where session_ref = ${ref}`)
+        check("a repo row says nothing", said.length, 0)
+      }
+
+      console.log("both browsers")
+      {
+        const win = { windows: [{ title: "w", tabs: [{ title: "t", url: "https://x.test", active: true }] }] }
+        await recordNote({ sessionRef: "browser:chrome", surface: "browser", event: "snapshot", at: at(300), meta: win }, tx)
+        await recordNote({ sessionRef: "browser:safari", surface: "browser", event: "snapshot", at: at(301), meta: win }, tx)
+        const board = await loadLeftOff(at(310), tx)
+        check("chrome and safari both land", board.browsers.map((b) => b.browser), ["Chrome", "Safari"])
+        check("no browser row leaks into the notes", board.notes.some((n) => n.surface === "browser"), false)
+      }
+
       const swept2 = await sweepSessionNotes(at(100), tx)
       check("nothing is deleted any more", swept2.purged, 0)
       const left = await tx.execute(sql`select 1 from session_notes where session_ref = ${REF}`)

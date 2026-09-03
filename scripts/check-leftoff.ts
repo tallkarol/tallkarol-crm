@@ -26,6 +26,12 @@ import {
   sortViews,
   toView,
   type NoteFacts,
+  BROWSER_REF,
+  SAFARI_REF,
+  repoRef,
+  repoPathFromRef,
+  isRepoRef,
+  isBrowserRef,
 } from "../lib/leftoff"
 
 let failures = 0
@@ -263,6 +269,60 @@ check(
   LEFTOFF_RULES.maxMessageReply
 )
 check("the board window replaced the purge", LEFTOFF_RULES.boardWindowDays, 14)
+
+console.log("")
+console.log("repos and browsers")
+{
+  const REPO = "/Users/karolbuczek/Work/tallkarol/dev"
+  const repo = (over: Partial<NoteFacts> = {}, meta: Record<string, unknown> = {}): NoteFacts =>
+    note({
+      sessionRef: repoRef(REPO),
+      surface: "repo",
+      title: "dev — 32 uncommitted",
+      project: "dev",
+      cwd: REPO,
+      state: "waiting",
+      meta: { changed: 30, untracked: 2, ahead: 1, behind: 0, stashes: 0, files: ["app/page.tsx"], ...meta },
+      ...over,
+    })
+
+  check("a repo ref round-trips", repoPathFromRef(repoRef(REPO)), REPO)
+  check("a trailing slash is dropped", repoRef(REPO + "/"), repoRef(REPO))
+  check("a repo ref is recognised", isRepoRef(repoRef(REPO)), true)
+  check("a session id is not a repo ref", isRepoRef("e1d87fb2-0db4"), false)
+  check("both browsers are browser refs", [isBrowserRef(BROWSER_REF), isBrowserRef(SAFARI_REF)], [true, true])
+
+  // Uncommitted work is a standing fact: it never ages into "parked".
+  check("a fresh repo row waits", deriveState(repo(), NOW), "waiting")
+  check("an old repo row still waits", deriveState(repo({ eventAt: minAgo(48 * 60) }), NOW), "waiting")
+  check("a repo row is not a conversation", keepsMessages("repo"), false)
+
+  const payload = buildPayload(
+    [
+      note({ sessionRef: "chat-a", state: "blocked", eventAt: minAgo(2) }),
+      repo(),
+      repo({ sessionRef: repoRef("/Users/karolbuczek/Work/daedalus-hive-mind"), title: "hive-mind — 27" }, { changed: 27, untracked: 0 }),
+    ],
+    NOW
+  )
+  check("repo rows do not inflate the counts", payload.counts, { working: 0, waiting: 0, blocked: 1, parked: 0 })
+  check("repos are also served on their own", payload.repos.length, 2)
+  check("the dirtiest repo sorts first", payload.repos[0].repo?.dirty, 32)
+  check("a repo row carries counts, never a diff", payload.repos[0].repo?.changed, 30)
+  check("chats sort above repos", payload.notes[0].sessionRef, "chat-a")
+
+  const browsers = buildPayload(
+    [
+      note({ sessionRef: BROWSER_REF, surface: "browser", meta: { windows: [{ title: "w", tabs: [] }] } }),
+      note({ sessionRef: SAFARI_REF, surface: "browser", meta: { windows: [{ title: "s", tabs: [] }] } }),
+      note({ sessionRef: "chat-b" }),
+    ],
+    NOW
+  )
+  check("both browsers are captured", browsers.browsers.map((b) => b.browser), ["Chrome", "Safari"])
+  check("the Chrome field still answers on its own", browsers.browser?.browser, "Chrome")
+  check("no browser row leaks into the notes", browsers.notes.length, 1)
+}
 
 console.log("")
 if (failures) {

@@ -14,6 +14,8 @@ import { clientColor } from "@/lib/client-colors"
 import { ensureClientColors } from "@/lib/client-colors-store"
 import {
   BROWSER_REF,
+  isBrowserRef,
+  isRepoRef,
   LEFTOFF_RULES,
   buildBriefing,
   buildPayload,
@@ -91,9 +93,10 @@ export async function recordNote(note: IncomingNote, client: Executor = db): Pro
     (note.event === "snapshot" ? BROWSER_REF : isManual ? `manual:${randomUUID()}` : "")
   if (!sessionRef) throw new Error("`sessionRef` is required.")
 
-  const surface: Surface =
-    sessionRef === BROWSER_REF
-      ? "browser"
+  const surface: Surface = isBrowserRef(sessionRef)
+    ? "browser"
+    : isRepoRef(sessionRef)
+      ? "repo"
       : sessionRef.startsWith("manual:")
         ? "manual"
         : sessionRef.startsWith("agent:")
@@ -148,6 +151,24 @@ export async function recordNote(note: IncomingNote, client: Executor = db): Pro
     returning state
   `)
   const applied = inserted.length > 0
+
+  // A repo row is only interesting while the working copy is dirty. The sweep
+  // reports every repo it knows, clean ones included, so the row is dismissed
+  // the moment the work is committed and comes back the moment it is not.
+  if (surface === "repo") {
+    const m = (note.meta ?? {}) as Record<string, unknown>
+    const count = (k: string) => (typeof m[k] === "number" && Number.isFinite(m[k] as number) ? (m[k] as number) : 0)
+    // Only a post that actually carries the counts may clear a row. A partial
+    // post — one that just enriches the meta — must never empty the board.
+    const reportsCounts = typeof m.changed === "number" || typeof m.untracked === "number"
+    const clean = reportsCounts && count("changed") + count("untracked") <= 0
+    await client.execute(sql`
+      update session_notes
+         set dismissed_at = ${clean ? sql`now()` : sql`null`}, updated_at = now()
+       where session_ref = ${sessionRef}
+         and (dismissed_at is null) = ${clean}
+    `)
+  }
 
   if (isManual) {
     const body = (note.body ?? "").trim().slice(0, LEFTOFF_RULES.maxBody)

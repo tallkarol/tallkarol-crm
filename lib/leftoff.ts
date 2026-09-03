@@ -36,7 +36,7 @@ export const LEFTOFF_RULES = {
   maxHandoffLine: 300,
 } as const
 
-export const SURFACES = ["claude", "cursor", "manual", "browser", "agent"] as const
+export const SURFACES = ["claude", "cursor", "manual", "browser", "agent", "repo"] as const
 export type Surface = (typeof SURFACES)[number]
 
 export const STORED_STATES = ["working", "waiting", "blocked", "gone"] as const
@@ -44,6 +44,38 @@ export type StoredState = (typeof STORED_STATES)[number]
 export type NoteState = StoredState | "parked"
 
 export const BROWSER_REF = "browser:chrome"
+export const SAFARI_REF = "browser:safari"
+/** Every browser the tab snapshot knows, in the order the board shows them. */
+export const BROWSER_REFS = [BROWSER_REF, SAFARI_REF] as const
+/** Firefox is deliberately not captured — Karol does not use it. */
+export const BROWSER_NAMES: Record<string, string> = {
+  [BROWSER_REF]: "Chrome",
+  [SAFARI_REF]: "Safari",
+}
+
+/**
+ * A working copy with uncommitted work, one self-overwriting row per repo:
+ * `git:/Users/…/Work/tallkarol/dev`. Written by the sweep for every repo it
+ * knows and by a chat's own hooks for the repo that chat is sitting in, so a
+ * repo shows up whether or not a conversation is open on it.
+ */
+export const REPO_PREFIX = "git:"
+
+export function repoRef(path: string) {
+  return `${REPO_PREFIX}${path.replace(/\/+$/, "")}`
+}
+
+export function isRepoRef(ref: string) {
+  return ref.startsWith(REPO_PREFIX)
+}
+
+export function repoPathFromRef(ref: string) {
+  return isRepoRef(ref) ? ref.slice(REPO_PREFIX.length) : ""
+}
+
+export function isBrowserRef(ref: string) {
+  return (BROWSER_REFS as readonly string[]).includes(ref)
+}
 
 /** Every hook event the POST accepts, Claude Code's and Cursor's names alike. */
 export const LEFTOFF_EVENTS = [
@@ -146,8 +178,9 @@ export function deriveState(n: NoteFacts, now: Date): NoteState {
   const stored = (STORED_STATES as readonly string[]).includes(n.state)
     ? (n.state as StoredState)
     : "waiting"
-  // A post-it has no process behind it; it is simply there.
-  if (n.surface === "manual" || n.surface === "browser") return "waiting"
+  // A post-it has no process behind it; it is simply there. Neither has a
+  // repo row: uncommitted work is a standing fact, never "parked".
+  if (n.surface === "manual" || n.surface === "browser" || n.surface === "repo") return "waiting"
   // An agent lane waits for a pick; it is not parked by the clock. Only a
   // lane left "working" ages out, like a chat that lost its Stop.
   if (n.surface === "agent" && stored !== "working" && stored !== "gone") return "waiting"
@@ -268,9 +301,9 @@ export function messageText(event: LeftOffEvent, prompt: string, reply: string) 
     : clipTail(reply, LEFTOFF_RULES.maxMessageReply)
 }
 
-/** Manual post-its and the browser row are not conversations. */
+/** Post-its, browser snapshots and repo rows are not conversations. */
 export function keepsMessages(surface: string) {
-  return surface !== "manual" && surface !== "browser"
+  return surface !== "manual" && surface !== "browser" && surface !== "repo"
 }
 
 /* ---------------------------------------------------------------- payload */
@@ -298,11 +331,37 @@ export type LeftOffNoteView = {
   ticketId: string | null
   handoff: Handoff | null
   agents: AgentsView | null
+  /** Set only on `surface: "repo"` rows. */
+  repo: RepoView | null
 }
 
 export type BrowserTab = { title: string; url: string; active: boolean }
 export type BrowserWindow = { title: string; tabs: BrowserTab[] }
-export type BrowserSnapshot = { capturedAt: string; windows: BrowserWindow[] }
+export type BrowserSnapshot = {
+  /** "Chrome" | "Safari" — which browser this snapshot came from. */
+  browser: string
+  capturedAt: string
+  windows: BrowserWindow[]
+}
+
+/**
+ * Uncommitted work in one repo. Counts only, never diff bodies: a diff would
+ * carry .env files and client code into the CRM.
+ */
+export type RepoView = {
+  path: string
+  /** Tracked files changed, staged or not. */
+  changed: number
+  /** Files git does not know about yet. */
+  untracked: number
+  /** changed + untracked — what the row's title counts. */
+  dirty: number
+  ahead: number
+  behind: number
+  stashes: number
+  /** A few paths, for the row's second line. Never contents. */
+  files: string[]
+}
 
 export type LeftOffCounts = { working: number; waiting: number; blocked: number; parked: number }
 
@@ -310,7 +369,15 @@ export type LeftOffPayload = {
   generatedAt: string
   notes: LeftOffNoteView[]
   counts: LeftOffCounts
+  /**
+   * The Chrome snapshot. Kept as its own field because the Mac app and the
+   * board already read it; `browsers` is the full list.
+   */
   browser: BrowserSnapshot | null
+  /** Every browser captured, newest snapshot each. */
+  browsers: BrowserSnapshot[]
+  /** Repos with uncommitted work. Also present in `notes` as `surface: "repo"`. */
+  repos: LeftOffNoteView[]
 }
 
 export function toView(n: NoteFacts, now: Date): LeftOffNoteView {
@@ -337,6 +404,7 @@ export function toView(n: NoteFacts, now: Date): LeftOffNoteView {
     ticketId: n.ticketId ?? null,
     handoff: readHandoff(n.meta),
     agents: readAgents(n.meta, now, n.state),
+    repo: readRepo(n),
   }
 }
 
@@ -349,6 +417,9 @@ export function toView(n: NoteFacts, now: Date): LeftOffNoteView {
 export function sortViews(views: LeftOffNoteView[]) {
   const groupRank = new Map<string, number>()
   for (const v of views) {
+    // A repo row must not pull its client group up the board: uncommitted
+    // work is background, and the group's urgency comes from its chats.
+    if (v.surface === "repo") continue
     const key = v.client?.slug ?? ""
     const rank = STATE_RANK[v.state] - (v.pinned ? 1 : 0)
     groupRank.set(key, Math.min(groupRank.get(key) ?? 99, rank))
@@ -364,7 +435,18 @@ export function sortViews(views: LeftOffNoteView[]) {
       if (ra !== rb) return ra - rb
       return ka < kb ? -1 : 1
     }
+    // Inside a group the chats come first and the repos sit under them.
+    const ar = a.surface === "repo" ? 1 : 0
+    const br = b.surface === "repo" ? 1 : 0
+    if (ar !== br) return ar - br
     if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+    if (ar === 1) {
+      // Repos: the dirtiest first, then by name, so the order is stable.
+      const da = a.repo?.dirty ?? 0
+      const db = b.repo?.dirty ?? 0
+      if (da !== db) return db - da
+      return a.title < b.title ? -1 : a.title > b.title ? 1 : 0
+    }
     const rank = STATE_RANK[a.state] - STATE_RANK[b.state]
     if (rank !== 0) return rank
     return a.eventAt < b.eventAt ? 1 : a.eventAt > b.eventAt ? -1 : 0
@@ -418,28 +500,64 @@ function readBrowser(n: NoteFacts | undefined): BrowserSnapshot | null {
   if (!n || n.dismissedAt) return null
   const windows = Array.isArray(n.meta.windows) ? (n.meta.windows as BrowserWindow[]) : []
   if (!windows.length) return null
-  return { capturedAt: n.eventAt.toISOString(), windows }
+  return {
+    browser: BROWSER_NAMES[n.sessionRef] ?? "Browser",
+    capturedAt: n.eventAt.toISOString(),
+    windows,
+  }
+}
+
+function intAt(meta: Record<string, unknown>, key: string) {
+  const v = meta[key]
+  return typeof v === "number" && Number.isFinite(v) && v >= 0 ? Math.floor(v) : 0
+}
+
+/** The repo facts a `git:` row carries in its meta; null on every other row. */
+function readRepo(n: NoteFacts): RepoView | null {
+  if (n.surface !== "repo") return null
+  const changed = intAt(n.meta, "changed")
+  const untracked = intAt(n.meta, "untracked")
+  const files = Array.isArray(n.meta.files)
+    ? (n.meta.files as unknown[]).filter((f): f is string => typeof f === "string").slice(0, 20)
+    : []
+  return {
+    path: repoPathFromRef(n.sessionRef) || n.cwd,
+    changed,
+    untracked,
+    dirty: changed + untracked,
+    ahead: intAt(n.meta, "ahead"),
+    behind: intAt(n.meta, "behind"),
+    stashes: intAt(n.meta, "stashes"),
+    files,
+  }
 }
 
 /** The widget/dashboard payload from raw rows — the browser row is split out. */
 export function buildPayload(rows: NoteFacts[], now: Date): LeftOffPayload {
-  const browserRow = rows.find((r) => r.sessionRef === BROWSER_REF || r.surface === "browser")
+  const browserRows = rows.filter((r) => r.surface === "browser" || isBrowserRef(r.sessionRef))
   const notes = sortViews(
     rows
-      .filter((r) => r !== browserRow && r.surface !== "browser")
+      .filter((r) => !browserRows.includes(r))
       .filter((r) => isVisible(r, now))
       .map((r) => toView(r, now))
   )
   const counts: LeftOffCounts = { working: 0, waiting: 0, blocked: 0, parked: 0 }
   for (const n of notes) {
-    if (n.surface === "manual") continue
+    // A post-it and a repo row are standing facts, not chats waiting on you;
+    // counting them would inflate "2 parked, 1 blocked".
+    if (n.surface === "manual" || n.surface === "repo") continue
     if (n.state in counts) counts[n.state as keyof LeftOffCounts] += 1
   }
+  const browsers = BROWSER_REFS.map((ref) =>
+    readBrowser(browserRows.find((r) => r.sessionRef === ref))
+  ).filter((b): b is BrowserSnapshot => b !== null)
   return {
     generatedAt: now.toISOString(),
     notes,
     counts,
-    browser: readBrowser(browserRow),
+    browser: readBrowser(browserRows.find((r) => r.sessionRef === BROWSER_REF)),
+    browsers,
+    repos: notes.filter((n) => n.surface === "repo"),
   }
 }
 
