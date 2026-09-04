@@ -360,17 +360,24 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
   full day of the rebuilt account spent $24.43. One day over pace is not a problem in itself &mdash; new campaigns
   bid aggressively while they learn &mdash; but at $3.82 a click the budget buys about five clicks a day, so it is
   worth watching daily rather than monthly.</p>
-  <div class="card rail warn" style="margin-top:16px">
-    <h3>A question that needs an answer: the Performance Max campaign</h3>
-    <p class="small">The shared Ads account also runs <b>2023 &mdash; Performance Max &mdash; Maximize</b>. Between
-    28 August and 3 September it spent <b>$82.35</b> &mdash; more than the two B2B search campaigns spent together
-    ($55.33) over the same week. Because the reporting splits this account by campaign name, and that campaign has
-    no &ldquo;B2B&rdquo; in its name, every cent of it is currently attributed to Zemvelo and none of it appears in
-    Mineralife&rsquo;s figures.</p>
-    <p class="small">If that campaign is in fact Mineralife&rsquo;s, real Mineralife spend is roughly double what
-    is being reported, and the $600 budget is already being exceeded substantially. If it is Zemvelo&rsquo;s, the
-    reporting is correct and no action is needed. <b>Somebody needs to confirm which.</b> It is the only open
-    question in this report that could change the numbers by a factor of two.</p>
+  <div class="card rail good" style="margin-top:16px">
+    <h3>Settled: the Performance Max campaign is Zemvelo&rsquo;s</h3>
+    <p class="small">This report as first published left one open question. The shared Ads account also runs
+    <b>2023 &mdash; Performance Max &mdash; Maximize Conversions</b>, which spent <b>$82.35</b> between 28 August
+    and 3 September &mdash; more than the two B2B search campaigns spent together ($55.33) over the same week.
+    Because the reporting splits this account by campaign name, and that campaign has no &ldquo;B2B&rdquo; in its
+    name, all of it was attributed to Zemvelo. Had that been wrong, real Mineralife spend would have been roughly
+    double what this report shows and the $600 budget would already be substantially exceeded.</p>
+    <p class="small"><b>It was not wrong.</b> Confirmed on 4 September: Mineralife is <i>only</i> the campaigns
+    carrying &ldquo;B2B&rdquo; in the name, and everything else in that account is Zemvelo. The campaign&rsquo;s
+    own conversion record says the same thing independently &mdash; every conversion it has recorded is a Zemvelo
+    storefront action: <code>Purchase</code>, <code>Add to cart</code>, and one named literally
+    <code>Begin checkout (zemvelo.com/checkout)</code>, alongside the <code>Zemvelo &mdash; GA4 (web)</code> event
+    set. It is a shopping campaign selling Zemvelo product. None of that $82.35 is Mineralife money.</p>
+    <p class="small">Every budget figure in this section therefore stands as published, and the rule the reporting
+    already applies &mdash; B2B in the name is Mineralife, everything else is Zemvelo &mdash; is the correct one.
+    Anything added to this account later must carry &ldquo;B2B&rdquo; in its name to be counted as
+    Mineralife&rsquo;s.</p>
   </div>
 </section>
 
@@ -401,6 +408,26 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
   <b>30 August</b>, after both enquiries had already happened, and Analytics does not apply that designation
   retrospectively. <code>catalog_download</code> was marked on 1 September. The Google Ads link exists and was
   last touched on 1 September, but no conversion from it is being counted in Ads.</p>
+  <div class="card rail good" style="margin-top:14px">
+    <h3>The import into Ads is already in place &mdash; and correctly wired</h3>
+    <p class="small">Re-checked against the live account on 4 September. <code>My Custom Manufacturing &mdash; GA4
+    (web) generate_lead</code> exists as a conversion action, is <b>enabled</b>, is a <b>primary</b> action, and
+    carries the <b>Submit lead form</b> category. Both B2B search campaigns go further and override the
+    account&rsquo;s conversion goals so they bid on <b>Submit lead form</b> alone &mdash; Zemvelo&rsquo;s purchase,
+    add-to-cart and begin-checkout goals are switched off at campaign level. In an account shared by two
+    businesses that is exactly the right configuration, and it is done. Nothing about the import needs
+    changing.</p>
+    <p class="small">So &ldquo;no recent conversions&rdquo; in the Ads interface is not a wiring fault. It is
+    literal: the API returns <b>zero rows</b> for that conversion action across the whole of August and the first
+    four days of September. No <code>generate_lead</code> has reached Ads since the key event was created on
+    30 August, because the events barely fire &mdash; which is the measurement fault in section 02, not an
+    advertising problem. Fix the container trigger and this conversion begins filling on its own.</p>
+    <p class="small">One consequence to keep in view. <b>Competitors</b> bids on maximize conversions and will
+    use the new signal the moment it has one. <b>Core Terms</b> bids on <b>maximize clicks</b> with a $12 ceiling,
+    which does not read conversions at all, so the import changes nothing there yet. That is the right setting for
+    a campaign with nine clicks to its name; it becomes worth revisiting only once there is conversion volume to
+    optimise against.</p>
+  </div>
   <div class="card tint" style="margin-top:14px">
     <h3>Two smaller things in the same table</h3>
     <p class="small">Two of the nine enquiries came from <code>localhost:3000</code> &mdash; a developer machine
@@ -530,30 +557,46 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
   <p class="small muted" style="margin-top:14px">Google still has no field data from real visitors for this site
   &mdash; loading speeds above are laboratory measurements. That needs sustained real traffic before it changes,
   and it is not something to act on.</p>
+  <div class="card tint rail warn" style="margin-top:16px">
+    <h3>Speed slipped after the 4 September changes <span class="new">4 Sep</span></h3>
+    <p class="small">Three measurements were taken across the two days: 90 mobile / 99 desktop on 3 September,
+    then 69 / 67 and 82 / 82 within an hour of each other on 4 September. Laboratory scores bounce, and the
+    spread between the last two shows how much &mdash; so the exact figure is not worth arguing about. The
+    direction is consistent though, and the cause is visible in the detail: main-thread blocking now runs to
+    450&nbsp;ms on mobile and 390&nbsp;ms on desktop.</p>
+    <p class="small">The most likely explanation is not a regression at all. Until yesterday the Analytics tag
+    was skipped and cost nothing to run; it now actually loads and executes on every page. Working measurement
+    has a price in milliseconds. Worth watching over the coming week rather than reacting to, and worth
+    re-checking once real traffic gives Google field data to replace the laboratory guess.</p>
+  </div>
 </section>
 
 <section id="s11">
   <div class="sec-label"><span class="n">11</span><h2>What to do, in order</h2></div>
   <div class="stack">
-    <div class="statusrow"><span class="st open">now</span><span class="what">
-      <b>Retrigger the Analytics configuration tag in Tag Manager</b>
-      <span class="why">Move it from Initialization to All Pages, or add consent-update as a second trigger, and
-      republish the container. This is the whole measurement fault. Until it ships, no visitor who accepts
-      cookies is counted and nothing the campaign does can be judged. A container change only &mdash; no site
-      deploy.</span></span></div>
-    <div class="statusrow"><span class="st part">now</span><span class="what">
-      <b>Add googletagmanager.com to the image policy</b>
-      <span class="why">One entry in <code>img-src</code>. Clears a console error on every page load and lets
-      Tag Manager report its own health.</span></span></div>
-    <div class="statusrow"><span class="st open">now</span><span class="what">
-      <b>Confirm who owns the Performance Max campaign</b>
-      <span class="why">$82.35 in seven days is currently booked to Zemvelo on the strength of a campaign name. If
-      it is Mineralife&rsquo;s, the budget picture in this report is wrong by a factor of two.</span></span></div>
-    <div class="statusrow"><span class="st part">this week</span><span class="what">
-      <b>Get conversions into Google Ads</b>
-      <span class="why">Two paid enquiries in August were never counted. Import <code>generate_lead</code> from
-      Analytics as an Ads conversion so bidding can finally use it &mdash; and note it will only count enquiries
-      from 30 August onward, when the key event was created.</span></span></div>
+    <div class="statusrow"><span class="st done">shipped</span><span class="what">
+      <b>Measurement restored for visitors outside the EEA <span class="fixed">4 Sep</span></b>
+      <span class="why">Consent now defaults to granted everywhere except the EEA, the UK and Switzerland, so a
+      US visitor is measured from the first pageview whether or not they touch the banner &mdash; and because
+      consent is settled before the container loads, the configuration tag fires normally. Verified live: Analytics
+      realtime went from empty to recording page views within minutes of the deploy.</span></span></div>
+    <div class="statusrow"><span class="st done">shipped</span><span class="what">
+      <b>Configuration tag moved off Initialization <span class="fixed">4 Sep</span></b>
+      <span class="why">Live container is version 15. The tag now fires on a page-view trigger restricted to the
+      live hostname, so it no longer hangs off the one-shot Initialization event and no longer fires from preview
+      builds or a developer machine.</span></span></div>
+    <div class="statusrow"><span class="st done">shipped</span><span class="what">
+      <b>Image policy fixed <span class="fixed">4 Sep</span></b>
+      <span class="why"><code>googletagmanager.com</code> added to <code>img-src</code>; the console violation
+      on every page load is gone.</span></span></div>
+    <div class="statusrow"><span class="st open">open</span><span class="what">
+      <b>EEA visitors who accept after the page loads are still not counted</b>
+      <span class="why">Tested on the live site after both fixes: pressing Accept grants consent correctly, but
+      Tag Manager does not replay the page event, so no measurement follows. The cause is the
+      &ldquo;require additional consent&rdquo; check on the configuration tag, which stops the Google tag loading
+      at all rather than letting Consent Mode handle the gating itself &mdash; Consent Mode is designed to
+      withhold cookies under refusal and start measuring the moment consent arrives. Removing that redundant
+      check is the fix. It affects European visitors only, so it does not touch the US campaign.</span></span></div>
     <div class="statusrow"><span class="st part">this week</span><span class="what">
       <b>Exclude developer traffic from the production property</b>
       <span class="why">Two of nine August enquiries came from <code>localhost:3000</code>. The
@@ -576,6 +619,17 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
       <span class="why">Six clicks and $22.93 is not a result. Do not change bids, budgets, copy or landing pages
       on this evidence. Two full weeks, or roughly a hundred clicks, before any of that is worth
       discussing.</span></span></div>
+    <div class="statusrow"><span class="st done">closed</span><span class="what">
+      <b>Ownership of the Performance Max campaign</b>
+      <span class="why">Answered 4 September: it is Zemvelo&rsquo;s. Mineralife is only the campaigns with
+      &ldquo;B2B&rdquo; in the name. The campaign&rsquo;s own conversions are Zemvelo checkout actions, which
+      settles it independently of the name. The budget figures in this report stand as published.</span></span></div>
+    <div class="statusrow"><span class="st done">closed</span><span class="what">
+      <b>Importing <code>generate_lead</code> into Google Ads</b>
+      <span class="why">Already done, and done correctly &mdash; enabled, primary, Submit lead form, with both B2B
+      campaigns overridden to bid on that goal alone. It reads &ldquo;no recent conversions&rdquo; because none
+      have fired since 30 August, which the container fix at the top of this list resolves. No further Ads change
+      is needed.</span></span></div>
   </div>
 </section>
 
@@ -588,6 +642,10 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
       <code>sc-domain:mycustommanufacturer.com</code>, 63 sitemap URLs, run 3 September.</li>
     <li><b>Advertising</b> &mdash; Google Ads API v25, account 624-370-2566, campaign, keyword and search-term
       reports queried per day for 28 August to 3 September.</li>
+    <li><b>Advertising, re-checked 4 September</b> &mdash; same API, the account&rsquo;s conversion actions,
+      customer and campaign conversion goals, bidding strategies, and conversions segmented by conversion action
+      for 1 August to 4 September. This is what settled the Performance Max ownership question in section 06 and
+      the state of the conversion import in section 07.</li>
     <li><b>Analytics</b> &mdash; Analytics Data API against property 395780153, daily and realtime, cross-checked
       against properties 305233533 (Zemvelo), 498136327 and 551968841 to rule out processing delay.</li>
     <li><b>Search Console</b> &mdash; Search Analytics API, queries and pages, compared fortnight by fortnight
@@ -609,7 +667,8 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
   Tall Karol &middot; SEM Report v3 &middot; Mineralife Nutraceuticals, LLC &middot; supersedes SEM report v2 of
   2 September 2026 &middot; re-verified against Google Ads account 624-370-2566, Google Analytics property
   395780153, Search Console <code>sc-domain:mycustommanufacturer.com</code>, Tag Manager container GTM-5B83HMG
-  and the production site &middot; full re-run 3 September 2026
+  and the production site &middot; full re-run 3 September 2026 &middot; advertising re-checked and the
+  Performance Max ownership question closed 4 September 2026
 </footer>
 
 </div>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
-import { and, desc, eq, gte, sql } from "drizzle-orm"
+import { and, desc, eq, gte, isNull, sql } from "drizzle-orm"
 import { db } from "@/db"
 import { agentSessions, clients, projects, timeEntrySessions } from "@/db/schema"
 import { ROUTES } from "@/lib/nav"
@@ -27,7 +27,10 @@ export const dynamic = "force-dynamic"
  *   or { sessions: [ ...same objects ] } for a batch push.
  * 200 { sessions: [{ sessionRef, url }] }
  *
- * GET ?client=<slug>&since=<ISO>&unlinked=1 — sessions, newest first.
+ * GET ?client=<slug>&since=<ISO>&unlinked=1&unattributed=1&limit=<n>
+ *   sessions, newest first. `unattributed=1` returns only the ones with no
+ *   client — what the attribution pass reads, since a session nobody can
+ *   name is invisible to the ledger no matter how much of it we stored.
  */
 
 type SessionBody = Record<string, unknown>
@@ -149,6 +152,8 @@ export async function GET(request: Request) {
   const clientSlug = url.searchParams.get("client")?.trim() || null
   const since = instant(url.searchParams.get("since"))
   const unlinked = url.searchParams.get("unlinked") === "1"
+  const unattributed = url.searchParams.get("unattributed") === "1"
+  const limit = Math.min(500, Math.max(1, Number(url.searchParams.get("limit")) || 200))
 
   let clientId: string | null = null
   if (clientSlug) {
@@ -160,6 +165,7 @@ export async function GET(request: Request) {
   const rows = await db.query.agentSessions.findMany({
     where: and(
       clientId ? eq(agentSessions.clientId, clientId) : undefined,
+      unattributed ? isNull(agentSessions.clientId) : undefined,
       since ? gte(agentSessions.startedAt, since) : undefined
     ),
     with: {
@@ -168,7 +174,7 @@ export async function GET(request: Request) {
       entries: { columns: { timeEntryId: true, shareHours: true } },
     },
     orderBy: [desc(agentSessions.startedAt)],
-    limit: 200,
+    limit,
   })
 
   // How much of the conversation itself survives, so the ledger side can tell
@@ -191,6 +197,7 @@ export async function GET(request: Request) {
       sessionRef: row.sessionRef,
       surface: row.surface,
       name: row.name,
+      cwd: row.cwd,
       client: row.client?.slug ?? null,
       project: row.project?.slug ?? null,
       startedAt: row.startedAt,

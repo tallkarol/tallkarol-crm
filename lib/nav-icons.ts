@@ -23,6 +23,7 @@ import {
   ListChecks,
   Mail,
   Megaphone,
+  MessagesSquare,
   MonitorCheck,
   NotebookText,
   Package,
@@ -46,6 +47,7 @@ import type { NavIconName } from "@/lib/nav"
 
 const ICONS: Record<NavIconName, LucideIcon> = {
   dashboard: LayoutDashboard,
+  chat: MessagesSquare,
   inbox: Inbox,
   pipeline: Kanban,
   delivery: Rows3,

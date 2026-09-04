@@ -1,18 +1,18 @@
 {
-  "scannedAt": "2026-09-04T00:17:25.207Z",
+  "scannedAt": "2026-09-04T02:14:42.670Z",
   "plugin": {
     "name": "daedalus-hive-mind",
-    "version": "0.10.0",
+    "version": "0.12.0",
     "root": "~/Work/daedalus-hive-mind"
   },
   "counts": {
     "root": 1,
     "lane": 7,
     "agent": 8,
-    "skill": 18,
-    "reference": 6,
-    "script": 25,
-    "command": 13,
+    "skill": 20,
+    "reference": 11,
+    "script": 30,
+    "command": 15,
     "routine": 7,
     "pipeline": 1
   },
@@ -25,7 +25,7 @@
       "source": "skills/team-charter/SKILL.md",
       "meta": {
         "plugin": "daedalus-hive-mind",
-        "version": "0.10.0"
+        "version": "0.12.0"
       }
     },
     {
@@ -325,6 +325,62 @@
       "source": "skills/follow-up/scripts/follow-up.py"
     },
     {
+      "id": "skill:launch-audit",
+      "label": "launch-audit",
+      "kind": "skill",
+      "blurb": "Pre-launch and post-launch website audits that become a client handoff report — crawl health, redirects, security headers and exposed files, WordPress hardening, metadata and structured dat…",
+      "source": "skills/launch-audit/SKILL.md"
+    },
+    {
+      "id": "script:launch-audit/__pycache__",
+      "label": "__pycache__",
+      "kind": "script",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/launch-audit/scripts/__pycache__"
+    },
+    {
+      "id": "script:launch-audit/launch-audit.py",
+      "label": "launch-audit.py",
+      "kind": "script",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/launch-audit/scripts/launch-audit.py"
+    },
+    {
+      "id": "script:launch-audit/launch_audit",
+      "label": "launch_audit",
+      "kind": "script",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/launch-audit/scripts/launch_audit"
+    },
+    {
+      "id": "reference:launch-audit/report-fonts.html",
+      "label": "report-fonts.html",
+      "kind": "reference",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/launch-audit/references/report-fonts.html"
+    },
+    {
+      "id": "reference:launch-audit/report.css",
+      "label": "report.css",
+      "kind": "reference",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/launch-audit/references/report.css"
+    },
+    {
+      "id": "reference:launch-audit/sample-handoff.html",
+      "label": "sample-handoff.html",
+      "kind": "reference",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/launch-audit/references/sample-handoff.html"
+    },
+    {
+      "id": "reference:launch-audit/sample-internal.html",
+      "label": "sample-internal.html",
+      "kind": "reference",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/launch-audit/references/sample-internal.html"
+    },
+    {
       "id": "skill:leftoff",
       "label": "leftoff",
       "kind": "skill",
@@ -381,6 +437,27 @@
       "source": "skills/leftoff/scripts/leftoff.sh"
     },
     {
+      "id": "skill:lessons",
+      "label": "lessons",
+      "kind": "skill",
+      "blurb": "Mistakes that were fixed more than once across a project's Claude Code and Cursor conversations — tool errors and their fix loops, Karol's corrections, rejected plans, files the agent edite…",
+      "source": "skills/lessons/SKILL.md"
+    },
+    {
+      "id": "script:lessons/lessons.py",
+      "label": "lessons.py",
+      "kind": "script",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/lessons/scripts/lessons.py"
+    },
+    {
+      "id": "reference:lessons/example-rules-tallkarol.json",
+      "label": "example-rules-tallkarol.json",
+      "kind": "reference",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/lessons/references/example-rules-tallkarol.json"
+    },
+    {
       "id": "skill:log-session",
       "label": "log-session",
       "kind": "skill",
@@ -435,6 +512,14 @@
       "lane": "lane:ledger",
       "blurb": "Draft what a Claude Code or Cursor conversation actually did — one invoice-voice line per session, built from its transcript, edited files, commits and metered hours, stored locally and pus…",
       "source": "skills/session-log/SKILL.md"
+    },
+    {
+      "id": "script:session-log/attribute-sessions.py",
+      "label": "attribute-sessions.py",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/session-log/scripts/attribute-sessions.py"
     },
     {
       "id": "script:session-log/session-log.py",
@@ -661,6 +746,16 @@
       }
     },
     {
+      "id": "command:launch-audit",
+      "label": "/launch-audit",
+      "kind": "command",
+      "blurb": "Pre- or post-launch website audit → client handoff report + internal report, stored per client + codebase in the CRM",
+      "source": "commands/launch-audit.md",
+      "meta": {
+        "arguments": "pre|post <url> [--config audit.json] [--pre <run>] [--baseline <run>] [--push] — e.g. \"pre https://staging.acme.com\", \"post https://acme.com --config audit.json --push\""
+      }
+    },
+    {
       "id": "command:leftoff",
       "label": "/leftoff",
       "kind": "command",
@@ -669,6 +764,16 @@
       "source": "commands/leftoff.md",
       "meta": {
         "arguments": "<text> | list | search <words> | history [--since 7d] | dismiss <ref> | pin <ref> | agent <type> — e.g. \"waiting on Ola's copy\", \"list\", \"search elementor nav\""
+      }
+    },
+    {
+      "id": "command:lessons",
+      "label": "/lessons",
+      "kind": "command",
+      "blurb": "Mistakes fixed more than once across this project's Claude Code + Cursor conversations → clustered and costed → rules for .claude/rules and .cursor/rules, after Karol approves",
+      "source": "commands/lessons.md",
+      "meta": {
+        "arguments": "[path] [--client <slug>] [--since 90d] | show <id> | status — e.g. \"\", \"~/Work/tallkarol\", \"--client gdi --root ~/Local\\ Sites/gdi-multi-site-wp\", \"show c02\", \"status\""
       }
     },
     {
@@ -978,6 +1083,41 @@
       "rel": "contains"
     },
     {
+      "source": "skill:launch-audit",
+      "target": "script:launch-audit/__pycache__",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:launch-audit",
+      "target": "script:launch-audit/launch-audit.py",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:launch-audit",
+      "target": "script:launch-audit/launch_audit",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:launch-audit",
+      "target": "reference:launch-audit/report-fonts.html",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:launch-audit",
+      "target": "reference:launch-audit/report.css",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:launch-audit",
+      "target": "reference:launch-audit/sample-handoff.html",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:launch-audit",
+      "target": "reference:launch-audit/sample-internal.html",
+      "rel": "contains"
+    },
+    {
       "source": "lane:planning",
       "target": "skill:leftoff",
       "rel": "contains"
@@ -1013,6 +1153,16 @@
       "rel": "contains"
     },
     {
+      "source": "skill:lessons",
+      "target": "script:lessons/lessons.py",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:lessons",
+      "target": "reference:lessons/example-rules-tallkarol.json",
+      "rel": "contains"
+    },
+    {
       "source": "lane:ledger",
       "target": "skill:log-session",
       "rel": "contains"
@@ -1045,6 +1195,11 @@
     {
       "source": "lane:ledger",
       "target": "skill:session-log",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:session-log",
+      "target": "script:session-log/attribute-sessions.py",
       "rel": "contains"
     },
     {
@@ -1223,6 +1378,11 @@
       "rel": "loads"
     },
     {
+      "source": "skill:launch-audit",
+      "target": "skill:browser-check",
+      "rel": "loads"
+    },
+    {
       "source": "skill:log-session",
       "target": "skill:session-log",
       "rel": "loads"
@@ -1363,8 +1523,18 @@
       "rel": "loads"
     },
     {
+      "source": "command:launch-audit",
+      "target": "skill:launch-audit",
+      "rel": "loads"
+    },
+    {
       "source": "command:leftoff",
       "target": "skill:leftoff",
+      "rel": "loads"
+    },
+    {
+      "source": "command:lessons",
+      "target": "skill:lessons",
       "rel": "loads"
     },
     {

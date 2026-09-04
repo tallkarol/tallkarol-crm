@@ -3025,3 +3025,233 @@ export type SlinkRecipient = typeof slinkRecipients.$inferSelect
 export type SlinkBlock = typeof slinkBlocks.$inferSelect
 export type SlinkEvent = typeof slinkEvents.$inferSelect
 export type SlinkAccessRequest = typeof slinkAccessRequests.$inferSelect
+
+/* ------------------------------------------------------------------
+   Chat — see CHAT.md.
+
+   A thread holds messages. A user message queues a TURN, which a worker on
+   the Mac claims and runs through the Cursor SDK; the turn row is also the
+   billing record, because the pool a model draws from is the thing worth
+   watching and nothing else in the app records it.
+
+   Escalation is turns, not a column: rung 0 runs, its detector fails, and a
+   second row lands with escalatedFrom pointing back. Reading the ladder is
+   reading the chain, so a trace cannot disagree with what was billed.
+------------------------------------------------------------------ */
+
+export const chatRoleEnum = pgEnum("chat_role", [
+  "user",
+  "assistant",
+  "tool",
+  "system",
+])
+
+export const chatTurnStatusEnum = pgEnum("chat_turn_status", [
+  "queued",
+  "claimed",
+  "running",
+  "done",
+  "failed",
+  "cancelled",
+])
+
+/** Which included allowance the model spent. `none` = no model ran. */
+export const chatPoolEnum = pgEnum("chat_pool", ["cursor", "other", "none"])
+
+export const chatToolStatusEnum = pgEnum("chat_tool_status", [
+  "pending",
+  "approved",
+  "rejected",
+  "ran",
+  "failed",
+  "skipped",
+])
+
+export const chatThreads = pgTable(
+  "chat_threads",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    title: text("title").notNull().default(""),
+    clientId: uuid("client_id").references(() => clients.id, {
+      onDelete: "set null",
+    }),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    byUser: index("chat_threads_user_idx").on(table.userId, table.lastMessageAt),
+  })
+)
+
+export const chatMessages = pgTable(
+  "chat_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    threadId: uuid("thread_id")
+      .notNull()
+      .references(() => chatThreads.id, { onDelete: "cascade" }),
+    role: chatRoleEnum("role").notNull(),
+    /** Display name of the speaker — "Assistant", "Blogo", "Purser". */
+    agent: text("agent").notNull().default("Assistant"),
+    body: text("body").notNull().default(""),
+    /** Set on assistant messages; names the turn that produced them. */
+    turnId: uuid("turn_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    byThread: index("chat_messages_thread_idx").on(
+      table.threadId,
+      table.createdAt
+    ),
+  })
+)
+
+export const chatTurns = pgTable(
+  "chat_turns",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    threadId: uuid("thread_id")
+      .notNull()
+      .references(() => chatThreads.id, { onDelete: "cascade" }),
+    /** The user message this turn answers. */
+    messageId: uuid("message_id").references(() => chatMessages.id, {
+      onDelete: "cascade",
+    }),
+    status: chatTurnStatusEnum("status").notNull().default("queued"),
+
+    /** Routing decision, made by the CRM before the worker ever sees it. */
+    jobType: text("job_type").notNull().default("chat"),
+    model: text("model").notNull(),
+    effort: text("effort").notNull().default(""),
+    pool: chatPoolEnum("pool").notNull().default("cursor"),
+    fast: boolean("fast").notNull().default(false),
+
+    /** Ladder position. 0 is the first rung; escalatedFrom chains them. */
+    rung: smallint("rung").notNull().default(0),
+    escalatedFrom: uuid("escalated_from"),
+    /** What promoted this turn — "tests failed", "build red". */
+    detector: text("detector").notNull().default(""),
+
+    claimedBy: text("claimed_by").notNull().default(""),
+    claimedAt: timestamp("claimed_at", { withTimezone: true }),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    error: text("error").notNull().default(""),
+
+    inputTokens: integer("input_tokens").notNull().default(0),
+    outputTokens: integer("output_tokens").notNull().default(0),
+    cacheReadTokens: integer("cache_read_tokens").notNull().default(0),
+    cacheWriteTokens: integer("cache_write_tokens").notNull().default(0),
+    /** Priced by the CRM from the registry; the SDK settles cost late and
+        undercounts subagents, so this is our own floor, not a bill. */
+    costCents: numeric("cost_cents", { precision: 12, scale: 4 })
+      .notNull()
+      .default("0"),
+
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    byThread: index("chat_turns_thread_idx").on(table.threadId, table.createdAt),
+    /** The worker's poll: oldest queued first. */
+    byStatus: index("chat_turns_status_idx").on(table.status, table.createdAt),
+    byPool: index("chat_turns_pool_idx").on(table.pool, table.createdAt),
+  })
+)
+
+export const chatToolCalls = pgTable(
+  "chat_tool_calls",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    threadId: uuid("thread_id")
+      .notNull()
+      .references(() => chatThreads.id, { onDelete: "cascade" }),
+    turnId: uuid("turn_id").references(() => chatTurns.id, {
+      onDelete: "cascade",
+    }),
+    name: text("name").notNull(),
+    args: jsonb("args").notNull().default({}),
+    /** Mutating calls park at `pending` until Karol confirms. */
+    mutating: boolean("mutating").notNull().default(false),
+    status: chatToolStatusEnum("status").notNull().default("ran"),
+    /** Rendered for the approval card so the preview and the write agree. */
+    preview: jsonb("preview"),
+    result: jsonb("result"),
+    error: text("error").notNull().default(""),
+    /** Passed through to the domain write so a retry cannot double-apply. */
+    idempotencyKey: uuid("idempotency_key").notNull().defaultRandom(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    ranAt: timestamp("ran_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    byThread: index("chat_tool_calls_thread_idx").on(
+      table.threadId,
+      table.createdAt
+    ),
+    byStatus: index("chat_tool_calls_status_idx").on(table.status),
+    byKey: uniqueIndex("chat_tool_calls_key_idx").on(table.idempotencyKey),
+  })
+)
+
+export const chatThreadsRelations = relations(chatThreads, ({ one, many }) => ({
+  user: one(users, { fields: [chatThreads.userId], references: [users.id] }),
+  client: one(clients, {
+    fields: [chatThreads.clientId],
+    references: [clients.id],
+  }),
+  messages: many(chatMessages),
+  turns: many(chatTurns),
+  toolCalls: many(chatToolCalls),
+}))
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  thread: one(chatThreads, {
+    fields: [chatMessages.threadId],
+    references: [chatThreads.id],
+  }),
+}))
+
+export const chatTurnsRelations = relations(chatTurns, ({ one, many }) => ({
+  thread: one(chatThreads, {
+    fields: [chatTurns.threadId],
+    references: [chatThreads.id],
+  }),
+  message: one(chatMessages, {
+    fields: [chatTurns.messageId],
+    references: [chatMessages.id],
+  }),
+  toolCalls: many(chatToolCalls),
+}))
+
+export const chatToolCallsRelations = relations(chatToolCalls, ({ one }) => ({
+  thread: one(chatThreads, {
+    fields: [chatToolCalls.threadId],
+    references: [chatThreads.id],
+  }),
+  turn: one(chatTurns, {
+    fields: [chatToolCalls.turnId],
+    references: [chatTurns.id],
+  }),
+}))
+
+export type ChatThread = typeof chatThreads.$inferSelect
+export type ChatMessage = typeof chatMessages.$inferSelect
+export type ChatTurn = typeof chatTurns.$inferSelect
+export type ChatToolCall = typeof chatToolCalls.$inferSelect
+export type ChatPool = (typeof chatPoolEnum.enumValues)[number]
+export type ChatTurnStatus = (typeof chatTurnStatusEnum.enumValues)[number]
+export type ChatToolStatus = (typeof chatToolStatusEnum.enumValues)[number]

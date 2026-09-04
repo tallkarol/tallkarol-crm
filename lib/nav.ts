@@ -1,5 +1,6 @@
 export type NavIconName =
   | "dashboard"
+  | "chat"
   | "inbox"
   | "pipeline"
   | "delivery"
@@ -58,6 +59,7 @@ export type NavSection = {
 
 export const ROUTES = {
   home: "/",
+  chat: "/chat",
   inbox: "/inbox",
   inquiries: "/inquiries",
   pipeline: "/pipeline",
@@ -128,6 +130,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
   {
     items: [
       { href: ROUTES.home, label: "Dashboard", icon: "dashboard" },
+      { href: ROUTES.chat, label: "Chat", icon: "chat" },
       { href: ROUTES.inbox, label: "Inbox", icon: "inbox" },
       { href: ROUTES.leads, label: "Leads", icon: "leads" },
       { href: ROUTES.support, label: "Tickets", icon: "support" },
