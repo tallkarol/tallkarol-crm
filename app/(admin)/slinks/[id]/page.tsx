@@ -85,9 +85,7 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
           </h1>
           <span
             className={`rounded-full px-2.5 py-0.5 font-['Inter_Tight',sans-serif] text-[11px] font-semibold ${
-              slink.status === "active"
-                ? "bg-tk-teal/12 text-tk-teal"
-                : "bg-tk-slate/10 text-tk-slate/60"
+              slink.status === "active" ? "bg-tk-teal/12 text-tk-teal" : "bg-tk-slate/10 text-tk-slate/60"
             }`}
           >
             {slink.status === "active" ? "Active" : "Archived"}
@@ -104,16 +102,14 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
         </div>
         <p className="font-mono text-[11.5px] text-tk-slate/50">{url}</p>
         <p className="max-w-[68ch] text-[12.5px] text-tk-slate/60">
-          The link alone opens nothing. Everyone who can read this got their own magic link, and
-          letting a grant lapse locks the person, never the page.
+          The link alone opens nothing. Everyone who can read this got their own magic link, and letting a grant lapse
+          locks the person, never the page.
         </p>
       </header>
 
       {requests.length > 0 ? (
         <section className="rounded-xl border border-tk-tomato/30 bg-tk-tomato/[0.04] p-4">
-          <h2 className="font-['Inter_Tight',sans-serif] text-[13px] font-semibold text-tk-onyx">
-            Waiting on you
-          </h2>
+          <h2 className="font-['Inter_Tight',sans-serif] text-[13px] font-semibold text-tk-onyx">Waiting on you</h2>
           <ul className="mt-3 grid gap-3">
             {requests.map((r) => (
               <li key={r.id} className="grid gap-2 rounded-lg border border-tk-slate/12 bg-tk-white p-3">
@@ -121,9 +117,7 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
                   <b>{r.email}</b>
                   {r.name ? <span className="text-tk-slate/60"> · {r.name}</span> : null}
                 </div>
-                {r.reason ? (
-                  <p className="text-[12.5px] italic text-tk-slate/70">“{r.reason}”</p>
-                ) : null}
+                {r.reason ? <p className="text-[12.5px] italic text-tk-slate/70">“{r.reason}”</p> : null}
                 <form action={decideRequestAction} className="flex flex-wrap items-center gap-2">
                   <input type="hidden" name="requestId" value={r.id} />
                   <select
@@ -224,14 +218,10 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
                 <form action={deleteBlockAction}>
                   <input type="hidden" name="blockId" value={b.id} />
                   <input type="hidden" name="slinkId" value={slink.id} />
-                  <button className="px-1 text-[12px] text-tk-slate/40 hover:text-tk-tomato">
-                    Remove
-                  </button>
+                  <button className="px-1 text-[12px] text-tk-slate/40 hover:text-tk-tomato">Remove</button>
                 </form>
               </header>
-              {b.note ? (
-                <p className="px-3 py-2 text-[12.5px] text-tk-slate/60">{b.note}</p>
-              ) : null}
+              {b.note ? <p className="px-3 py-2 text-[12.5px] text-tk-slate/60">{b.note}</p> : null}
             </div>
           ))}
 
@@ -288,9 +278,7 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
                       <div className="break-all font-mono text-[12.5px] text-tk-onyx">{r.email}</div>
                       <div className="mt-0.5 text-[11.5px] text-tk-slate/50">
                         {r.name ? `${r.name} · ` : ""}
-                        {r.lastSeenAt
-                          ? `opened ${agoLabel(r.lastSeenAt, now)}`
-                          : "never opened"}
+                        {r.lastSeenAt ? `opened ${agoLabel(r.lastSeenAt, now)}` : "never opened"}
                         {r.viewCount ? ` · ${r.viewCount} visits` : ""}
                       </div>
                     </div>
@@ -353,9 +341,7 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
                   <span className="text-tk-slate/80">
                     <b className="text-tk-onyx">{e.recipient?.email ?? "Someone"}</b>{" "}
                     {EVENT_LABEL[e.kind as SlinkEventKind] ?? e.kind}
-                    {e.detail && e.kind !== "invited" ? (
-                      <span className="text-tk-slate/50"> · {e.detail}</span>
-                    ) : null}
+                    {e.detail && e.kind !== "invited" ? <span className="text-tk-slate/50"> · {e.detail}</span> : null}
                   </span>
                 </div>
               ))
@@ -391,9 +377,7 @@ function StateChip({
           ? "Expired"
           : "Revoked"
   return (
-    <span
-      className={`rounded-full px-2.5 py-0.5 font-['Inter_Tight',sans-serif] text-[11px] font-semibold ${tone}`}
-    >
+    <span className={`rounded-full px-2.5 py-0.5 font-['Inter_Tight',sans-serif] text-[11px] font-semibold ${tone}`}>
       {label}
     </span>
   )
@@ -426,8 +410,7 @@ function AddBlock({
   lists: { id: string; title: string }[]
   hasClient: boolean
 }) {
-  const input =
-    "w-full rounded-lg border border-tk-slate/15 bg-tk-linen/40 px-3 py-2 text-[13px]"
+  const input = "w-full rounded-lg border border-tk-slate/15 bg-tk-linen/40 px-3 py-2 text-[13px]"
   const submit =
     "justify-self-start rounded-lg bg-tk-teal px-3 py-1.5 font-['Inter_Tight',sans-serif] text-[12px] font-semibold text-white"
 
@@ -528,9 +511,7 @@ function AddBlock({
               <input type="hidden" name="slinkId" value={slinkId} />
               <input type="hidden" name="kind" value="reports" />
               <input type="hidden" name="sourceId" value="" />
-              <p className="text-[12.5px] text-tk-slate/60">
-                Filed reports for this client, always up to date.
-              </p>
+              <p className="text-[12.5px] text-tk-slate/60">Filed reports for this client, always up to date.</p>
               <button className={submit}>Add reports</button>
             </form>
 
