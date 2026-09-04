@@ -40,6 +40,7 @@ export type NavIconName =
   | "email-settings"
   | "integrations"
   | "vault"
+  | "slinks"
   | "scaffolds"
   | "hivemind"
 
@@ -94,6 +95,7 @@ export const ROUTES = {
   uptime: "/uptime",
   notebooks: "/notebooks",
   vault: "/vault",
+  slinks: "/slinks",
   scaffolds: "/scaffolds",
   hivemind: "/hivemind",
   scaffold: (slug: string) => `/scaffolds/${slug}`,
@@ -193,6 +195,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
     title: "Workspace",
     items: [
       { href: ROUTES.vault, label: "Vault", icon: "vault" },
+      { href: ROUTES.slinks, label: "Slinks", icon: "slinks" },
       { href: ROUTES.scaffolds, label: "Scaffolds", icon: "scaffolds" },
       { href: ROUTES.hivemind, label: "Hive mind", icon: "hivemind" },
       { href: ROUTES.activity, label: "Activity", icon: "activity" },

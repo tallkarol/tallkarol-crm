@@ -55,7 +55,8 @@
     "hivemind:scan": "tsx scripts/hivemind-scan.ts",
     "check:slink": "tsx scripts/check-slink.ts",
     "check:theme": "tsx scripts/check-theme.ts",
-    "check:theme:update": "tsx scripts/check-theme.ts --update"
+    "check:theme:update": "tsx scripts/check-theme.ts --update",
+    "check:slink:db": "tsx scripts/check-slink-db.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

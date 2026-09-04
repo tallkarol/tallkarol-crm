@@ -27,6 +27,8 @@ export type NotificationKind =
   | "punchlist.test"
   | "leftoff.return"
   | "leftoff.briefing"
+  | "slink.opened"
+  | "slink.request"
 
 export type KindSpec = {
   kind: NotificationKind
@@ -52,6 +54,10 @@ export const NOTIFICATION_KINDS: KindSpec[] = [
   { kind: "leftoff.return", title: "Back at the desk", summary: "What was parked while you were away.", defaultOn: true, ignoresQuietHours: false },
   // You asked for it by unlocking the Mac, and 06:30 is inside quiet hours.
   { kind: "leftoff.briefing", title: "Morning briefing", summary: "Once a day, on the first unlock: what was parked, finished or lost overnight.", defaultOn: true, ignoresQuietHours: true },
+  // Sharing a bank detail and hearing nothing back is the uneasy part; this is
+  // the receipt. Once per person per slink, not once per page view.
+  { kind: "slink.opened", title: "Slink opened", summary: "The first time someone opens something you shared.", defaultOn: true, ignoresQuietHours: false },
+  { kind: "slink.request", title: "Access requested", summary: "Someone asked to be added to a slink. Nothing is granted until you say so.", defaultOn: true, ignoresQuietHours: false },
 ]
 
 const SPEC = new Map(NOTIFICATION_KINDS.map((k) => [k.kind, k]))

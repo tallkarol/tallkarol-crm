@@ -309,3 +309,35 @@ export type SlinkCounts = {
   expired: number
   pendingRequests: number
 }
+
+/* ---------------------------------------------------------------- parsing */
+
+/**
+ * Tables are pasted, not built cell by cell — a DNS zone or a bank detail is
+ * already in a spreadsheet or a terminal somewhere. First line is the header;
+ * tabs or two-or-more spaces separate columns.
+ */
+export function parseTable(raw: string) {
+ const lines = raw.split(/\r?\n/).map((l) => l.trimEnd()).filter((l) => l.trim())
+ if (!lines.length) return { columns: [], rows: [] }
+ const split = (line: string) =>
+ line.includes("\t") ? line.split("\t").map((c) => c.trim()) : line.split(/\s{2,}/).map((c) => c.trim())
+ const columns = split(lines[0])
+ const rows = lines.slice(1).map(split)
+ return { columns, rows }
+}
+
+/**"Routing: 021000021" per line — the shape ACH details already arrive in. */
+export function parseFields(raw: string) {
+ const fields = raw
+ .split(/\r?\n/)
+ .map((line) => line.trim())
+ .filter(Boolean)
+ .map((line) => {
+ const at = line.indexOf(":")
+ if (at === -1) return { label: line, value:"" }
+ return { label: line.slice(0, at).trim(), value: line.slice(at + 1).trim() }
+ })
+ .filter((f) => f.label || f.value)
+ return { fields }
+}
