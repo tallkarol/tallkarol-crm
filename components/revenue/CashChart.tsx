@@ -40,19 +40,19 @@ export function CashChart({
           data={data}
           margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
         >
-          <CartesianGrid vertical={false} stroke="rgba(15,22,21,0.08)" />
+          <CartesianGrid vertical={false} stroke={CHART.grid} />
           <XAxis
             dataKey="month"
             tickLine={false}
             axisLine={false}
             interval={1}
-            tick={{ fontSize: 10, fill: "#71807D" }}
+            tick={{ fontSize: 10, fill: CHART.axisText }}
           />
           <YAxis
             tickLine={false}
             axisLine={false}
             width={40}
-            tick={{ fontSize: 10, fill: "#71807D" }}
+            tick={{ fontSize: 10, fill: CHART.axisText }}
             tickFormatter={(value: number) => formatAxisMoney(value)}
           />
           {goalCents ? (
@@ -64,7 +64,7 @@ export function CashChart({
             />
           ) : null}
           <Tooltip
-            cursor={{ fill: "rgba(15,22,21,0.04)" }}
+            cursor={{ fill: CHART.cursor }}
             content={({ active, payload, label }) => {
               if (!active || !payload?.length) return null
               return (
@@ -92,7 +92,7 @@ export function CashChart({
           <Bar
             dataKey="collected"
             name="Collected"
-            fill="#4C74C9"
+            fill={CHART.cash}
             radius={[3, 3, 0, 0]}
             maxBarSize={18}
             isAnimationActive={false}

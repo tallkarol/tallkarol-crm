@@ -1,4 +1,6 @@
 /** Server-rendered 12-month billing bars in the insights chart ink. */
+import { CHART } from "@/lib/insights/chart"
+
 export function MiniBars({
   values,
   accrued,
@@ -17,13 +19,13 @@ export function MiniBars({
   const bw = Math.min(16, slot - 6)
   return (
     <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" role="img" aria-label={label}>
-      <line x1="0" y1={h - 1} x2={w} y2={h - 1} stroke="rgba(15,22,21,.08)" />
+      <line x1="0" y1={h - 1} x2={w} y2={h - 1} stroke={CHART.grid} />
       {values.map((v, i) => {
         const x = i * slot + (slot - bw) / 2
         if (v <= 0)
           return <circle key={i} cx={x + bw / 2} cy={h - 4} r="1.5" fill="rgba(15,22,21,.22)" />
         const bh = Math.max(2, (v / max) * (h - 8))
-        return <rect key={i} x={x} y={h - 1 - bh} width={bw} height={bh} rx="2" fill="#009688" />
+        return <rect key={i} x={x} y={h - 1 - bh} width={bw} height={bh} rx="2" fill={CHART.teal} />
       })}
       {accrued && accrued > 0 ? (
         <rect
@@ -33,7 +35,7 @@ export function MiniBars({
           height={Math.max(4, (accrued / max) * (h - 8))}
           rx="2"
           fill="none"
-          stroke="#009688"
+          stroke={CHART.teal}
           strokeWidth="1.4"
           strokeDasharray="3 2.5"
         />

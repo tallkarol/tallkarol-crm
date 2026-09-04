@@ -33,6 +33,26 @@ export function PrintTrend({
     <svg
       viewBox={`-6 -14 ${W + 44} ${H + 34}`}
       className="block w-full"
+      /*
+        Belt and braces for a CLIENT PDF. This renders only on the frozen
+        insights report and the portal, and its literals used to make it immune
+        to a theme leak — tokenising it makes it vulnerable. Stage 3's route
+        split already closes the leak; this re-stamp means even a future
+        regression cannot reach a printed artifact. Every value is
+        byte-identical to the literal it replaced, so the report does not move.
+      */
+      style={
+        {
+          "--chart-teal": "#009688",
+          "--chart-amber": "#B07818",
+          "--chart-axis": "#6C7975",
+          "--chart-grid": "rgba(15,22,21,0.07)",
+          "--chart-axis-line": "rgba(15,22,21,0.12)",
+          "--chart-halo": "#fff",
+          "--chart-wash": "0.1",
+          "--ink-rgb": "15 22 21",
+        } as React.CSSProperties
+      }
       role="img"
       aria-label={`Daily ${label} across the period`}
     >
@@ -47,7 +67,7 @@ export function PrintTrend({
           strokeWidth="1"
         />
       ))}
-      <line x1="0" y1={H} x2={W} y2={H} stroke="rgba(15,22,21,.12)" strokeWidth="1" />
+      <line x1="0" y1={H} x2={W} y2={H} stroke={CHART.axisLine} strokeWidth="1" />
       <path d={area} fill={color} opacity=".1" />
       <polyline
         points={line}
@@ -57,7 +77,7 @@ export function PrintTrend({
         strokeLinejoin="round"
         strokeLinecap="round"
       />
-      <circle cx={W} cy={y(last)} r="4" fill={color} stroke="#fff" strokeWidth="2" />
+      <circle cx={W} cy={y(last)} r="4" fill={color} stroke={CHART.halo} strokeWidth="2" />
       <text x={W + 8} y={y(last) + 3} fontSize="10" fontWeight="700" fill="#0F1615">
         {last.toLocaleString("en-US")}
       </text>

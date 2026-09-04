@@ -129,10 +129,10 @@ export function ChartTip({
 }
 
 export const MIX_COLORS: Record<string, string> = {
-  retainer: "#009688",
-  project: "#B07818",
-  other: "#9AA6A2",
-  paid: "#009688",
-  sent: "#A62228",
-  draft: "#B07818",
+  retainer: CHART.teal,
+  project: CHART.amber,
+  other: CHART.prev,
+  paid: CHART.teal,
+  sent: CHART.bad,
+  draft: CHART.amber,
 }

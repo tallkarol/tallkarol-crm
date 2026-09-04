@@ -179,16 +179,16 @@ export function TrendChart({
             cy={y(cur[cur.length - 1] ?? 0)}
             r="4.5"
             fill={color}
-            stroke="#fff"
+            stroke={CHART.halo}
             strokeWidth="2"
           />
 
           {h != null ? (
             <g>
-              <line x1={h * dx} y1={PAD_TOP} x2={h * dx} y2={H} stroke="rgba(15,22,21,.25)" strokeWidth="1" />
-              <circle cx={h * dx} cy={y(cur[h])} r="4.5" fill={color} stroke="#fff" strokeWidth="2" />
+              <line x1={h * dx} y1={PAD_TOP} x2={h * dx} y2={H} stroke="rgb(var(--ink-rgb) / 0.25)" strokeWidth="1" />
+              <circle cx={h * dx} cy={y(cur[h])} r="4.5" fill={color} stroke={CHART.halo} strokeWidth="2" />
               {prev[h] != null ? (
-                <circle cx={h * dx} cy={y(prev[h])} r="3.5" fill={CHART.prev} stroke="#fff" strokeWidth="2" />
+                <circle cx={h * dx} cy={y(prev[h])} r="3.5" fill={CHART.prev} stroke={CHART.halo} strokeWidth="2" />
               ) : null}
             </g>
           ) : null}

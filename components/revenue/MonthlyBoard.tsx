@@ -13,6 +13,7 @@ import { formatMoney } from "@/lib/work"
 import { BilledChart } from "./BilledChart"
 import { CashChart } from "./CashChart"
 import { RateChart } from "./RateChart"
+import { CHART } from "@/lib/insights/chart"
 
 const VIEWS = [
   { id: "billed", label: "Billed" },
@@ -93,12 +94,12 @@ export function MonthlyBoard({
 
       {view === "billed" ? (
         <div className="flex flex-wrap gap-4 px-5 pb-4 pt-2 text-xs text-tk-slate">
-          <Key color="#009688" label="Billed" />
+          <Key color={CHART.teal} label="Billed" />
           {hasRemainder ? (
-            <Key color="#009688" opacity={0.34} label="Still to invoice" />
+            <Key color={CHART.teal} opacity={0.34} label="Still to invoice" />
           ) : null}
           <Key
-            color="#B07818"
+            color={CHART.amber}
             label={`3-month average · ${formatWholeMoney(latestAvg)}`}
           />
           {goalCents ? (
@@ -116,10 +117,10 @@ export function MonthlyBoard({
         </div>
       ) : view === "cash" ? (
         <div className="flex flex-wrap gap-4 px-5 pb-4 pt-2 text-xs text-tk-slate">
-          <Key color="#009688" label="Billed" />
-          <Key color="#4C74C9" label="Collected" />
+          <Key color={CHART.teal} label="Billed" />
+          <Key color={CHART.cash} label="Collected" />
           {cash.some((point) => point.expenses > 0) ? (
-            <Key color="#B07818" label="Expenses" />
+            <Key color={CHART.amber} label="Expenses" />
           ) : null}
           {goalCents ? (
             <span className="text-ink-3">

@@ -45,7 +45,7 @@ export function SearchMultiples({ points }: { points: DailyPoint[] }) {
     <div className="grid gap-4 px-5 py-4 sm:grid-cols-2">
       <Mini title="Clicks · daily" end={`${fmtInt(clicksPerDay)} last day`}>
         <svg viewBox={`0 -4 ${W} ${H + 10}`} className="mt-1.5 block w-full" aria-hidden>
-          <line x1="0" y1={H} x2={W} y2={H} stroke="rgba(15,22,21,.1)" strokeWidth="1" />
+          <line x1="0" y1={H} x2={W} y2={H} stroke={CHART.grid} strokeWidth="1" />
           {clicks.map((v, i) =>
             v > 0 ? (
               <rect
@@ -63,7 +63,7 @@ export function SearchMultiples({ points }: { points: DailyPoint[] }) {
       </Mini>
       <Mini title="Impressions · daily" end={`${fmtInt(imprLast)} last day`}>
         <svg viewBox={`0 -4 ${W} ${H + 10}`} className="mt-1.5 block w-full" aria-hidden>
-          <line x1="0" y1={H} x2={W} y2={H} stroke="rgba(15,22,21,.1)" strokeWidth="1" />
+          <line x1="0" y1={H} x2={W} y2={H} stroke={CHART.grid} strokeWidth="1" />
           <path d={iArea} fill={CHART.amber} opacity=".12" />
           <polyline
             points={iLine}
@@ -73,7 +73,7 @@ export function SearchMultiples({ points }: { points: DailyPoint[] }) {
             strokeLinejoin="round"
             strokeLinecap="round"
           />
-          <circle cx={W} cy={H - (imprLast / iMax) * H} r="4" fill={CHART.amber} stroke="#fff" strokeWidth="2" />
+          <circle cx={W} cy={H - (imprLast / iMax) * H} r="4" fill={CHART.amber} stroke={CHART.halo} strokeWidth="2" />
         </svg>
       </Mini>
     </div>

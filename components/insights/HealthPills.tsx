@@ -1,9 +1,10 @@
 import type { SourceHealth } from "@/lib/insights/types"
+import { CHART } from "@/lib/insights/chart"
 
 function dotColor(ok: boolean | null) {
-  if (ok === true) return "#1B6B3A"
-  if (ok === false) return "#A62228"
-  return "#9AA6A2"
+  if (ok === true) return CHART.good
+  if (ok === false) return CHART.bad
+  return CHART.prev
 }
 
 /** Compact status row — the full story lives in the Health tab. */

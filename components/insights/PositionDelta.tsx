@@ -2,6 +2,8 @@
  * Search-position movement chip. Position is inverted (lower = better), so an
  * improvement renders ▲ with the number of places gained.
  */
+import { CHART } from "@/lib/insights/chart"
+
 export function PositionDelta({
   position,
   prevPosition,
@@ -26,8 +28,8 @@ export function PositionDelta({
       className="inline-block rounded px-1.5 py-px text-[10px] font-bold tabular-nums"
       style={
         better
-          ? { color: "#1B6B3A", background: "rgba(27,107,58,.09)" }
-          : { color: "#A62228", background: "rgba(166,34,40,.08)" }
+          ? { color: CHART.good, background: "rgba(27,107,58,.09)" }
+          : { color: CHART.bad, background: "rgba(166,34,40,.08)" }
       }
       title={`Position ${prevPosition.toFixed(1)} → ${position.toFixed(1)}`}
     >

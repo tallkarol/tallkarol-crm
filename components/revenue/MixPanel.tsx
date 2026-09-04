@@ -4,6 +4,7 @@ import { Cell, Pie, PieChart, Tooltip } from "recharts"
 import { formatMoney } from "@/lib/work"
 import type { MixSlice } from "@/lib/revenue"
 import { ChartTip, MIX_COLORS } from "./bits"
+import { CHART } from "@/lib/insights/chart"
 
 function Donut({
   slices,
@@ -32,7 +33,7 @@ function Donut({
             isAnimationActive={false}
           >
             {slices.map((slice) => (
-              <Cell key={slice.id} fill={MIX_COLORS[slice.id] ?? "#9AA6A2"} />
+              <Cell key={slice.id} fill={MIX_COLORS[slice.id] ?? CHART.prev} />
             ))}
           </Pie>
           <Tooltip
@@ -94,7 +95,7 @@ export function MixPanel({
                   <span className="inline-flex items-center gap-1.5 font-medium text-tk-onyx">
                     <span
                       className="inline-block size-2 rounded-[3px]"
-                      style={{ background: MIX_COLORS[slice.id] ?? "#9AA6A2" }}
+                      style={{ background: MIX_COLORS[slice.id] ?? CHART.prev }}
                     />
                     {slice.label}
                   </span>
@@ -107,7 +108,7 @@ export function MixPanel({
                     className="block h-full rounded-full"
                     style={{
                       width: `${share}%`,
-                      background: MIX_COLORS[slice.id] ?? "#9AA6A2",
+                      background: MIX_COLORS[slice.id] ?? CHART.prev,
                     }}
                   />
                 </span>

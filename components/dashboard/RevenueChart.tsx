@@ -12,6 +12,7 @@ import { ChartFrame } from "@/components/revenue/ChartFrame"
 import { chartColor } from "@/lib/client-colors"
 import { formatAxisMoney } from "@/lib/revenue"
 import { formatMoney } from "@/lib/work"
+import { CHART } from "@/lib/insights/chart"
 
 export type RevenuePoint = {
   month: string // "May 25"
@@ -38,23 +39,23 @@ export function RevenueChart({
           margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
           barCategoryGap="30%"
         >
-          <CartesianGrid vertical={false} stroke="rgba(15,22,21,0.08)" />
+          <CartesianGrid vertical={false} stroke={CHART.grid} />
           <XAxis
             dataKey="month"
             tickLine={false}
             axisLine={false}
             interval={1}
-            tick={{ fontSize: 10, fill: "#71807D" }}
+            tick={{ fontSize: 10, fill: CHART.axisText }}
           />
           <YAxis
             tickLine={false}
             axisLine={false}
             width={40}
-            tick={{ fontSize: 10, fill: "#71807D" }}
+            tick={{ fontSize: 10, fill: CHART.axisText }}
             tickFormatter={(v: number) => formatAxisMoney(v)}
           />
           <Tooltip
-            cursor={{ fill: "rgba(15,22,21,0.04)" }}
+            cursor={{ fill: CHART.cursor }}
             content={({ active, payload, label }) => {
               if (!active || !payload?.length) return null
               const total = payload.reduce((s, p) => s + (Number(p.value) || 0), 0)

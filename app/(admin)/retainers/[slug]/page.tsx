@@ -19,6 +19,7 @@ import { ROUTES } from "@/lib/nav"
 import { taskTargets, tasksFor } from "@/lib/tasks"
 import { formatDay, formatMoney } from "@/lib/work"
 import { draftRetainerInvoice } from "../actions"
+import { CHART } from "@/lib/insights/chart"
 
 export const dynamic = "force-dynamic"
 
@@ -198,13 +199,13 @@ export default async function RetainerDetailPage({
             </div>
             <div className="px-4 pb-3 pt-1">
               <svg width="100%" height="150" viewBox="0 0 560 150" role="img" aria-label="Monthly logged hours against capacity">
-                <line x1="36" y1="128" x2="552" y2="128" stroke="rgba(15,22,21,.09)" />
+                <line x1="36" y1="128" x2="552" y2="128" stroke={CHART.grid} />
                 {(() => {
                   const capY = 128 - (retainer.hoursPerMonth / chartMax) * 108
                   return (
                     <>
-                      <line x1="36" y1={capY} x2="552" y2={capY} stroke="#B07818" strokeWidth="1.5" strokeDasharray="5 4" />
-                      <text x="548" y={capY - 5} textAnchor="end" fontSize="10" fontWeight="600" fill="#B07818">
+                      <line x1="36" y1={capY} x2="552" y2={capY} stroke={CHART.amber} strokeWidth="1.5" strokeDasharray="5 4" />
+                      <text x="548" y={capY - 5} textAnchor="end" fontSize="10" fontWeight="600" fill={CHART.amber}>
                         cap {retainer.hoursPerMonth}
                       </text>
                     </>
@@ -220,10 +221,10 @@ export default async function RetainerDetailPage({
                   return (
                     <g key={k}>
                       {projH != null && projH > bh ? (
-                        <rect x={x} y={128 - projH} width={bw} height={projH - bh} rx="2" fill="none" stroke="#009688" strokeWidth="1.3" strokeDasharray="3 2.5" />
+                        <rect x={x} y={128 - projH} width={bw} height={projH - bh} rx="2" fill="none" stroke={CHART.teal} strokeWidth="1.3" strokeDasharray="3 2.5" />
                       ) : null}
-                      <rect x={x} y={128 - bh} width={bw} height={bh} rx="3" fill={v > 0 ? "#009688" : "rgba(15,22,21,.12)"} />
-                      <text x={x + bw / 2} y="144" textAnchor="middle" fontSize="10.5" fontWeight={isNow ? 700 : 400} fill={isNow ? "#0F1615" : "#6C7975"}>
+                      <rect x={x} y={128 - bh} width={bw} height={bh} rx="3" fill={v > 0 ? CHART.teal : CHART.axisLine} />
+                      <text x={x + bw / 2} y="144" textAnchor="middle" fontSize="10.5" fontWeight={isNow ? 700 : 400} fill={isNow ? "#0F1615" : CHART.axisText}>
                         {monthLabel(k).split(" ")[0]} · {fmtHours(v)}
                       </text>
                     </g>
@@ -321,7 +322,7 @@ export default async function RetainerDetailPage({
                           {formatMoney(i.amountCents)}
                         </span>
                       </span>
-                      <span className="mt-1 size-2.5 rounded-full border-2 border-card shadow-[0_0_0_1.5px_#009688]" style={{ background: "#009688" }} />
+                      <span className="mt-1 size-2.5 rounded-full border-2 border-card shadow-[0_0_0_1.5px_#009688]" style={{ background: CHART.teal }} />
                       <span className="text-[13px] leading-relaxed text-tk-slate">{i.description}</span>
                     </li>
                   ))}

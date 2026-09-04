@@ -22,7 +22,7 @@ export function Delta({
   const up = value > 0
   const flat = value === 0
   const good = flat ? null : up === goodWhenUp
-  const color = flat ? "#6C7975" : good ? CHART.good : CHART.bad
+  const color = flat ? CHART.axisText : good ? CHART.good : CHART.bad
   const magnitude = Math.abs(value)
   const text =
     abs != null

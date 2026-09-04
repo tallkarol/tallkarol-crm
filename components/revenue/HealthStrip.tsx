@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { fmtHours } from "@/lib/engagements"
 import type { RevenueKpis } from "@/lib/revenue"
 import { formatMoney } from "@/lib/work"
+import { CHART } from "@/lib/insights/chart"
 
 function Cell({
   label,
@@ -78,7 +79,7 @@ export function HealthStrip({
         <Cell
           label="Still draft"
           value={formatMoney(kpis.draftCents)}
-          tone={kpis.draftCents > 0 ? "#B07818" : undefined}
+          tone={kpis.draftCents > 0 ? CHART.amber : undefined}
           sub={kpis.draftCents > 0 ? "issued, not yet sent" : "everything sent"}
         />
         <Cell

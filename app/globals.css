@@ -171,6 +171,10 @@
      --chart-track is 1.208:1 on the white card against today's #D9EEEB at
      1.200:1, where bg-well would be a visible 1.107. */
   --chart-track: rgb(var(--accent-rgb) / 0.12);
+  /* Hover band. The shipped literal rgba(15,22,21,0.04) IS the dark card
+     colour, so it composited to exactly #172020 — hovering a chart changed
+     nothing at all. Light is byte-identical to that literal. */
+  --chart-cursor: rgb(var(--ink-rgb) / 0.04);
   /* Alphas are tokens because they are DIRECTIONAL: the same number lightens
      paper and darkens a dark card. Light values are today's literals, so
      every light wash is byte-identical. */
@@ -304,6 +308,7 @@
     --chart-axis: #8A9793;
     --chart-grid: rgb(var(--line-rgb) / 0.10);
     --chart-axis-line: rgb(var(--line-rgb) / 0.18);
+    --chart-cursor: rgb(var(--ink-rgb) / 0.06);
     --chart-wash: 0.2;
     --chart-wash-area: 0.2;
     --chart-wash-strong: 0.45;
@@ -424,6 +429,7 @@
   --chart-axis: #8A9793;
   --chart-grid: rgb(var(--line-rgb) / 0.10);
   --chart-axis-line: rgb(var(--line-rgb) / 0.18);
+  --chart-cursor: rgb(var(--ink-rgb) / 0.06);
   --chart-wash: 0.2;
   --chart-wash-area: 0.2;
   --chart-wash-strong: 0.45;
@@ -701,6 +707,7 @@ html[data-embed="settings"] main h1 {
     --chart-axis: #6c7975;
     --chart-grid: rgb(var(--line-rgb) / 0.2);
     --chart-axis-line: rgb(var(--line-rgb) / 0.3);
+    --chart-cursor: transparent;
     --chart-halo: #ffffff;
     --chart-wash: 0.1;
     --chart-wash-area: 0.12;

@@ -126,7 +126,7 @@ export function OverlayChart({
                 y1={PAD_TOP}
                 x2={h * dx}
                 y2={H}
-                stroke="rgba(15,22,21,.25)"
+                stroke="rgb(var(--ink-rgb) / 0.25)"
                 strokeWidth="1"
               />
               {series.map((s) => (
@@ -136,7 +136,7 @@ export function OverlayChart({
                   cy={y(s.values[h] ?? 0)}
                   r="4"
                   fill={s.color}
-                  stroke="#fff"
+                  stroke={CHART.halo}
                   strokeWidth="2"
                 />
               ))}
