@@ -8,12 +8,28 @@
    Every colour a page paints comes through these variables, and Tailwind's
    `bg-white`, `text-tk-onyx`, `border-tk-slate/15` etc. are mapped onto them
    per channel, so the 240-odd existing components pick up dark mode without
-   a rewrite. Light is the bare :root. Dark redefines only the tokens: once
-   for the system preference (unless the user chose light) and once for an
-   explicit choice. The rail has its own set because it stays onyx in both.
-   RGB triplets so Tailwind's `/opacity` modifiers keep working.
+   a rewrite. Light is the bare :root (which .tk-light also claims, so a
+   subtree can opt out of dark — see the light-only routes). Dark redefines
+   only the tokens: once for the system preference (unless the user chose
+   light) and once for an explicit choice.
+
+   Most tokens are RGB triplets so Tailwind's `/opacity` modifiers keep
+   working. The exceptions are deliberate: --line, --line-strong, --scrim and
+   the --*-soft tints carry a DIFFERENT alpha per theme, and an alpha that
+   changes with the theme is something a caller-side `/15` cannot express.
+   Linen on dark reads stronger per unit alpha than slate on white, so reusing
+   one number is what made every hairline ~20% heavier in dark than in light.
+   Those tokens are composed here, once, and callers get a name, not a number.
+
+   The two dark blocks are byte-identical on purpose. light-dark() would
+   collapse them but only accepts <color> arguments, and these are triplets;
+   CSS cannot union a selector across a media boundary either. The parity
+   check in scripts/check-theme.ts compares the two dark blocks to EACH
+   OTHER, never to :root — several tokens (the whole rail family, --chart-halo)
+   are theme-invariant and correctly live in :root alone.
 ------------------------------------------------------------------ */
-:root {
+:root,
+.tk-light {
   color-scheme: light;
   --canvas-rgb: 241 234 220;
   --card-rgb: 255 255 255;
@@ -22,21 +38,98 @@
   --ink-rgb: 15 22 21;
   --ink-2-rgb: 77 88 87;
   --ink-3-rgb: 98 107 106;
+
+  /* --accent is a SURFACE that carries linen text; --accent-ink is a MARK
+     (icons, links, active borders) on a surface; --accent-mark is a solid
+     accent FILL that carries no label (toggle tracks, checkbox fills,
+     progress fills, unread dots) and therefore owes 3:1, not 4.5:1. They are
+     one hex in light because brand teal on white does all three jobs. They
+     split in dark — see the dark block for the measured window. */
   --accent-rgb: 0 105 101;
   --accent-ink-rgb: 0 105 101;
+  --accent-mark-rgb: 0 105 101;
   --on-accent-rgb: 241 234 220;
+
   --bad-rgb: 166 34 40;
   --warn-rgb: 138 90 5;
   --ok-rgb: 0 105 101;
-  /* How far client colours are lifted toward white when used as text. */
+  /* --good is green, --ok is teal, and they are NOT interchangeable:
+     components/clients/StatusPill.tsx keeps "paid" (good) and "in progress"
+     (teal) apart on purpose. ~29° of Oklab hue separates them in both themes. */
+  --good-rgb: 27 107 58;
+
+  /* One line at two weights — the resting hairline and its hover/active
+     state. Never re-alpha these at the call site; that is the habit they
+     exist to end, and scripts/check-theme.ts fails the build on it.
+     Measured on the card: 1.253:1 light / 1.269:1 dark for --line, a matched
+     pair; the shipped single /15 alpha gives 1.34 vs 1.52, a 14% mismatch. */
+  --line: rgb(var(--line-rgb) / 0.12);
+  --line-strong: rgb(var(--line-rgb) / 0.22);
+
+  /* The one token that must NOT invert: a scrim always darkens what is behind
+     it. Built from the literal onyx rather than --ink-rgb, which becomes linen
+     on dark and would light the page up instead of dimming it. */
+  --scrim: rgb(15 22 21 / 0.45);
+
+  /* Tone is a soft tint, never an outline. Each tint is built from the token
+     whose ink sits on top of it, so the pair moves together by construction. */
+  --accent-soft: rgb(var(--accent-ink-rgb) / 0.10);
+  --bad-soft: rgb(var(--bad-rgb) / 0.10);
+  --warn-soft: rgb(var(--warn-rgb) / 0.10);
+  --ok-soft: rgb(var(--ok-rgb) / 0.10);
+  --good-soft: rgb(var(--good-rgb) / 0.10);
+
+  /* Categorical colour (client / calendar lane), three derivations from one
+     stored hex — mockup rule 5. --shade darkens for LIGHT text (the hexes
+     were picked for a white card and six fail 4.5:1 on the linen canvas raw);
+     --lift lightens for DARK text; --lift-mark is the smaller lift a dot, a
+     3px edge, a stripe or a bar fill needs, because those owe 3:1 and every
+     extra point of lift costs pairwise separation (min oklab dE across the 14
+     client hues: 0.0464 raw, 0.0316 at the mark lift, 0.0223 at the ink lift). */
   --lift: 0%;
+  --lift-mark: 0%;
+  --shade: 16%;
+
   --shadow-card: 0 1px 2px rgb(15 22 21 / 0.05), 0 8px 24px -16px rgb(15 22 21 / 0.18);
   --shadow-hover: 0 1px 2px rgb(15 22 21 / 0.06), 0 14px 32px -16px rgb(15 22 21 / 0.28);
+  /* Modals, drawers and command palettes, which float over a scrim rather
+     than resting on the page. No spread ring in light — 8 of the consumers
+     already carry border-line and a ring would double the edge. */
+  --shadow-overlay: 0 24px 70px -18px rgb(15 22 21 / 0.45);
 
   --rail-rgb: 15 22 21;
   --rail-2-rgb: 20 29 28;
   --rail-ink-rgb: 241 234 220;
   --rail-active: rgb(0 159 154 / 0.18);
+
+  /* The rail is onyx in BOTH themes, so everything below is declared once and
+     never appears in a dark block — that is not drift, it is the point.
+     ink-3 is 0.55, not the mockup's 0.48: SidebarNav.tsx:250 currently ships
+     text-rail-ink/45 at ~4.06:1 on the rail and its 10px bold section
+     headings need 4.5. At 0.55 they read 5.335 light / 5.400 dark. */
+  --rail-ink-2: rgb(var(--rail-ink-rgb) / 0.72);
+  --rail-ink-3: rgb(var(--rail-ink-rgb) / 0.55);
+  --rail-line: rgb(var(--rail-ink-rgb) / 0.10);
+  --rail-hover: rgb(var(--rail-ink-rgb) / 0.06);
+  --rail-active-ink: #ffffff;
+  --rail-active-icon: #3fc1b6;
+  --rail-logo: #009f9a;
+
+  /* Rail-scoped badge tones. The page --warn/--bad go LIGHT on dark (#E4C07A,
+     #F08A7D), which on an always-onyx rail would put linen counts at 1.45:1
+     and 2.03:1. Literal so the badges read the same in both themes: warn is
+     3.09:1 light / 3.24:1 dark vs the rail with linen on it at 4.95:1; tomato
+     is 2.93 / 3.06 with linen at 5.23. The tomato pill is 0.075 short of 3:1
+     on the light rail — accepted because the count itself is the signal and
+     it clears 4.5. #BC3413 clears both floors if Karol will move a brand hex. */
+  --rail-warn: #8a5a05;
+  --rail-bad: #b72a0f;
+
+  /* Nav gutter. The old value was slate, left over from a white rail: over
+     onyx it composited to 1.05:1 and the thumb has been invisible in BOTH
+     themes since the redesign. Linen is what the rail is inked with. */
+  --rail-thumb: rgb(var(--rail-ink-rgb) / 0.22);
+  --rail-thumb-strong: rgb(var(--rail-ink-rgb) / 0.36);
 
   /* Data-viz slots for the hive map (/hivemind). Three categorical hues, not
      nine: the validated palette clears the all-pairs CVD and normal-vision
@@ -51,18 +144,58 @@
   --viz-sub: rgb(var(--ink-3-rgb));
   --viz-edge: rgb(var(--ink-rgb) / 0.18);
   --viz-edge-strong: rgb(var(--ink-rgb) / 0.42);
-  --rail-active-icon: #3fc1b6;
-  --rail-logo: #009f9a;
+
+  /* Chart ink. Whole colours, not triplets: nothing needs /alpha on a chart
+     hue, because chart alphas are per-theme tokens (--chart-wash and friends)
+     rather than caller decisions. Series hues are re-stepped per theme, not
+     alpha-faded: #1F3A5F (Ads) is 1.45:1 on the dark card and no opacity
+     trick recovers it. --chart-prev moves in LIGHT too — #9AA6A2 is 2.51:1
+     on the white card and 2.10:1 on linen, already under the 3:1 line floor
+     before dark mode existed. */
+  --chart-teal: #009688;
+  --chart-amber: #B07818;
+  --chart-ink: #1F3A5F;
+  --chart-host: #6B4F8A;
+  --chart-cash: #4C74C9;
+  --chart-prev: #6C7975;
+  --chart-axis: #6C7975;
+  --chart-grid: rgb(var(--line-rgb) / 0.08);
+  /* The axis BASELINE is a step heavier than the grid — it is the frame, not
+     a rule. Folding it into --chart-grid lightened the printed report's
+     x-axis by ~30%. */
+  --chart-axis-line: rgb(var(--line-rgb) / 0.12);
+  /* A halo means "the surface behind the mark", never literally white. */
+  --chart-halo: rgb(var(--card-rgb));
+  /* Unfilled meter track for accent-filled meters. Deliberately NOT bg-well:
+     BarList/MeterList render on the pixel-frozen portal and print report, and
+     --chart-track is 1.208:1 on the white card against today's #D9EEEB at
+     1.200:1, where bg-well would be a visible 1.107. */
+  --chart-track: rgb(var(--accent-rgb) / 0.12);
+  /* Alphas are tokens because they are DIRECTIONAL: the same number lightens
+     paper and darkens a dark card. Light values are today's literals, so
+     every light wash is byte-identical. */
+  --chart-wash: 0.1;
+  --chart-wash-area: 0.12;
+  --chart-wash-strong: 0.34;
+  --chart-tint: 0.09;
+  --chart-bar-2: 0.25;
+  --chart-bar-3: 0.4;
+  /* Delta arrows share the status green/red rather than owning a fourth
+     green — one green in the system is the whole reason --good exists. */
+  --chart-good: rgb(var(--good-rgb));
+  --chart-bad: rgb(var(--bad-rgb));
+
+  /* The Mac app's embedded Settings pane (see the admin layout). Grey window
+     chrome that the CRM cards sit ON, so it must stay a step BELOW --card:
+     #FFFFFF over #F3F3F5 is 1.108:1, and #172020 over #141414 is 1.109:1 —
+     the same relationship, not the CRM canvas. #1e1e1e was rejected: the card
+     over it measures 1.0033:1 and vanishes. */
+  --embed-bg: #f3f3f5;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --viz-agent: #3987e5;
-    --viz-skill: #d95926;
-    --viz-trigger: #199e70;
-    --viz-edge: rgb(var(--ink-rgb) / 0.16);
-    --viz-edge-strong: rgb(var(--ink-rgb) / 0.45);
     --canvas-rgb: 15 22 21;
     --card-rgb: 23 32 32;
     --well-rgb: 30 41 40;
@@ -70,27 +203,119 @@
     --ink-rgb: 241 234 220;
     --ink-2-rgb: 201 194 180;
     --ink-3-rgb: 163 157 145;
-    --accent-rgb: 14 138 132;
+
+    /* #0A7671, L=0.14214, is the only place both floors fit: linen needs
+       L <= 0.144919 for 4.5:1, and the fill needs L >= 0.139584 to clear 3:1
+       against the card. Measured: linen 4.565, white 5.465, fill/canvas
+       3.353, fill/card 3.040. Against the WELL it is 2.739 and cannot be
+       fixed — the well is only 1.11:1 above the card, so clearing 3:1 there
+       would need L >= 0.160453 and drop linen to 4.05:1. A button LABEL at
+       4.5 beats a button EDGE at 3. The old #0E8A84 put linen at 3.518
+       across the text-tk-linen half of ~192 bg-tk-teal sites (the other 107
+       carry text-white, which measured 4.211 — also a fail). */
+    --accent-rgb: 10 118 113;
     --accent-ink-rgb: 79 201 190;
+    /* Solid teal that is a MARK, not a labelled surface. It only owes 3:1
+       against card and well, and the new surface value cannot deliver that:
+       #0A7671 is 2.739 on the well where #0E8A84 is 3.555 and passes. Held at
+       the old value so the accent split does not regress WCAG 1.4.11 on the
+       13 sites listed in Stage 4's mark table. */
+    --accent-mark-rgb: 14 138 132;
     --on-accent-rgb: 241 234 220;
+
     --bad-rgb: 240 138 125;
     --warn-rgb: 228 192 122;
     --ok-rgb: 79 201 190;
+    /* #7FD6A5 is already in this file at .tk-payload .tk-add, so the palette
+       gains no new hue. 9.545 card / 8.599 well, and 28.9° of Oklab hue from
+       --ok #4FC9BE (158.0° vs 186.9°) — the same split light keeps. */
+    --good-rgb: 127 214 165;
+
+    /* 0.09/0.18, not the 0.12/0.22 of light. Linen on a dark card is stronger
+       per unit alpha than slate on white, so matching the NUMBER would not
+       match the LINE: 0.12 linen reads 1.39:1 where 0.12 slate reads 1.25:1.
+       At 0.09 the pair is 1.269 dark / 1.253 light. */
+    --line: rgb(var(--line-rgb) / 0.09);
+    --line-strong: rgb(var(--line-rgb) / 0.18);
+
+    /* Pure black, not onyx: bg-tk-onyx/N IS the dark canvas painted onto
+       itself, exactly 1.0000:1. Black at 0.62 gives ~1.096 over the canvas and
+       ~1.18 over the cards behind it. That is near the ceiling — black at
+       alpha 1.0 only reaches 1.1459 over #0F1615 — so on dark the scrim dims
+       and --shadow-overlay's hairline is what actually cuts the panel out. */
+    --scrim: rgb(0 0 0 / 0.62);
+
+    --accent-soft: rgb(var(--accent-ink-rgb) / 0.14);
+    --bad-soft: rgb(var(--bad-rgb) / 0.14);
+    --warn-soft: rgb(var(--warn-rgb) / 0.14);
+    --ok-soft: rgb(var(--ok-rgb) / 0.14);
+    --good-soft: rgb(var(--good-rgb) / 0.14);
+
+    /* 52% for text (worst hex, sondry #1F3A4D, lands 5.819 on the card).
+       32% for marks: the binding surface is the WELL, which sits ABOVE the
+       card in dark — 30% leaves sondry at 2.916 there, 31% at exactly 3.00
+       with no margin, 32% at 3.084 (3.423 on the card). --shade is 0%: the
+       nested color-mix is a no-op on one side in each theme. */
     --lift: 52%;
-    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -16px rgb(0 0 0 / 0.6);
-    --shadow-hover: 0 1px 2px rgb(0 0 0 / 0.3), 0 14px 32px -16px rgb(0 0 0 / 0.7);
+    --lift-mark: 32%;
+    --shade: 0%;
+
+    /* A black shadow cannot lift a card off a #0F1615 canvas: the ceiling at
+       alpha 1.0 with no blur is 1.1456:1, and the card's own surface step is
+       already 1.1033. The separation has to come from a 1px linen top edge —
+       0.045 reads 1.1176 above the card, 0.075 reads 1.2124, so resting to
+       hover is a 0.095 step you can see, where the shipped tokens moved 0.001.
+       The black layers stay for the cast beneath the card, where they still do
+       something over the lighter well. */
+    --shadow-card:
+      inset 0 1px 0 rgb(241 234 220 / 0.045),
+      0 1px 2px rgb(0 0 0 / 0.42),
+      0 10px 24px -14px rgb(0 0 0 / 0.7);
+    --shadow-hover:
+      inset 0 1px 0 rgb(241 234 220 / 0.075),
+      0 2px 4px rgb(0 0 0 / 0.5),
+      0 18px 36px -14px rgb(0 0 0 / 0.8);
+    /* The hairline is the load-bearing half: 7% linen is 1.196 against the
+       panel and 1.176 against the canvas. The black layer is atmosphere. */
+    --shadow-overlay:
+      0 0 0 1px rgb(241 234 220 / 0.07),
+      0 40px 100px -30px rgb(0 0 0 / 0.75);
+
     --rail-rgb: 11 16 15;
     --rail-2-rgb: 15 22 21;
     --rail-active: rgb(0 159 154 / 0.2);
+
+    --viz-agent: #3987e5;
+    --viz-skill: #d95926;
+    --viz-trigger: #199e70;
+    --viz-edge: rgb(var(--ink-rgb) / 0.16);
+    --viz-edge-strong: rgb(var(--ink-rgb) / 0.45);
+
+    /* Re-stepped, not alpha-faded. On the card: teal 7.963, amber 8.820,
+       ads-blue 4.846, host 7.738, cash 8.00, prev 4.320, axis 5.482. The
+       light set's #1F3A5F is 1.45 here and #9AA6A2 is 6.61 — the palette
+       inverts, so it needs values, not a filter. */
+    --chart-teal: #3FC7B7;
+    --chart-amber: #E9B45C;
+    --chart-ink: #5A8ADE;
+    --chart-host: #C6A2EC;
+    --chart-cash: #8FAEF2;
+    --chart-prev: #78857F;
+    --chart-axis: #8A9793;
+    --chart-grid: rgb(var(--line-rgb) / 0.10);
+    --chart-axis-line: rgb(var(--line-rgb) / 0.18);
+    --chart-wash: 0.2;
+    --chart-wash-area: 0.2;
+    --chart-wash-strong: 0.45;
+    --chart-tint: 0.16;
+    --chart-bar-2: 0.45;
+    --chart-bar-3: 0.7;
+
+    --embed-bg: #141414;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --viz-agent: #3987e5;
-  --viz-skill: #d95926;
-  --viz-trigger: #199e70;
-  --viz-edge: rgb(var(--ink-rgb) / 0.16);
-  --viz-edge-strong: rgb(var(--ink-rgb) / 0.45);
   --canvas-rgb: 15 22 21;
   --card-rgb: 23 32 32;
   --well-rgb: 30 41 40;
@@ -98,18 +323,115 @@
   --ink-rgb: 241 234 220;
   --ink-2-rgb: 201 194 180;
   --ink-3-rgb: 163 157 145;
-  --accent-rgb: 14 138 132;
+
+  /* #0A7671, L=0.14214, is the only place both floors fit: linen needs
+     L <= 0.144919 for 4.5:1, and the fill needs L >= 0.139584 to clear 3:1
+     against the card. Measured: linen 4.565, white 5.465, fill/canvas
+     3.353, fill/card 3.040. Against the WELL it is 2.739 and cannot be
+     fixed — the well is only 1.11:1 above the card, so clearing 3:1 there
+     would need L >= 0.160453 and drop linen to 4.05:1. A button LABEL at
+     4.5 beats a button EDGE at 3. The old #0E8A84 put linen at 3.518
+     across the text-tk-linen half of ~192 bg-tk-teal sites (the other 107
+     carry text-white, which measured 4.211 — also a fail). */
+  --accent-rgb: 10 118 113;
   --accent-ink-rgb: 79 201 190;
+  /* Solid teal that is a MARK, not a labelled surface. It only owes 3:1
+     against card and well, and the new surface value cannot deliver that:
+     #0A7671 is 2.739 on the well where #0E8A84 is 3.555 and passes. Held at
+     the old value so the accent split does not regress WCAG 1.4.11 on the
+     13 sites listed in Stage 4's mark table. */
+  --accent-mark-rgb: 14 138 132;
   --on-accent-rgb: 241 234 220;
+
   --bad-rgb: 240 138 125;
   --warn-rgb: 228 192 122;
   --ok-rgb: 79 201 190;
+  /* #7FD6A5 is already in this file at .tk-payload .tk-add, so the palette
+     gains no new hue. 9.545 card / 8.599 well, and 28.9° of Oklab hue from
+     --ok #4FC9BE (158.0° vs 186.9°) — the same split light keeps. */
+  --good-rgb: 127 214 165;
+
+  /* 0.09/0.18, not the 0.12/0.22 of light. Linen on a dark card is stronger
+     per unit alpha than slate on white, so matching the NUMBER would not
+     match the LINE: 0.12 linen reads 1.39:1 where 0.12 slate reads 1.25:1.
+     At 0.09 the pair is 1.269 dark / 1.253 light. */
+  --line: rgb(var(--line-rgb) / 0.09);
+  --line-strong: rgb(var(--line-rgb) / 0.18);
+
+  /* Pure black, not onyx: bg-tk-onyx/N IS the dark canvas painted onto
+     itself, exactly 1.0000:1. Black at 0.62 gives ~1.096 over the canvas and
+     ~1.18 over the cards behind it. That is near the ceiling — black at
+     alpha 1.0 only reaches 1.1459 over #0F1615 — so on dark the scrim dims
+     and --shadow-overlay's hairline is what actually cuts the panel out. */
+  --scrim: rgb(0 0 0 / 0.62);
+
+  --accent-soft: rgb(var(--accent-ink-rgb) / 0.14);
+  --bad-soft: rgb(var(--bad-rgb) / 0.14);
+  --warn-soft: rgb(var(--warn-rgb) / 0.14);
+  --ok-soft: rgb(var(--ok-rgb) / 0.14);
+  --good-soft: rgb(var(--good-rgb) / 0.14);
+
+  /* 52% for text (worst hex, sondry #1F3A4D, lands 5.819 on the card).
+     32% for marks: the binding surface is the WELL, which sits ABOVE the
+     card in dark — 30% leaves sondry at 2.916 there, 31% at exactly 3.00
+     with no margin, 32% at 3.084 (3.423 on the card). --shade is 0%: the
+     nested color-mix is a no-op on one side in each theme. */
   --lift: 52%;
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -16px rgb(0 0 0 / 0.6);
-  --shadow-hover: 0 1px 2px rgb(0 0 0 / 0.3), 0 14px 32px -16px rgb(0 0 0 / 0.7);
+  --lift-mark: 32%;
+  --shade: 0%;
+
+  /* A black shadow cannot lift a card off a #0F1615 canvas: the ceiling at
+     alpha 1.0 with no blur is 1.1456:1, and the card's own surface step is
+     already 1.1033. The separation has to come from a 1px linen top edge —
+     0.045 reads 1.1176 above the card, 0.075 reads 1.2124, so resting to
+     hover is a 0.095 step you can see, where the shipped tokens moved 0.001.
+     The black layers stay for the cast beneath the card, where they still do
+     something over the lighter well. */
+  --shadow-card:
+    inset 0 1px 0 rgb(241 234 220 / 0.045),
+    0 1px 2px rgb(0 0 0 / 0.42),
+    0 10px 24px -14px rgb(0 0 0 / 0.7);
+  --shadow-hover:
+    inset 0 1px 0 rgb(241 234 220 / 0.075),
+    0 2px 4px rgb(0 0 0 / 0.5),
+    0 18px 36px -14px rgb(0 0 0 / 0.8);
+  /* The hairline is the load-bearing half: 7% linen is 1.196 against the
+     panel and 1.176 against the canvas. The black layer is atmosphere. */
+  --shadow-overlay:
+    0 0 0 1px rgb(241 234 220 / 0.07),
+    0 40px 100px -30px rgb(0 0 0 / 0.75);
+
   --rail-rgb: 11 16 15;
   --rail-2-rgb: 15 22 21;
   --rail-active: rgb(0 159 154 / 0.2);
+
+  --viz-agent: #3987e5;
+  --viz-skill: #d95926;
+  --viz-trigger: #199e70;
+  --viz-edge: rgb(var(--ink-rgb) / 0.16);
+  --viz-edge-strong: rgb(var(--ink-rgb) / 0.45);
+
+  /* Re-stepped, not alpha-faded. On the card: teal 7.963, amber 8.820,
+     ads-blue 4.846, host 7.738, cash 8.00, prev 4.320, axis 5.482. The
+     light set's #1F3A5F is 1.45 here and #9AA6A2 is 6.61 — the palette
+     inverts, so it needs values, not a filter. */
+  --chart-teal: #3FC7B7;
+  --chart-amber: #E9B45C;
+  --chart-ink: #5A8ADE;
+  --chart-host: #C6A2EC;
+  --chart-cash: #8FAEF2;
+  --chart-prev: #78857F;
+  --chart-axis: #8A9793;
+  --chart-grid: rgb(var(--line-rgb) / 0.10);
+  --chart-axis-line: rgb(var(--line-rgb) / 0.18);
+  --chart-wash: 0.2;
+  --chart-wash-area: 0.2;
+  --chart-wash-strong: 0.45;
+  --chart-tint: 0.16;
+  --chart-bar-2: 0.45;
+  --chart-bar-3: 0.7;
+
+  --embed-bg: #141414;
 }
 
 html,
@@ -125,11 +447,44 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Client colours as text: lifted toward white on dark so the stored hexes
-   (picked for light paper) stay readable. Stripes, dots and tints use the
-   raw colour and are fine at any luminance. */
+/* Categorical colour, painted five ways from one stored hex (--c).
+
+   ink   — the client's name as text. Shaded in light, lifted in dark. The
+           nested color-mix is a no-op on one side in each theme (light has
+           --lift 0%, dark has --shade 0%), so one expression serves both.
+   mark  — a dot, a 3px edge, a stripe, a meter fill. The smaller lift.
+   edge  — the 3px left rule on a card. Same lift as a mark.
+   fill  — a chip whose GLYPH sits on the colour. Stays RAW: lifting the
+           backdrop toward white attacks the very contrast it looks like it
+           is helping.
+   tint  — a flat 12% wash. At 12% over the dark card ALL 91 client pairs
+           collapse below dE 0.05 (min 0.0077). The tint is a mood, never an
+           identifier, so anything tinted must also be labelled.
+
+   .tk-client-mark-onyx is for marks on `bg-tk-onyx`, which tailwind.config
+   deliberately leaves unmapped and so is #0F1615 in BOTH themes. Fixed 32%,
+   no token, because the backdrop never moves — raw there, chart:artist-house
+   #6B3E92 is 2.38:1 and sondry #1F3A4D is 1.55:1, i.e. the chart tooltip
+   swatches fail in LIGHT mode today. At 32% they reach 5.07 and 3.78. */
 .tk-client-ink {
-  color: color-mix(in oklab, var(--c), white var(--lift));
+  color: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--c), black var(--shade)),
+    white var(--lift)
+  );
+}
+.tk-client-mark {
+  background: color-mix(in oklab, var(--c), white var(--lift-mark));
+}
+.tk-client-edge {
+  border-left-color: color-mix(in oklab, var(--c), white var(--lift-mark));
+}
+.tk-client-mark-onyx {
+  background: color-mix(in oklab, var(--c), white 32%);
+}
+.tk-client-fill {
+  background: var(--c);
+  color: rgb(var(--on-accent-rgb));
 }
 .tk-client-tint {
   background: color-mix(in srgb, var(--c) 12%, transparent);
@@ -227,16 +582,20 @@ body {
   color: #7fd6a5;
 }
 
-/* Nav sidebar scroller — thin, trackless, slate pill so the gutter
-   doesn't fight the white rail. Chrome treats `scrollbar-width` as
-   authoritative and then ignores `::-webkit-scrollbar`, so Firefox
-   gets the standard properties and WebKit gets the custom thumb.
-   Skip `background-clip` + transparent borders: WebKit drops the
-   radius and the thumb reads as a 4px square. */
+/* Nav sidebar scroller — thin, trackless, a linen pill because the rail is
+   onyx in both themes. It used to be slate, left over from the white rail,
+   which over onyx composited to 1.05:1 at rest and 1.08:1 on hover: the thumb
+   has been invisible in BOTH themes since the redesign. Linen at 0.22 reads
+   1.878 light / 1.829 dark, and 0.36 on hover reads 2.969 / 2.941. Chrome
+   treats `scrollbar-width` as authoritative and then ignores
+   `::-webkit-scrollbar`, so Firefox gets the standard properties and WebKit
+   gets the custom thumb. Skip `background-clip` + transparent borders: WebKit
+   drops the radius and the thumb reads as a 4px square. The :active grab
+   state stays brand teal — the one declaration here that was never broken. */
 @supports not selector(::-webkit-scrollbar) {
   .tk-nav-scroll {
     scrollbar-width: thin;
-    scrollbar-color: rgb(31 44 43 / 0.28) transparent;
+    scrollbar-color: var(--rail-thumb) transparent;
   }
 }
 
@@ -262,7 +621,7 @@ body {
 }
 
 .tk-nav-scroll::-webkit-scrollbar-thumb {
-  background-color: rgb(31 44 43 / 0.22);
+  background-color: var(--rail-thumb);
   border-radius: 999px;
 }
 
@@ -273,11 +632,11 @@ body {
 [data-chrome="sidebar"]:hover .tk-nav-scroll::-webkit-scrollbar-thumb,
 #tk-crm-mobile-nav:hover .tk-nav-scroll::-webkit-scrollbar-thumb,
 .tk-nav-scroll:hover::-webkit-scrollbar-thumb {
-  background-color: rgb(31 44 43 / 0.36);
+  background-color: var(--rail-thumb-strong);
 }
 
 .tk-nav-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: rgb(31 44 43 / 0.48);
+  background-color: rgb(var(--rail-ink-rgb) / 0.48);
 }
 
 .tk-nav-scroll::-webkit-scrollbar-thumb:active {
@@ -290,7 +649,7 @@ html[data-embed="settings"] [data-chrome] {
 }
 html[data-embed="settings"] body,
 html[data-embed="settings"] main {
-  background: #f3f3f5;
+  background: var(--embed-bg);
 }
 html[data-embed="settings"] main > div {
   max-width: 58rem;
