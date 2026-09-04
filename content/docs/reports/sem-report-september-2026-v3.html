@@ -557,6 +557,18 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
   <p class="small muted" style="margin-top:14px">Google still has no field data from real visitors for this site
   &mdash; loading speeds above are laboratory measurements. That needs sustained real traffic before it changes,
   and it is not something to act on.</p>
+  <div class="card tint rail warn" style="margin-top:16px">
+    <h3>Speed slipped after the 4 September changes <span class="new">4 Sep</span></h3>
+    <p class="small">Three measurements were taken across the two days: 90 mobile / 99 desktop on 3 September,
+    then 69 / 67 and 82 / 82 within an hour of each other on 4 September. Laboratory scores bounce, and the
+    spread between the last two shows how much &mdash; so the exact figure is not worth arguing about. The
+    direction is consistent though, and the cause is visible in the detail: main-thread blocking now runs to
+    450&nbsp;ms on mobile and 390&nbsp;ms on desktop.</p>
+    <p class="small">The most likely explanation is not a regression at all. Until yesterday the Analytics tag
+    was skipped and cost nothing to run; it now actually loads and executes on every page. Working measurement
+    has a price in milliseconds. Worth watching over the coming week rather than reacting to, and worth
+    re-checking once real traffic gives Google field data to replace the laboratory guess.</p>
+  </div>
 </section>
 
 <section id="s11">
