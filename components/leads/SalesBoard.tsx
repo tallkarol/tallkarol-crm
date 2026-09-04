@@ -52,7 +52,7 @@ function CardBody({ lead }: { lead: LeadListItem }) {
   return (
     <>
       <p className="text-[12.5px] font-semibold text-tk-onyx">{lead.name}</p>
-      {lead.company ? <p className="text-[11px] text-tk-slate/60">{lead.company}</p> : null}
+      {lead.company ? <p className="text-[11px] text-ink-3">{lead.company}</p> : null}
       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
         {lead.pipeline.valueCents != null ? (
           <span className="font-mono text-[11.5px] font-semibold tabular-nums text-tk-onyx">
@@ -60,24 +60,24 @@ function CardBody({ lead }: { lead: LeadListItem }) {
           </span>
         ) : null}
         {meeting ? (
-          <span className="rounded-full bg-tk-linen px-2 py-0.5 text-[10.5px] text-tk-slate">
+          <span className="rounded-full bg-well px-2 py-0.5 text-[10.5px] text-tk-slate">
             {meeting}
           </span>
         ) : stage === "sent" && lastSend ? (
-          <span className="rounded-full bg-tk-linen px-2 py-0.5 text-[10.5px] text-tk-slate">
+          <span className="rounded-full bg-well px-2 py-0.5 text-[10.5px] text-tk-slate">
             {lastSend.templateTitle}
           </span>
         ) : (
           lead.projectTypes.slice(0, 2).map((t) => (
             <span
               key={t}
-              className="rounded-full bg-tk-linen px-2 py-0.5 text-[10.5px] text-tk-slate"
+              className="rounded-full bg-well px-2 py-0.5 text-[10.5px] text-tk-slate"
             >
               {t}
             </span>
           ))
         )}
-        <span className="ml-auto font-mono text-[10px] text-tk-slate/45">
+        <span className="ml-auto font-mono text-[10px] text-ink-3">
           {ageLabel(lead.pipeline.stageChangedAt ?? lead.createdAt)}
         </span>
       </div>
@@ -105,18 +105,18 @@ function Column({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex min-h-[230px] flex-col rounded-2xl border bg-[#FAF6EE] transition-colors",
-        isOver ? "border-tk-teal bg-tk-teal/5" : "border-tk-slate/15"
+        "flex min-h-[230px] flex-col rounded-2xl border bg-well transition-colors",
+        isOver ? "border-tk-teal bg-tk-teal/5" : "border-line"
       )}
     >
       <div className="px-3 pb-1.5 pt-2.5">
         <h3 className="flex items-baseline justify-between gap-2 text-[12px] font-semibold text-tk-onyx">
           {label}
-          <span className="text-[11px] font-medium tabular-nums text-tk-slate/55">
+          <span className="text-[11px] font-medium tabular-nums text-ink-3">
             {count || ""}
           </span>
         </h3>
-        <p className="mt-0.5 text-[10.5px] tabular-nums text-tk-slate/55">
+        <p className="mt-0.5 text-[10.5px] tabular-nums text-ink-3">
           {prob === 100
             ? `${formatMoney(weighted)} won`
             : `${formatMoney(Math.round(weighted))} weighted · ${prob}%`}
@@ -146,7 +146,7 @@ function DraggableCard({
       {...attributes}
       onDoubleClick={onOpen}
       className={cn(
-        "cursor-grab touch-none rounded-xl border border-tk-slate/15 bg-white p-2.5 shadow-sm active:cursor-grabbing",
+        "cursor-grab touch-none rounded-xl border border-line bg-card p-2.5 shadow-card active:cursor-grabbing",
         dragging && "opacity-35"
       )}
       style={{ borderLeftWidth: 3, borderLeftColor: EDGE }}
@@ -241,7 +241,7 @@ export function SalesBoard({
       onDragCancel={() => setActiveId(null)}
     >
       {error ? (
-        <p role="status" className="mt-3 text-[11.5px] font-semibold text-[#B4322A]">
+        <p role="status" className="mt-3 text-[11.5px] font-semibold text-bad">
           {error}
         </p>
       ) : null}
@@ -277,7 +277,7 @@ export function SalesBoard({
                       placeholder="$ value"
                       aria-label={`Estimated value for ${lead.name} (hidden)`}
                       onPointerDown={(e) => e.stopPropagation()}
-                      className="mt-1.5 w-full rounded-md border border-tk-slate/15 bg-tk-linen/60 px-2 py-1 text-[11px] tabular-nums outline-none"
+                      className="mt-1.5 w-full rounded-md border border-line bg-well px-2 py-1 text-[11px] tabular-nums outline-none"
                     />
                   ) : (
                     <input
@@ -292,7 +292,7 @@ export function SalesBoard({
                         if (e.key === "Enter") (e.target as HTMLInputElement).blur()
                       }}
                       onBlur={(e) => saveValue(lead, e.target.value)}
-                      className="mt-1.5 w-full rounded-md border border-tk-slate/15 bg-tk-linen/60 px-2 py-1 text-[11px] tabular-nums outline-none focus:border-tk-teal"
+                      className="mt-1.5 w-full rounded-md border border-line bg-well px-2 py-1 text-[11px] tabular-nums outline-none focus:border-tk-teal"
                     />
                   )}
                 </DraggableCard>
@@ -304,7 +304,7 @@ export function SalesBoard({
       <DragOverlay>
         {active ? (
           <div
-            className="w-56 rotate-2 rounded-xl border border-tk-slate/15 bg-white p-2.5 shadow-xl"
+            className="w-56 rotate-2 rounded-xl border border-line bg-card p-2.5 shadow-overlay"
             style={{ borderLeftWidth: 3, borderLeftColor: EDGE }}
           >
             <CardBody lead={active} />

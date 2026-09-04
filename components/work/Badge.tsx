@@ -13,8 +13,8 @@ export function Badge({
       className={cn(
         "inline-flex shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold",
         tone === "teal" && "bg-tk-teal/10 text-tk-teal",
-        tone === "neutral" && "bg-tk-linen text-tk-slate",
-        tone === "muted" && "bg-tk-slate/10 text-tk-slate/70"
+        tone === "neutral" && "bg-well text-tk-slate",
+        tone === "muted" && "bg-well text-ink-3"
       )}
     >
       {children}

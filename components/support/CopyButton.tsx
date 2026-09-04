@@ -62,10 +62,10 @@ export function CopyButton({
         tone === "dark"
           ? state === "done"
             ? "border-[#54C3AB] bg-[#54C3AB] text-[#0F1615]"
-            : "border-white/15 text-tk-linen/65 hover:border-[#54C3AB]/60 hover:text-[#54C3AB]"
+            : "border-on-accent/15 text-tk-linen/65 hover:border-[#54C3AB]/60 hover:text-[#54C3AB]"
           : state === "done"
-            ? "border-tk-teal bg-tk-teal text-tk-linen"
-            : "border-tk-slate/20 text-tk-slate/70 hover:border-tk-teal hover:text-tk-teal"
+            ? "border-tk-teal bg-accent text-tk-linen"
+            : "border-line text-ink-3 hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
       )}
     >
       {state === "done" ? doneLabel : state === "error" ? "copy failed" : label}
@@ -94,8 +94,8 @@ export function CopyAction({ text, label }: { text: string; label: string }) {
       className={cn(
         "rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors",
         done
-          ? "border-tk-teal bg-tk-teal text-tk-linen"
-          : "border-tk-slate/20 bg-white text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+          ? "border-tk-teal bg-accent text-tk-linen"
+          : "border-line bg-card text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
       )}
     >
       {done ? "Copied ✓" : label}
@@ -133,7 +133,7 @@ export function CopyHotkey({ text, note }: { text: string; note: string }) {
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed bottom-6 left-1/2 z-[90] -translate-x-1/2 rounded-full bg-tk-onyx px-4 py-2 font-mono text-xs text-tk-linen shadow-lg"
+      className="pointer-events-none fixed bottom-6 left-1/2 z-[90] -translate-x-1/2 rounded-full bg-tk-onyx px-4 py-2 font-mono text-xs text-tk-linen shadow-overlay"
     >
       {flash}
     </div>

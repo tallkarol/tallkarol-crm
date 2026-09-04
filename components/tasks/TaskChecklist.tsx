@@ -75,7 +75,7 @@ export function TaskChecklist({
   return (
     <div>
       {items.length > 0 ? (
-        <p className="mb-1.5 font-mono text-[11px] text-tk-slate/50">
+        <p className="mb-1.5 font-mono text-[11px] text-ink-3">
           {done} of {items.length}
         </p>
       ) : null}
@@ -91,8 +91,8 @@ export function TaskChecklist({
               className={cn(
                 "grid size-[15px] shrink-0 place-items-center rounded border-[1.5px] transition-colors",
                 item.done
-                  ? "border-tk-teal bg-tk-teal"
-                  : "border-tk-slate/25 bg-white hover:border-tk-teal"
+                  ? "border-tk-teal bg-accent"
+                  : "border-line-strong bg-card hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
               )}
             >
               <svg width="9" height="7" viewBox="0 0 11 9" fill="none" aria-hidden>
@@ -108,7 +108,7 @@ export function TaskChecklist({
             <span
               className={cn(
                 "min-w-0 flex-1 text-[12.5px]",
-                item.done ? "text-tk-slate/45 line-through" : "text-tk-slate"
+                item.done ? "text-ink-3 line-through" : "text-tk-slate"
               )}
             >
               {item.title}
@@ -117,7 +117,7 @@ export function TaskChecklist({
               type="button"
               onClick={() => remove(item.id)}
               aria-label={`Remove ${item.title}`}
-              className="shrink-0 rounded p-0.5 text-tk-slate/25 opacity-0 transition-opacity hover:text-red-700 group-hover:opacity-100"
+              className="shrink-0 rounded p-0.5 text-ink-3 opacity-0 transition-opacity hover:text-red-700 group-hover:opacity-100"
             >
               <X className="size-3" />
             </button>
@@ -128,7 +128,7 @@ export function TaskChecklist({
       <div className="mt-1 flex items-center gap-2">
         <span
           aria-hidden
-          className="size-[15px] shrink-0 rounded border-[1.5px] border-dashed border-tk-slate/25"
+          className="size-[15px] shrink-0 rounded border-[1.5px] border-dashed border-line-strong"
         />
         <input
           value={draft}
@@ -142,7 +142,7 @@ export function TaskChecklist({
           onBlur={add}
           placeholder="Add an item…"
           aria-label="Add a checklist item"
-          className="min-w-0 flex-1 bg-transparent py-1 text-[12.5px] text-tk-onyx outline-none placeholder:text-tk-slate/40"
+          className="min-w-0 flex-1 bg-transparent py-1 text-[12.5px] text-tk-onyx outline-none placeholder:text-ink-3"
         />
         {draft ? (
           <button

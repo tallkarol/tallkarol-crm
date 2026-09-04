@@ -95,7 +95,7 @@ export default async function InsightsUnfilteredPage({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="max-w-2xl text-xs leading-relaxed text-tk-slate/60">
+        <p className="max-w-2xl text-xs leading-relaxed text-ink-3">
           Ads clicks and Search Console clicks are counted by Google, not the site — they do not
           wait for the cookie banner. Analytics sessions only count visitors who accepted.{" "}
           {site.slug === "mycustommanufacturer"
@@ -105,7 +105,7 @@ export default async function InsightsUnfilteredPage({
         <RangeSwitcher />
       </div>
 
-      <p className="mt-3 text-xs text-tk-slate/60">
+      <p className="mt-3 text-xs text-ink-3">
         {win.label} · vs. previous {prev ? `${range} days` : "window (not covered)"}
       </p>
 
@@ -163,7 +163,7 @@ export default async function InsightsUnfilteredPage({
         {series.length >= 2 ? (
           <OverlayChart dates={win.current.map((p) => p.date)} series={series} />
         ) : (
-          <p className="px-5 py-8 text-sm text-tk-slate/70">
+          <p className="px-5 py-8 text-sm text-ink-3">
             This view needs at least two of Ads, Search Console, and Analytics. See Health.
           </p>
         )}
@@ -171,9 +171,9 @@ export default async function InsightsUnfilteredPage({
 
       <div className="mt-3 grid gap-3 lg:grid-cols-2">
         <Card title="Paid — Ads vs Analytics" note={hasPaidSplit ? "paid sessions" : "all sessions"}>
-          <div className="grid grid-cols-2 gap-px border-t border-tk-slate/[.06]">
+          <div className="grid grid-cols-2 gap-px border-t border-line">
             <div className="px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                 Ads clicks
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums text-tk-onyx">
@@ -181,7 +181,7 @@ export default async function InsightsUnfilteredPage({
               </p>
             </div>
             <div className="px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                 {hasPaidSplit ? "GA4 paid sessions" : "GA4 sessions"}
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums text-tk-onyx">
@@ -189,7 +189,7 @@ export default async function InsightsUnfilteredPage({
               </p>
             </div>
           </div>
-          <p className="border-t border-tk-slate/[.06] px-5 py-3 text-xs leading-relaxed text-tk-slate/65">
+          <p className="border-t border-line px-5 py-3 text-xs leading-relaxed text-ink-3">
             {hasAds && hasGa4 ? (
               <>
                 Analytics counted {fmtCapture(paidCapture)} of the clicks Google Ads billed. That
@@ -205,9 +205,9 @@ export default async function InsightsUnfilteredPage({
           title="Search — Console vs Analytics"
           note={hasOrganicSplit ? "organic sessions" : "all sessions"}
         >
-          <div className="grid grid-cols-2 gap-px border-t border-tk-slate/[.06]">
+          <div className="grid grid-cols-2 gap-px border-t border-line">
             <div className="px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                 Search clicks
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums text-tk-onyx">
@@ -215,7 +215,7 @@ export default async function InsightsUnfilteredPage({
               </p>
             </div>
             <div className="px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                 {hasOrganicSplit ? "GA4 organic sessions" : "GA4 sessions"}
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums text-tk-onyx">
@@ -223,7 +223,7 @@ export default async function InsightsUnfilteredPage({
               </p>
             </div>
           </div>
-          <p className="border-t border-tk-slate/[.06] px-5 py-3 text-xs leading-relaxed text-tk-slate/65">
+          <p className="border-t border-line px-5 py-3 text-xs leading-relaxed text-ink-3">
             {hasGsc && hasGa4 ? (
               <>
                 Search Console counted {fmtInt(totals.clicks)} clicks; Analytics counted{" "}
@@ -247,7 +247,7 @@ export default async function InsightsUnfilteredPage({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[480px] border-collapse text-xs">
               <thead>
-                <tr className="border-b border-tk-slate/12 text-left text-[10px] font-bold uppercase tracking-wide text-tk-slate/55">
+                <tr className="border-b border-line text-left text-[10px] font-bold uppercase tracking-wide text-ink-3">
                   <th className="px-5 py-2 font-bold">Campaign</th>
                   <th className="px-3 py-2 text-right font-bold">Clicks</th>
                   <th className="px-3 py-2 text-right font-bold">Impr.</th>
@@ -256,7 +256,7 @@ export default async function InsightsUnfilteredPage({
               </thead>
               <tbody>
                 {snapshot.ads.campaigns.map((row) => (
-                  <tr key={row.id || row.name} className="border-b border-tk-slate/[.06] last:border-0">
+                  <tr key={row.id || row.name} className="border-b border-line last:border-0">
                     <td className="max-w-[22rem] truncate px-5 py-2 font-medium text-tk-onyx">
                       {row.name}
                     </td>

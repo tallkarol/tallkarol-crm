@@ -68,7 +68,7 @@ function InvoiceRow({ invoice }: { invoice: InvoiceHubRow }) {
       <Link
         href={`${ROUTES.invoices}?peek=invoice:${encodeURIComponent(invoice.number)}`}
         scroll={false}
-        className="flex items-center justify-between gap-4 border-l-[3px] px-5 py-3 hover:bg-tk-linen/60"
+        className="flex items-center justify-between gap-4 border-l-[3px] px-5 py-3 hover:bg-well"
         style={{ borderLeftColor: color }}
       >
         <div className="min-w-0">
@@ -80,12 +80,12 @@ function InvoiceRow({ invoice }: { invoice: InvoiceHubRow }) {
             >
               {invoice.clientName}
             </span>
-            <span className="text-xs text-tk-slate/60">
+            <span className="text-xs text-ink-3">
               {formatDay(invoice.issuedOn)}
             </span>
           </p>
           {invoice.description ? (
-            <p className="mt-1 truncate text-sm text-tk-slate/60">
+            <p className="mt-1 truncate text-sm text-ink-3">
               {invoice.description}
             </p>
           ) : null}
@@ -165,7 +165,7 @@ export function InvoicesHub({ invoices }: { invoices: InvoiceHubRow[] }) {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search number, client, work…"
           aria-label="Search invoices"
-          className="min-w-[220px] flex-1 rounded-lg border border-tk-slate/20 bg-white px-3 py-2 text-sm outline-none placeholder:text-tk-slate/40 focus:border-tk-teal sm:max-w-xs"
+          className="min-w-[220px] flex-1 rounded-lg border border-line bg-card px-3 py-2 text-sm outline-none placeholder:text-ink-3 focus:border-tk-teal sm:max-w-xs"
         />
         <div className="flex flex-wrap gap-2">
           {clients.map((client) => {
@@ -180,7 +180,7 @@ export function InvoicesHub({ invoices }: { invoices: InvoiceHubRow[] }) {
                   "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold",
                   active
                     ? "text-white"
-                    : "border-tk-slate/20 bg-white text-tk-slate hover:text-tk-onyx"
+                    : "border-line bg-card text-tk-slate hover:text-tk-onyx"
                 )}
                 style={
                   active
@@ -202,17 +202,17 @@ export function InvoicesHub({ invoices }: { invoices: InvoiceHubRow[] }) {
       </div>
 
       {outstanding.length > 0 ? (
-        <section className="mt-6 overflow-hidden rounded-2xl border border-tk-teal/30 bg-white shadow-sm">
+        <section className="mt-6 overflow-hidden rounded-2xl border border-tk-teal/30 bg-card shadow-card">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-tk-teal/15 bg-tk-teal/5 px-5 py-3">
             <h2 className="text-sm font-semibold text-tk-onyx">Outstanding</h2>
-            <p className="text-sm text-tk-slate/70">
+            <p className="text-sm text-ink-3">
               {plural(outstanding.length, "invoice")} ·{" "}
               <span className="font-semibold tabular-nums text-tk-teal">
                 {formatMoney(outstandingCents)}
               </span>
             </p>
           </div>
-          <ul className="divide-y divide-tk-slate/10">
+          <ul className="divide-y divide-line">
             {outstanding.map((invoice) => (
               <InvoiceRow key={invoice.id} invoice={invoice} />
             ))}
@@ -224,7 +224,7 @@ export function InvoicesHub({ invoices }: { invoices: InvoiceHubRow[] }) {
         <div className="flex flex-wrap items-baseline gap-x-3">
           <h2 className="text-sm font-semibold text-tk-onyx">All invoices</h2>
           {inRange.length > 0 ? (
-            <span className="text-sm text-tk-slate/60">
+            <span className="text-sm text-ink-3">
               {plural(inRange.length, "invoice")} · {formatMoney(inRangeCents)}
             </span>
           ) : null}
@@ -237,8 +237,8 @@ export function InvoicesHub({ invoices }: { invoices: InvoiceHubRow[] }) {
               onClick={() => setRange(item.id)}
               className={
                 item.id === range
-                  ? "rounded-full bg-tk-teal px-3 py-1.5 text-xs font-semibold text-tk-linen"
-                  : "rounded-full border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+                  ? "rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-tk-linen"
+                  : "rounded-full border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
               }
             >
               {item.label}
@@ -248,7 +248,7 @@ export function InvoicesHub({ invoices }: { invoices: InvoiceHubRow[] }) {
       </div>
 
       {inRange.length === 0 ? (
-        <p className="mt-4 text-sm text-tk-slate/70">
+        <p className="mt-4 text-sm text-ink-3">
           No invoices in this range.
           {range !== "all" ? " Try a wider range." : ""}
         </p>
@@ -256,15 +256,15 @@ export function InvoicesHub({ invoices }: { invoices: InvoiceHubRow[] }) {
         months.map((month) => (
           <section key={month.key} className="mt-5">
             <div className="flex items-baseline justify-between px-1">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-tk-slate/60">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-3">
                 {monthLabel(month.key)}
               </h3>
-              <span className="text-xs tabular-nums text-tk-slate/50">
+              <span className="text-xs tabular-nums text-ink-3">
                 {formatMoney(month.cents)}
               </span>
             </div>
-            <div className="mt-2 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-              <ul className="divide-y divide-tk-slate/10">
+            <div className="mt-2 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+              <ul className="divide-y divide-line">
                 {month.rows.map((invoice) => (
                   <InvoiceRow key={invoice.id} invoice={invoice} />
                 ))}

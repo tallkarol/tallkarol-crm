@@ -76,7 +76,7 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
   return (
     <div className="grid gap-6">
       <header className="grid gap-2">
-        <Link href={ROUTES.slinks} className="text-[11.5px] text-tk-slate/50 hover:text-tk-teal">
+        <Link href={ROUTES.slinks} className="text-[11.5px] text-ink-3 hover:text-tk-teal">
           ← Slinks
         </Link>
         <div className="flex flex-wrap items-center gap-3">
@@ -85,7 +85,7 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
           </h1>
           <span
             className={`rounded-full px-2.5 py-0.5 font-['Inter_Tight',sans-serif] text-[11px] font-semibold ${
-              slink.status === "active" ? "bg-tk-teal/12 text-tk-teal" : "bg-tk-slate/10 text-tk-slate/60"
+              slink.status === "active" ? "bg-tk-teal/12 text-tk-teal" : "bg-well text-ink-3"
             }`}
           >
             {slink.status === "active" ? "Active" : "Archived"}
@@ -95,13 +95,13 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
           <form action={archiveSlinkAction}>
             <input type="hidden" name="slinkId" value={slink.id} />
             <input type="hidden" name="archived" value={slink.status === "active" ? "1" : "0"} />
-            <button className="rounded-md border border-tk-slate/15 px-2.5 py-1 font-['Inter_Tight',sans-serif] text-[11.5px] font-semibold text-tk-slate/80 hover:border-tk-teal hover:text-tk-teal">
+            <button className="rounded-md border border-line px-2.5 py-1 font-['Inter_Tight',sans-serif] text-[11.5px] font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal">
               {slink.status === "active" ? "Archive" : "Restore"}
             </button>
           </form>
         </div>
-        <p className="font-mono text-[11.5px] text-tk-slate/50">{url}</p>
-        <p className="max-w-[68ch] text-[12.5px] text-tk-slate/60">
+        <p className="font-mono text-[11.5px] text-ink-3">{url}</p>
+        <p className="max-w-[68ch] text-[12.5px] text-ink-3">
           The link alone opens nothing. Everyone who can read this got their own magic link, and letting a grant lapse
           locks the person, never the page.
         </p>
@@ -112,18 +112,18 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
           <h2 className="font-['Inter_Tight',sans-serif] text-[13px] font-semibold text-tk-onyx">Waiting on you</h2>
           <ul className="mt-3 grid gap-3">
             {requests.map((r) => (
-              <li key={r.id} className="grid gap-2 rounded-lg border border-tk-slate/12 bg-tk-white p-3">
+              <li key={r.id} className="grid gap-2 rounded-lg border border-line bg-tk-white p-3">
                 <div className="text-[13px] text-tk-onyx">
                   <b>{r.email}</b>
-                  {r.name ? <span className="text-tk-slate/60"> · {r.name}</span> : null}
+                  {r.name ? <span className="text-ink-3"> · {r.name}</span> : null}
                 </div>
-                {r.reason ? <p className="text-[12.5px] italic text-tk-slate/70">“{r.reason}”</p> : null}
+                {r.reason ? <p className="text-[12.5px] italic text-ink-3">“{r.reason}”</p> : null}
                 <form action={decideRequestAction} className="flex flex-wrap items-center gap-2">
                   <input type="hidden" name="requestId" value={r.id} />
                   <select
                     name="grant"
                     defaultValue="24"
-                    className="rounded-md border border-tk-slate/15 bg-tk-linen/40 px-2 py-1 text-[12px]"
+                    className="rounded-md border border-line bg-well px-2 py-1 text-[12px]"
                   >
                     {GRANTS.map((g) => (
                       <option key={g.value} value={g.value}>
@@ -134,14 +134,14 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
                   <button
                     name="decision"
                     value="granted"
-                    className="rounded-md bg-tk-teal px-3 py-1 font-['Inter_Tight',sans-serif] text-[11.5px] font-semibold text-white"
+                    className="rounded-md bg-accent px-3 py-1 font-['Inter_Tight',sans-serif] text-[11.5px] font-semibold text-white"
                   >
                     Grant
                   </button>
                   <button
                     name="decision"
                     value="denied"
-                    className="rounded-md border border-tk-slate/15 px-3 py-1 font-['Inter_Tight',sans-serif] text-[11.5px] font-semibold text-tk-slate/80"
+                    className="rounded-md border border-line px-3 py-1 font-['Inter_Tight',sans-serif] text-[11.5px] font-semibold text-tk-slate"
                   >
                     Deny
                   </button>
@@ -155,17 +155,17 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] lg:items-start">
         {/* ---------------------------------------------------------- content */}
         <section className="grid gap-3">
-          <h2 className="font-['Inter_Tight',sans-serif] text-[11.5px] font-bold uppercase tracking-[0.14em] text-tk-slate/50">
+          <h2 className="font-['Inter_Tight',sans-serif] text-[11.5px] font-bold uppercase tracking-[0.14em] text-ink-3">
             Content
           </h2>
 
-          <form action={updateSlinkAction} className="grid gap-3 rounded-xl border border-tk-slate/12 bg-tk-white p-4">
+          <form action={updateSlinkAction} className="grid gap-3 rounded-xl border border-line bg-tk-white p-4">
             <input type="hidden" name="slinkId" value={slink.id} />
             <Labeled label="Title">
               <input
                 name="title"
                 defaultValue={slink.title}
-                className="w-full rounded-lg border border-tk-slate/15 bg-tk-linen/40 px-3 py-2 text-[13px]"
+                className="w-full rounded-lg border border-line bg-well px-3 py-2 text-[13px]"
               />
             </Labeled>
             <Labeled label="Intro">
@@ -173,14 +173,14 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
                 name="intro"
                 rows={3}
                 defaultValue={slink.intro}
-                className="w-full rounded-lg border border-tk-slate/15 bg-tk-linen/40 px-3 py-2 text-[13px]"
+                className="w-full rounded-lg border border-line bg-well px-3 py-2 text-[13px]"
               />
             </Labeled>
             <Labeled label="Client">
               <select
                 name="clientId"
                 defaultValue={slink.clientId ?? ""}
-                className="w-full rounded-lg border border-tk-slate/15 bg-tk-linen/40 px-3 py-2 text-[13px]"
+                className="w-full rounded-lg border border-line bg-well px-3 py-2 text-[13px]"
               >
                 <option value="">No client</option>
                 {clients.map((c) => (
@@ -190,14 +190,14 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
                 ))}
               </select>
             </Labeled>
-            <button className="justify-self-start rounded-lg bg-tk-teal px-4 py-2 font-['Inter_Tight',sans-serif] text-[12.5px] font-semibold text-white">
+            <button className="justify-self-start rounded-lg bg-accent px-4 py-2 font-['Inter_Tight',sans-serif] text-[12.5px] font-semibold text-white">
               Save
             </button>
           </form>
 
           {blocks.map((b) => (
-            <div key={b.id} className="rounded-xl border border-tk-slate/12 bg-tk-white">
-              <header className="flex items-center gap-2 border-b border-tk-slate/10 px-3 py-2">
+            <div key={b.id} className="rounded-xl border border-line bg-tk-white">
+              <header className="flex items-center gap-2 border-b border-line px-3 py-2">
                 <span className="font-['Inter_Tight',sans-serif] text-[13px] font-semibold text-tk-onyx">
                   {b.title || BLOCK_LABEL[b.kind as BlockKind]}
                 </span>
@@ -210,7 +210,7 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
                     <input type="hidden" name="blockId" value={b.id} />
                     <input type="hidden" name="slinkId" value={slink.id} />
                     <input type="hidden" name="dir" value={dir} />
-                    <button className="px-1 text-[12px] text-tk-slate/40 hover:text-tk-teal">
+                    <button className="px-1 text-[12px] text-ink-3 hover:text-tk-teal">
                       {dir === "up" ? "↑" : "↓"}
                     </button>
                   </form>
@@ -218,10 +218,10 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
                 <form action={deleteBlockAction}>
                   <input type="hidden" name="blockId" value={b.id} />
                   <input type="hidden" name="slinkId" value={slink.id} />
-                  <button className="px-1 text-[12px] text-tk-slate/40 hover:text-tk-tomato">Remove</button>
+                  <button className="px-1 text-[12px] text-ink-3 hover:text-tk-tomato">Remove</button>
                 </form>
               </header>
-              {b.note ? <p className="px-3 py-2 text-[12.5px] text-tk-slate/60">{b.note}</p> : null}
+              {b.note ? <p className="px-3 py-2 text-[12.5px] text-ink-3">{b.note}</p> : null}
             </div>
           ))}
 
@@ -230,29 +230,29 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
 
         {/* ----------------------------------------------------------- people */}
         <section className="grid gap-3">
-          <h2 className="font-['Inter_Tight',sans-serif] text-[11.5px] font-bold uppercase tracking-[0.14em] text-tk-slate/50">
+          <h2 className="font-['Inter_Tight',sans-serif] text-[11.5px] font-bold uppercase tracking-[0.14em] text-ink-3">
             People
           </h2>
 
-          <form action={inviteAction} className="grid gap-2 rounded-xl border border-tk-slate/12 bg-tk-white p-4">
+          <form action={inviteAction} className="grid gap-2 rounded-xl border border-line bg-tk-white p-4">
             <input type="hidden" name="slinkId" value={slink.id} />
             <input
               name="email"
               type="email"
               required
               placeholder="them@company.com"
-              className="rounded-lg border border-tk-slate/15 bg-tk-linen/40 px-3 py-2 text-[13px]"
+              className="rounded-lg border border-line bg-well px-3 py-2 text-[13px]"
             />
             <input
               name="name"
               placeholder="Name (optional)"
-              className="rounded-lg border border-tk-slate/15 bg-tk-linen/40 px-3 py-2 text-[13px]"
+              className="rounded-lg border border-line bg-well px-3 py-2 text-[13px]"
             />
             <div className="flex gap-2">
               <select
                 name="grant"
                 defaultValue="24"
-                className="flex-1 rounded-lg border border-tk-slate/15 bg-tk-linen/40 px-3 py-2 text-[13px]"
+                className="flex-1 rounded-lg border border-line bg-well px-3 py-2 text-[13px]"
               >
                 {GRANTS.map((g) => (
                   <option key={g.value} value={g.value}>
@@ -260,23 +260,23 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
                   </option>
                 ))}
               </select>
-              <button className="rounded-lg bg-tk-teal px-4 py-2 font-['Inter_Tight',sans-serif] text-[12.5px] font-semibold text-white">
+              <button className="rounded-lg bg-accent px-4 py-2 font-['Inter_Tight',sans-serif] text-[12.5px] font-semibold text-white">
                 Send link
               </button>
             </div>
           </form>
 
-          <div className="rounded-xl border border-tk-slate/12 bg-tk-white">
+          <div className="rounded-xl border border-line bg-tk-white">
             {recipients.length === 0 ? (
-              <p className="px-4 py-6 text-center text-[13px] text-tk-slate/50">Nobody yet.</p>
+              <p className="px-4 py-6 text-center text-[13px] text-ink-3">Nobody yet.</p>
             ) : (
               recipients.map((r) => {
                 const state = grantState(r, now)
                 return (
-                  <div key={r.id} className="grid gap-2 border-b border-tk-slate/8 p-3 last:border-b-0">
+                  <div key={r.id} className="grid gap-2 border-b border-line p-3 last:border-b-0">
                     <div>
                       <div className="break-all font-mono text-[12.5px] text-tk-onyx">{r.email}</div>
-                      <div className="mt-0.5 text-[11.5px] text-tk-slate/50">
+                      <div className="mt-0.5 text-[11.5px] text-ink-3">
                         {r.name ? `${r.name} · ` : ""}
                         {r.lastSeenAt ? `opened ${agoLabel(r.lastSeenAt, now)}` : "never opened"}
                         {r.viewCount ? ` · ${r.viewCount} visits` : ""}
@@ -290,7 +290,7 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
                         <select
                           name="grant"
                           defaultValue={r.expiresAt ? "24" : "never"}
-                          className="rounded-md border border-tk-slate/15 bg-tk-linen/40 px-2 py-1 text-[11.5px]"
+                          className="rounded-md border border-line bg-well px-2 py-1 text-[11.5px]"
                         >
                           {GRANTS.map((g) => (
                             <option key={g.value} value={g.value}>
@@ -298,20 +298,20 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
                             </option>
                           ))}
                         </select>
-                        <button className="rounded-md border border-tk-slate/15 px-2 py-1 font-['Inter_Tight',sans-serif] text-[11px] font-semibold text-tk-slate/70 hover:border-tk-teal hover:text-tk-teal">
+                        <button className="rounded-md border border-line px-2 py-1 font-['Inter_Tight',sans-serif] text-[11px] font-semibold text-ink-3 hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal">
                           Set
                         </button>
                       </form>
                       <form action={resendAction}>
                         <input type="hidden" name="recipientId" value={r.id} />
-                        <button className="rounded-md border border-tk-slate/15 px-2 py-1 font-['Inter_Tight',sans-serif] text-[11px] font-semibold text-tk-slate/70 hover:border-tk-teal hover:text-tk-teal">
+                        <button className="rounded-md border border-line px-2 py-1 font-['Inter_Tight',sans-serif] text-[11px] font-semibold text-ink-3 hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal">
                           {state === "expired" || state === "revoked" ? "Re-share" : "Resend"}
                         </button>
                       </form>
                       {state !== "revoked" ? (
                         <form action={revokeAction}>
                           <input type="hidden" name="recipientId" value={r.id} />
-                          <button className="rounded-md border border-tk-slate/15 px-2 py-1 font-['Inter_Tight',sans-serif] text-[11px] font-semibold text-tk-slate/70 hover:border-tk-tomato hover:text-tk-tomato">
+                          <button className="rounded-md border border-line px-2 py-1 font-['Inter_Tight',sans-serif] text-[11px] font-semibold text-ink-3 hover:border-tk-tomato hover:text-tk-tomato">
                             Revoke
                           </button>
                         </form>
@@ -323,25 +323,25 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
             )}
           </div>
 
-          <h2 className="mt-2 font-['Inter_Tight',sans-serif] text-[11.5px] font-bold uppercase tracking-[0.14em] text-tk-slate/50">
+          <h2 className="mt-2 font-['Inter_Tight',sans-serif] text-[11.5px] font-bold uppercase tracking-[0.14em] text-ink-3">
             Activity
           </h2>
-          <div className="rounded-xl border border-tk-slate/12 bg-tk-white p-3">
+          <div className="rounded-xl border border-line bg-tk-white p-3">
             {events.length === 0 ? (
-              <p className="py-3 text-center text-[13px] text-tk-slate/50">Nothing yet.</p>
+              <p className="py-3 text-center text-[13px] text-ink-3">Nothing yet.</p>
             ) : (
               events.map((e) => (
                 <div
                   key={e.id}
-                  className="grid grid-cols-[auto_1fr] gap-3 border-b border-tk-slate/8 py-2 text-[12.5px] last:border-b-0"
+                  className="grid grid-cols-[auto_1fr] gap-3 border-b border-line py-2 text-[12.5px] last:border-b-0"
                 >
-                  <span className="whitespace-nowrap font-mono text-[11px] text-tk-slate/40">
+                  <span className="whitespace-nowrap font-mono text-[11px] text-ink-3">
                     {agoLabel(e.at, now)}
                   </span>
-                  <span className="text-tk-slate/80">
+                  <span className="text-tk-slate">
                     <b className="text-tk-onyx">{e.recipient?.email ?? "Someone"}</b>{" "}
                     {EVENT_LABEL[e.kind as SlinkEventKind] ?? e.kind}
-                    {e.detail && e.kind !== "invited" ? <span className="text-tk-slate/50"> · {e.detail}</span> : null}
+                    {e.detail && e.kind !== "invited" ? <span className="text-ink-3"> · {e.detail}</span> : null}
                   </span>
                 </div>
               ))
@@ -366,7 +366,7 @@ function StateChip({
     state === "indefinite"
       ? "bg-tk-teal/12 text-tk-teal"
       : state === "active"
-        ? "bg-tk-slate/8 text-tk-slate/70"
+        ? "bg-well text-ink-3"
         : "bg-tk-tomato/10 text-tk-tomato"
   const label =
     state === "indefinite"
@@ -386,7 +386,7 @@ function StateChip({
 function Labeled({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="grid gap-1.5">
-      <span className="font-['Inter_Tight',sans-serif] text-[11px] font-bold uppercase tracking-[0.09em] text-tk-slate/50">
+      <span className="font-['Inter_Tight',sans-serif] text-[11px] font-bold uppercase tracking-[0.09em] text-ink-3">
         {label}
       </span>
       {children}
@@ -410,12 +410,12 @@ function AddBlock({
   lists: { id: string; title: string }[]
   hasClient: boolean
 }) {
-  const input = "w-full rounded-lg border border-tk-slate/15 bg-tk-linen/40 px-3 py-2 text-[13px]"
+  const input = "w-full rounded-lg border border-line bg-well px-3 py-2 text-[13px]"
   const submit =
-    "justify-self-start rounded-lg bg-tk-teal px-3 py-1.5 font-['Inter_Tight',sans-serif] text-[12px] font-semibold text-white"
+    "justify-self-start rounded-lg bg-accent px-3 py-1.5 font-['Inter_Tight',sans-serif] text-[12px] font-semibold text-white"
 
   return (
-    <details className="rounded-xl border border-dashed border-tk-slate/25 bg-tk-white/60 p-4">
+    <details className="rounded-xl border border-dashed border-line-strong bg-tk-white/60 p-4">
       <summary className="cursor-pointer font-['Inter_Tight',sans-serif] text-[13px] font-semibold text-tk-onyx">
         Add a block
       </summary>
@@ -511,21 +511,21 @@ function AddBlock({
               <input type="hidden" name="slinkId" value={slinkId} />
               <input type="hidden" name="kind" value="reports" />
               <input type="hidden" name="sourceId" value="" />
-              <p className="text-[12.5px] text-tk-slate/60">Filed reports for this client, always up to date.</p>
+              <p className="text-[12.5px] text-ink-3">Filed reports for this client, always up to date.</p>
               <button className={submit}>Add reports</button>
             </form>
 
             <form action={addBlockAction} className="grid gap-2">
               <input type="hidden" name="slinkId" value={slinkId} />
               <input type="hidden" name="kind" value="dashboard" />
-              <p className="text-[12.5px] text-tk-slate/60">
+              <p className="text-[12.5px] text-ink-3">
                 Traffic, search and site health for this client, read live.
               </p>
               <button className={submit}>Add dashboard</button>
             </form>
           </>
         ) : (
-          <p className="text-[12.5px] text-tk-slate/50">
+          <p className="text-[12.5px] text-ink-3">
             Pick a client above to add a punch list, reports or the dashboard.
           </p>
         )}

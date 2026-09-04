@@ -74,14 +74,14 @@ export function SessionFilters({
       >
         <Search
           aria-hidden
-          className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-tk-slate/40"
+          className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-ink-3"
         />
         <input
           value={text}
           onChange={(event) => setText(event.target.value)}
           placeholder="Search everything you said…"
           aria-label="Search prompts and replies"
-          className="w-72 rounded-lg border border-tk-slate/20 bg-white py-1.5 pl-8 pr-3 text-xs text-tk-onyx outline-none placeholder:text-tk-slate/40 focus:border-tk-teal"
+          className="w-72 rounded-lg border border-line bg-card py-1.5 pl-8 pr-3 text-xs text-tk-onyx outline-none placeholder:text-ink-3 focus:border-tk-teal"
         />
       </form>
 
@@ -89,7 +89,7 @@ export function SessionFilters({
         value={clientSlug}
         onChange={(event) => push({ client: event.target.value })}
         aria-label="Client"
-        className="rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
+        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
       >
         <option value="">All clients</option>
         {clients.map((client) => (
@@ -103,7 +103,7 @@ export function SessionFilters({
         value={surface}
         onChange={(event) => push({ surface: event.target.value })}
         aria-label="Surface"
-        className="rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
+        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
       >
         {SURFACES.map((option) => (
           <option key={option.value} value={option.value}>
@@ -116,7 +116,7 @@ export function SessionFilters({
         value={since || "7d"}
         onChange={(event) => push({ since: event.target.value })}
         aria-label="How far back"
-        className="rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
+        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
       >
         {SINCE.map((option) => (
           <option key={option.value} value={option.value}>
@@ -129,14 +129,14 @@ export function SessionFilters({
         <button
           type="button"
           onClick={() => router.push(ROUTES.timesheetSessions)}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-tk-slate/60 hover:text-tk-onyx"
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-ink-3 hover:text-tk-onyx"
         >
           <X className="size-3.5" />
           Clear
         </button>
       ) : null}
 
-      <p className="ml-auto font-mono text-xs tabular-nums text-tk-slate/60">{summary}</p>
+      <p className="ml-auto font-mono text-xs tabular-nums text-ink-3">{summary}</p>
     </div>
   )
 }

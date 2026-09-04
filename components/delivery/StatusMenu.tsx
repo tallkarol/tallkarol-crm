@@ -24,10 +24,10 @@ export type StatusTone = "progress" | "waiting" | "open" | "done" | "flat"
 
 export const TONE_CLASS: Record<StatusTone, string> = {
   progress: "border-tk-teal/25 bg-tk-teal/10 text-tk-teal",
-  waiting: "border-tk-slate/15 bg-tk-slate/[0.06] text-tk-slate/70",
-  open: "border-[#8A5A05]/25 bg-[#8A5A05]/10 text-[#8A5A05]",
-  done: "border-[#26684A]/25 bg-[#26684A]/10 text-[#26684A]",
-  flat: "border-tk-slate/15 bg-white text-tk-slate/70",
+  waiting: "border-line bg-well text-ink-3",
+  open: "border-transparent bg-warn-soft text-warn",
+  done: "border-transparent bg-good-soft text-good",
+  flat: "border-line bg-card text-ink-3",
 }
 
 export type StatusOption = { value: string; label: string; tone: StatusTone }
@@ -133,7 +133,7 @@ export function StatusMenu({
           role="status"
           className={cn(
             "absolute left-0 top-full z-20 mt-1 whitespace-nowrap rounded-md",
-            "border border-[#B4322A]/30 bg-white px-2 py-1 text-[10.5px] font-semibold text-[#B4322A] shadow-sm"
+            "border border-transparent bg-card px-2 py-1 text-[10.5px] font-semibold text-bad shadow-card"
           )}
         >
           {error}

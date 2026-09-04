@@ -73,7 +73,7 @@ export default async function InsightsHostPage({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="max-w-2xl text-xs leading-relaxed text-tk-slate/60">
+        <p className="max-w-2xl text-xs leading-relaxed text-ink-3">
           Vercel Web Analytics — cookieless host counts, not the cookie banner.
           Vercel only serves the last {VERCEL_FETCH_DAYS} days; each refresh writes
           those days into this snapshot so the 90-day chart can keep growing.
@@ -81,12 +81,12 @@ export default async function InsightsHostPage({
         <RangeSwitcher />
       </div>
 
-      <p className="mt-3 text-xs text-tk-slate/60">
+      <p className="mt-3 text-xs text-ink-3">
         {win.label} · vs. previous {prev ? `${range} days` : "window (not covered)"}
       </p>
 
       {!hasHost ? (
-        <p className="mt-4 rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 px-6 py-10 text-center text-sm text-tk-slate/70 shadow-sm">
+        <p className="mt-4 rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center text-sm text-ink-3 shadow-card">
           {vercel?.error ||
             "Refresh to pull the first Vercel window. If this stays empty, Web Analytics is on but nothing has been counted yet — open a couple of production pages."}
         </p>
@@ -139,13 +139,13 @@ export default async function InsightsHostPage({
         {series.length >= 1 ? (
           <OverlayChart dates={win.current.map((p) => p.date)} series={series} />
         ) : (
-          <p className="px-5 py-8 text-sm text-tk-slate/70">
+          <p className="px-5 py-8 text-sm text-ink-3">
             Refresh once Vercel has counted a visit.
           </p>
         )}
       </Card>
 
-      <p className="mt-5 text-xs text-tk-slate/60">
+      <p className="mt-5 text-xs text-ink-3">
         Paths, referrers, devices, and countries cover Vercel&apos;s last{" "}
         {VERCEL_FETCH_DAYS}-day window — not the range switcher. Traffic (GA4)
         tables stay on their own {TABLE_WINDOW_DAYS}-day fetch.

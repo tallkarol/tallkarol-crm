@@ -19,9 +19,9 @@ function defaultSlot(day: string | null, hourOffset: number) {
 }
 
 const field =
-  "mt-1 w-full rounded-xl border border-tk-slate/20 bg-white px-3 py-2 text-sm text-tk-onyx outline-none focus:border-tk-teal"
+  "mt-1 w-full rounded-xl border border-line bg-card px-3 py-2 text-sm text-tk-onyx outline-none focus:border-tk-teal"
 const label =
-  "text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60"
+  "text-[11px] font-semibold uppercase tracking-wide text-ink-3"
 
 export function NewEventForm({
   defaultDay,
@@ -43,11 +43,11 @@ export function NewEventForm({
 
   if (!canWrite) {
     return (
-      <div className="mt-4 rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
+      <div className="mt-4 rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
         <p className="text-sm font-semibold text-tk-onyx">
           No destination calendar
         </p>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           Events made here need one Google calendar marked as the destination.
           Pick one in{" "}
           <Link
@@ -83,7 +83,7 @@ export function NewEventForm({
   return (
     <form
       onSubmit={submit}
-      className="mt-4 rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm"
+      className="mt-4 rounded-2xl border border-line bg-card px-5 py-4 shadow-card"
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="sm:col-span-2">
@@ -150,11 +150,11 @@ export function NewEventForm({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-full bg-tk-teal px-4 py-2 text-xs font-semibold text-tk-linen disabled:opacity-50"
+          className="rounded-full bg-accent px-4 py-2 text-xs font-semibold text-tk-linen disabled:opacity-50"
         >
           {pending ? "Creating…" : "Create event"}
         </button>
-        <p className="text-xs text-tk-slate/55">
+        <p className="text-xs text-ink-3">
           Goes to the destination calendar, then syncs back here.
         </p>
       </div>

@@ -134,10 +134,10 @@ export function Dropdown({
           variant === "lens" ? "font-semibold" : "font-medium",
           variant === "icon" && "px-2",
           active
-            ? "border-tk-teal bg-tk-teal text-tk-linen hover:bg-tk-teal/90"
+            ? "border-tk-teal bg-accent text-tk-linen hover:bg-tk-teal/90"
             : open
               ? "border-tk-teal bg-tk-teal/[0.06] text-tk-teal"
-              : "border-tk-slate/15 bg-white text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+              : "border-line bg-card text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
         )}
       >
         {label}
@@ -145,7 +145,7 @@ export function Dropdown({
           <span
             className={cn(
               "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-mono text-[10px]",
-              active ? "bg-white/25 text-tk-linen" : "bg-tk-teal text-tk-linen"
+              active ? "bg-on-accent/25 text-tk-linen" : "bg-accent text-tk-linen"
             )}
           >
             {count}
@@ -167,7 +167,7 @@ export function Dropdown({
           onKeyDown={onMenuKeyDown}
           style={offset == null ? undefined : { left: offset }}
           className={cn(
-            "absolute top-[calc(100%+5px)] z-40 max-h-[26rem] min-w-[15rem] overflow-y-auto rounded-xl border border-tk-slate/15 bg-white p-1.5 shadow-[0_16px_36px_-12px_rgba(15,22,21,.28)]",
+            "absolute top-[calc(100%+5px)] z-40 max-h-[26rem] min-w-[15rem] overflow-y-auto rounded-xl border border-line bg-card p-1.5 shadow-overlay",
             // Pre-measurement fallback; `place()` replaces it before paint.
             offset != null ? null : align === "right" ? "right-0" : "left-0"
           )}
@@ -181,7 +181,7 @@ export function Dropdown({
 
 export function MenuHead({ children, onClear }: { children: ReactNode; onClear?: () => void }) {
   return (
-    <div className="flex items-center gap-2 px-2 pb-1.5 pt-1 font-mono text-[9.5px] uppercase tracking-[0.12em] text-tk-slate/45">
+    <div className="flex items-center gap-2 px-2 pb-1.5 pt-1 font-mono text-[9.5px] uppercase tracking-[0.12em] text-ink-3">
       {children}
       {onClear ? (
         <button
@@ -198,14 +198,14 @@ export function MenuHead({ children, onClear }: { children: ReactNode; onClear?:
 
 export function MenuSub({ children }: { children: ReactNode }) {
   return (
-    <div className="px-2 pb-0.5 pt-1.5 font-mono text-[9.5px] uppercase tracking-[0.1em] text-tk-slate/45">
+    <div className="px-2 pb-0.5 pt-1.5 font-mono text-[9.5px] uppercase tracking-[0.1em] text-ink-3">
       {children}
     </div>
   )
 }
 
 export function MenuRule() {
-  return <div className="mx-1.5 my-1 h-px bg-tk-slate/10" />
+  return <div className="mx-1.5 my-1 h-px bg-line" />
 }
 
 export function MenuOption({
@@ -229,14 +229,14 @@ export function MenuOption({
       role={kind === "check" ? "menuitemcheckbox" : "menuitemradio"}
       aria-checked={checked}
       onClick={onSelect}
-      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12.5px] text-tk-slate hover:bg-tk-linen"
+      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12.5px] text-tk-slate hover:bg-well transition-colors duration-[120ms]"
     >
       {kind === "check" ? (
         <span
           aria-hidden
           className={cn(
             "grid size-3.5 shrink-0 place-items-center rounded border-[1.5px] text-[9px] text-white",
-            checked ? "border-tk-teal bg-tk-teal" : "border-tk-slate/25"
+            checked ? "border-tk-teal bg-accent" : "border-line-strong"
           )}
         >
           {checked ? "✓" : ""}
@@ -246,10 +246,10 @@ export function MenuOption({
           aria-hidden
           className={cn(
             "grid size-3.5 shrink-0 place-items-center rounded-full border-[1.5px]",
-            checked ? "border-tk-teal" : "border-tk-slate/25"
+            checked ? "border-tk-teal" : "border-line-strong"
           )}
         >
-          {checked ? <span className="size-1.5 rounded-full bg-tk-teal" /> : null}
+          {checked ? <span className="size-1.5 rounded-full bg-accent" /> : null}
         </span>
       )}
       {color ? (
@@ -257,7 +257,7 @@ export function MenuOption({
       ) : null}
       <span className="min-w-0 flex-1 truncate">{children}</span>
       {count != null ? (
-        <span className="font-mono text-[10.5px] tabular-nums text-tk-slate/45">{count}</span>
+        <span className="font-mono text-[10.5px] tabular-nums text-ink-3">{count}</span>
       ) : null}
     </button>
   )

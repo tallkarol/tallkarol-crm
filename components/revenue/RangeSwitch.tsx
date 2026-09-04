@@ -8,7 +8,7 @@ import {
 
 export function RangeSwitch({ range }: { range: RevenueRange }) {
   return (
-    <div className="flex rounded-lg border border-tk-slate/20 bg-white p-0.5">
+    <div className="flex rounded-lg border border-line bg-card p-0.5">
       {REVENUE_RANGES.map((option) => (
         <Link
           key={option.id}
@@ -18,7 +18,7 @@ export function RangeSwitch({ range }: { range: RevenueRange }) {
             "rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors",
             range === option.id
               ? "bg-tk-onyx text-tk-linen"
-              : "text-tk-slate/70 hover:text-tk-onyx"
+              : "text-ink-3 hover:text-tk-onyx"
           )}
         >
           {option.label}

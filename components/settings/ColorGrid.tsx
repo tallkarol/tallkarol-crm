@@ -20,7 +20,7 @@ export function ColorGrid({
     <div className="mt-6 space-y-8">
       {groups.map((group) => (
         <section key={group.label}>
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-tk-slate/60">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-3">
             {group.label}
           </h2>
           <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
@@ -66,7 +66,7 @@ function ColorRow({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-tk-slate/15 bg-white px-3 py-2.5 shadow-sm">
+    <div className="flex items-center gap-3 rounded-xl border border-line bg-card px-3 py-2.5 shadow-card">
       {/* The native picker is the whole swatch — no library, and it is the
           control people already know from every other Mac app. */}
       <label className="relative shrink-0 cursor-pointer">
@@ -92,15 +92,15 @@ function ColorRow({
             onChange={(e) => setValue(e.target.value)}
             onBlur={(e) => commit(e.target.value)}
             spellCheck={false}
-            className="w-24 bg-transparent font-mono text-xs text-tk-slate/70 outline-none focus:text-tk-onyx"
+            className="w-24 bg-transparent font-mono text-xs text-ink-3 outline-none focus:text-tk-onyx"
           />
-          {pending && <span className="text-[11px] text-tk-slate/50">saving…</span>}
-          {!pending && dirty && <span className="text-[11px] text-tk-slate/50">unsaved</span>}
+          {pending && <span className="text-[11px] text-ink-3">saving…</span>}
+          {!pending && dirty && <span className="text-[11px] text-ink-3">unsaved</span>}
           {!pending && !dirty && isDefault && (
-            <span className="text-[11px] text-tk-slate/40">default</span>
+            <span className="text-[11px] text-ink-3">default</span>
           )}
         </div>
-        {error && <div className="text-[11px] text-[#B4322A]">{error}</div>}
+        {error && <div className="text-[11px] text-bad">{error}</div>}
       </div>
 
       {!isDefault && (
@@ -110,7 +110,7 @@ function ColorRow({
             setValue(fallback)
             commit("")
           }}
-          className="shrink-0 text-[11px] font-medium text-tk-slate/60 hover:text-tk-onyx"
+          className="shrink-0 text-[11px] font-medium text-ink-3 hover:text-tk-onyx"
         >
           Reset
         </button>

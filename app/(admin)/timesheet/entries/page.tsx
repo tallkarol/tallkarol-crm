@@ -92,18 +92,18 @@ export default async function LedgerPage({
       />
 
       {visible.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 px-6 py-10 text-center shadow-sm">
+        <div className="mt-6 rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
           <p className="text-sm font-semibold text-tk-onyx">Nothing matches</p>
-          <p className="mt-1 text-sm text-tk-slate/70">
+          <p className="mt-1 text-sm text-ink-3">
             Try a shorter search, a wider date range, or clear the client filter.
           </p>
         </div>
       ) : (
-        <section className="mt-5 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+        <section className="mt-5 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px] border-collapse text-sm">
               <thead>
-                <tr className="border-b border-tk-slate/15 bg-tk-linen/50 text-left text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+                <tr className="border-b border-line bg-well text-left text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                   <th className="px-5 py-2 font-semibold">Date</th>
                   <th className="px-3 py-2 font-semibold">Client</th>
                   <th className="px-3 py-2 font-semibold">Project</th>
@@ -117,7 +117,7 @@ export default async function LedgerPage({
                 {visible.map((row) => (
                   <tr
                     key={row.id}
-                    className="border-b border-tk-slate/10 last:border-0 hover:bg-tk-linen/40"
+                    className="border-b border-line last:border-0 hover:bg-well"
                   >
                     <td className="whitespace-nowrap px-5 py-2.5 text-tk-slate">
                       <Link
@@ -140,9 +140,9 @@ export default async function LedgerPage({
                         {row.clientName}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 text-tk-slate/70">
+                    <td className="px-3 py-2.5 text-ink-3">
                       {row.projectName ?? (
-                        <span className="text-tk-slate/40">retainer</span>
+                        <span className="text-ink-3">retainer</span>
                       )}
                     </td>
                     <td className="px-3 py-2.5 text-tk-slate">
@@ -169,7 +169,7 @@ export default async function LedgerPage({
                       {formatSheetHours(row.hours)}
                     </td>
                     <td className="px-3 py-2.5">
-                      <span className="rounded bg-tk-linen px-1.5 py-0.5 font-mono text-[10px] font-semibold text-tk-slate/70">
+                      <span className="rounded bg-well px-1.5 py-0.5 font-mono text-[10px] font-semibold text-ink-3">
                         {SOURCE_LABEL[row.source] ?? row.source}
                       </span>
                     </td>
@@ -182,7 +182,7 @@ export default async function LedgerPage({
                           {row.invoiceNumber}
                         </Link>
                       ) : (
-                        <span className="text-tk-slate/40">—</span>
+                        <span className="text-ink-3">—</span>
                       )}
                     </td>
                   </tr>
@@ -194,7 +194,7 @@ export default async function LedgerPage({
       )}
 
       {truncated ? (
-        <p className="mt-3 text-sm text-tk-slate/55">
+        <p className="mt-3 text-sm text-ink-3">
           Showing the 500 most recent matches of {total}. Narrow the date range
           to see the rest.
         </p>

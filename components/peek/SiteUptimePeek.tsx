@@ -49,11 +49,11 @@ export async function SiteUptimePeek({ slug }: { slug: string }) {
           <span aria-hidden className="size-2.5 rounded-[3px]" style={{ background: color }} />
           {site.name}
         </h2>
-        <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-sm text-tk-slate/70">
-          <span className={cn("font-semibold", bad ? "text-[#B4322A]" : "text-tk-onyx")}>
+        <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-sm text-ink-3">
+          <span className={cn("font-semibold", bad ? "text-bad" : "text-tk-onyx")}>
             {monitor ? statusLabel(status) : "No monitor"}
           </span>
-          <span className="text-tk-slate/25">·</span>
+          <span className="text-ink-3">·</span>
           <a
             href={monitor?.url || site.origin || `https://${host}`}
             target="_blank"
@@ -62,7 +62,7 @@ export async function SiteUptimePeek({ slug }: { slug: string }) {
           >
             {host}
           </a>
-          <span className="text-tk-slate/25">·</span>
+          <span className="text-ink-3">·</span>
           <span>{site.client?.name ?? "House"}</span>
         </p>
 
@@ -75,14 +75,14 @@ export async function SiteUptimePeek({ slug }: { slug: string }) {
                 ["30d", monitor.ratio30],
               ] as const
             ).map(([label, value]) => (
-              <div key={label} className="rounded-lg border border-tk-slate/12 px-2 py-1.5 text-center">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-tk-slate/55">
+              <div key={label} className="rounded-lg border border-line px-2 py-1.5 text-center">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-3">
                   {label}
                 </p>
                 <p
                   className={cn(
                     "font-mono text-[14px] font-semibold",
-                    value != null && value < 99.9 ? "text-[#8A5A05]" : "text-tk-onyx"
+                    value != null && value < 99.9 ? "text-warn" : "text-tk-onyx"
                   )}
                 >
                   {formatRatio(value)}
@@ -98,13 +98,13 @@ export async function SiteUptimePeek({ slug }: { slug: string }) {
           <PeekSection title={`Response · last ${pings.length} checks`}>
             <span className="flex h-12 items-end gap-px" aria-hidden>
               {pings.length === 0 ? (
-                <span className="font-mono text-[11.5px] text-tk-slate/45">no history yet</span>
+                <span className="font-mono text-[11.5px] text-ink-3">no history yet</span>
               ) : (
                 pings.map((ping) => (
                   <span
                     key={ping.at.toISOString()}
                     title={`${ping.ms} ms · ${ping.at.toISOString().slice(0, 16).replace("T", " ")} UTC`}
-                    className="min-w-0 flex-1 rounded-[1px] bg-[#2E7D57] opacity-70"
+                    className="min-w-0 flex-1 rounded-[1px] bg-good opacity-70"
                     style={{ height: `${Math.max(8, Math.round((ping.ms / peak) * 100))}%` }}
                   />
                 ))
@@ -128,7 +128,7 @@ export async function SiteUptimePeek({ slug }: { slug: string }) {
         </>
       ) : (
         <PeekSection title="Monitor">
-          <p className="text-sm text-tk-slate/70">
+          <p className="text-sm text-ink-3">
             {site.uptimeMonitorId
               ? "A monitor id is attached but UptimeRobot did not return it — check the read-only key."
               : "No monitor attached yet."}
@@ -155,7 +155,7 @@ npm run site:set -- ${site.slug} uptimeMonitorId <id>`}</code>
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <dt className="shrink-0 text-[12px] text-tk-slate/60">{label}</dt>
+      <dt className="shrink-0 text-[12px] text-ink-3">{label}</dt>
       <dd className="min-w-0 truncate text-right font-mono text-[11.5px] text-tk-onyx">
         {value}
       </dd>

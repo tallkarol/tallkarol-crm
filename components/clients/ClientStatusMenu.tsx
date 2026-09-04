@@ -89,7 +89,7 @@ export function ClientStatusMenu({
           role="status"
           className={cn(
             "absolute left-0 top-full z-20 mt-1 whitespace-nowrap rounded-md",
-            "border border-[#B4322A]/30 bg-white px-2 py-1 text-[10.5px] font-semibold text-[#B4322A] shadow-sm"
+            "border border-transparent bg-card px-2 py-1 text-[10.5px] font-semibold text-bad shadow-card"
           )}
         >
           {error}

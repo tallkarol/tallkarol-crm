@@ -32,7 +32,7 @@ export function AcceptDraftButton({
             router.refresh()
           })
         }
-        className="rounded-full bg-tk-teal px-3.5 py-1.5 text-[12px] font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90 disabled:opacity-50"
+        className="rounded-full bg-accent px-3.5 py-1.5 text-[12px] font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90 disabled:opacity-50"
       >
         {pending ? "Creating tasks…" : `Accept — create ${count} ${count === 1 ? "task" : "tasks"}`}
       </button>

@@ -28,13 +28,13 @@ export default function ScaffoldPage({
         actions={
           <Link
             href={ROUTES.scaffolds}
-            className="rounded-lg border border-tk-slate/20 px-3 py-1.5 text-[13px] font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+            className="rounded-lg border border-line px-3 py-1.5 text-[13px] font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
           >
             All scaffolds
           </Link>
         }
       />
-      <p className="mt-1 text-[11.5px] text-tk-slate/60">
+      <p className="mt-1 text-[11.5px] text-ink-3">
         {scaffold.kind} · distilled from{" "}
         <span className="font-mono">{scaffold.source}</span>
       </p>
@@ -44,18 +44,18 @@ export default function ScaffoldPage({
       </p>
 
       <section className="mt-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-tk-slate/60">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-3">
           Stack
         </h2>
-        <div className="mt-2.5 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+        <div className="mt-2.5 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
           <table className="w-full text-left text-[13px]">
             <tbody>
               {scaffold.stack.map((row) => (
                 <tr
                   key={row.layer}
-                  className="border-b border-tk-slate/10 last:border-b-0"
+                  className="border-b border-line last:border-b-0"
                 >
-                  <td className="w-36 px-4 py-3 align-top font-mono text-[11px] font-semibold uppercase tracking-wide text-tk-slate/55">
+                  <td className="w-36 px-4 py-3 align-top font-mono text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                     {row.layer}
                   </td>
                   <td className="w-72 px-4 py-3 align-top font-semibold text-tk-onyx">
@@ -72,16 +72,16 @@ export default function ScaffoldPage({
       </section>
 
       <section className="mt-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-tk-slate/60">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-3">
           Commands
         </h2>
         <div className="mt-2.5 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {scaffold.commands.map((row) => (
             <div
               key={row.cmd}
-              className="rounded-xl border border-tk-slate/15 bg-white px-4 py-3 shadow-sm"
+              className="rounded-xl border border-line bg-card px-4 py-3 shadow-card"
             >
-              <code className="rounded bg-tk-linen px-1.5 py-0.5 font-mono text-xs font-semibold text-tk-onyx">
+              <code className="rounded bg-well px-1.5 py-0.5 font-mono text-xs font-semibold text-tk-onyx">
                 {row.cmd}
               </code>
               <p className="mt-1.5 text-[12.5px] text-tk-slate">{row.what}</p>
@@ -91,14 +91,14 @@ export default function ScaffoldPage({
       </section>
 
       <section className="mt-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-tk-slate/60">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-3">
           Playbook
         </h2>
         <div className="mt-2.5 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {scaffold.playbook.map((section) => (
             <div
               key={section.title}
-              className="rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm"
+              className="rounded-2xl border border-line bg-card p-5 shadow-card"
             >
               <p className="text-[14px] font-semibold text-tk-onyx">
                 {section.title}

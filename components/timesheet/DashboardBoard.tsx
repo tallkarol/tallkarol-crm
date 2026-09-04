@@ -37,7 +37,7 @@ function Tile({
 }) {
   const body = (
     <>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
         {label}
       </p>
       <p className="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-tk-onyx">
@@ -48,7 +48,7 @@ function Tile({
           "mt-0.5 text-[11px] font-medium",
           tone === "good" && "text-emerald-700",
           tone === "warn" && "text-amber-700",
-          tone === "muted" && "text-tk-slate/60"
+          tone === "muted" && "text-ink-3"
         )}
       >
         {note}
@@ -57,13 +57,13 @@ function Tile({
   )
 
   const className =
-    "rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm"
+    "rounded-2xl border border-line bg-card px-5 py-4 shadow-card"
 
   if (href) {
     return (
       <Link
         href={href}
-        className={cn(className, "transition-colors hover:border-tk-teal/40")}
+        className={cn(className, "hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0")}
       >
         {body}
       </Link>
@@ -128,9 +128,9 @@ function Tiles({ data }: { data: TimesheetDashboard }) {
 function Engagements({ data }: { data: TimesheetDashboard }) {
   if (data.engagements.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 px-6 py-8 text-center">
+      <div className="rounded-2xl border border-dashed border-line bg-well px-6 py-8 text-center">
         <p className="text-sm font-semibold text-tk-onyx">No live retainers</p>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           Retainers marked active show their month against their cap here.
         </p>
       </div>
@@ -152,7 +152,7 @@ function Engagements({ data }: { data: TimesheetDashboard }) {
           <Link
             key={row.clientId}
             href={ROUTES.timesheetFor(row.clientSlug, data.month)}
-            className="flex flex-col gap-2.5 rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm transition-colors hover:border-tk-teal/40"
+            className="flex flex-col gap-2.5 rounded-2xl border border-line bg-card px-5 py-4 shadow-card hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
           >
             <div className="flex items-center gap-2">
               <span
@@ -163,13 +163,13 @@ function Engagements({ data }: { data: TimesheetDashboard }) {
               <p className="truncate text-sm font-semibold text-tk-onyx">
                 {row.clientName}
               </p>
-              <p className="ml-auto shrink-0 font-mono text-xs tabular-nums text-tk-slate/70">
+              <p className="ml-auto shrink-0 font-mono text-xs tabular-nums text-ink-3">
                 {row.hours} / {row.capHours}
               </p>
             </div>
 
             <div
-              className="h-1.5 overflow-hidden rounded-full bg-tk-linen"
+              className="h-1.5 overflow-hidden rounded-full bg-well"
               role="img"
               aria-label={`${row.hours} of ${row.capHours} hours`}
             >
@@ -182,7 +182,7 @@ function Engagements({ data }: { data: TimesheetDashboard }) {
               />
             </div>
 
-            <div className="flex items-center justify-between text-[11px] text-tk-slate/60">
+            <div className="flex items-center justify-between text-[11px] text-ink-3">
               <span>
                 {over
                   ? `${row.overBy} hr over cap`
@@ -207,18 +207,18 @@ const SEVERITY_COLOR: Record<AttentionItem["severity"], string> = {
 
 function Attention({ items }: { items: AttentionItem[] }) {
   return (
-    <section className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
-      <h2 className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+    <section className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+      <h2 className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
         Needs attention
       </h2>
       {items.length === 0 ? (
-        <p className="mt-3 text-sm text-tk-slate/60">
+        <p className="mt-3 text-sm text-ink-3">
           Nothing unbilled, nothing waiting, nothing over cap.
         </p>
       ) : (
         <ul className="mt-1.5">
           {items.map((item) => (
-            <li key={item.id} className="border-b border-tk-slate/10 last:border-0">
+            <li key={item.id} className="border-b border-line last:border-0">
               <Link
                 href={item.href}
                 className="group flex items-center gap-3 py-2.5 text-sm"
@@ -230,7 +230,7 @@ function Attention({ items }: { items: AttentionItem[] }) {
                 />
                 <span className="min-w-0 flex-1 text-tk-slate">{item.text}</span>
                 {item.amount ? (
-                  <span className="shrink-0 font-mono text-xs tabular-nums text-tk-slate/70">
+                  <span className="shrink-0 font-mono text-xs tabular-nums text-ink-3">
                     {item.amount}
                   </span>
                 ) : null}
@@ -249,9 +249,9 @@ function Attention({ items }: { items: AttentionItem[] }) {
 function MonthBars({ data }: { data: TimesheetDashboard }) {
   const max = Math.max(1, ...data.series.map((row) => row.hours))
   return (
-    <section className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
+    <section className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
           Hours · last 12 months
         </h2>
         <Link
@@ -276,7 +276,7 @@ function MonthBars({ data }: { data: TimesheetDashboard }) {
                 <span
                   className={cn(
                     "block rounded-t-sm transition-colors",
-                    current ? "bg-tk-teal" : "bg-tk-teal/20 hover:bg-tk-teal/40"
+                    current ? "bg-accent" : "bg-tk-teal/20 hover:bg-tk-teal/40"
                   )}
                   style={{ height: `${height}%`, minHeight: 2 }}
                 />
@@ -289,7 +289,7 @@ function MonthBars({ data }: { data: TimesheetDashboard }) {
         {data.series.map((row) => (
           <li
             key={row.month}
-            className="flex-1 text-center font-mono text-[9px] text-tk-slate/50"
+            className="flex-1 text-center font-mono text-[9px] text-ink-3"
           >
             {row.label}
           </li>

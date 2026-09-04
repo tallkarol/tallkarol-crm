@@ -26,7 +26,7 @@ export function ClientAvatar({
         size === "sm" && "h-8 w-8 text-[10.5px]",
         size === "md" && "h-10 w-10 text-xs",
         size === "lg" && "h-12 w-12 rounded-2xl text-sm",
-        muted && "bg-tk-slate/20 text-tk-slate/70"
+        muted && "bg-line-strong text-ink-3"
       )}
       style={muted ? undefined : { backgroundColor: clientColor(slug) }}
     >

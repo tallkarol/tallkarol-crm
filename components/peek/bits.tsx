@@ -17,7 +17,7 @@ export function Fact({
 }) {
   return (
     <div className={wide ? "col-span-2" : undefined}>
-      <dt className="text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/55">
+      <dt className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">
         {label}
       </dt>
       <dd className="mt-0.5 text-sm text-tk-onyx">{children}</dd>
@@ -49,8 +49,8 @@ export function EntityLink({
 
 export function PeekSection({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="border-t border-tk-slate/10 px-6 py-4">
-      <h3 className="text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/55">
+    <section className="border-t border-line px-6 py-4">
+      <h3 className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">
         {title}
       </h3>
       <div className="mt-2">{children}</div>
@@ -63,7 +63,7 @@ export function GonePeek() {
   return (
     <div className="px-6 py-10 text-center">
       <p className="text-sm font-semibold text-tk-onyx">That one&rsquo;s gone</p>
-      <p className="mt-1 text-sm text-tk-slate/70">
+      <p className="mt-1 text-sm text-ink-3">
         It was deleted or renamed since this list rendered. Close this card and
         the list will be current again.
       </p>

@@ -44,23 +44,23 @@ export default async function InquiryDetailPage({
           <h1 className="text-2xl font-semibold tracking-tight text-tk-onyx">
             {row.name}
           </h1>
-          <p className="mt-1 text-sm text-tk-slate/70">
+          <p className="mt-1 text-sm text-ink-3">
             {row.email}
             {row.company ? ` · ${row.company}` : ""}
           </p>
-          <p className="mt-1 text-xs text-tk-slate/70">
+          <p className="mt-1 text-xs text-ink-3">
             {row.source} · {row.createdAt.toLocaleString()}
           </p>
         </div>
         <a
           href={mailto}
-          className="rounded-full bg-tk-teal px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90"
+          className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90"
         >
           Reply by email
         </a>
       </div>
 
-      <section className="mt-8 rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm">
+      <section className="mt-8 rounded-2xl border border-line bg-card p-5 shadow-card">
         <h2 className="text-sm font-semibold text-tk-onyx">Status</h2>
         <div className="mt-3">
           <StatusButtons inquiryId={row.id} current={row.status} />
@@ -70,17 +70,17 @@ export default async function InquiryDetailPage({
       {attribution && <AttributionCard attribution={attribution} />}
 
       {row.projectTypes.length > 0 && (
-        <section className="mt-4 rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm">
+        <section className="mt-4 rounded-2xl border border-line bg-card p-5 shadow-card">
           <h2 className="text-sm font-semibold text-tk-onyx">Project types</h2>
-          <p className="mt-2 text-sm text-tk-slate/80">
+          <p className="mt-2 text-sm text-tk-slate">
             {row.projectTypes.join(", ")}
           </p>
         </section>
       )}
 
-      <section className="mt-4 rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm">
+      <section className="mt-4 rounded-2xl border border-line bg-card p-5 shadow-card">
         <h2 className="text-sm font-semibold text-tk-onyx">Full payload</h2>
-        <pre className="mt-3 overflow-x-auto whitespace-pre-wrap rounded-lg bg-tk-linen p-4 font-mono text-xs leading-relaxed text-tk-slate">
+        <pre className="mt-3 overflow-x-auto whitespace-pre-wrap rounded-lg bg-well p-4 font-mono text-xs leading-relaxed text-tk-slate">
           {payloadText}
         </pre>
       </section>

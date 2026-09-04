@@ -35,7 +35,7 @@ export function AnchorNav({ items }: { items: { id: string; label: string }[] })
   return (
     <nav
       aria-label="Client sections"
-      className="sticky top-0 z-10 -mx-2 mt-5 flex gap-1 overflow-x-auto border-b border-tk-slate/10 bg-tk-linen/70 px-2 py-2 backdrop-blur-sm"
+      className="sticky top-0 z-10 -mx-2 mt-5 flex gap-1 overflow-x-auto border-b border-line bg-well px-2 py-2 backdrop-blur-sm"
     >
       {items.map((item) => (
         <a
@@ -46,7 +46,7 @@ export function AnchorNav({ items }: { items: { id: string; label: string }[] })
             "whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-semibold",
             active === item.id
               ? "bg-tk-teal/10 text-tk-teal"
-              : "text-tk-slate/70 hover:bg-tk-slate/5"
+              : "text-ink-3 hover:bg-well"
           )}
         >
           {item.label}

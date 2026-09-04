@@ -69,14 +69,14 @@ export function LedgerFilters({
       >
         <Search
           aria-hidden
-          className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-tk-slate/40"
+          className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-ink-3"
         />
         <input
           value={text}
           onChange={(event) => setText(event.target.value)}
           placeholder="Search summaries…"
           aria-label="Search session highlights"
-          className="w-56 rounded-lg border border-tk-slate/20 bg-white py-1.5 pl-8 pr-3 text-xs text-tk-onyx outline-none placeholder:text-tk-slate/40 focus:border-tk-teal"
+          className="w-56 rounded-lg border border-line bg-card py-1.5 pl-8 pr-3 text-xs text-tk-onyx outline-none placeholder:text-ink-3 focus:border-tk-teal"
         />
       </form>
 
@@ -84,7 +84,7 @@ export function LedgerFilters({
         value={clientSlug}
         onChange={(event) => push({ client: event.target.value })}
         aria-label="Client"
-        className="rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
+        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
       >
         <option value="">All clients</option>
         {clients.map((client) => (
@@ -98,7 +98,7 @@ export function LedgerFilters({
         value={source}
         onChange={(event) => push({ source: event.target.value })}
         aria-label="Source"
-        className="rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
+        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
       >
         {SOURCES.map((option) => (
           <option key={option.value} value={option.value}>
@@ -113,15 +113,15 @@ export function LedgerFilters({
           value={from}
           onChange={(event) => push({ from: event.target.value })}
           aria-label="From date"
-          className="rounded-lg border border-tk-slate/20 bg-white px-2.5 py-1.5 text-xs text-tk-slate outline-none focus:border-tk-teal"
+          className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-xs text-tk-slate outline-none focus:border-tk-teal"
         />
-        <span className="text-xs text-tk-slate/40">→</span>
+        <span className="text-xs text-ink-3">→</span>
         <input
           type="date"
           value={to}
           onChange={(event) => push({ to: event.target.value })}
           aria-label="To date"
-          className="rounded-lg border border-tk-slate/20 bg-white px-2.5 py-1.5 text-xs text-tk-slate outline-none focus:border-tk-teal"
+          className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-xs text-tk-slate outline-none focus:border-tk-teal"
         />
       </div>
 
@@ -131,8 +131,8 @@ export function LedgerFilters({
         className={cn(
           "rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors",
           missingSummary
-            ? "border-amber-400 bg-amber-50 text-amber-800"
-            : "border-tk-slate/20 bg-white text-tk-slate/70 hover:text-tk-onyx"
+            ? "border-transparent bg-warn-soft text-warn"
+            : "border-line bg-card text-ink-3 hover:text-tk-onyx"
         )}
       >
         No summary
@@ -142,14 +142,14 @@ export function LedgerFilters({
         <button
           type="button"
           onClick={() => router.push(ROUTES.timesheetEntries)}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-tk-slate/60 hover:text-tk-onyx"
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-ink-3 hover:text-tk-onyx"
         >
           <X className="size-3.5" />
           Clear
         </button>
       ) : null}
 
-      <p className="ml-auto font-mono text-xs tabular-nums text-tk-slate/60">
+      <p className="ml-auto font-mono text-xs tabular-nums text-ink-3">
         {summary}
       </p>
     </div>

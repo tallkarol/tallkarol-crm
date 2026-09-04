@@ -61,8 +61,8 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
               className={cn(
                 "rounded-full border px-3 py-1 text-xs font-semibold",
                 filter === f.id
-                  ? "border-tk-onyx bg-tk-onyx text-white"
-                  : "border-tk-slate/20 bg-white text-tk-slate/70 hover:border-tk-slate/40"
+                  ? "border-ink bg-ink text-canvas"
+                  : "border-line bg-card text-ink-3 hover:border-line-strong"
               )}
             >
               {f.label}
@@ -77,7 +77,7 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
             id="roster-status"
             value={status}
             onChange={(e) => setStatus(e.target.value as ClientStatus | "all")}
-            className="rounded-lg border border-tk-slate/20 bg-white px-2.5 py-1.5 text-sm text-tk-onyx focus:border-tk-teal focus:outline-none"
+            className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-sm text-tk-onyx focus:border-tk-teal focus:outline-none"
           >
             <option value="all">All statuses</option>
             {CLIENT_STATUSES.map((id) => (
@@ -92,15 +92,15 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Find a client…"
             aria-label="Find a client"
-            className="w-52 rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-sm text-tk-onyx placeholder:text-tk-slate/40 focus:border-tk-teal focus:outline-none"
+            className="w-52 rounded-lg border border-line bg-card px-3 py-1.5 text-sm text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:outline-none"
           />
         </div>
       </div>
 
-      <div className="mt-3 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+      <div className="mt-3 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
         <div
           aria-hidden="true"
-          className="hidden grid-cols-[minmax(200px,1.5fr)_130px_64px_minmax(110px,1fr)_100px_16px] items-center gap-4 border-b border-tk-slate/10 px-5 py-2.5 text-[10.5px] font-bold uppercase tracking-[0.1em] text-tk-slate/50 md:grid"
+          className="hidden grid-cols-[minmax(200px,1.5fr)_130px_64px_minmax(110px,1fr)_100px_16px] items-center gap-4 border-b border-line px-5 py-2.5 text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-3 md:grid"
         >
           <span>Client</span>
           <span>Hours this month</span>
@@ -111,7 +111,7 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
         </div>
 
         {visible.length === 0 ? (
-          <p className="px-5 py-10 text-center text-sm text-tk-slate/60">
+          <p className="px-5 py-10 text-center text-sm text-ink-3">
             No clients match. Clear the filter or the search above.
           </p>
         ) : (
@@ -121,7 +121,7 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
               <Link
                 key={row.id}
                 href={ROUTES.client(row.slug)}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-tk-slate/10 px-5 py-3.5 last:border-0 hover:bg-tk-linen/50 md:grid-cols-[minmax(200px,1.5fr)_130px_64px_minmax(110px,1fr)_100px_16px]"
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-line px-5 py-3.5 last:border-0 hover:bg-well md:grid-cols-[minmax(200px,1.5fr)_130px_64px_minmax(110px,1fr)_100px_16px]"
               >
                 <span className="flex min-w-0 items-center gap-3">
                   <ClientAvatar name={row.name} slug={row.slug} muted={row.dormant} />
@@ -129,7 +129,7 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
                     <span
                       className={cn(
                         "block truncate text-[14.5px] font-bold",
-                        row.dormant ? "text-tk-slate/50" : "text-tk-onyx"
+                        row.dormant ? "text-ink-3" : "text-tk-onyx"
                       )}
                     >
                       {row.name}
@@ -139,7 +139,7 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
                       <span
                         className={cn(
                           "truncate text-xs",
-                          row.dormant ? "text-tk-slate/40" : "text-tk-slate/70"
+                          row.dormant ? "text-ink-3" : "text-ink-3"
                         )}
                       >
                         {row.engagement}
@@ -151,13 +151,13 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
                 <span className="hidden md:block">
                   {row.hours ? (
                     <>
-                      <span className="mb-1 block text-[11.5px] tabular-nums text-tk-slate/70">
+                      <span className="mb-1 block text-[11.5px] tabular-nums text-ink-3">
                         {fmtHours(row.hours.logged)} / {row.hours.cap} hr
                       </span>
                       <HoursMeter logged={row.hours.logged} cap={row.hours.cap} />
                     </>
                   ) : (
-                    <span className="text-xs text-tk-slate/40">{row.hoursNote || "—"}</span>
+                    <span className="text-xs text-ink-3">{row.hoursNote || "—"}</span>
                   )}
                 </span>
 
@@ -166,17 +166,17 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
                     <>
                       <span className="tabular-nums text-tk-onyx">{row.openTasks}</span>
                       {row.overdueTasks > 0 ? (
-                        <span className="block text-[11px] font-semibold text-[#A32C1E]">
+                        <span className="block text-[11px] font-semibold text-bad">
                           {row.overdueTasks} overdue
                         </span>
                       ) : row.ticketsWaiting > 0 ? (
-                        <span className="block text-[11px] font-semibold text-[#8A5A05]">
+                        <span className="block text-[11px] font-semibold text-warn">
                           ticket waiting
                         </span>
                       ) : null}
                     </>
                   ) : (
-                    <span className="text-tk-slate/40">—</span>
+                    <span className="text-ink-3">—</span>
                   )}
                 </span>
 
@@ -186,12 +186,12 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
                       <span className="text-tk-onyx">
                         {meeting.day} <span className="tabular-nums">{meeting.time}</span>
                       </span>
-                      <span className="block truncate text-[11px] text-tk-slate/50">
+                      <span className="block truncate text-[11px] text-ink-3">
                         {row.nextMeeting?.title}
                       </span>
                     </>
                   ) : (
-                    <span className="text-tk-slate/40">—</span>
+                    <span className="text-ink-3">—</span>
                   )}
                 </span>
 
@@ -200,15 +200,15 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
                     "text-right text-[13px] tabular-nums",
                     row.outstandingCents > 0
                       ? (row.outstandingAgeDays ?? 0) >= 14
-                        ? "font-bold text-[#A32C1E]"
+                        ? "font-bold text-bad"
                         : "font-semibold text-tk-onyx"
-                      : "text-tk-slate/40"
+                      : "text-ink-3"
                   )}
                 >
                   {row.outstandingCents > 0 ? formatMoney(row.outstandingCents) : "—"}
                 </span>
 
-                <span aria-hidden="true" className="hidden text-tk-slate/30 md:block">
+                <span aria-hidden="true" className="hidden text-ink-3 md:block">
                   ›
                 </span>
               </Link>
@@ -216,7 +216,7 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
           })
         )}
 
-        <p className="border-t border-tk-slate/10 bg-tk-linen/40 px-5 py-2.5 text-xs text-tk-slate/60">
+        <p className="border-t border-line bg-well px-5 py-2.5 text-xs text-ink-3">
           Hours meters reset on the 1st · outstanding = sent, not yet paid
         </p>
       </div>

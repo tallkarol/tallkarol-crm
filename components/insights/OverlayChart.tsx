@@ -67,7 +67,7 @@ export function OverlayChart({
 
   return (
     <div>
-      <div className="flex flex-wrap gap-4 px-5 pt-3 text-[11px] font-medium text-tk-slate/70">
+      <div className="flex flex-wrap gap-4 px-5 pt-3 text-[11px] font-medium text-ink-3">
         {series.map((s) => (
           <span key={s.id} className="flex items-center gap-1.5">
             <i className="h-[3px] w-3.5 rounded-full" style={{ background: s.color }} />
@@ -145,7 +145,7 @@ export function OverlayChart({
         </svg>
         {h != null && dates[h] ? (
           <div
-            className="pointer-events-none absolute top-3 z-10 rounded-xl bg-tk-onyx px-3 py-2 text-xs text-tk-linen shadow-lg"
+            className="pointer-events-none absolute top-3 z-10 rounded-xl bg-tk-onyx px-3 py-2 text-xs text-tk-linen shadow-overlay"
             style={
               tooltipLeftPct > 0.62
                 ? { right: `${(1 - tooltipLeftPct) * 88 + 6}%` }

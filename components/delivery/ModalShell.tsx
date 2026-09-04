@@ -29,24 +29,24 @@ export function ModalShell({
         href={closeHref}
         scroll={false}
         aria-label="Close"
-        className="absolute inset-0 bg-tk-onyx/35 backdrop-blur-[2px] motion-safe:animate-[tk-fade-in_.18s_ease-out]"
+        className="absolute inset-0 bg-scrim backdrop-blur-[2px] motion-safe:animate-[tk-fade-in_.18s_ease-out]"
       />
       <div className="absolute inset-0 flex items-start justify-center overflow-y-auto p-3 sm:p-6">
-        <div className="relative w-full max-w-[62rem] overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-[0_24px_70px_-18px_rgba(15,22,21,.45)] motion-safe:animate-[tk-modal-in_.2s_ease-out]">
+        <div className="relative w-full max-w-[62rem] overflow-hidden rounded-2xl border border-line bg-card shadow-[0_24px_70px_-18px_rgba(15,22,21,.45)] motion-safe:animate-[tk-modal-in_.2s_ease-out]">
           <div className="relative">
             {header}
             <Link
               href={closeHref}
               scroll={false}
               aria-label="Close"
-              className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-lg text-tk-slate/50 transition-colors hover:bg-tk-linen hover:text-tk-onyx"
+              className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-lg text-ink-3 transition-colors hover:bg-well transition-colors duration-[120ms] hover:text-tk-onyx"
             >
               ✕
             </Link>
           </div>
           {children}
           {footer ? (
-            <div className="flex flex-wrap items-center gap-2 border-t border-tk-slate/10 bg-[#FAF6EE] px-4 py-2.5">
+            <div className="flex flex-wrap items-center gap-2 border-t border-line bg-well px-4 py-2.5">
               {footer}
             </div>
           ) : null}
@@ -64,28 +64,28 @@ export function ModalStrip({
   cells: { label: string; value: ReactNode; caption?: string; tone?: "amber" | "green" }[]
 }) {
   return (
-    <div className="grid border-y border-tk-slate/10 bg-[#FAF6EE] sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid border-y border-line bg-well sm:grid-cols-2 lg:grid-cols-4">
       {cells.map((cell) => (
         <div
           key={cell.label}
-          className="border-b border-r border-tk-slate/10 px-4 py-2.5 last:border-r-0 lg:border-b-0"
+          className="border-b border-r border-line px-4 py-2.5 last:border-r-0 lg:border-b-0"
         >
-          <p className="text-[9.5px] font-bold uppercase tracking-[0.09em] text-tk-slate/60">
+          <p className="text-[9.5px] font-bold uppercase tracking-[0.09em] text-ink-3">
             {cell.label}
           </p>
           <p
             className={
               cell.tone === "amber"
-                ? "mt-0.5 text-[18px] font-semibold tracking-tight tabular-nums text-[#8A5A05]"
+                ? "mt-0.5 text-[18px] font-semibold tracking-tight tabular-nums text-warn"
                 : cell.tone === "green"
-                  ? "mt-0.5 text-[18px] font-semibold tracking-tight tabular-nums text-[#26684A]"
+                  ? "mt-0.5 text-[18px] font-semibold tracking-tight tabular-nums text-good"
                   : "mt-0.5 text-[18px] font-semibold tracking-tight tabular-nums text-tk-onyx"
             }
           >
             {cell.value}
           </p>
           {cell.caption ? (
-            <p className="text-[10.5px] text-tk-slate/60">{cell.caption}</p>
+            <p className="text-[10.5px] text-ink-3">{cell.caption}</p>
           ) : null}
         </div>
       ))}
@@ -107,11 +107,11 @@ export function Block({
   return (
     <section className="mt-4 first:mt-0">
       <div className="mb-1.5 flex items-center gap-2">
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.1em] text-tk-slate/60">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.1em] text-ink-3">
           {title}
         </h3>
         {count != null ? (
-          <span className="font-mono text-[10px] tabular-nums text-tk-slate/40">{count}</span>
+          <span className="font-mono text-[10px] tabular-nums text-ink-3">{count}</span>
         ) : null}
         {action ? <span className="ml-auto">{action}</span> : null}
       </div>
@@ -125,8 +125,8 @@ export function Card({ children, padded }: { children: ReactNode; padded?: boole
     <div
       className={
         padded
-          ? "rounded-xl border border-tk-slate/15 bg-white px-2.5 py-1.5"
-          : "overflow-hidden rounded-xl border border-tk-slate/15 bg-white"
+          ? "rounded-xl border border-line bg-card px-2.5 py-1.5"
+          : "overflow-hidden rounded-xl border border-line bg-card"
       }
     >
       {children}
@@ -145,8 +145,8 @@ export function Line({
     <div
       className={
         hot
-          ? "flex items-center gap-2.5 border-b border-tk-slate/[0.09] bg-[#8A5A05]/[0.055] px-2.5 py-2 last:border-b-0"
-          : "flex items-center gap-2.5 border-b border-tk-slate/[0.09] px-2.5 py-2 last:border-b-0"
+          ? "flex items-center gap-2.5 border-b border-line bg-warn-soft px-2.5 py-2 last:border-b-0"
+          : "flex items-center gap-2.5 border-b border-line px-2.5 py-2 last:border-b-0"
       }
     >
       {children}
@@ -156,12 +156,12 @@ export function Line({
 
 export function KeyValue({ label, value, tone }: { label: string; value: ReactNode; tone?: "amber" }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-tk-slate/[0.09] py-1.5 last:border-b-0">
-      <span className="text-[11.5px] text-tk-slate/65">{label}</span>
+    <div className="flex items-baseline justify-between gap-3 border-b border-line py-1.5 last:border-b-0">
+      <span className="text-[11.5px] text-ink-3">{label}</span>
       <span
         className={
           tone === "amber"
-            ? "font-mono text-[11px] font-semibold tabular-nums text-[#8A5A05]"
+            ? "font-mono text-[11px] font-semibold tabular-nums text-warn"
             : "font-mono text-[11px] font-semibold tabular-nums text-tk-onyx"
         }
       >
@@ -174,18 +174,18 @@ export function KeyValue({ label, value, tone }: { label: string; value: ReactNo
 export function Attention({ flags }: { flags: { key: string; detail: string; severity: string }[] }) {
   if (flags.length === 0) {
     return (
-      <p className="rounded-xl border border-tk-slate/15 bg-white px-3 py-2.5 text-[11.5px] text-tk-slate/65">
+      <p className="rounded-xl border border-line bg-card px-3 py-2.5 text-[11.5px] text-ink-3">
         Nothing needs you here.
       </p>
     )
   }
   return (
-    <div className="rounded-xl border border-[#8A5A05]/30 bg-[#8A5A05]/[0.06] px-3 py-2.5">
+    <div className="rounded-xl border border-transparent bg-warn-soft px-3 py-2.5">
       <ul className="list-disc space-y-1.5 pl-4">
         {flags.map((flag) => (
           <li
             key={flag.key}
-            className="text-[11.5px] leading-snug text-tk-slate marker:text-[#8A5A05]"
+            className="text-[11.5px] leading-snug text-tk-slate marker:text-warn"
           >
             {flag.severity === "hot" ? (
               <strong className="font-semibold text-tk-onyx">{flag.detail}</strong>

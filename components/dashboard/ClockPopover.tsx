@@ -67,13 +67,13 @@ export function ClockPopover({
           <div className="flex items-center gap-2 font-ui">
             <Clock className="size-4 text-tk-teal" aria-hidden />
             <b className="text-[13.5px]">{live ? "Running" : "Clock in"}</b>
-            <span className="ml-auto text-[11.5px] text-tk-slate/70">
+            <span className="ml-auto text-[11.5px] text-ink-3">
               {live ? `${live.elapsed} · started ${new Date(live.startedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}` : "nothing running"}
             </span>
           </div>
 
           {live ? (
-            <div className="rounded-xl border border-tk-slate/10 bg-tk-linen px-3 py-2.5">
+            <div className="rounded-xl border border-line bg-well px-3 py-2.5">
               <p className="flex items-center gap-2 text-sm font-semibold text-tk-onyx">
                 <span
                   aria-hidden
@@ -82,11 +82,11 @@ export function ClockPopover({
                 />
                 {live.clientName}
                 {live.projectName ? (
-                  <span className="font-normal text-tk-slate/70">· {live.projectName}</span>
+                  <span className="font-normal text-ink-3">· {live.projectName}</span>
                 ) : null}
               </p>
               {live.note ? (
-                <p className="mt-0.5 text-xs text-tk-slate/70">{live.note}</p>
+                <p className="mt-0.5 text-xs text-ink-3">{live.note}</p>
               ) : null}
             </div>
           ) : (
@@ -108,7 +108,7 @@ export function ClockPopover({
                           "inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 font-ui text-xs font-semibold transition-colors",
                           on
                             ? "tk-client-tint tk-client-ink ring-1 ring-inset ring-[color:var(--c)]/40"
-                            : "bg-tk-linen text-tk-slate ring-1 ring-inset ring-tk-slate/15 hover:text-tk-onyx"
+                            : "bg-well text-tk-slate ring-1 ring-inset ring-line hover:text-tk-onyx"
                         )}
                       >
                         <span aria-hidden className="size-1.5 rounded-full" style={{ background: "var(--c)" }} />
@@ -142,14 +142,14 @@ export function ClockPopover({
           ) : null}
 
           <div className="flex items-center gap-1.5">
-            <span className="text-[11.5px] text-tk-slate/70">
+            <span className="text-[11.5px] text-ink-3">
               {live ? "Stops here or from the menu bar app." : "Shows in the floating clock on every page."}
             </span>
             <span className="flex-1" />
             <button
               type="button"
               onClick={close}
-              className="h-8 rounded-lg px-3 font-ui text-xs font-semibold text-tk-slate hover:bg-tk-linen hover:text-tk-onyx"
+              className="h-8 rounded-lg px-3 font-ui text-xs font-semibold text-tk-slate hover:bg-well transition-colors duration-[120ms] hover:text-tk-onyx"
             >
               Cancel
             </button>
@@ -168,7 +168,7 @@ export function ClockPopover({
                 type="button"
                 disabled={pending || (!clientId && clients.length > 0)}
                 onClick={() => begin(close)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-tk-teal px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95 disabled:opacity-60"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95 disabled:opacity-60"
               >
                 <Play className="size-3.5" aria-hidden />
                 Start

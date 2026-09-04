@@ -121,11 +121,11 @@ export default async function SlinksPage() {
                       {waiting} waiting on you
                     </span>
                   ) : null}
-                  <span className="rounded-full bg-tk-slate/8 px-2.5 py-0.5 font-['Inter_Tight',sans-serif] text-[11px] font-semibold text-ink-3">
+                  <span className="rounded-full bg-well px-2.5 py-0.5 font-['Inter_Tight',sans-serif] text-[11px] font-semibold text-ink-3">
                     {liveBy.get(s.id) ?? 0} with access
                   </span>
                   {s.status === "archived" ? (
-                    <span className="rounded-full bg-tk-slate/8 px-2.5 py-0.5 font-['Inter_Tight',sans-serif] text-[11px] font-semibold text-ink-3">
+                    <span className="rounded-full bg-well px-2.5 py-0.5 font-['Inter_Tight',sans-serif] text-[11px] font-semibold text-ink-3">
                       Archived
                     </span>
                   ) : null}

@@ -9,7 +9,7 @@ function Mini({ title, children, end }: { title: string; children: React.ReactNo
   return (
     <div className="min-w-0">
       <div className="flex items-baseline justify-between">
-        <p className="text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/60">
+        <p className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">
           {title}
         </p>
         <p className="text-[11px] font-bold tabular-nums text-tk-onyx">{end}</p>

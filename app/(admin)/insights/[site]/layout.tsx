@@ -26,11 +26,11 @@ export default async function InsightsSiteLayout({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/55">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
           Insights / <span className="text-tk-onyx">{site.name}</span>
         </p>
         {snapshot?.ga4.ok ? (
-          <p className="flex items-center gap-1.5 rounded-full border border-tk-slate/15 bg-white px-2.5 py-1 text-[11px] font-semibold text-tk-slate">
+          <p className="flex items-center gap-1.5 rounded-full border border-line bg-card px-2.5 py-1 text-[11px] font-semibold text-tk-slate">
             <span className="h-1.5 w-1.5 rounded-full bg-[#009688] motion-safe:animate-pulse" aria-hidden />
             {fmtInt(snapshot.ga4.realtimeUsers)} active · at last fetch
           </p>
@@ -47,7 +47,7 @@ export default async function InsightsSiteLayout({
           <RefreshInsights slug={site.slug} refreshedAt={refreshedAt} />
           <Link
             href={`/insights/${site.slug}/reports`}
-            className="rounded-lg bg-tk-teal px-3 py-1.5 text-xs font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90"
+            className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90"
           >
             Snapshot report ↓
           </Link>

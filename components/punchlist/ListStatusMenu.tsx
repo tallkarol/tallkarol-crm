@@ -36,7 +36,7 @@ export function ListStatusMenu({
             router.refresh()
           })
         }
-        className="rounded-full border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal disabled:opacity-40"
+        className="rounded-full border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal disabled:opacity-40"
       >
         {next === "void" ? "Void list" : "Reopen list"}
       </button>

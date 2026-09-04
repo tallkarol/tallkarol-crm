@@ -98,7 +98,7 @@ export function PushToggle() {
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <span className="text-sm text-tk-slate/80">
+      <span className="text-sm text-tk-slate">
         {state === "checking" && "Checking this browser…"}
         {state === "unsupported" && "This browser can't receive push. On iPhone or iPad, add the CRM to the Home Screen first."}
         {state === "denied" && "Notifications are blocked for this site in the browser's settings."}
@@ -107,21 +107,21 @@ export function PushToggle() {
         {state === "busy" && "Working…"}
       </span>
       {state === "off" && (
-        <button type="button" onClick={enable} className={`${button} bg-tk-teal text-tk-linen hover:bg-tk-teal/90`}>
+        <button type="button" onClick={enable} className={`${button} bg-accent text-tk-linen hover:bg-tk-teal/90`}>
           Enable on this device
         </button>
       )}
       {state === "on" && (
         <>
-          <button type="button" onClick={test} className={`${button} bg-tk-teal text-tk-linen hover:bg-tk-teal/90`}>
+          <button type="button" onClick={test} className={`${button} bg-accent text-tk-linen hover:bg-tk-teal/90`}>
             Send a test
           </button>
-          <button type="button" onClick={disable} className={`${button} border border-tk-slate/20 text-tk-slate/80 hover:text-tk-onyx`}>
+          <button type="button" onClick={disable} className={`${button} border border-line text-tk-slate hover:text-tk-onyx`}>
             Turn off here
           </button>
         </>
       )}
-      {note && <span className="text-xs text-tk-slate/60">{note}</span>}
+      {note && <span className="text-xs text-ink-3">{note}</span>}
     </div>
   )
 }

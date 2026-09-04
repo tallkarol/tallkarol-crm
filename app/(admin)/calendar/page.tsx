@@ -25,7 +25,7 @@ export default async function CalendarPage({
         actions={
           <Link
             href={ROUTES.settingsCalendar}
-            className="rounded-full border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+            className="rounded-full border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
           >
             Calendars
           </Link>
@@ -33,11 +33,11 @@ export default async function CalendarPage({
       />
 
       {snapshot.sources.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
+        <div className="mt-6 rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
           <p className="text-sm font-semibold text-tk-onyx">
             No calendars connected
           </p>
-          <p className="mt-1 max-w-xl text-sm text-tk-slate/70">
+          <p className="mt-1 max-w-xl text-sm text-ink-3">
             Connect Cal.com and your Google calendars in{" "}
             <Link
               href={ROUTES.settingsCalendar}

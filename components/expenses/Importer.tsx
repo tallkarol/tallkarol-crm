@@ -127,11 +127,11 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
   const skipped = rows.length - selected.length
 
   return (
-    <section className="mt-6 rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm">
+    <section className="mt-6 rounded-2xl border border-line bg-card p-5 shadow-card">
       <div className="flex flex-wrap items-center gap-3">
         <div>
           <h2 className="text-sm font-semibold text-tk-onyx">Import statements</h2>
-          <p className="mt-0.5 text-xs text-tk-slate/60">
+          <p className="mt-0.5 text-xs text-ink-3">
             Credit card, debit, or PayPal exports (CSV / OFX / QFX) — or paste receipt
             and invoice lines like “Aug 12 Adobe $54.99”. Everything lands in a review
             queue first.
@@ -160,14 +160,14 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="rounded-lg bg-tk-teal px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90"
           >
             Choose files
           </button>
           <button
             type="button"
             onClick={() => setPasteOpen((v) => !v)}
-            className="rounded-lg border border-tk-slate/20 px-4 py-2 text-sm font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+            className="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
           >
             Paste lines
           </button>
@@ -181,14 +181,14 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
             onChange={(e) => setPasteText(e.target.value)}
             rows={4}
             placeholder={"Aug 12 Adobe receipt $54.99\n8/3 Railway 20.00\nGoDaddy renewal 12/1/2026 $149.17"}
-            className="w-full rounded-lg border border-tk-slate/20 bg-tk-linen px-3 py-2 font-mono text-[13px] outline-none focus:border-tk-teal"
+            className="w-full rounded-lg border border-line bg-well px-3 py-2 font-mono text-[13px] outline-none focus:border-tk-teal"
           />
           <div>
             <button
               type="button"
               disabled={busy || !pasteText.trim()}
               onClick={() => stage(parsePaste(pasteText), "the pasted text")}
-              className="rounded-lg bg-tk-teal px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90 disabled:opacity-50"
+              className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90 disabled:opacity-50"
             >
               Parse lines
             </button>
@@ -205,12 +205,12 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
               {selected.length} of {rows.length} selected · {formatMoney(selectedCents)}
             </p>
             {skipped > 0 ? (
-              <p className="text-xs text-tk-slate/60">
+              <p className="text-xs text-ink-3">
                 {skipped} unchecked (duplicates and refunds/credits start excluded)
               </p>
             ) : null}
             {lastFile && !/\.(ofx|qfx)$/i.test(lastFile.name) ? (
-              <label className="flex items-center gap-1.5 text-xs text-tk-slate/70">
+              <label className="flex items-center gap-1.5 text-xs text-ink-3">
                 <input
                   type="checkbox"
                   checked={chargesNegative}
@@ -224,16 +224,16 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
               type="button"
               disabled={busy || selected.length === 0}
               onClick={commit}
-              className="ml-auto rounded-lg bg-tk-teal px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90 disabled:opacity-50"
+              className="ml-auto rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90 disabled:opacity-50"
             >
               {busy ? "Working…" : `Import ${selected.length}`}
             </button>
           </div>
 
-          <div className="mt-3 overflow-x-auto rounded-xl border border-tk-slate/15">
+          <div className="mt-3 overflow-x-auto rounded-xl border border-line">
             <table className="w-full min-w-[860px] border-collapse text-[13px]">
               <thead>
-                <tr className="border-b border-tk-slate/15 bg-tk-linen/60 text-left text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+                <tr className="border-b border-line bg-well text-left text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                   <th className="w-10 px-3 py-2" aria-label="Include" />
                   <th className="w-24 px-2 py-2">Date</th>
                   <th className="w-44 px-2 py-2">Vendor</th>
@@ -248,7 +248,7 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
                   <tr
                     key={r.key}
                     className={cn(
-                      "border-b border-tk-slate/[0.07] last:border-0",
+                      "border-b border-line last:border-0",
                       !r.include && "opacity-45"
                     )}
                   >
@@ -266,10 +266,10 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
                       <input
                         value={r.vendor}
                         onChange={(e) => patch(r.key, { vendor: e.target.value })}
-                        className="w-full rounded border border-transparent bg-transparent px-1.5 py-1 font-medium text-tk-onyx outline-none hover:border-tk-slate/20 focus:border-tk-teal"
+                        className="w-full rounded border border-transparent bg-transparent px-1.5 py-1 font-medium text-tk-onyx outline-none hover:border-line-strong focus:border-tk-teal"
                       />
                     </td>
-                    <td className="max-w-0 truncate px-2 py-1.5 text-xs text-tk-slate/60" title={r.description}>
+                    <td className="max-w-0 truncate px-2 py-1.5 text-xs text-ink-3" title={r.description}>
                       {r.description}
                       {r.credit ? <span className="ml-1.5 font-semibold text-emerald-800">refund/credit</span> : null}
                       {r.duplicate ? <span className="ml-1.5 font-semibold text-amber-800">already in expenses</span> : null}
@@ -284,7 +284,7 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
                       <select
                         value={r.category}
                         onChange={(e) => patch(r.key, { category: e.target.value })}
-                        className="w-full rounded border border-transparent bg-transparent px-1 py-1 text-xs outline-none hover:border-tk-slate/20 focus:border-tk-teal"
+                        className="w-full rounded border border-transparent bg-transparent px-1 py-1 text-xs outline-none hover:border-line-strong focus:border-tk-teal"
                       >
                         {EXPENSE_CATEGORIES.map((c) => (
                           <option key={c} value={c}>
@@ -297,7 +297,7 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
                       <select
                         value={r.clientId ?? ""}
                         onChange={(e) => patch(r.key, { clientId: e.target.value || null })}
-                        className="w-full rounded border border-transparent bg-transparent px-1 py-1 text-xs outline-none hover:border-tk-slate/20 focus:border-tk-teal"
+                        className="w-full rounded border border-transparent bg-transparent px-1 py-1 text-xs outline-none hover:border-line-strong focus:border-tk-teal"
                         style={r.clientId ? { color: clientColor(clients.find((c) => c.id === r.clientId)?.slug ?? "") } : undefined}
                       >
                         <option value="">overhead</option>

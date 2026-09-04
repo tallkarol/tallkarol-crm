@@ -63,7 +63,7 @@ export default async function NotebooksPage() {
               <form action={syncAllNotebooks}>
                 <button
                   type="submit"
-                  className="rounded-lg border border-tk-slate/20 px-3 py-1.5 text-[13px] font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+                  className="rounded-lg border border-line px-3 py-1.5 text-[13px] font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
                 >
                   Sync all
                 </button>
@@ -71,7 +71,7 @@ export default async function NotebooksPage() {
               <form action={scanAllNotebooks}>
                 <button
                   type="submit"
-                  className="rounded-lg bg-tk-onyx px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-tk-teal"
+                  className="rounded-lg bg-tk-onyx px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-accent"
                 >
                   Scan all
                 </button>
@@ -82,7 +82,7 @@ export default async function NotebooksPage() {
       />
 
       {totalProposed > 0 && busiest?.client ? (
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-tk-teal p-5 text-tk-linen">
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-accent p-5 text-tk-linen">
           <div>
             <p className="text-[15px] font-semibold">
               {totalProposed} actionable{totalProposed === 1 ? "" : "s"} waiting
@@ -94,7 +94,7 @@ export default async function NotebooksPage() {
           </div>
           <Link
             href={ROUTES.notebook(busiest.client.slug)}
-            className="rounded-lg bg-tk-linen px-3.5 py-1.5 text-[13px] font-bold text-tk-teal hover:bg-white"
+            className="rounded-lg bg-well px-3.5 py-1.5 text-[13px] font-bold text-tk-teal hover:bg-card"
           >
             Review inbox →
           </Link>
@@ -102,12 +102,12 @@ export default async function NotebooksPage() {
       ) : null}
 
       {links.length === 0 && discovered.matched.length === 0 ? (
-        <div className="mt-8 max-w-2xl rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 p-6 text-sm text-tk-slate">
+        <div className="mt-8 max-w-2xl rounded-2xl border border-dashed border-line bg-well p-6 text-sm text-tk-slate">
           <p className="font-semibold text-tk-onyx">No notebooks linked yet</p>
-          <p className="mt-1.5 text-tk-slate/70">
+          <p className="mt-1.5 text-ink-3">
             Share a client&apos;s Notion notebook with the integration and it
             appears here, or link one directly:{" "}
-            <code className="rounded bg-tk-linen px-1 py-0.5 text-xs">
+            <code className="rounded bg-well px-1 py-0.5 text-xs">
               npm run notion:link -- &lt;clientSlug&gt; &lt;pageId&gt;
             </code>
           </p>
@@ -132,7 +132,7 @@ export default async function NotebooksPage() {
             return (
               <div
                 key={link.id}
-                className="flex flex-col rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm"
+                className="flex flex-col rounded-2xl border border-line bg-card p-5 shadow-card"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -142,7 +142,7 @@ export default async function NotebooksPage() {
                     >
                       {link.client?.name ?? "Unknown client"}
                     </Link>
-                    <p className="mt-0.5 truncate font-mono text-[11px] text-tk-slate/55">
+                    <p className="mt-0.5 truncate font-mono text-[11px] text-ink-3">
                       {link.client?.slug} · {live.length} pages · {blocks} blocks
                     </p>
                   </div>
@@ -170,15 +170,15 @@ export default async function NotebooksPage() {
                 ) : null}
 
                 {link.lastError ? (
-                  <p className="mt-3 rounded bg-[#B4322A]/10 px-2 py-1 text-[11px] text-[#B4322A]">
+                  <p className="mt-3 rounded bg-bad-soft px-2 py-1 text-[11px] text-bad">
                     {link.lastError}
                   </p>
                 ) : null}
 
-                <div className="mt-auto flex items-center justify-between border-t border-tk-slate/10 pt-3.5">
-                  <span className="flex items-center gap-1.5 font-mono text-[10.5px] text-tk-slate/50">
+                <div className="mt-auto flex items-center justify-between border-t border-line pt-3.5">
+                  <span className="flex items-center gap-1.5 font-mono text-[10.5px] text-ink-3">
                     <span
-                      className={`size-1.5 rounded-full ${fresh ? "bg-[#2E7D32]" : "bg-[#B4790A]"}`}
+                      className={`size-1.5 rounded-full ${fresh ? "bg-good" : "bg-warn"}`}
                     />
                     synced {ago(link.lastSyncedAt)}
                   </span>
@@ -196,13 +196,13 @@ export default async function NotebooksPage() {
           {discovered.matched.map((page) => (
             <div
               key={page.id}
-              className="flex flex-col items-start justify-between rounded-2xl border border-dashed border-tk-slate/25 bg-white/55 p-5"
+              className="flex flex-col items-start justify-between rounded-2xl border border-dashed border-line-strong bg-well p-5"
             >
               <div>
-                <p className="text-base font-semibold text-tk-onyx/75">
+                <p className="text-base font-semibold text-tk-slate">
                   {page.clientName}
                 </p>
-                <p className="mt-1 text-[12.5px] text-tk-slate/55">
+                <p className="mt-1 text-[12.5px] text-ink-3">
                   &ldquo;{page.title}&rdquo; is shared with the integration but
                   not linked yet.
                 </p>
@@ -221,7 +221,7 @@ export default async function NotebooksPage() {
       )}
 
       {discovered.unmatched > 0 ? (
-        <p className="mt-4 font-mono text-[10.5px] text-tk-slate/45">
+        <p className="mt-4 font-mono text-[10.5px] text-ink-3">
           {discovered.unmatched} more shared top-level pages without a matching
           client · link one with npm run notion:link
         </p>

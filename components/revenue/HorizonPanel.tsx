@@ -5,9 +5,9 @@ import { formatWholeMoney, type Horizon, type Verdict } from "@/lib/revenue"
 import { Delta } from "./bits"
 
 const VERDICT: Record<Verdict, { label: string; className: string }> = {
-  ahead: { label: "Ahead", className: "bg-[#1B6B3A]/10 text-[#1B6B3A]" },
+  ahead: { label: "Ahead", className: "bg-good-soft text-good" },
   track: { label: "On track", className: "bg-tk-teal/10 text-tk-teal" },
-  behind: { label: "Behind", className: "bg-[#A62228]/10 text-[#A62228]" },
+  behind: { label: "Behind", className: "bg-bad-soft text-bad" },
 }
 
 /**
@@ -29,7 +29,7 @@ function Meter({ horizon }: { horizon: Horizon }) {
   const pacePct = horizon.pace ? pct(horizon.pace.expectedCents) : null
 
   return (
-    <div className="relative mt-3 h-2.5 overflow-hidden rounded-full bg-tk-linen">
+    <div className="relative mt-3 h-2.5 overflow-hidden rounded-full bg-well">
       <span
         className="absolute inset-y-0 left-0 bg-[#009688]"
         style={{ width: `${billedPct}%` }}
@@ -42,7 +42,7 @@ function Meter({ horizon }: { horizon: Horizon }) {
       ) : null}
       {goalPct != null && goalPct < 99.5 ? (
         <span
-          className="absolute inset-y-0 w-0.5 bg-white/90 shadow-[0_0_0_1px_rgba(15,22,21,0.35)]"
+          className="absolute inset-y-0 w-0.5 bg-well shadow-[0_0_0_1px_rgba(15,22,21,0.35)]"
           style={{ left: `calc(${goalPct}% - 1px)` }}
           aria-hidden
         />
@@ -139,13 +139,13 @@ export function HorizonPanel({
   const ahead = horizon.pace?.aheadCents ?? null
 
   return (
-    <section className="flex flex-col rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
+    <section className="flex flex-col rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-[11px] font-bold uppercase tracking-widest text-tk-slate/75">
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-tk-slate">
             {horizon.label}
           </h2>
-          <p className="mt-0.5 text-[11px] tabular-nums text-tk-slate/60">
+          <p className="mt-0.5 text-[11px] tabular-nums text-ink-3">
             {horizon.through}
           </p>
         </div>
@@ -165,7 +165,7 @@ export function HorizonPanel({
       {horizon.deltaPct != null && horizon.deltaSuffix ? (
         <Delta pct={horizon.deltaPct} suffix={horizon.deltaSuffix} />
       ) : null}
-      <p className="mt-1 text-xs text-tk-slate/60 tabular-nums">
+      <p className="mt-1 text-xs text-ink-3 tabular-nums">
         {horizon.goalCents != null
           ? `${Math.round((horizon.goalShare ?? 0) * 100)}% of the ${formatWholeMoney(horizon.goalCents)} goal`
           : "no goal set"}
@@ -173,14 +173,14 @@ export function HorizonPanel({
 
       <Meter horizon={horizon} />
 
-      <div className="mt-1.5 flex items-baseline justify-between gap-3 text-[11px] tabular-nums text-tk-slate/60">
+      <div className="mt-1.5 flex items-baseline justify-between gap-3 text-[11px] tabular-nums text-ink-3">
         {ahead != null ? (
           <span
             className="font-semibold"
             style={{ color: ahead >= 0 ? CHART.good : CHART.bad }}
           >
             {ahead >= 0 ? "▲" : "▼"} {formatWholeMoney(Math.abs(ahead))}{" "}
-            <span className="font-medium text-tk-slate/60">
+            <span className="font-medium text-ink-3">
               {ahead >= 0 ? "ahead of pace" : "behind pace"}
             </span>
           </span>
@@ -192,7 +192,7 @@ export function HorizonPanel({
         ) : null}
       </div>
 
-      <p className="mt-3 border-t border-tk-slate/10 pt-2.5 text-xs leading-relaxed text-tk-slate">
+      <p className="mt-3 border-t border-line pt-2.5 text-xs leading-relaxed text-tk-slate">
         {note ?? defaultNote(horizon)}
       </p>
     </section>

@@ -115,8 +115,8 @@ export default async function RetainerDetailPage({
                 aria-current={on ? "page" : undefined}
                 className={
                   on
-                    ? "flex items-center gap-2 rounded-xl border border-tk-teal bg-tk-teal px-3.5 py-2 text-sm font-semibold text-tk-linen"
-                    : "flex items-center gap-2 rounded-xl border border-tk-slate/20 bg-white px-3.5 py-2 text-sm font-semibold text-tk-onyx hover:border-tk-teal"
+                    ? "flex items-center gap-2 rounded-xl border border-tk-teal bg-accent px-3.5 py-2 text-sm font-semibold text-tk-linen"
+                    : "flex items-center gap-2 rounded-xl border border-line bg-card px-3.5 py-2 text-sm font-semibold text-tk-onyx hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                 }
               >
                 <span
@@ -150,22 +150,22 @@ export default async function RetainerDetailPage({
       />
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-tk-slate/60">
+        <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">
             {now.toLocaleDateString("en-US", { month: "long" })} logged
           </p>
           <p className="mt-1.5 text-[23px] font-semibold leading-tight tracking-tight text-tk-onyx tabular-nums">
-            {fmtHours(loggedNow)} <span className="text-sm text-tk-slate/60">/ {retainer.hoursPerMonth} hrs</span>
+            {fmtHours(loggedNow)} <span className="text-sm text-ink-3">/ {retainer.hoursPerMonth} hrs</span>
           </p>
           {p ? (
             <p className={`mt-0.5 text-xs font-semibold tabular-nums ${over ? "text-red-700" : "text-emerald-800"}`}>
               {over ? "▲ over cap" : "▲ on pace"}{" "}
-              <span className="font-normal text-tk-slate/60">
+              <span className="font-normal text-ink-3">
                 projected {fmtHours(p.projected)} by {monthLabel(thisMonth).split(" ")[0]} {p.days}
               </span>
             </p>
           ) : (
-            <p className="mt-0.5 text-xs text-tk-slate/60">no timesheet entries this month</p>
+            <p className="mt-0.5 text-xs text-ink-3">no timesheet entries this month</p>
           )}
         </div>
         <Stat
@@ -191,10 +191,10 @@ export default async function RetainerDetailPage({
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
         <div className="flex min-w-0 flex-col gap-4">
-          <section className="rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+          <section className="rounded-2xl border border-line bg-card shadow-card">
             <div className="flex items-center justify-between px-5 pb-1 pt-4">
               <h2 className="text-[13px] font-bold text-tk-onyx">Hours vs capacity</h2>
-              <span className="text-[11px] tabular-nums text-tk-slate/60">timesheet · cap {retainer.hoursPerMonth} hrs</span>
+              <span className="text-[11px] tabular-nums text-ink-3">timesheet · cap {retainer.hoursPerMonth} hrs</span>
             </div>
             <div className="px-4 pb-3 pt-1">
               <svg width="100%" height="150" viewBox="0 0 560 150" role="img" aria-label="Monthly logged hours against capacity">
@@ -233,19 +233,19 @@ export default async function RetainerDetailPage({
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+          <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
             <div className="flex items-center justify-between px-5 pb-1 pt-4">
               <h2 className="text-[13px] font-bold text-tk-onyx">Month ledger</h2>
-              <span className="text-[11px] text-tk-slate/60">logged → invoiced, one row per month</span>
+              <span className="text-[11px] text-ink-3">logged → invoiced, one row per month</span>
             </div>
             <table className="w-full border-collapse text-[13px] tabular-nums">
               <thead>
-                <tr className="text-left text-[10.5px] font-bold uppercase tracking-wider text-tk-slate/60">
-                  <th className="border-b border-tk-slate/10 px-5 py-2">Month</th>
-                  <th className="border-b border-tk-slate/10 px-2 py-2 text-right">Logged</th>
-                  <th className="border-b border-tk-slate/10 px-2 py-2">Invoice</th>
-                  <th className="border-b border-tk-slate/10 px-2 py-2 text-right">Amount</th>
-                  <th className="border-b border-tk-slate/10 px-5 py-2">Status</th>
+                <tr className="text-left text-[10.5px] font-bold uppercase tracking-wider text-ink-3">
+                  <th className="border-b border-line px-5 py-2">Month</th>
+                  <th className="border-b border-line px-2 py-2 text-right">Logged</th>
+                  <th className="border-b border-line px-2 py-2">Invoice</th>
+                  <th className="border-b border-line px-2 py-2 text-right">Amount</th>
+                  <th className="border-b border-line px-5 py-2">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -255,7 +255,7 @@ export default async function RetainerDetailPage({
                   const isNow = k === thisMonth
                   const gap = !inv && !isNow && logged > 0
                   return (
-                    <tr key={k} className="border-b border-tk-slate/[0.06] last:border-0">
+                    <tr key={k} className="border-b border-line last:border-0">
                       <td className="px-5 py-2 font-semibold text-tk-onyx">{monthLabel(k)}</td>
                       <td className="px-2 py-2 text-right text-tk-slate">{logged ? fmtHours(logged) : "—"}</td>
                       <td className="px-2 py-2 text-tk-slate">
@@ -300,10 +300,10 @@ export default async function RetainerDetailPage({
           </section>
 
           {mine.some((i) => i.description) ? (
-            <section className="rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+            <section className="rounded-2xl border border-line bg-card shadow-card">
               <div className="flex items-center justify-between px-5 pb-1 pt-4">
                 <h2 className="text-[13px] font-bold text-tk-onyx">Month in review</h2>
-                <span className="text-[11px] text-tk-slate/60">from invoice journals — zero extra data entry</span>
+                <span className="text-[11px] text-ink-3">from invoice journals — zero extra data entry</span>
               </div>
               <ul className="px-5 pb-4 pt-1">
                 {mine
@@ -312,11 +312,11 @@ export default async function RetainerDetailPage({
                   .map((i, idx, arr) => (
                     <li key={i.id} className="relative grid grid-cols-[92px_14px_1fr] gap-3 py-2.5">
                       {idx < arr.length - 1 ? (
-                        <span className="absolute bottom-[-6px] left-[104px] top-7 w-0.5 bg-tk-slate/[0.07]" aria-hidden />
+                        <span className="absolute bottom-[-6px] left-[104px] top-7 w-0.5 bg-well" aria-hidden />
                       ) : null}
                       <span className="text-xs font-bold tabular-nums text-tk-onyx">
                         {monthLabel(i.issuedOn.slice(0, 7))}
-                        <span className="block font-medium text-tk-slate/60">
+                        <span className="block font-medium text-ink-3">
                           {i.hours ? `${fmtHours(Number(i.hours))} hr · ` : ""}
                           {formatMoney(i.amountCents)}
                         </span>
@@ -331,22 +331,22 @@ export default async function RetainerDetailPage({
         </div>
 
         <div className="flex min-w-0 flex-col gap-4">
-          <section className="rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+          <section className="rounded-2xl border border-line bg-card shadow-card">
             <div className="flex items-center justify-between px-5 pb-1 pt-4">
               <h2 className="text-[13px] font-bold text-tk-onyx">Recent time entries</h2>
-              <span className="text-[11px] tabular-nums text-tk-slate/60">{entriesThisMonth} this month</span>
+              <span className="text-[11px] tabular-nums text-ink-3">{entriesThisMonth} this month</span>
             </div>
             {recent.length === 0 ? (
-              <p className="px-5 pb-4 pt-1 text-sm text-tk-slate/60">
+              <p className="px-5 pb-4 pt-1 text-sm text-ink-3">
                 Nothing logged yet — entries stream in from the timesheet.
               </p>
             ) : (
               <ul className="px-1 pb-2">
                 {recent.map((e) => (
-                  <li key={e.id} className="flex items-start gap-3 border-b border-tk-slate/[0.06] px-4 py-2.5 text-[13px] last:border-0">
+                  <li key={e.id} className="flex items-start gap-3 border-b border-line px-4 py-2.5 text-[13px] last:border-0">
                     <span className="min-w-0 flex-1">
                       <span className="block font-semibold tabular-nums text-tk-onyx">{formatDay(e.occurredOn)}</span>
-                      {e.summary ? <span className="block truncate text-xs text-tk-slate/60">{e.summary}</span> : null}
+                      {e.summary ? <span className="block truncate text-xs text-ink-3">{e.summary}</span> : null}
                     </span>
                     <span className="shrink-0 text-xs font-semibold tabular-nums text-tk-slate">
                       {fmtHours(Number(e.hours))} hr
@@ -357,25 +357,25 @@ export default async function RetainerDetailPage({
             )}
           </section>
 
-          <section className="rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm">
+          <section className="rounded-2xl border border-line bg-card p-5 shadow-card">
             <h2 className="text-[13px] font-bold text-tk-onyx">Actions</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               <form action={draftRetainerInvoice.bind(null, retainer.id)}>
-                <button className="rounded-full bg-tk-teal px-3.5 py-1.5 text-xs font-semibold text-tk-linen hover:bg-tk-teal/90">
+                <button className="rounded-full bg-accent px-3.5 py-1.5 text-xs font-semibold text-tk-linen hover:bg-tk-teal/90">
                   Draft {now.toLocaleDateString("en-US", { month: "long" })} invoice
                 </button>
               </form>
-              <Link href={ROUTES.timesheetFor(retainer.client.slug, thisMonth)} className="rounded-full border border-tk-slate/20 px-3.5 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal">
+              <Link href={ROUTES.timesheetFor(retainer.client.slug, thisMonth)} className="rounded-full border border-line px-3.5 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal">
                 Open timesheet
               </Link>
-              <Link href={ROUTES.client(retainer.client.slug)} className="rounded-full border border-tk-slate/20 px-3.5 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal">
+              <Link href={ROUTES.client(retainer.client.slug)} className="rounded-full border border-line px-3.5 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal">
                 Client
               </Link>
             </div>
           </section>
 
           {retainer.notes ? (
-            <section className="rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm">
+            <section className="rounded-2xl border border-line bg-card p-5 shadow-card">
               <h2 className="text-[13px] font-bold text-tk-onyx">Notes</h2>
               <p className="mt-2 text-sm leading-relaxed text-tk-slate">{retainer.notes}</p>
             </section>
@@ -388,10 +388,10 @@ export default async function RetainerDetailPage({
 
 function Stat({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-tk-slate/60">{label}</p>
+    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
       <p className="mt-1.5 text-[23px] font-semibold leading-tight tracking-tight text-tk-onyx tabular-nums">{value}</p>
-      <p className="mt-0.5 truncate text-xs text-tk-slate/60">{sub}</p>
+      <p className="mt-0.5 truncate text-xs text-ink-3">{sub}</p>
     </div>
   )
 }
@@ -402,6 +402,6 @@ function Pill({ tone, children }: { tone: "mut" | "bad" | "warn"; children: Reac
       ? "bg-red-700/10 text-red-700"
       : tone === "warn"
         ? "bg-amber-700/10 text-amber-800"
-        : "bg-tk-slate/10 text-tk-slate/70"
+        : "bg-well text-ink-3"
   return <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${cls}`}>{children}</span>
 }

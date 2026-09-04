@@ -75,7 +75,7 @@ const SOURCE_CHIP: Record<string, { label: string; title: string; tone: string }
   manual: {
     label: "man",
     title: "Typed into the sheet",
-    tone: "bg-tk-slate/10 text-tk-slate/60",
+    tone: "bg-well text-ink-3",
   },
   clock: {
     label: "clock",
@@ -407,7 +407,7 @@ export function Timesheet({
             onChange={(event) =>
               router.push(ROUTES.timesheetFor(event.target.value, month))
             }
-            className="rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-sm font-semibold text-tk-onyx outline-none focus:border-tk-teal"
+            className="rounded-lg border border-line bg-card px-3 py-1.5 text-sm font-semibold text-tk-onyx outline-none focus:border-tk-teal"
           >
             {clients.map((item) => (
               <option key={item.id} value={item.slug}>
@@ -460,16 +460,16 @@ export function Timesheet({
         </p>
       ) : null}
 
-      <section className="mt-4 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-6 border-b border-tk-slate/10 px-5 py-5">
+      <section className="mt-4 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+        <div className="flex flex-wrap items-start justify-between gap-6 border-b border-line px-5 py-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-tk-slate/50">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">
               Invoice
             </p>
             <h2 className="mt-1 text-xl font-semibold tracking-tight text-tk-onyx">
               {client.name} — Karol Buczek (1099)
             </h2>
-            <p className="mt-1 text-sm text-tk-slate/70">
+            <p className="mt-1 text-sm text-ink-3">
               {monthShort(month)}
               {client.rateCents != null
                 ? ` · ${formatMoney(client.rateCents)}/hr`
@@ -490,7 +490,7 @@ export function Timesheet({
             {capPct != null ? (
               <div className="mt-3 max-w-[16rem]">
                 <div
-                  className="h-1.5 overflow-hidden rounded-full bg-tk-linen"
+                  className="h-1.5 overflow-hidden rounded-full bg-well"
                   role="img"
                   aria-label={`${formatSheetHours(totalHours)} of ${client.capHours} hours`}
                 >
@@ -507,7 +507,7 @@ export function Timesheet({
                 <p
                   className={cn(
                     "mt-1 text-[11px]",
-                    overCap ? "font-semibold text-amber-700" : "text-tk-slate/60"
+                    overCap ? "font-semibold text-amber-700" : "text-ink-3"
                   )}
                 >
                   {overCap
@@ -519,18 +519,18 @@ export function Timesheet({
           </div>
 
           <dl className="grid min-w-[12rem] grid-cols-[1fr_auto] gap-x-6 gap-y-1 text-sm">
-            <dt className="text-tk-slate/70">Hours Worked</dt>
+            <dt className="text-ink-3">Hours Worked</dt>
             <dd className="text-right font-semibold tabular-nums text-tk-onyx">
               {formatSheetHours(totalHours) || "0"}
             </dd>
-            <dt className="text-tk-slate/70">Invoice Total</dt>
+            <dt className="text-ink-3">Invoice Total</dt>
             <dd className="text-right font-semibold tabular-nums text-tk-onyx">
               {totalCents != null ? formatMoney(totalCents) : "—"}
             </dd>
           </dl>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-tk-slate/10 px-5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3">
           <h3 className="text-sm font-semibold text-tk-onyx">Work Summary</h3>
           <div className="flex flex-wrap items-center gap-2">
             {billed ? (
@@ -546,7 +546,7 @@ export function Timesheet({
                 type="button"
                 onClick={onCreateInvoice}
                 disabled={busy}
-                className="rounded-full bg-tk-teal px-3 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-60"
+                className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-60"
               >
                 {busy ? "Creating…" : "Create draft invoice"}
               </button>
@@ -557,7 +557,7 @@ export function Timesheet({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px] border-collapse text-sm">
             <thead>
-              <tr className="border-b border-tk-slate/15 bg-tk-linen/60 text-left text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+              <tr className="border-b border-line bg-well text-left text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                 <th className="w-8 px-2 py-2 font-semibold">
                   <span className="sr-only">Row</span>
                 </th>
@@ -589,20 +589,20 @@ export function Timesheet({
                 return (
                   <Fragment key={row.key}>
                     {bandHere ? (
-                      <tr className="bg-tk-linen/50">
+                      <tr className="bg-well">
                         <td
                           colSpan={colCount + (projects.length > 0 ? 1 : 0)}
-                          className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-tk-slate/55"
+                          className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-3"
                         >
                           {weekLabel(week!)}
-                          <span className="ml-2 font-mono tabular-nums text-tk-slate/45">
+                          <span className="ml-2 font-mono tabular-nums text-ink-3">
                             {formatSheetHours(weekTotals.get(week!) ?? 0) || "0"} hr
                           </span>
                         </td>
                       </tr>
                     ) : null}
 
-                    <tr className="border-b border-tk-slate/10 last:border-0">
+                    <tr className="border-b border-line last:border-0">
                       <td className="px-1 py-0.5">
                         {readOnly ? (
                           <span className="flex size-7 items-center justify-center text-tk-slate/20">
@@ -612,7 +612,7 @@ export function Timesheet({
                           <button
                             type="button"
                             onClick={() => remove(index)}
-                            className="flex size-7 items-center justify-center rounded text-tk-slate/30 hover:bg-tk-linen hover:text-tk-slate"
+                            className="flex size-7 items-center justify-center rounded text-ink-3 hover:bg-well transition-colors duration-[120ms] hover:text-tk-slate"
                             aria-label="Delete row"
                           >
                             <Trash2 className="size-3.5" />
@@ -727,7 +727,7 @@ export function Timesheet({
                               if (row.id || hasWork(row)) flushSave(index)
                             }}
                             aria-label={`Project, row ${index + 1}`}
-                            className="w-full rounded border border-transparent bg-transparent px-1.5 py-1.5 text-xs text-tk-slate outline-none hover:border-tk-slate/20 focus:border-tk-teal disabled:hover:border-transparent"
+                            className="w-full rounded border border-transparent bg-transparent px-1.5 py-1.5 text-xs text-tk-slate outline-none hover:border-line-strong focus:border-tk-teal disabled:hover:border-transparent"
                           >
                             <option value="">— retainer</option>
                             {projects.map((p) => (
@@ -744,8 +744,8 @@ export function Timesheet({
               })}
             </tbody>
             <tfoot>
-              <tr className="bg-tk-linen/40 text-sm">
-                <td colSpan={5} className="px-3 py-2.5 text-tk-slate/70">
+              <tr className="bg-well text-sm">
+                <td colSpan={5} className="px-3 py-2.5 text-ink-3">
                   Hours Worked
                 </td>
                 <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-tk-onyx">
@@ -759,16 +759,16 @@ export function Timesheet({
       </section>
 
       {status ? (
-        <p className="mt-3 text-sm text-tk-slate/70" role="status">
+        <p className="mt-3 text-sm text-ink-3" role="status">
           {status}
         </p>
       ) : readOnly ? (
-        <p className="mt-3 text-sm text-tk-slate/50">
+        <p className="mt-3 text-sm text-ink-3">
           Read-only while this month is billed. Unlock above if a correction is
           genuinely needed.
         </p>
       ) : (
-        <p className="mt-3 text-sm text-tk-slate/50">
+        <p className="mt-3 text-sm text-ink-3">
           Tab through cells like a sheet. Hours fill in from start and end.
           Leave the date blank to keep the day above.
         </p>
@@ -780,10 +780,10 @@ export function Timesheet({
 function sheetInput(readOnly: boolean, extra?: string) {
   return cn(
     "w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 text-sm text-tk-onyx outline-none",
-    "placeholder:text-tk-slate/30",
+    "placeholder:text-ink-3",
     readOnly
-      ? "cursor-default text-tk-slate/75"
-      : "hover:bg-tk-linen/50 focus:border-tk-teal/30 focus:bg-tk-teal/[0.04]",
+      ? "cursor-default text-tk-slate"
+      : "hover:bg-well focus:border-tk-teal/30 focus:bg-tk-teal/[0.04]",
     extra
   )
 }

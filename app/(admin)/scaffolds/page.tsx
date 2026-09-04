@@ -9,7 +9,7 @@ export default function ScaffoldsPage() {
   return (
     <>
       <PageHeader title="Scaffolds" />
-      <p className="mt-1 text-[11.5px] text-tk-slate/60">
+      <p className="mt-1 text-[11.5px] text-ink-3">
         Build notes per project type — preferred stacks and the moves that
         repeat. Distilled from real projects; edit content/scaffolds.ts to grow
         it.
@@ -20,14 +20,14 @@ export default function ScaffoldsPage() {
           <Link
             key={scaffold.slug}
             href={ROUTES.scaffold(scaffold.slug)}
-            className="group flex flex-col rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm hover:border-tk-teal/40"
+            className="group flex flex-col rounded-2xl border border-line bg-card p-5 shadow-card hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate text-base font-semibold text-tk-onyx group-hover:text-tk-teal">
                   {scaffold.name}
                 </p>
-                <p className="mt-0.5 text-[12.5px] text-tk-slate/70">
+                <p className="mt-0.5 text-[12.5px] text-ink-3">
                   {scaffold.kind}
                 </p>
               </div>
@@ -40,8 +40,8 @@ export default function ScaffoldsPage() {
               {scaffold.summary}
             </p>
 
-            <div className="mt-auto flex items-center justify-between border-t border-tk-slate/10 pt-3.5">
-              <span className="font-mono text-[10.5px] text-tk-slate/50">
+            <div className="mt-auto flex items-center justify-between border-t border-line pt-3.5">
+              <span className="font-mono text-[10.5px] text-ink-3">
                 from {scaffold.source}
               </span>
               <span className="text-[12px] font-semibold text-tk-teal">

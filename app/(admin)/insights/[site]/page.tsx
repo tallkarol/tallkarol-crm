@@ -74,7 +74,7 @@ export default async function InsightsOverviewPage({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-tk-slate/60">
+        <p className="text-xs text-ink-3">
           {win.label} · vs. previous {prev ? `${range} days` : "window (not covered)"}
         </p>
         <RangeSwitcher />
@@ -174,7 +174,7 @@ export default async function InsightsOverviewPage({
               initialMetric={initialMetric}
             />
           ) : (
-            <p className="px-5 py-8 text-sm text-tk-slate/70">
+            <p className="px-5 py-8 text-sm text-ink-3">
               No connected source returns daily data yet — see Health.
             </p>
           )}
@@ -190,7 +190,7 @@ export default async function InsightsOverviewPage({
             {hasGa4 ? (
               <MeterList rows={snapshot.ga4.devices} />
             ) : (
-              <p className="px-5 py-5 text-sm text-tk-slate/70">
+              <p className="px-5 py-5 text-sm text-ink-3">
                 GA4 is not connected for this property.
               </p>
             )}
@@ -216,7 +216,7 @@ export default async function InsightsOverviewPage({
           {hasGa4 ? (
             <BarList rows={snapshot.ga4.channels.slice(0, 6)} />
           ) : (
-            <p className="px-5 py-5 text-sm text-tk-slate/70">GA4 is not connected.</p>
+            <p className="px-5 py-5 text-sm text-ink-3">GA4 is not connected.</p>
           )}
         </Card>
         <Card
@@ -235,7 +235,7 @@ export default async function InsightsOverviewPage({
             <div className="overflow-x-auto">
               <table className="w-full min-w-[420px] border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-tk-slate/12 text-left text-[10px] font-bold uppercase tracking-wide text-tk-slate/55">
+                  <tr className="border-b border-line text-left text-[10px] font-bold uppercase tracking-wide text-ink-3">
                     <th className="px-5 py-2 font-bold">Page</th>
                     <th className="px-3 py-2 text-right font-bold">Sessions</th>
                     <th className="px-5 py-2 text-right font-bold">Key events</th>
@@ -243,7 +243,7 @@ export default async function InsightsOverviewPage({
                 </thead>
                 <tbody>
                   {snapshot.ga4.pages.slice(0, 6).map((row) => (
-                    <tr key={row.name} className="border-b border-tk-slate/[.06] last:border-0">
+                    <tr key={row.name} className="border-b border-line last:border-0">
                       <td className="max-w-[22rem] truncate px-5 py-2 font-medium text-tk-onyx" title={row.name}>
                         {row.name}
                       </td>
@@ -259,7 +259,7 @@ export default async function InsightsOverviewPage({
               </table>
             </div>
           ) : (
-            <p className="px-5 py-5 text-sm text-tk-slate/70">GA4 is not connected.</p>
+            <p className="px-5 py-5 text-sm text-ink-3">GA4 is not connected.</p>
           )}
         </Card>
       </div>
@@ -280,13 +280,13 @@ export default async function InsightsOverviewPage({
           <>
             <SearchMultiples points={win.current} />
             <SearchTable rows={snapshot.gsc.queries} nameHeader="Query" limit={5} />
-            <p className="border-t border-tk-slate/[.06] px-5 py-2.5 text-[11px] text-tk-slate/55">
+            <p className="border-t border-line px-5 py-2.5 text-[11px] text-ink-3">
               Queries cover the last {TABLE_WINDOW_DAYS} days; Δ pos compares the{" "}
               {TABLE_WINDOW_DAYS} days before that. Search Console data lags ~2 days.
             </p>
           </>
         ) : (
-          <p className="px-5 py-5 text-sm text-tk-slate/70">
+          <p className="px-5 py-5 text-sm text-ink-3">
             Search Console is not connected — see Health.
           </p>
         )}
@@ -310,7 +310,7 @@ export default async function InsightsOverviewPage({
             <div className="overflow-x-auto">
               <table className="w-full min-w-[520px] border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-tk-slate/12 text-left text-[10px] font-bold uppercase tracking-wide text-tk-slate/55">
+                  <tr className="border-b border-line text-left text-[10px] font-bold uppercase tracking-wide text-ink-3">
                     <th className="px-5 py-2 font-bold">Campaign</th>
                     <th className="px-3 py-2 text-right font-bold">Spend</th>
                     <th className="px-3 py-2 text-right font-bold">Clicks</th>
@@ -320,7 +320,7 @@ export default async function InsightsOverviewPage({
                 </thead>
                 <tbody>
                   {ads.campaigns.map((row) => (
-                    <tr key={row.id || row.name} className="border-b border-tk-slate/[.06] last:border-0">
+                    <tr key={row.id || row.name} className="border-b border-line last:border-0">
                       <td className="max-w-[22rem] truncate px-5 py-2 font-medium text-tk-onyx" title={row.name}>
                         {row.name}
                       </td>
@@ -342,7 +342,7 @@ export default async function InsightsOverviewPage({
               </table>
             </div>
           ) : (
-            <p className="px-5 py-5 text-sm text-tk-slate/70">
+            <p className="px-5 py-5 text-sm text-ink-3">
               No impressions in this window.
             </p>
           )}

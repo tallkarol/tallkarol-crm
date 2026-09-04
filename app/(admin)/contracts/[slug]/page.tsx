@@ -60,7 +60,7 @@ export default async function ContractDetailPage({
           ) : null}
         </div>
       </div>
-      <p className="mt-2 text-sm text-tk-slate/70">
+      <p className="mt-2 text-sm text-ink-3">
         <Link
           href={ROUTES.client(contract.client.slug)}
           className="font-semibold text-tk-teal hover:underline"
@@ -94,8 +94,8 @@ export default async function ContractDetailPage({
 
       <dl className="mt-6 grid gap-3 sm:grid-cols-2">
         {contract.counterparty ? (
-          <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-3 shadow-sm">
-            <dt className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+          <div className="rounded-2xl border border-line bg-card px-5 py-3 shadow-card">
+            <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
               Counterparty
             </dt>
             <dd className="mt-1 text-sm font-medium text-tk-onyx">
@@ -104,8 +104,8 @@ export default async function ContractDetailPage({
           </div>
         ) : null}
         {contract.governingLaw ? (
-          <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-3 shadow-sm">
-            <dt className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+          <div className="rounded-2xl border border-line bg-card px-5 py-3 shadow-card">
+            <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
               Governing law
             </dt>
             <dd className="mt-1 text-sm font-medium text-tk-onyx">
@@ -114,8 +114,8 @@ export default async function ContractDetailPage({
           </div>
         ) : null}
         {contract.venue ? (
-          <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-3 shadow-sm">
-            <dt className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+          <div className="rounded-2xl border border-line bg-card px-5 py-3 shadow-card">
+            <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
               Venue
             </dt>
             <dd className="mt-1 text-sm font-medium text-tk-onyx">
@@ -124,8 +124,8 @@ export default async function ContractDetailPage({
           </div>
         ) : null}
         {contract.extraRateCents != null ? (
-          <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-3 shadow-sm">
-            <dt className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+          <div className="rounded-2xl border border-line bg-card px-5 py-3 shadow-card">
+            <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
               Extra work
             </dt>
             <dd className="mt-1 text-sm font-medium text-tk-onyx">
@@ -138,7 +138,7 @@ export default async function ContractDetailPage({
       {hasTerms(terms) ? <ContractBody terms={terms} /> : null}
 
       {!hasTerms(terms) && contract.notes ? (
-        <p className="mt-3 whitespace-pre-wrap text-sm text-tk-slate/70">
+        <p className="mt-3 whitespace-pre-wrap text-sm text-ink-3">
           {contract.notes}
         </p>
       ) : null}

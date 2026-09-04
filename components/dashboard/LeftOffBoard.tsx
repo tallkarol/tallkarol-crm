@@ -65,19 +65,19 @@ const TONE_DOT: Record<LaneTone, string> = {
   bad: "bg-bad",
   warn: "bg-warn",
   ok: "bg-ok",
-  neutral: "border border-tk-slate/15 bg-white",
+  neutral: "border border-line bg-card",
 }
 const TONE_WELL: Record<LaneTone, string> = {
   bad: "bg-bad/10",
   warn: "bg-warn/10",
   ok: "bg-ok/10",
-  neutral: "bg-tk-linen",
+  neutral: "bg-well",
 }
 const TONE_BORDER: Record<LaneTone, string> = {
   bad: "border-l-bad",
   warn: "border-l-warn",
   ok: "border-l-ok",
-  neutral: "border-l-tk-slate/15",
+  neutral: "border-l-line",
 }
 
 type LaneConfig = {
@@ -156,12 +156,12 @@ function agoFrom(iso: string) {
 }
 
 const ICON_BTN =
-  "rounded-md p-1.5 text-tk-slate/70 hover:bg-tk-linen hover:text-tk-onyx focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-tk-teal"
+  "rounded-md p-1.5 text-ink-3 hover:bg-well transition-colors duration-[120ms] hover:text-tk-onyx focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-tk-teal"
 const GHOST_BTN =
-  "h-7 whitespace-nowrap rounded-md px-2 font-ui text-[11.5px] font-semibold text-tk-slate hover:bg-tk-linen hover:text-tk-onyx focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-tk-teal"
+  "h-7 whitespace-nowrap rounded-md px-2 font-ui text-[11.5px] font-semibold text-tk-slate hover:bg-well transition-colors duration-[120ms] hover:text-tk-onyx focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-tk-teal"
 const REPLY_INPUT =
-  "h-8 min-w-0 flex-1 rounded-lg border border-tk-slate/15 bg-tk-linen px-2.5 text-[12.5px] text-tk-onyx placeholder:text-tk-slate focus:border-tk-teal focus:bg-white focus:outline-none"
-const SEND_BTN = "h-8 shrink-0 rounded-lg bg-tk-teal px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95"
+  "h-8 min-w-0 flex-1 rounded-lg border border-line bg-well px-2.5 text-[12.5px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:bg-card focus:outline-none"
+const SEND_BTN = "h-8 shrink-0 rounded-lg bg-accent px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95"
 
 export function LeftOffBoard({ payload }: { payload: LeftOffPayload | null }) {
   const [open, setOpen] = useState(false)
@@ -267,16 +267,16 @@ export function LeftOffBoard({ payload }: { payload: LeftOffPayload | null }) {
       <div
         aria-hidden
         onClick={closeBoard}
-        className="absolute inset-0 bg-tk-onyx/55 backdrop-blur-sm motion-safe:animate-[tk-fade-in_.18s_ease-out]"
+        className="absolute inset-0 bg-scrim backdrop-blur-sm motion-safe:animate-[tk-fade-in_.18s_ease-out]"
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="absolute inset-[18px] grid grid-rows-[auto_1fr_auto] overflow-hidden rounded-[20px] border border-tk-slate/15 bg-canvas shadow-2xl motion-safe:animate-[tk-modal-in_.2s_ease-out]"
+        className="absolute inset-[18px] grid grid-rows-[auto_1fr_auto] overflow-hidden rounded-[20px] border border-line bg-canvas shadow-overlay motion-safe:animate-[tk-modal-in_.2s_ease-out]"
       >
         {/* -------------------------------------------------------- header */}
-        <header className="flex flex-wrap items-center gap-4 border-b border-tk-slate/10 bg-white px-6 py-4">
+        <header className="flex flex-wrap items-center gap-4 border-b border-line bg-card px-6 py-4">
           <div className="flex items-center gap-3">
             {payload && payload.counts.blocked > 0 ? (
               <span aria-hidden className="size-2.5 shrink-0 rounded-full bg-bad motion-safe:animate-pulse" />
@@ -285,7 +285,7 @@ export function LeftOffBoard({ payload }: { payload: LeftOffPayload | null }) {
               <h2 id={titleId} className="font-display text-[21px] font-semibold leading-tight tracking-tight text-tk-onyx">
                 Where I left off
               </h2>
-              <p className="mt-0.5 text-[12.5px] text-tk-slate/70">
+              <p className="mt-0.5 text-[12.5px] text-ink-3">
                 Every Claude Code and Cursor chat, plus Chrome · snapshot{" "}
                 {payload ? agoFrom(payload.generatedAt) : "unavailable"}
               </p>
@@ -294,14 +294,14 @@ export function LeftOffBoard({ payload }: { payload: LeftOffPayload | null }) {
 
           <div className="ml-auto flex flex-wrap items-center gap-2">
             <label className="relative flex h-8 w-64 max-w-full items-center">
-              <Search aria-hidden className="pointer-events-none absolute left-2.5 size-3.5 text-tk-slate/70" />
+              <Search aria-hidden className="pointer-events-none absolute left-2.5 size-3.5 text-ink-3" />
               <input
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Filter by title, project, client…"
                 aria-label="Filter the board"
-                className="h-8 w-full rounded-lg border border-tk-slate/15 bg-tk-linen py-0 pl-8 pr-2.5 text-[12.5px] text-tk-onyx placeholder:text-tk-slate focus:border-tk-teal focus:bg-white focus:outline-none"
+                className="h-8 w-full rounded-lg border border-line bg-well py-0 pl-8 pr-2.5 text-[12.5px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:bg-card focus:outline-none"
               />
             </label>
 
@@ -309,7 +309,7 @@ export function LeftOffBoard({ payload }: { payload: LeftOffPayload | null }) {
               <div
                 role="group"
                 aria-label="Filter by client"
-                className="flex items-center gap-0.5 rounded-lg border border-tk-slate/15 bg-tk-linen p-0.5"
+                className="flex items-center gap-0.5 rounded-lg border border-line bg-well p-0.5"
               >
                 <ClientFilterButton active={clientFilter === "all"} onClick={() => setClientFilter("all")}>
                   All
@@ -337,10 +337,10 @@ export function LeftOffBoard({ payload }: { payload: LeftOffPayload | null }) {
               type="button"
               onClick={closeBoard}
               aria-label="Close the board"
-              className="flex h-8 items-center gap-2 rounded-lg border border-tk-slate/15 bg-white pl-2.5 pr-2 text-tk-slate/70 hover:bg-tk-linen hover:text-tk-onyx focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-tk-teal"
+              className="flex h-8 items-center gap-2 rounded-lg border border-line bg-card pl-2.5 pr-2 text-ink-3 hover:bg-well transition-colors duration-[120ms] hover:text-tk-onyx focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-tk-teal"
             >
               <X className="size-4" aria-hidden />
-              <kbd className="rounded border border-tk-slate/15 px-1 font-ui text-[10px] font-semibold text-tk-slate/70">
+              <kbd className="rounded border border-line px-1 font-ui text-[10px] font-semibold text-ink-3">
                 esc
               </kbd>
             </button>
@@ -356,21 +356,21 @@ export function LeftOffBoard({ payload }: { payload: LeftOffPayload | null }) {
           </div>
         ) : (
           <div className="grid min-h-0 place-items-center px-6 py-4">
-            <p className="max-w-sm text-center text-[13px] text-tk-slate/70">
+            <p className="max-w-sm text-center text-[13px] text-ink-3">
               Nothing reported yet — chats appear here as they report in.
             </p>
           </div>
         )}
 
         {/* -------------------------------------------------------- footer */}
-        <footer className="flex flex-wrap items-center gap-3 border-t border-tk-slate/10 bg-white px-6 py-3">
+        <footer className="flex flex-wrap items-center gap-3 border-t border-line bg-card px-6 py-3">
           <div className="flex items-center gap-2 text-[12px] font-semibold text-tk-onyx">
-            <Monitor className="size-4 text-tk-slate/70" aria-hidden />
+            <Monitor className="size-4 text-ink-3" aria-hidden />
             Chrome
           </div>
           {payload?.browser ? (
             <>
-              <p className="text-[12px] text-tk-slate/70">
+              <p className="text-[12px] text-ink-3">
                 {payload.browser.windows.length} {payload.browser.windows.length === 1 ? "window" : "windows"} ·{" "}
                 {tabCount} {tabCount === 1 ? "tab" : "tabs"} · captured {agoFrom(payload.browser.capturedAt)}
               </p>
@@ -378,9 +378,9 @@ export function LeftOffBoard({ payload }: { payload: LeftOffPayload | null }) {
                 {payload.browser.windows.map((w, i) => (
                   <div
                     key={i}
-                    className="flex flex-wrap items-center gap-1.5 rounded-lg border border-tk-slate/15 bg-tk-linen px-2.5 py-1.5"
+                    className="flex flex-wrap items-center gap-1.5 rounded-lg border border-line bg-well px-2.5 py-1.5"
                   >
-                    <span className="mr-0.5 font-ui text-[10px] font-bold uppercase tracking-[0.06em] text-tk-slate/70">
+                    <span className="mr-0.5 font-ui text-[10px] font-bold uppercase tracking-[0.06em] text-ink-3">
                       {w.title || `Window ${i + 1}`}
                     </span>
                     {w.tabs.slice(0, 4).map((t, ti) => (
@@ -388,22 +388,22 @@ export function LeftOffBoard({ payload }: { payload: LeftOffPayload | null }) {
                         key={ti}
                         title={t.title || t.url}
                         className={cn(
-                          "max-w-[220px] truncate rounded-md border bg-white px-2 py-0.5 text-[11px]",
-                          t.active ? "border-tk-teal text-tk-onyx" : "border-tk-slate/15 text-tk-slate/70"
+                          "max-w-[220px] truncate rounded-md border bg-card px-2 py-0.5 text-[11px]",
+                          t.active ? "border-tk-teal text-tk-onyx" : "border-line text-ink-3"
                         )}
                       >
                         {t.title || t.url}
                       </span>
                     ))}
                     {w.tabs.length > 4 ? (
-                      <span className="text-[11px] text-tk-slate/70">+{w.tabs.length - 4}</span>
+                      <span className="text-[11px] text-ink-3">+{w.tabs.length - 4}</span>
                     ) : null}
                   </div>
                 ))}
               </div>
             </>
           ) : (
-            <p className="text-[12px] text-tk-slate/70">No Chrome snapshot yet.</p>
+            <p className="text-[12px] text-ink-3">No Chrome snapshot yet.</p>
           )}
         </footer>
       </div>
@@ -432,7 +432,7 @@ function ClientFilterButton({
       style={color ? ({ "--c": color } as React.CSSProperties) : undefined}
       className={cn(
         "h-7 whitespace-nowrap rounded-md px-2.5 font-ui text-[11.5px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-tk-teal",
-        active ? "bg-white text-tk-onyx shadow-card" : color ? "tk-client-ink" : "text-tk-slate/70 hover:text-tk-onyx"
+        active ? "bg-card text-tk-onyx shadow-card" : color ? "tk-client-ink" : "text-ink-3 hover:text-tk-onyx"
       )}
     >
       {children}
@@ -459,17 +459,17 @@ function Lane({ lane, notes }: { lane: LaneConfig; notes: LeftOffNoteView[] }) {
           <h3 id={headingId} className="font-ui text-[13px] font-bold text-tk-onyx">
             {lane.label}
           </h3>
-          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-tk-linen px-1.5 font-ui text-[11px] font-bold tabular-nums text-tk-onyx">
+          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-well px-1.5 font-ui text-[11px] font-bold tabular-nums text-tk-onyx">
             {notes.length}
           </span>
         </div>
-        <p className="mt-0.5 truncate pl-[18px] text-[11px] text-tk-slate/70">{lane.hint}</p>
+        <p className="mt-0.5 truncate pl-[18px] text-[11px] text-ink-3">{lane.hint}</p>
       </div>
       <div
         className={cn(
           "grid min-h-[180px] content-start gap-2.5 overflow-y-auto rounded-2xl border p-2.5",
           TONE_WELL[lane.tone],
-          lane.dashedWell ? "border-dashed border-tk-slate/15" : "border-transparent"
+          lane.dashedWell ? "border-dashed border-line" : "border-transparent"
         )}
       >
         {notes.length === 0 ? <LaneEmpty lane={lane} /> : notes.map((n) => <Card key={n.sessionRef} note={n} tone={lane.tone} compact={!!lane.compact} />)}
@@ -482,9 +482,9 @@ function LaneEmpty({ lane }: { lane: LaneConfig }) {
   const Icon = lane.emptyIcon
   return (
     <div className="grid justify-items-center gap-1.5 self-center px-4 py-8 text-center">
-      <Icon className="mb-1 size-[18px] text-tk-slate/70" aria-hidden />
+      <Icon className="mb-1 size-[18px] text-ink-3" aria-hidden />
       <p className="font-ui text-[13px] font-bold text-tk-onyx">{lane.emptyTitle}</p>
-      <p className="max-w-[32ch] text-[12px] leading-relaxed text-tk-slate/70">{lane.emptyBody}</p>
+      <p className="max-w-[32ch] text-[12px] leading-relaxed text-ink-3">{lane.emptyBody}</p>
     </div>
   )
 }
@@ -518,17 +518,17 @@ function Card({ note, tone, compact }: { note: LeftOffNoteView; tone: LaneTone; 
   return (
     <article
       className={cn(
-        "grid gap-1.5 rounded-xl border border-l-[3px] border-tk-slate/15 bg-white p-3 shadow-card",
+        "grid gap-1.5 rounded-xl border border-l-[3px] border-line bg-card p-3 shadow-card",
         TONE_BORDER[tone],
         compact && "opacity-80"
       )}
     >
-      <div className="flex items-center gap-1.5 font-ui text-[11px] font-semibold text-tk-slate/70">
+      <div className="flex items-center gap-1.5 font-ui text-[11px] font-semibold text-ink-3">
         <span
           style={note.client ? ({ "--c": note.client.color } as React.CSSProperties) : undefined}
           className={cn(
             "inline-flex h-5 items-center rounded-md px-1.5",
-            note.client ? "tk-client-tint tk-client-ink" : "bg-tk-linen text-tk-onyx"
+            note.client ? "tk-client-tint tk-client-ink" : "bg-well text-tk-onyx"
           )}
         >
           {note.client ? note.client.name : "House"}
@@ -546,7 +546,7 @@ function Card({ note, tone, compact }: { note: LeftOffNoteView; tone: LaneTone; 
       </p>
 
       {note.project || showBranch ? (
-        <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-tk-slate/70">
+        <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-ink-3">
           {note.project ? (
             <span className="inline-flex items-center gap-1">
               <FolderKanban className="size-3" aria-hidden />
@@ -568,20 +568,20 @@ function Card({ note, tone, compact }: { note: LeftOffNoteView; tone: LaneTone; 
 
       {!compact && note.lastPrompt ? (
         <p className="line-clamp-2 text-[12.5px] leading-snug text-tk-onyx">
-          <span className="mr-1 font-ui text-[10px] font-bold uppercase tracking-[0.06em] text-tk-slate/70">You</span>
+          <span className="mr-1 font-ui text-[10px] font-bold uppercase tracking-[0.06em] text-ink-3">You</span>
           {note.lastPrompt}
         </p>
       ) : null}
 
       {!compact && note.state === "working" && note.lastReply ? (
         <p className="line-clamp-2 text-[12.5px] leading-snug text-tk-onyx">
-          <span className="mr-1 font-ui text-[10px] font-bold uppercase tracking-[0.06em] text-tk-slate/70">Claude</span>
+          <span className="mr-1 font-ui text-[10px] font-bold uppercase tracking-[0.06em] text-ink-3">Claude</span>
           {note.lastReply}
         </p>
       ) : null}
 
       {!compact && note.agents ? (
-        <p className="flex flex-wrap items-center gap-1 text-[11px] font-semibold text-tk-slate/70">
+        <p className="flex flex-wrap items-center gap-1 text-[11px] font-semibold text-ink-3">
           <Activity className="size-3" aria-hidden />
           {note.agents.running} {note.agents.running === 1 ? "agent" : "agents"}
           {note.agents.types.length ? ` (${note.agents.types.join(", ")})` : ""}
@@ -630,7 +630,7 @@ function Card({ note, tone, compact }: { note: LeftOffNoteView; tone: LaneTone; 
 
         {!compact ? (
           note.taskId ? (
-            <span className="inline-flex h-6 items-center rounded-md bg-tk-linen px-2 font-ui text-[11px] font-semibold text-tk-onyx">
+            <span className="inline-flex h-6 items-center rounded-md bg-well px-2 font-ui text-[11px] font-semibold text-tk-onyx">
               → task
             </span>
           ) : (
@@ -647,7 +647,7 @@ function Card({ note, tone, compact }: { note: LeftOffNoteView; tone: LaneTone; 
 
         {!compact ? (
           note.ticketId ? (
-            <span className="inline-flex h-6 items-center rounded-md bg-tk-linen px-2 font-ui text-[11px] font-semibold text-tk-onyx">
+            <span className="inline-flex h-6 items-center rounded-md bg-well px-2 font-ui text-[11px] font-semibold text-tk-onyx">
               → ticket
             </span>
           ) : (

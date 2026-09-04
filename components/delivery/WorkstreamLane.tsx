@@ -75,17 +75,17 @@ export function WorkstreamLane({ lane }: { lane: LaneData }) {
   }
 
   return (
-    <section className="rounded-2xl border border-tk-slate/15 bg-white/50 p-3.5">
+    <section className="rounded-2xl border border-line bg-well p-3.5">
       <div className="flex flex-wrap items-center gap-2.5 px-1 pb-1">
         <span className="size-2 rounded-full" style={{ background: color }} />
         <h3 className="text-sm font-semibold text-tk-onyx">{lane.projectName}</h3>
-        <span className="text-xs text-tk-slate/60">{lane.meta}</span>
+        <span className="text-xs text-ink-3">{lane.meta}</span>
         <span className="ml-auto">
           <AddWorkstream projectId={lane.projectId} />
         </span>
       </div>
       {error ? (
-        <p role="status" className="px-1 pb-1 text-[11.5px] font-semibold text-[#B4322A]">
+        <p role="status" className="px-1 pb-1 text-[11.5px] font-semibold text-bad">
           {error}
         </p>
       ) : null}
@@ -116,7 +116,7 @@ export function WorkstreamLane({ lane }: { lane: LaneData }) {
         <DragOverlay>
           {active ? (
             <div
-              className="w-56 rotate-2 rounded-xl border border-tk-slate/15 bg-white p-3 shadow-xl"
+              className="w-56 rotate-2 rounded-xl border border-line bg-card p-3 shadow-overlay"
               style={{ borderLeftWidth: 3, borderLeftColor: color }}
             >
               <p className="text-[13px] font-semibold text-tk-onyx">{active.title}</p>
@@ -147,14 +147,14 @@ function Column({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex min-h-[140px] flex-col rounded-2xl border bg-[#FAF6EE] transition-colors",
-        isOver ? "border-tk-teal bg-tk-teal/5" : "border-tk-slate/15"
+        "flex min-h-[140px] flex-col rounded-2xl border bg-well transition-colors",
+        isOver ? "border-tk-teal bg-tk-teal/5" : "border-line"
       )}
     >
       <div className="px-3.5 pb-1 pt-3">
         <h4 className="flex items-baseline justify-between text-[13px] font-semibold text-tk-onyx">
           {label}
-          <span className="text-xs font-medium text-tk-slate/60">{count || ""}</span>
+          <span className="text-xs font-medium text-ink-3">{count || ""}</span>
         </h4>
       </div>
       <ul className="flex flex-1 flex-col gap-2 px-2.5 pb-3 pt-1.5">{children}</ul>
@@ -180,7 +180,7 @@ function Card({
       {...listeners}
       {...attributes}
       className={cn(
-        "cursor-grab touch-none rounded-xl border border-tk-slate/15 bg-white p-3 shadow-sm active:cursor-grabbing",
+        "cursor-grab touch-none rounded-xl border border-line bg-card p-3 shadow-card active:cursor-grabbing",
         dragging && "opacity-35"
       )}
       style={{ borderLeftWidth: 3, borderLeftColor: edge }}

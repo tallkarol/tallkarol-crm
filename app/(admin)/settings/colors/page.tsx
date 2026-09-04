@@ -38,7 +38,7 @@ export default async function ColorSettingsPage() {
     <>
       <PageHeader title="Colours" />
 
-      <p className="mt-2 max-w-2xl text-sm text-tk-slate/70">
+      <p className="mt-2 max-w-2xl text-sm text-ink-3">
         The accent behind every client and product — used across lists, boards,
         meters, and the macOS widgets. Leave one unset to keep its default.
       </p>

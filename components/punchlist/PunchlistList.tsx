@@ -13,7 +13,7 @@ export function PunchlistList({
   peekBase?: string
 }) {
   return (
-    <div className="divide-y divide-tk-slate/10 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+    <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card shadow-card">
       {rows.map((row) => (
         <div key={row.id} className="flex items-center justify-between gap-4 px-5 py-3">
           <div className="min-w-0">
@@ -24,7 +24,7 @@ export function PunchlistList({
             >
               {row.title}
             </Link>
-            <p className="mt-0.5 text-xs text-tk-slate/60">
+            <p className="mt-0.5 text-xs text-ink-3">
               {[
                 row.project ? row.project.name : null,
                 SOURCE_KIND_LABEL[row.sourceKind] ?? row.sourceKind,
@@ -46,11 +46,11 @@ export function PunchlistList({
                 test waiting
               </span>
             ) : null}
-            <span className="font-mono text-[11.5px] tabular-nums text-tk-slate/70">
+            <span className="font-mono text-[11.5px] tabular-nums text-ink-3">
               {row.progress.done}/{row.progress.total}
             </span>
-            <span className="h-1.5 w-16 overflow-hidden rounded-full bg-tk-slate/10" aria-hidden>
-              <span className="block h-full rounded-full bg-tk-teal" style={{ width: `${row.progress.pct}%` }} />
+            <span className="h-1.5 w-16 overflow-hidden rounded-full bg-well" aria-hidden>
+              <span className="block h-full rounded-full bg-accent" style={{ width: `${row.progress.pct}%` }} />
             </span>
             <Link
               href={ROUTES.punchlist(row.slug)}

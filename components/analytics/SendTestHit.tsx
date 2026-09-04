@@ -25,11 +25,11 @@ export function SendTestHit({ slug }: { slug: string }) {
         type="button"
         onClick={onClick}
         disabled={busy}
-        className="rounded-full bg-tk-teal px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90 disabled:opacity-60"
+        className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90 disabled:opacity-60"
       >
         {busy ? "Sending…" : "Send test hit"}
       </button>
-      {note ? <p className="text-sm text-tk-slate/70">{note}</p> : null}
+      {note ? <p className="text-sm text-ink-3">{note}</p> : null}
     </div>
   )
 }

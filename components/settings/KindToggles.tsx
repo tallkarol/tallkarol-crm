@@ -7,7 +7,7 @@ type Kind = { kind: string; title: string; summary: string; on: boolean; ignores
 
 export function KindToggles({ kinds }: { kinds: Kind[] }) {
   return (
-    <ul className="divide-y divide-tk-slate/10">
+    <ul className="divide-y divide-line">
       {kinds.map((k) => (
         <KindRow key={k.kind} kind={k} />
       ))}
@@ -25,12 +25,12 @@ function KindRow({ kind }: { kind: Kind }) {
         <div className="text-sm font-medium text-tk-onyx">
           {kind.title}
           {kind.ignoresQuietHours && (
-            <span className="ml-2 rounded bg-tk-slate/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-tk-slate/70">
+            <span className="ml-2 rounded bg-well px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-3">
               ignores quiet hours
             </span>
           )}
         </div>
-        <div className="text-xs text-tk-slate/60">{kind.summary}</div>
+        <div className="text-xs text-ink-3">{kind.summary}</div>
       </div>
       <button
         type="button"
@@ -45,10 +45,10 @@ function KindRow({ kind }: { kind: Kind }) {
             if (!result.ok) setOn(!next)
           })
         }}
-        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${on ? "bg-tk-teal" : "bg-tk-slate/25"} disabled:opacity-60`}
+        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${on ? "bg-accent-mark" : "bg-line-strong"} disabled:opacity-60`}
       >
         <span
-          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${on ? "left-0.5 translate-x-5" : "left-0.5"}`}
+          className={`absolute top-0.5 h-5 w-5 rounded-full bg-card shadow transition-transform ${on ? "left-0.5 translate-x-5" : "left-0.5"}`}
         />
       </button>
     </li>

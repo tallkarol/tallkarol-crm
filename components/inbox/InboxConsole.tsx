@@ -40,7 +40,7 @@ function Age({ item }: { item: InboxItem }) {
     <span
       className={cn(
         "mt-0.5 shrink-0 font-mono text-[10px] tabular-nums",
-        hot ? "font-semibold text-[#B4322A]" : "text-tk-slate/45"
+        hot ? "font-semibold text-bad" : "text-ink-3"
       )}
     >
       {label}
@@ -133,7 +133,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
   return (
     <>
       {!data.ready ? (
-        <p className="mt-3 rounded-xl border border-[#8A5A05]/30 bg-[#8A5A05]/[0.06] px-3 py-2 text-[12px] text-tk-slate">
+        <p className="mt-3 rounded-xl border border-transparent bg-warn-soft px-3 py-2 text-[12px] text-tk-slate">
           Triage state isn&rsquo;t stored yet — run <code className="font-mono">npm run db:migrate</code> to
           apply <code className="font-mono">0027_inbox</code>. Until then everything reads as unread and
           Snooze/Archive won&rsquo;t stick.
@@ -141,7 +141,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
       ) : null}
 
       {error ? (
-        <p role="status" className="mt-3 text-[12px] font-semibold text-[#B4322A]">
+        <p role="status" className="mt-3 text-[12px] font-semibold text-bad">
           {error}
         </p>
       ) : null}
@@ -154,7 +154,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
         )}
       >
         {/* ---- lens rail ---- */}
-        <nav className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white p-1.5">
+        <nav className="overflow-hidden rounded-2xl border border-line bg-card p-1.5">
           {INBOX_LENSES.map((item) => {
             const on = item.id === lens
             const count = data.counts[item.id]
@@ -165,7 +165,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
                 onClick={() => setQuery({ lens: item.id === "unread" ? null : item.id, item: null })}
                 className={cn(
                   "flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12.5px]",
-                  on ? "bg-tk-teal font-semibold text-tk-linen" : "text-tk-slate hover:bg-tk-linen"
+                  on ? "bg-accent-mark font-semibold text-tk-linen" : "text-tk-slate hover:bg-well transition-colors duration-[120ms]"
                 )}
               >
                 {item.label}
@@ -176,7 +176,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
             )
           })}
 
-          <p className="px-2.5 pb-1 pt-3 text-[9.5px] font-bold uppercase tracking-[0.1em] text-tk-slate/45">
+          <p className="px-2.5 pb-1 pt-3 text-[9.5px] font-bold uppercase tracking-[0.1em] text-ink-3">
             By kind
           </p>
           {INBOX_KINDS.map((k) => {
@@ -188,7 +188,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
                 onClick={() => setQuery({ kind: on ? null : k, item: null })}
                 className={cn(
                   "flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12.5px]",
-                  on ? "bg-tk-teal font-semibold text-tk-linen" : "text-tk-slate hover:bg-tk-linen"
+                  on ? "bg-accent-mark font-semibold text-tk-linen" : "text-tk-slate hover:bg-well transition-colors duration-[120ms]"
                 )}
               >
                 {KIND_LABEL[k]}
@@ -201,7 +201,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
 
           {railClients.length > 0 ? (
             <>
-              <p className="px-2.5 pb-1 pt-3 text-[9.5px] font-bold uppercase tracking-[0.1em] text-tk-slate/45">
+              <p className="px-2.5 pb-1 pt-3 text-[9.5px] font-bold uppercase tracking-[0.1em] text-ink-3">
                 By client
               </p>
               {railClients.map((c) => {
@@ -213,7 +213,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
                     onClick={() => setQuery({ client: on ? null : c.slug, item: null })}
                     className={cn(
                       "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12.5px]",
-                      on ? "bg-tk-teal font-semibold text-tk-linen" : "text-tk-slate hover:bg-tk-linen"
+                      on ? "bg-accent-mark font-semibold text-tk-linen" : "text-tk-slate hover:bg-well transition-colors duration-[120ms]"
                     )}
                   >
                     <span
@@ -230,15 +230,15 @@ export function InboxConsole({ data }: { data: InboxData }) {
         </nav>
 
         {/* ---- stream ---- */}
-        <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white">
+        <section className="overflow-hidden rounded-2xl border border-line bg-card">
           {visible.length === 0 ? (
-            <p className="px-4 py-16 text-center text-sm text-tk-slate/65">
+            <p className="px-4 py-16 text-center text-sm text-ink-3">
               {lens === "unread" ? "Inbox zero." : "Nothing in this view."}
             </p>
           ) : (
             groups.map((group) => (
               <div key={group.day}>
-                <p className="border-y border-tk-slate/[0.09] bg-[#FAF6EE] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.09em] text-tk-slate/45">
+                <p className="border-y border-line bg-well px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.09em] text-ink-3">
                   {group.day}
                 </p>
                 {group.rows.map((item) => {
@@ -252,15 +252,15 @@ export function InboxConsole({ data }: { data: InboxData }) {
                         if (item.state === "unread") run(() => markReadAction(item.key))
                       }}
                       className={cn(
-                        "flex w-full items-start gap-2.5 border-b border-tk-slate/[0.09] py-2 pr-3 text-left last:border-b-0",
-                        on ? "bg-tk-teal/[0.06]" : "hover:bg-tk-linen/50"
+                        "flex w-full items-start gap-2.5 border-b border-line py-2 pr-3 text-left last:border-b-0",
+                        on ? "bg-accent-mark/[0.06]" : "hover:bg-well"
                       )}
                     >
                       <span
                         aria-hidden
                         className={cn(
                           "w-[3px] self-stretch",
-                          item.state === "unread" ? "bg-tk-teal" : "bg-transparent"
+                          item.state === "unread" ? "bg-accent-mark" : "bg-transparent"
                         )}
                       />
                       <Kind kind={item.kind} />
@@ -273,12 +273,12 @@ export function InboxConsole({ data }: { data: InboxData }) {
                         >
                           {item.title}
                         </span>
-                        <span className="mt-0.5 block truncate text-[11.5px] text-tk-slate/60">
+                        <span className="mt-0.5 block truncate text-[11.5px] text-ink-3">
                           {item.snippet || item.actor}
                         </span>
                       </span>
                       {item.state === "snoozed" ? (
-                        <span className="mt-0.5 shrink-0 rounded bg-tk-linen px-1.5 font-mono text-[9.5px] text-tk-slate/60">
+                        <span className="mt-0.5 shrink-0 rounded bg-well px-1.5 font-mono text-[9.5px] text-ink-3">
                           snoozed
                         </span>
                       ) : null}
@@ -292,7 +292,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
         </section>
 
         {/* ---- workspace ---- */}
-        <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white">
+        <section className="overflow-hidden rounded-2xl border border-line bg-card">
           {selected ? (
             <Workspace
               item={selected}
@@ -304,7 +304,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
           ) : (
             <div className="flex h-full min-h-[18rem] flex-col items-center justify-center px-5 text-center">
               <p className="text-sm font-semibold text-tk-onyx">Nothing selected</p>
-              <p className="mt-1 text-[12px] text-tk-slate/65">
+              <p className="mt-1 text-[12px] text-ink-3">
                 Pick something from the stream and the same four verbs apply, whatever it is.
               </p>
             </div>
@@ -334,16 +334,16 @@ function Workspace({
   const [composing, setComposing] = useState(false)
 
   const btn =
-    "inline-flex h-[26px] items-center gap-1.5 rounded-full border border-tk-slate/15 bg-white px-2.5 text-[11.5px] font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal disabled:opacity-50"
+    "inline-flex h-[26px] items-center gap-1.5 rounded-full border border-line bg-card px-2.5 text-[11.5px] font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal disabled:opacity-50"
 
   return (
     <div className="flex h-full flex-col">
       {/* the one triage bar — the same verbs whatever the item is */}
-      <div className="flex flex-wrap items-center gap-1.5 border-b border-tk-slate/10 bg-[#FAF6EE] px-3 py-2">
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-line bg-well px-3 py-2">
         {item.href ? (
           <Link
             href={item.href}
-            className="inline-flex h-[26px] items-center rounded-full bg-tk-teal px-3 text-[11.5px] font-semibold text-tk-linen hover:bg-tk-teal/90"
+            className="inline-flex h-[26px] items-center rounded-full bg-accent-mark px-3 text-[11.5px] font-semibold text-tk-linen hover:bg-accent-mark/90"
           >
             Open
           </Link>
@@ -353,7 +353,7 @@ function Workspace({
             type="button"
             disabled={busy}
             onClick={() => onRun(() => mailToTicketAction(item.id))}
-            className="inline-flex h-[26px] items-center rounded-full bg-[#8A5A05] px-3 text-[11.5px] font-semibold text-white hover:brightness-110 disabled:opacity-50"
+            className="inline-flex h-[26px] items-center rounded-full bg-warn px-3 text-[11.5px] font-semibold text-white hover:brightness-110 disabled:opacity-50"
           >
             Make ticket
           </button>
@@ -438,7 +438,7 @@ function Workspace({
       </div>
 
       {composing ? (
-        <div className="flex items-center gap-1.5 border-b border-tk-slate/10 px-3 py-2">
+        <div className="flex items-center gap-1.5 border-b border-line px-3 py-2">
           <input
             autoFocus
             value={taskTitle}
@@ -451,7 +451,7 @@ function Workspace({
               }
             }}
             aria-label="Task title"
-            className="min-w-0 flex-1 rounded-md border border-tk-slate/20 bg-white px-2 py-1 text-[12px] outline-none focus:border-tk-teal"
+            className="min-w-0 flex-1 rounded-md border border-line bg-card px-2 py-1 text-[12px] outline-none focus:border-tk-teal"
           />
           <button
             type="button"
@@ -460,7 +460,7 @@ function Workspace({
               setComposing(false)
               onRun(() => makeTaskAction(item.key, taskTitle, null))
             }}
-            className="rounded-full bg-tk-teal px-2.5 py-1 text-[10.5px] font-semibold text-tk-linen"
+            className="rounded-full bg-accent-mark px-2.5 py-1 text-[10.5px] font-semibold text-tk-linen"
           >
             Save
           </button>
@@ -468,14 +468,14 @@ function Workspace({
       ) : null}
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3.5 py-3">
-        <p className="text-[10.5px] font-bold uppercase tracking-[0.07em] text-tk-slate/55">
+        <p className="text-[10.5px] font-bold uppercase tracking-[0.07em] text-ink-3">
           {KIND_LABEL[item.kind]}
           {item.clientName ? ` · ${item.clientName}` : ""}
         </p>
         <h2 className="mt-0.5 text-[15px] font-semibold leading-snug tracking-tight text-tk-onyx">
           {item.title}
         </h2>
-        <p className="mt-1 text-[11.5px] text-tk-slate/65">
+        <p className="mt-1 text-[11.5px] text-ink-3">
           {item.actor}
           {" · "}
           {new Date(item.occurredAt).toLocaleString(undefined, {
@@ -488,17 +488,17 @@ function Workspace({
 
         <div className="mt-2 flex flex-wrap gap-1.5">
           {item.needsReply ? (
-            <span className="rounded-full border border-[#8A5A05]/25 bg-[#8A5A05]/10 px-2 py-0.5 text-[11px] font-semibold text-[#8A5A05]">
+            <span className="rounded-full border border-transparent bg-warn-soft px-2 py-0.5 text-[11px] font-semibold text-warn">
               Needs a reply
             </span>
           ) : null}
           {item.priority && item.priority !== "normal" ? (
-            <span className="rounded-full border border-tk-slate/15 bg-white px-2 py-0.5 text-[11px] font-semibold capitalize text-tk-slate/70">
+            <span className="rounded-full border border-line bg-card px-2 py-0.5 text-[11px] font-semibold capitalize text-ink-3">
               {item.priority}
             </span>
           ) : null}
           {item.state !== "unread" ? (
-            <span className="rounded-full border border-tk-slate/15 bg-white px-2 py-0.5 text-[11px] font-semibold text-tk-slate/60">
+            <span className="rounded-full border border-line bg-card px-2 py-0.5 text-[11px] font-semibold text-ink-3">
               {item.state}
             </span>
           ) : null}
@@ -506,10 +506,10 @@ function Workspace({
 
         {item.snippet ? (
           <div className="mt-3">
-            <p className="text-[9.5px] font-bold uppercase tracking-[0.09em] text-tk-slate/55">
+            <p className="text-[9.5px] font-bold uppercase tracking-[0.09em] text-ink-3">
               What arrived
             </p>
-            <p className="mt-1 whitespace-pre-wrap rounded-xl border border-tk-slate/15 bg-tk-linen px-2.5 py-2 text-[11.5px] leading-relaxed text-tk-slate">
+            <p className="mt-1 whitespace-pre-wrap rounded-xl border border-line bg-well px-2.5 py-2 text-[11.5px] leading-relaxed text-tk-slate">
               {item.snippet}
             </p>
           </div>

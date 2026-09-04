@@ -6,7 +6,7 @@ export function CsvLink({ slug, table, label = "CSV" }: { slug: string; table: C
     <a
       href={`/api/insights/export?site=${encodeURIComponent(slug)}&table=${table}`}
       download
-      className="rounded-md border border-tk-slate/20 bg-white px-2 py-1 text-[10.5px] font-semibold text-tk-slate transition-colors hover:border-tk-teal hover:text-tk-teal"
+      className="rounded-md border border-line bg-card px-2 py-1 text-[10.5px] font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
     >
       {label} ↓
     </a>

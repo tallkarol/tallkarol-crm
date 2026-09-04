@@ -20,7 +20,7 @@ export async function TaskPeek({ id }: { id: string }) {
   return (
     <>
       <TaskDetailBody id={id} />
-      <div className="border-t border-tk-slate/10 px-6 py-3">
+      <div className="border-t border-line px-6 py-3">
         <Link
           href={`/tasks/${id}`}
           className="text-xs font-semibold text-tk-teal hover:underline"

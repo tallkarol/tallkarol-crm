@@ -41,10 +41,10 @@ export function matchesStateFilter(rowState: TicketState, filter: StateFilter) {
 }
 
 export function stateTone(state: TicketState) {
-  if (state === "closed") return "bg-[#26684A]/10 text-[#26684A]"
+  if (state === "closed") return "bg-good-soft text-good"
   if (state === "progress") return "bg-tk-teal/10 text-tk-teal"
-  if (state === "waiting") return "bg-tk-slate/[0.07] text-tk-slate/70"
-  return "bg-[#8A5A05]/12 text-[#8A5A05]"
+  if (state === "waiting") return "bg-well text-ink-3"
+  return "bg-warn-soft text-warn"
 }
 
 /**
@@ -101,10 +101,10 @@ export const SORT_LABEL: Record<TicketSort, string> = {
 }
 
 export function priorityTone(priority: TicketPriority) {
-  if (priority === "urgent") return "bg-[#B4322A]/11 text-[#B4322A]"
-  if (priority === "high") return "bg-[#8A5A05]/12 text-[#8A5A05]"
-  if (priority === "low") return "bg-tk-slate/[0.06] text-tk-slate/50"
-  return "bg-tk-linen text-tk-slate/70"
+  if (priority === "urgent") return "bg-bad-soft text-bad"
+  if (priority === "high") return "bg-warn-soft text-warn"
+  if (priority === "low") return "bg-well text-ink-3"
+  return "bg-well text-ink-3"
 }
 
 /* ------------------------------------------------------------------ urls */

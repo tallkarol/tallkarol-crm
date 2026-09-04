@@ -24,11 +24,11 @@ export function YearGapBar({
 }) {
   if (plan.goalCents == null || plan.goalCents <= 0) {
     return (
-      <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-        <div className="border-b border-tk-slate/10 px-5 py-3.5">
+      <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+        <div className="border-b border-line px-5 py-3.5">
           <h2 className="text-sm font-semibold text-tk-onyx">Making the year</h2>
         </div>
-        <p className="px-5 py-6 text-sm text-tk-slate/70">
+        <p className="px-5 py-6 text-sm text-ink-3">
           Booked work lands {formatWholeMoney(plan.landingCents)} for {plan.yearKey}.{" "}
           <Link
             href={ROUTES.settings}
@@ -55,17 +55,17 @@ export function YearGapBar({
   const h2Gap = plan.h2LandingCents - halfGoal
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-tk-slate/10 px-5 py-3.5">
+    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3.5">
         <h2 className="text-sm font-semibold text-tk-onyx">Making the year</h2>
-        <p className="text-xs tabular-nums text-tk-slate/60">
+        <p className="text-xs tabular-nums text-ink-3">
           {formatWholeMoney(plan.landingCents)} landing
           {gap > 0 ? ` · ${formatWholeMoney(gap)} to find` : " · goal already booked"}
         </p>
       </div>
 
       <div className="px-5 pb-4 pt-4">
-        <div className="flex h-[30px] overflow-hidden rounded-lg bg-tk-linen">
+        <div className="flex h-[30px] overflow-hidden rounded-lg bg-well">
           <div className="bg-[#009688]" style={{ width: `${ytdPct}%` }} />
           <div
             className="bg-[#009688]/[0.38]"
@@ -84,7 +84,7 @@ export function YearGapBar({
             <span
               key={mark}
               className={cn(
-                "absolute top-0 whitespace-nowrap text-[10px] tabular-nums text-tk-slate/55 before:absolute before:-top-[7px] before:h-[5px] before:w-px before:bg-tk-slate/20 before:content-['']",
+                "absolute top-0 whitespace-nowrap text-[10px] tabular-nums text-ink-3 before:absolute before:-top-[7px] before:h-[5px] before:w-px before:bg-line-strong before:content-['']",
                 mark === 100
                   ? "-translate-x-full before:right-0"
                   : "-translate-x-1/2 before:left-1/2"
@@ -97,7 +97,7 @@ export function YearGapBar({
           ))}
         </div>
 
-        <div className="mt-3.5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-tk-slate/75">
+        <div className="mt-3.5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-tk-slate">
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block size-2.5 rounded-[3px] bg-[#009688]" />
             Billed to date · {formatWholeMoney(plan.ytdCents)}
@@ -121,7 +121,7 @@ export function YearGapBar({
         </div>
       </div>
 
-      <p className="border-t border-tk-slate/10 px-5 py-3 text-xs leading-relaxed text-tk-slate/80">
+      <p className="border-t border-line px-5 py-3 text-xs leading-relaxed text-tk-slate">
         {h1Gap > 0 && quarters[2].landingCents > 0 ? (
           <>
             H1 came in{" "}

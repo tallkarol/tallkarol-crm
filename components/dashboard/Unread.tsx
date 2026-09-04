@@ -73,14 +73,14 @@ export function Unread({ summary }: { summary: UnreadSummary }) {
   const cleared = clearedLabel(summary.clearedAt)
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-card">
-      <div className="flex items-center gap-2.5 border-b border-tk-slate/10 px-[18px] py-3">
+    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <div className="flex items-center gap-2.5 border-b border-line px-[18px] py-3">
         <h2 className="font-ui text-[13.5px] font-bold tracking-tight text-tk-onyx">Unread</h2>
         <span
           className={cn(
             "grid h-5 min-w-5 place-items-center rounded-full border px-1.5 font-ui text-[11px] font-bold tabular-nums",
             quiet
-              ? "border-tk-slate/15 bg-tk-linen text-tk-slate"
+              ? "border-line bg-well text-tk-slate"
               : "border-transparent bg-bad/10 text-bad"
           )}
         >
@@ -88,7 +88,7 @@ export function Unread({ summary }: { summary: UnreadSummary }) {
         </span>
         <Link
           href={ROUTES.inbox}
-          className="ml-auto font-ui text-xs font-bold text-tk-slate/70 hover:text-tk-onyx hover:underline"
+          className="ml-auto font-ui text-xs font-bold text-ink-3 hover:text-tk-onyx hover:underline"
         >
           Inbox →
         </Link>
@@ -96,7 +96,7 @@ export function Unread({ summary }: { summary: UnreadSummary }) {
 
       <div className="px-[18px] py-3">
         {quiet ? (
-          <p className="flex items-center gap-2 text-[13px] text-tk-slate/70">
+          <p className="flex items-center gap-2 text-[13px] text-ink-3">
             <span
               aria-hidden
               className="grid size-4 shrink-0 place-items-center rounded-full bg-accent/10 text-tk-teal"
@@ -119,7 +119,7 @@ export function Unread({ summary }: { summary: UnreadSummary }) {
             >
               <div
                 role="row"
-                className="grid h-7 grid-cols-[0.9fr_0.7fr_1.6fr_0.8fr] bg-tk-linen font-ui text-[9.5px] font-bold uppercase tracking-[0.08em] text-tk-slate/70"
+                className="grid h-7 grid-cols-[0.9fr_0.7fr_1.6fr_0.8fr] bg-well font-ui text-[9.5px] font-bold uppercase tracking-[0.08em] text-ink-3"
               >
                 <Cell head>Kind</Cell>
                 <Cell head>Unread</Cell>
@@ -142,7 +142,7 @@ export function Unread({ summary }: { summary: UnreadSummary }) {
                   <Cell
                     className={cn(
                       "font-display text-[15px] font-semibold tabular-nums",
-                      row.count === 0 ? "font-medium text-tk-slate/70" : "text-current"
+                      row.count === 0 ? "font-medium text-ink-3" : "text-current"
                     )}
                   >
                     {row.count}
@@ -155,7 +155,7 @@ export function Unread({ summary }: { summary: UnreadSummary }) {
               ))}
             </div>
             {loudest ? (
-              <p className="mt-2 truncate text-xs text-tk-slate/70">
+              <p className="mt-2 truncate text-xs text-ink-3">
                 {loudest.detail}
               </p>
             ) : null}

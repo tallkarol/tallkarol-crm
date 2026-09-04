@@ -55,29 +55,29 @@ function Tile({
     <div
       className={cn(
         "rounded-2xl border px-3 py-2.5",
-        alert ? "border-[#8A5A05]/40 bg-[#8A5A05]/[0.05]" : "border-tk-slate/15 bg-white"
+        alert ? "border-transparent bg-warn-soft" : "border-line bg-card"
       )}
     >
-      <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-tk-slate/60">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-3">
         {label}
       </p>
       <p
         className={cn(
           "mt-0.5 text-[22px] font-semibold leading-tight tracking-tight tabular-nums",
-          alert ? "text-[#8A5A05]" : "text-tk-onyx"
+          alert ? "text-warn" : "text-tk-onyx"
         )}
       >
         {value}
       </p>
       {meter != null ? (
-        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-tk-slate/10">
+        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-well">
           <div
-            className={cn("h-full rounded-full", meter >= 0.85 ? "bg-[#8A5A05]" : "bg-tk-teal")}
+            className={cn("h-full rounded-full", meter >= 0.85 ? "bg-warn" : "bg-accent")}
             style={{ width: `${Math.max(2, Math.round(meter * 100))}%` }}
           />
         </div>
       ) : null}
-      <p className="mt-0.5 text-[11px] text-tk-slate/60">{caption}</p>
+      <p className="mt-0.5 text-[11px] text-ink-3">{caption}</p>
     </div>
   )
 }
@@ -92,10 +92,10 @@ function Rail({ rail }: { rail: NonNullable<DeliveryRow["rail"]> }) {
           className={cn(
             "h-[5px] w-[15px] rounded-[2px]",
             s.count === 0
-              ? "bg-tk-slate/[0.13]"
+              ? "bg-well"
               : s.stale
-                ? "bg-[#8A5A05]"
-                : "bg-tk-teal"
+                ? "bg-warn"
+                : "bg-accent"
           )}
         />
       ))}
@@ -107,11 +107,11 @@ function CapMeter({ capacity }: { capacity: NonNullable<DeliveryRow["capacity"]>
   const empty = capacity.hours <= 0
   return (
     <span className="flex min-w-[168px] shrink-0 items-center gap-2">
-      <span className="h-[5px] flex-1 overflow-hidden rounded-full bg-tk-slate/10">
+      <span className="h-[5px] flex-1 overflow-hidden rounded-full bg-well">
         <span
           className={cn(
             "block h-full rounded-full",
-            empty ? "bg-[#B4322A]" : capacity.pct >= 0.85 ? "bg-[#8A5A05]" : "bg-tk-teal"
+            empty ? "bg-bad" : capacity.pct >= 0.85 ? "bg-warn" : "bg-accent"
           )}
           style={{ width: `${Math.max(3, Math.round(capacity.pct * 100))}%` }}
         />
@@ -128,7 +128,7 @@ function Row({ row, openHref }: { row: DeliveryRow; openHref: string }) {
   const lead = row.flags[0]
 
   return (
-    <li className="flex min-h-[46px] items-center gap-2.5 border-b border-tk-slate/[0.09] pr-3 last:border-b-0 hover:bg-tk-linen/40">
+    <li className="flex min-h-[46px] items-center gap-2.5 border-b border-line pr-3 last:border-b-0 hover:bg-well">
       <span aria-hidden className="w-[3px] self-stretch" style={{ background: row.color }} />
 
       <Link
@@ -136,7 +136,7 @@ function Row({ row, openHref }: { row: DeliveryRow; openHref: string }) {
         scroll={false}
         className="flex min-w-[220px] shrink-0 items-baseline gap-2 py-2 pl-2.5 outline-none focus-visible:underline"
       >
-        <span className="text-[10.5px] font-bold uppercase tracking-[0.05em] text-tk-slate/60">
+        <span className="text-[10.5px] font-bold uppercase tracking-[0.05em] text-ink-3">
           {row.clientName}
         </span>
         <span className="truncate text-[13px] font-semibold text-tk-onyx">{row.name}</span>
@@ -162,24 +162,24 @@ function Row({ row, openHref }: { row: DeliveryRow; openHref: string }) {
         {row.rail && row.rail.some((s) => s.count > 0) ? (
           <>
             <Rail rail={row.rail} />
-            <span className="shrink-0 text-[11px] text-tk-slate/60">{row.railNote}</span>
+            <span className="shrink-0 text-[11px] text-ink-3">{row.railNote}</span>
           </>
         ) : null}
         {row.capacity ? <CapMeter capacity={row.capacity} /> : null}
 
         {lead ? (
-          <span className="min-w-0 truncate text-[11.5px] text-tk-slate/60">
-            <span className="mx-1 text-tk-slate/25">·</span>
+          <span className="min-w-0 truncate text-[11.5px] text-ink-3">
+            <span className="mx-1 text-ink-3">·</span>
             <span
               className={cn(
                 "font-semibold",
-                hot ? "text-[#B4322A]" : "text-[#8A5A05]"
+                hot ? "text-bad" : "text-warn"
               )}
             >
               {lead.short}
             </span>
             {row.flags.length > 1 ? (
-              <span className="ml-1.5 text-tk-slate/45">+{row.flags.length - 1}</span>
+              <span className="ml-1.5 text-ink-3">+{row.flags.length - 1}</span>
             ) : null}
           </span>
         ) : null}
@@ -198,7 +198,7 @@ function Row({ row, openHref }: { row: DeliveryRow; openHref: string }) {
         href={openHref}
         scroll={false}
         aria-label={`Open ${row.clientName} ${row.name}`}
-        className="shrink-0 rounded px-1 text-[15px] leading-none tracking-[1px] text-tk-slate/40 hover:text-tk-teal"
+        className="shrink-0 rounded px-1 text-[15px] leading-none tracking-[1px] text-ink-3 hover:text-tk-teal"
       >
         ⋯
       </Link>
@@ -290,7 +290,7 @@ export function DeliveryLedger({
           value={
             <>
               {totals.retainerHours.toFixed(1)}
-              <span className="text-[13px] text-tk-slate/60">/{totals.retainerCap}h</span>
+              <span className="text-[13px] text-ink-3">/{totals.retainerCap}h</span>
             </>
           }
           caption="across active retainers"
@@ -315,7 +315,7 @@ export function DeliveryLedger({
 
       <div
         data-menu-boundary
-        className="mt-3.5 flex h-11 items-center gap-2 rounded-2xl border border-tk-slate/15 bg-white px-2.5"
+        className="mt-3.5 flex h-11 items-center gap-2 rounded-2xl border border-line bg-card px-2.5"
       >
         <Dropdown label={activeLens.label} on={lens !== "all"} title={activeLens.question}>
           {(close) => (
@@ -380,7 +380,7 @@ export function DeliveryLedger({
           )}
         </Dropdown>
 
-        <p className="ml-auto pr-1 text-[11.5px] tabular-nums text-tk-slate/55">
+        <p className="ml-auto pr-1 text-[11.5px] tabular-nums text-ink-3">
           {visible.length === rows.length
             ? `${rows.length} engagement${rows.length === 1 ? "" : "s"}`
             : `${visible.length} of ${rows.length}`}
@@ -388,7 +388,7 @@ export function DeliveryLedger({
       </div>
 
       {banded.length === 0 ? (
-        <p className="mt-10 text-center text-sm text-tk-slate/70">
+        <p className="mt-10 text-center text-sm text-ink-3">
           {lens === "needs-me"
             ? "Nothing needs you. Genuinely."
             : "Nothing matches this view."}
@@ -400,17 +400,17 @@ export function DeliveryLedger({
               <h2
                 className={cn(
                   "text-[10.5px] font-bold uppercase tracking-[0.11em]",
-                  group.band === "needs-you" ? "text-[#8A5A05]" : "text-tk-slate/60"
+                  group.band === "needs-you" ? "text-warn" : "text-ink-3"
                 )}
               >
                 {BAND_LABEL[group.band as BandId]}
               </h2>
-              <span className="font-mono text-[10.5px] tabular-nums text-tk-slate/40">
+              <span className="font-mono text-[10.5px] tabular-nums text-ink-3">
                 {group.rows.length}
               </span>
-              <span className="h-px flex-1 bg-tk-slate/[0.09]" />
+              <span className="h-px flex-1 bg-line" />
             </div>
-            <ul className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white">
+            <ul className="overflow-hidden rounded-2xl border border-line bg-card">
               {group.rows.map((row) => (
                 <Row
                   key={`${row.kind}:${row.id}`}

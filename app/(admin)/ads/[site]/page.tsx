@@ -64,9 +64,9 @@ export default async function PaidAdsPage({
 
   if (!hasAds) {
     return (
-      <div className="rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 px-6 py-10 text-center shadow-sm">
+      <div className="rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
         <p className="text-sm font-semibold text-tk-onyx">Ads did not load on the last fetch</p>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           {ads?.error || "Refresh the snapshot, or check the Health tab on Analytics."}
         </p>
         <Link
@@ -82,7 +82,7 @@ export default async function PaidAdsPage({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-tk-slate/60">
+        <p className="text-xs text-ink-3">
           {win.label} · vs. previous {prev ? `${range} days` : "window (not covered)"}
         </p>
         <RangeSwitcher />
@@ -181,7 +181,7 @@ export default async function PaidAdsPage({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-xs">
               <thead>
-                <tr className="border-b border-tk-slate/12 text-left text-[10px] font-bold uppercase tracking-wide text-tk-slate/55">
+                <tr className="border-b border-line text-left text-[10px] font-bold uppercase tracking-wide text-ink-3">
                   <th className="px-5 py-2 font-bold">Campaign</th>
                   <th className="px-3 py-2 text-right font-bold">Spend</th>
                   <th className="px-3 py-2 text-right font-bold">Clicks</th>
@@ -203,7 +203,7 @@ export default async function PaidAdsPage({
                   return (
                     <tr
                       key={row.id || row.name}
-                      className="border-b border-tk-slate/[.06] last:border-0"
+                      className="border-b border-line last:border-0"
                     >
                       <td
                         className="max-w-[22rem] truncate px-5 py-2 font-medium text-tk-onyx"
@@ -211,7 +211,7 @@ export default async function PaidAdsPage({
                       >
                         {row.name}
                         {row.status && row.status !== "ENABLED" ? (
-                          <span className="ml-2 text-[10px] font-semibold uppercase text-tk-slate/50">
+                          <span className="ml-2 text-[10px] font-semibold uppercase text-ink-3">
                             {row.status.toLowerCase()}
                           </span>
                         ) : null}
@@ -244,7 +244,7 @@ export default async function PaidAdsPage({
             </table>
           </div>
         ) : (
-          <p className="px-5 py-5 text-sm text-tk-slate/70">
+          <p className="px-5 py-5 text-sm text-ink-3">
             No impressions in this window.
           </p>
         )}
@@ -252,9 +252,9 @@ export default async function PaidAdsPage({
 
       <div className="mt-3 grid gap-3 lg:grid-cols-2">
         <Card title="Paid — Ads vs Analytics" note={totals.ga4Paid > 0 ? "paid sessions" : "all sessions"}>
-          <div className="grid grid-cols-2 gap-px border-t border-tk-slate/[.06]">
+          <div className="grid grid-cols-2 gap-px border-t border-line">
             <div className="px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                 Ads clicks
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums text-tk-onyx">
@@ -262,7 +262,7 @@ export default async function PaidAdsPage({
               </p>
             </div>
             <div className="px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                 {totals.ga4Paid > 0 ? "GA4 paid sessions" : "GA4 sessions"}
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums text-tk-onyx">
@@ -270,7 +270,7 @@ export default async function PaidAdsPage({
               </p>
             </div>
           </div>
-          <p className="border-t border-tk-slate/[.06] px-5 py-3 text-xs leading-relaxed text-tk-slate/65">
+          <p className="border-t border-line px-5 py-3 text-xs leading-relaxed text-ink-3">
             {hasGa4 && paidCapture != null ? (
               <>
                 Analytics counted{" "}
@@ -287,9 +287,9 @@ export default async function PaidAdsPage({
           title="Cost of an enquiry"
           note={totals.adConversions > 0 ? "from Ads conversions" : "needs conversions"}
         >
-          <div className="grid grid-cols-2 gap-px border-t border-tk-slate/[.06]">
+          <div className="grid grid-cols-2 gap-px border-t border-line">
             <div className="px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                 Spend
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums text-tk-onyx">
@@ -297,7 +297,7 @@ export default async function PaidAdsPage({
               </p>
             </div>
             <div className="px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                 Per conversion
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums text-tk-onyx">
@@ -305,7 +305,7 @@ export default async function PaidAdsPage({
               </p>
             </div>
           </div>
-          <p className="border-t border-tk-slate/[.06] px-5 py-3 text-xs leading-relaxed text-tk-slate/65">
+          <p className="border-t border-line px-5 py-3 text-xs leading-relaxed text-ink-3">
             {totals.adConversions > 0
               ? `${fmtConv(totals.adConversions)} conversions in this window, billed at ${fmtMoney(totals.adSpend, currency)}.`
               : "No conversions in this window — CPA stays blank until Ads records one."}

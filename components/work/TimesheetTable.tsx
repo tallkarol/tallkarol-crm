@@ -21,7 +21,7 @@ export function TimesheetTable({ entries }: { entries: TimesheetSession[] }) {
     <div className="overflow-x-auto">
       <table className="w-full min-w-[640px] border-collapse text-sm">
         <thead>
-          <tr className="border-b border-tk-slate/15 bg-tk-linen/60 text-left text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+          <tr className="border-b border-line bg-well text-left text-[11px] font-semibold uppercase tracking-wide text-ink-3">
             <th className="px-4 py-2.5 font-semibold">Date</th>
             <th className="px-3 py-2.5 font-semibold">Time Start</th>
             <th className="px-3 py-2.5 font-semibold">Time End</th>
@@ -36,21 +36,21 @@ export function TimesheetTable({ entries }: { entries: TimesheetSession[] }) {
             return (
               <tr
                 key={entry.id}
-                className="border-b border-tk-slate/10 last:border-0"
+                className="border-b border-line last:border-0"
               >
                 <td className="whitespace-nowrap px-4 py-2 text-tk-onyx">
                   {showDate ? formatSheetDate(entry.occurredOn) : ""}
                 </td>
-                <td className="whitespace-nowrap px-3 py-2 tabular-nums text-tk-slate/80">
+                <td className="whitespace-nowrap px-3 py-2 tabular-nums text-tk-slate">
                   {entry.startedAt || ""}
                 </td>
-                <td className="whitespace-nowrap px-3 py-2 tabular-nums text-tk-slate/80">
+                <td className="whitespace-nowrap px-3 py-2 tabular-nums text-tk-slate">
                   {entry.endedAt || ""}
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">
                   {formatSheetHours(entry.hours)}
                 </td>
-                <td className="px-4 py-2 text-tk-slate/80">{entry.summary}</td>
+                <td className="px-4 py-2 text-tk-slate">{entry.summary}</td>
               </tr>
             )
           })}

@@ -70,7 +70,7 @@ t(1, "ink/placeholder-bare", /placeholder:text-tk-slate(?![-/\w])/g, "placeholde
 /* ---------------------------------------------------------------- stage 2 */
 /* Neutral chips. Roles 1-4 (tracks, dividers, marks, hovers) are exact-site
    rules below and run before this catch-all. */
-t(2, "chip/slate-surface", /\bbg-tk-slate\/(?:\[0?\.(?:0[6-9]|13)\]|5|10|12|15)(?![\w/[])/g, "bg-well")
+t(2, "chip/slate-surface", /\bbg-tk-slate\/(?:\[0?\.(?:0[6-9]|13)\]|5|8|10|12|15)(?![\w/[])/g, "bg-well")
 
 /* Eight scrims, every one measuring exactly 1.0000:1 in dark: tk-onyx is the
    locked literal #0F1615 and the dark canvas is ALSO #0F1615, so each paints
@@ -197,7 +197,7 @@ const SITE_RULES: Record<string, [string, string][]> = {
   "components/clients/HoursMeter.tsx": [["bg-tk-slate/10", "bg-well"]],
   /* :411 is a band-header rule; bg-line/[0.09] holds the light weight where a
      plain bg-well would paint linen on linen at 1.03:1 and vanish. */
-  "components/delivery/DeliveryLedger.tsx": [["bg-tk-slate/[0.09]", "bg-line/[0.09]"]],
+  "components/delivery/DeliveryLedger.tsx": [["bg-tk-slate/[0.09]", "bg-line"]],
   "components/punchlist/PunchlistList.tsx": [["bg-tk-slate/10", "bg-well"]],
   "components/punchlist/PunchlistBody.tsx": [["bg-tk-slate/12", "bg-well"]],
 

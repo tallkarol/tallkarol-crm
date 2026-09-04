@@ -7,12 +7,12 @@ import type {
 import { formatMoney } from "@/lib/work"
 
 function Prose({ children }: { children: string }) {
-  return <p className="text-sm leading-relaxed text-tk-slate/80">{children}</p>
+  return <p className="text-sm leading-relaxed text-tk-slate">{children}</p>
 }
 
 function Bullets({ items }: { items: string[] }) {
   return (
-    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-tk-slate/80">
+    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-tk-slate">
       {items.map((item) => (
         <li key={item}>{item}</li>
       ))}
@@ -22,7 +22,7 @@ function Bullets({ items }: { items: string[] }) {
 
 function Block({ block }: { block: ContractBlock }) {
   return (
-    <div className="border-t border-tk-slate/10 px-5 py-4 first:border-t-0">
+    <div className="border-t border-line px-5 py-4 first:border-t-0">
       <h3 className="text-sm font-semibold text-tk-onyx">{block.heading}</h3>
       {block.paragraphs?.map((paragraph) => (
         <div key={paragraph.slice(0, 48)} className="mt-2">
@@ -31,7 +31,7 @@ function Block({ block }: { block: ContractBlock }) {
       ))}
       {block.bullets ? <Bullets items={block.bullets} /> : null}
       {block.note ? (
-        <p className="mt-2 text-sm leading-relaxed text-tk-slate/70">
+        <p className="mt-2 text-sm leading-relaxed text-ink-3">
           {block.note}
         </p>
       ) : null}
@@ -45,7 +45,7 @@ function Block({ block }: { block: ContractBlock }) {
           ))}
           {child.bullets ? <Bullets items={child.bullets} /> : null}
           {child.note ? (
-            <p className="mt-2 text-sm leading-relaxed text-tk-slate/70">
+            <p className="mt-2 text-sm leading-relaxed text-ink-3">
               {child.note}
             </p>
           ) : null}
@@ -59,7 +59,7 @@ function Schedule({ schedule }: { schedule: ContractSchedule }) {
   return (
     <Section title={schedule.title}>
       {schedule.subtitle ? (
-        <p className="border-b border-tk-slate/10 px-5 py-3 text-sm text-tk-slate/70">
+        <p className="border-b border-line px-5 py-3 text-sm text-ink-3">
           {schedule.subtitle}
         </p>
       ) : null}
@@ -71,7 +71,7 @@ function Schedule({ schedule }: { schedule: ContractSchedule }) {
       {schedule.allocations?.map((item) => (
         <div
           key={item.label}
-          className="border-t border-tk-slate/10 px-5 py-4 first:border-t-0"
+          className="border-t border-line px-5 py-4 first:border-t-0"
         >
           <div className="flex items-start justify-between gap-4">
             <h3 className="text-sm font-semibold text-tk-onyx">{item.label}</h3>
@@ -83,7 +83,7 @@ function Schedule({ schedule }: { schedule: ContractSchedule }) {
           </div>
           <Bullets items={item.bullets} />
           {item.note ? (
-            <p className="mt-2 text-sm leading-relaxed text-tk-slate/70">
+            <p className="mt-2 text-sm leading-relaxed text-ink-3">
               {item.note}
             </p>
           ) : null}
@@ -99,7 +99,7 @@ function Schedule({ schedule }: { schedule: ContractSchedule }) {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
               <thead>
-                <tr className="border-b border-tk-slate/15 text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+                <tr className="border-b border-line text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                   {table.columns.map((column) => (
                     <th key={column} className="pb-2 pr-4 font-semibold">
                       {column}
@@ -111,12 +111,12 @@ function Schedule({ schedule }: { schedule: ContractSchedule }) {
                 {table.rows.map((row) => (
                   <tr
                     key={row.join("|")}
-                    className="border-b border-tk-slate/10 align-top last:border-b-0"
+                    className="border-b border-line align-top last:border-b-0"
                   >
                     {row.map((cell, index) => (
                       <td
                         key={`${cell}-${index}`}
-                        className="py-2.5 pr-4 text-tk-slate/80"
+                        className="py-2.5 pr-4 text-tk-slate"
                       >
                         {cell}
                       </td>
@@ -129,13 +129,13 @@ function Schedule({ schedule }: { schedule: ContractSchedule }) {
         </div>
       ))}
       {schedule.lists?.map((list) => (
-        <div key={list.title} className="border-t border-tk-slate/10 px-5 py-4">
+        <div key={list.title} className="border-t border-line px-5 py-4">
           <h3 className="text-sm font-semibold text-tk-onyx">{list.title}</h3>
           <Bullets items={list.items} />
         </div>
       ))}
       {schedule.note ? (
-        <p className="border-t border-tk-slate/10 px-5 py-3 text-sm font-semibold text-tk-onyx">
+        <p className="border-t border-line px-5 py-3 text-sm font-semibold text-tk-onyx">
           {schedule.note}
         </p>
       ) : null}
@@ -148,13 +148,13 @@ export function ContractBody({ terms }: { terms: ContractTerms }) {
     <>
       {terms.parties && terms.parties.length > 0 ? (
         <Section title="Parties">
-          <dl className="divide-y divide-tk-slate/10">
+          <dl className="divide-y divide-line">
             {terms.parties.map((party) => (
               <div
                 key={`${party.role}-${party.name}`}
                 className="flex items-start justify-between gap-4 px-5 py-3"
               >
-                <dt className="text-sm text-tk-slate/70">{party.role}</dt>
+                <dt className="text-sm text-ink-3">{party.role}</dt>
                 <dd className="text-right text-sm font-medium text-tk-onyx">
                   {party.name}
                 </dd>
@@ -176,7 +176,7 @@ export function ContractBody({ terms }: { terms: ContractTerms }) {
 
       {terms.milestones && terms.milestones.length > 0 ? (
         <Section title="Payment schedule">
-          <ul className="divide-y divide-tk-slate/10">
+          <ul className="divide-y divide-line">
             {terms.milestones.map((row) => (
               <li
                 key={row.label}
@@ -184,7 +184,7 @@ export function ContractBody({ terms }: { terms: ContractTerms }) {
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-tk-onyx">{row.label}</p>
-                  <p className="mt-0.5 text-sm text-tk-slate/70">{row.trigger}</p>
+                  <p className="mt-0.5 text-sm text-ink-3">{row.trigger}</p>
                 </div>
                 <span className="shrink-0 text-sm font-semibold tabular-nums text-tk-onyx">
                   {formatMoney(row.amountCents)}
@@ -193,12 +193,12 @@ export function ContractBody({ terms }: { terms: ContractTerms }) {
             ))}
           </ul>
           {terms.paymentDue ? (
-            <p className="border-t border-tk-slate/10 px-5 py-3 text-sm leading-relaxed text-tk-slate/70">
+            <p className="border-t border-line px-5 py-3 text-sm leading-relaxed text-ink-3">
               {terms.paymentDue}
             </p>
           ) : null}
           {terms.extraRateNote ? (
-            <p className="border-t border-tk-slate/10 px-5 py-3 text-sm leading-relaxed text-tk-slate/70">
+            <p className="border-t border-line px-5 py-3 text-sm leading-relaxed text-ink-3">
               {terms.extraRateNote}
             </p>
           ) : null}
@@ -220,25 +220,25 @@ export function ContractBody({ terms }: { terms: ContractTerms }) {
       {terms.operatingCosts && terms.operatingCosts.length > 0 ? (
         <Section title="Estimated monthly operating costs">
           {terms.operatingCostsNote ? (
-            <p className="px-5 py-3 text-sm leading-relaxed text-tk-slate/70">
+            <p className="px-5 py-3 text-sm leading-relaxed text-ink-3">
               {terms.operatingCostsNote}
             </p>
           ) : null}
-          <ul className="divide-y divide-tk-slate/10">
+          <ul className="divide-y divide-line">
             {terms.operatingCosts.map((row) => (
               <li
                 key={row.label}
                 className="flex items-start justify-between gap-4 px-5 py-3"
               >
                 <p className="text-sm text-tk-onyx">{row.label}</p>
-                <span className="shrink-0 text-sm tabular-nums text-tk-slate/80">
+                <span className="shrink-0 text-sm tabular-nums text-tk-slate">
                   {row.amount}
                 </span>
               </li>
             ))}
           </ul>
           {terms.operatingCostsTotal ? (
-            <p className="border-t border-tk-slate/10 px-5 py-3 text-sm font-semibold text-tk-onyx">
+            <p className="border-t border-line px-5 py-3 text-sm font-semibold text-tk-onyx">
               Total estimated monthly cost: {terms.operatingCostsTotal}
             </p>
           ) : null}
@@ -247,13 +247,13 @@ export function ContractBody({ terms }: { terms: ContractTerms }) {
 
       {terms.signatures && terms.signatures.length > 0 ? (
         <Section title="Signatures">
-          <dl className="divide-y divide-tk-slate/10">
+          <dl className="divide-y divide-line">
             {terms.signatures.map((party) => (
               <div
                 key={`${party.role}-${party.name}`}
                 className="flex items-start justify-between gap-4 px-5 py-3"
               >
-                <dt className="text-sm text-tk-slate/70">{party.role}</dt>
+                <dt className="text-sm text-ink-3">{party.role}</dt>
                 <dd className="text-right text-sm font-medium text-tk-onyx">
                   {party.name}
                 </dd>
@@ -264,7 +264,7 @@ export function ContractBody({ terms }: { terms: ContractTerms }) {
       ) : null}
 
       {terms.source ? (
-        <p className="mt-4 text-xs text-tk-slate/50">{terms.source}</p>
+        <p className="mt-4 text-xs text-ink-3">{terms.source}</p>
       ) : null}
     </>
   )

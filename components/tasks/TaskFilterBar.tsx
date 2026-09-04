@@ -193,7 +193,7 @@ export function TaskFilterBar({
   // and have to escape it. The pill strip rounds its own bottom corners, and
   // z-20 lifts the open menus above the composer and rows below.
   return (
-    <div className="relative z-20 mt-5 rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+    <div className="relative z-20 mt-5 rounded-2xl border border-line bg-card shadow-card">
       <div className="flex flex-wrap items-center gap-1.5 px-2.5 py-2">
         <Dropdown
           label={current?.name ?? "All tasks"}
@@ -222,7 +222,7 @@ export function TaskFilterBar({
                   close()
                   void saveAsNew()
                 }}
-                className="w-full rounded-lg px-2 py-1.5 text-left text-xs font-semibold text-tk-teal hover:bg-tk-linen"
+                className="w-full rounded-lg px-2 py-1.5 text-left text-xs font-semibold text-tk-teal hover:bg-well transition-colors duration-[120ms]"
               >
                 Save this view…
               </button>
@@ -230,8 +230,8 @@ export function TaskFilterBar({
           )}
         </Dropdown>
 
-        <label className="flex min-w-[160px] flex-1 items-center gap-2 rounded-lg border border-tk-slate/15 bg-tk-linen/60 px-2.5 py-1.5">
-          <Search aria-hidden className="size-3.5 shrink-0 text-tk-slate/40" />
+        <label className="flex min-w-[160px] flex-1 items-center gap-2 rounded-lg border border-line bg-well px-2.5 py-1.5">
+          <Search aria-hidden className="size-3.5 shrink-0 text-ink-3" />
           <input
             id="task-search"
             value={q}
@@ -248,9 +248,9 @@ export function TaskFilterBar({
             }}
             placeholder="Search tasks, notes, client…"
             aria-label="Search tasks"
-            className="min-w-0 flex-1 bg-transparent text-xs text-tk-onyx outline-none placeholder:text-tk-slate/40"
+            className="min-w-0 flex-1 bg-transparent text-xs text-tk-onyx outline-none placeholder:text-ink-3"
           />
-          <kbd className="shrink-0 rounded border border-tk-slate/20 px-1 font-mono text-[10px] text-tk-slate/40">
+          <kbd className="shrink-0 rounded border border-line px-1 font-mono text-[10px] text-ink-3">
             /
           </kbd>
         </label>
@@ -289,7 +289,7 @@ export function TaskFilterBar({
                 Project
               </MenuHead>
               {projects.length === 0 ? (
-                <p className="px-2 py-2 text-xs text-tk-slate/50">
+                <p className="px-2 py-2 text-xs text-ink-3">
                   No projects have tasks yet.
                 </p>
               ) : (
@@ -327,7 +327,7 @@ export function TaskFilterBar({
           )}
         </Dropdown>
 
-        <span aria-hidden className="mx-0.5 h-5 w-px bg-tk-slate/15" />
+        <span aria-hidden className="mx-0.5 h-5 w-px bg-well" />
 
         <Dropdown label="⋯" align="right" title="Group, sort">
           {() => (
@@ -358,7 +358,7 @@ export function TaskFilterBar({
         <div
           role="group"
           aria-label="Layout"
-          className="ml-auto flex rounded-lg border border-tk-slate/15 bg-tk-linen/60 p-0.5"
+          className="ml-auto flex rounded-lg border border-line bg-well p-0.5"
         >
           {(
             [
@@ -378,8 +378,8 @@ export function TaskFilterBar({
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[11.5px] font-semibold transition-colors",
                   on
-                    ? "bg-white text-tk-onyx shadow-sm"
-                    : "text-tk-slate/60 hover:text-tk-onyx"
+                    ? "bg-card text-tk-onyx shadow-card"
+                    : "text-ink-3 hover:text-tk-onyx"
                 )}
               >
                 <Icon className="size-3.5" />
@@ -391,11 +391,11 @@ export function TaskFilterBar({
       </div>
 
       {pills.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-1.5 rounded-b-[15px] border-t border-tk-slate/10 bg-tk-linen/40 px-3 py-1.5">
+        <div className="flex flex-wrap items-center gap-1.5 rounded-b-[15px] border-t border-line bg-well px-3 py-1.5">
           {pills.map((pill) => (
             <span
               key={pill.key}
-              className="inline-flex items-center gap-1.5 rounded-full border border-tk-slate/20 bg-white py-0.5 pl-2.5 pr-1 text-[11.5px] text-tk-slate"
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card py-0.5 pl-2.5 pr-1 text-[11.5px] text-tk-slate"
             >
               {pill.swatch ? (
                 <span
@@ -409,7 +409,7 @@ export function TaskFilterBar({
                 type="button"
                 onClick={pill.clear}
                 aria-label={`Remove ${pill.label} filter`}
-                className="rounded p-0.5 text-tk-slate/40 hover:bg-tk-linen hover:text-red-700"
+                className="rounded p-0.5 text-ink-3 hover:bg-well transition-colors duration-[120ms] hover:text-red-700"
               >
                 <X className="size-3" />
               </button>
@@ -435,7 +435,7 @@ export function TaskFilterBar({
             </button>
           ) : null}
 
-          <span className="ml-auto font-mono text-[11px] tabular-nums text-tk-slate/55">
+          <span className="ml-auto font-mono text-[11px] tabular-nums text-ink-3">
             {shown} of {total} tasks
           </span>
         </div>

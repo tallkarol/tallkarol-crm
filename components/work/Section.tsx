@@ -12,15 +12,15 @@ export function Section({
 }) {
   return (
     <section
-      className={`mt-6 rounded-2xl border border-tk-slate/15 bg-white shadow-sm ${
+      className={`mt-6 rounded-2xl border border-line bg-card shadow-card ${
         allowOverflow ? "" : "overflow-hidden"
       }`}
     >
-      <div className="border-b border-tk-slate/10 px-5 py-3">
+      <div className="border-b border-line px-5 py-3">
         <h2 className="text-sm font-semibold text-tk-onyx">{title}</h2>
       </div>
       {empty ? (
-        <p className="px-5 py-8 text-sm text-tk-slate/70">Nothing here yet.</p>
+        <p className="px-5 py-8 text-sm text-ink-3">Nothing here yet.</p>
       ) : (
         children
       )}

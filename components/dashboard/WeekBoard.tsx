@@ -144,7 +144,7 @@ type DragState = {
 }
 
 const segBtn =
-  "grid h-[26px] min-w-[26px] place-items-center rounded-md px-2 font-ui text-[11.5px] font-semibold text-tk-slate transition-colors hover:bg-white hover:text-tk-onyx"
+  "grid h-[26px] min-w-[26px] place-items-center rounded-md px-2 font-ui text-[11.5px] font-semibold text-tk-slate transition-colors hover:bg-card hover:text-tk-onyx"
 
 export function WeekBoard({
   configured,
@@ -403,10 +403,10 @@ export function WeekBoard({
   if (!configured) {
     return (
       <section
-        className="rounded-2xl border border-tk-slate/15 bg-white shadow-card"
+        className="rounded-2xl border border-line bg-card shadow-card"
         aria-labelledby="week-board-title"
       >
-        <div className="flex items-center gap-2.5 border-b border-tk-slate/10 px-[18px] py-3">
+        <div className="flex items-center gap-2.5 border-b border-line px-[18px] py-3">
           <h2
             id="week-board-title"
             className="font-display text-[15px] font-semibold text-tk-onyx"
@@ -414,7 +414,7 @@ export function WeekBoard({
             Calendar
           </h2>
         </div>
-        <div className="px-[18px] py-6 text-sm text-tk-slate/70">
+        <div className="px-[18px] py-6 text-sm text-ink-3">
           <p>No calendars connected yet — upcoming bookings will show here.</p>
           <Link
             href={ROUTES.settingsCalendar}
@@ -429,23 +429,23 @@ export function WeekBoard({
 
   return (
     <section
-      className="relative rounded-2xl border border-tk-slate/15 bg-white shadow-card"
+      className="relative rounded-2xl border border-line bg-card shadow-card"
       aria-labelledby="week-board-title"
     >
-      <div className="flex flex-wrap items-center gap-2.5 border-b border-tk-slate/10 px-[18px] py-3">
+      <div className="flex flex-wrap items-center gap-2.5 border-b border-line px-[18px] py-3">
         <h2
           id="week-board-title"
           className="font-display text-[15px] font-semibold text-tk-onyx"
         >
           Calendar
         </h2>
-        <span className="font-ui text-xs text-tk-slate/60">
+        <span className="font-ui text-xs text-ink-3">
           {start ? rangeLabel(start) : " "}
         </span>
         <div
           role="group"
           aria-label="Move the window"
-          className="ml-0.5 inline-flex items-center gap-0.5 rounded-lg border border-tk-slate/15 bg-tk-linen p-0.5"
+          className="ml-0.5 inline-flex items-center gap-0.5 rounded-lg border border-line bg-well p-0.5"
         >
           <button type="button" aria-label="Previous five days" onClick={goPrev} className={segBtn}>
             <ChevronLeft className="size-3.5" aria-hidden />
@@ -484,7 +484,7 @@ export function WeekBoard({
                 style={{ "--c": source.color } as CSSProperties}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-ui text-[11.5px] font-semibold transition-colors",
-                  isHidden ? "text-tk-slate/50" : "tk-client-tint tk-client-ink"
+                  isHidden ? "text-ink-3" : "tk-client-tint tk-client-ink"
                 )}
               >
                 <span
@@ -504,26 +504,26 @@ export function WeekBoard({
 
       <div
         className={cn(
-          "mt-2.5 overflow-x-auto border-t border-tk-slate/10 transition-opacity duration-150 motion-reduce:transition-none",
+          "mt-2.5 overflow-x-auto border-t border-line transition-opacity duration-150 motion-reduce:transition-none",
           loading && "opacity-60"
         )}
       >
         {start ? (
           <>
-            <div className="grid min-w-[55rem] grid-cols-5 divide-x divide-tk-slate/10 lg:min-w-0">
+            <div className="grid min-w-[55rem] grid-cols-5 divide-x divide-line lg:min-w-0">
               {days.map((d) => {
                 const key = dayKey(d, false)
                 const isToday = key === todayKey
                 const isPast = key < todayKey
                 return (
                   <div key={key} className="grid min-w-[11rem] justify-items-center gap-[3px] px-1.5 py-2 text-center lg:min-w-0">
-                    <span className="font-ui text-[10px] font-bold uppercase tracking-wide text-tk-slate/55">
+                    <span className="font-ui text-[10px] font-bold uppercase tracking-wide text-ink-3">
                       {d.toLocaleDateString(undefined, { weekday: "short" })}
                     </span>
                     <span
                       className={cn(
                         "grid size-[26px] place-items-center rounded-full font-display text-[13px] font-semibold tabular-nums",
-                        isToday ? "bg-tk-teal text-tk-linen" : "text-tk-onyx",
+                        isToday ? "bg-accent text-tk-linen" : "text-tk-onyx",
                         isPast && !isToday && "opacity-55"
                       )}
                     >
@@ -534,9 +534,9 @@ export function WeekBoard({
               })}
             </div>
 
-            <div className="relative grid min-h-[11.5rem] min-w-[55rem] grid-cols-5 divide-x divide-tk-slate/10 lg:min-w-0">
+            <div className="relative grid min-h-[11.5rem] min-w-[55rem] grid-cols-5 divide-x divide-line lg:min-w-0">
               {isWindowEmpty ? (
-                <p className="pointer-events-none absolute inset-0 grid place-items-center px-6 text-center font-ui text-[12.5px] text-tk-slate/55">
+                <p className="pointer-events-none absolute inset-0 grid place-items-center px-6 text-center font-ui text-[12.5px] text-ink-3">
                   Nothing on the calendars in these five days.
                 </p>
               ) : null}
@@ -560,7 +560,7 @@ export function WeekBoard({
                   >
                     {items.length === 0 ? (
                       !isPast ? (
-                        <p className="py-3.5 text-center font-ui text-[11.5px] text-tk-slate/40">—</p>
+                        <p className="py-3.5 text-center font-ui text-[11.5px] text-ink-3">—</p>
                       ) : null
                     ) : (
                       items.map((meeting) => {
@@ -601,7 +601,7 @@ export function WeekBoard({
                             <span className="mt-0.5 line-clamp-2 block text-xs leading-snug text-tk-onyx">
                               {meeting.title || meeting.source}
                             </span>
-                            <span className="mt-0.5 block truncate text-[10.5px] text-tk-slate/60">
+                            <span className="mt-0.5 block truncate text-[10.5px] text-ink-3">
                               {meeting.location || meeting.source}
                             </span>
                           </button>
@@ -632,7 +632,7 @@ export function WeekBoard({
                 toast.undo?.()
                 setToast(null)
               }}
-              className="rounded-md bg-white/15 px-2 py-1 font-ui text-[11.5px] font-semibold"
+              className="rounded-md bg-on-accent/15 px-2 py-1 font-ui text-[11.5px] font-semibold"
             >
               Undo
             </button>

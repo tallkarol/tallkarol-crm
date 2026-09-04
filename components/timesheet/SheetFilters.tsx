@@ -50,7 +50,7 @@ export function SheetFilters({
       <div
         role="group"
         aria-label="Year"
-        className="flex overflow-hidden rounded-lg border border-tk-slate/20 bg-white"
+        className="flex overflow-hidden rounded-lg border border-line bg-card"
       >
         {options.slice(0, 4).map((option) => (
           <Link
@@ -60,8 +60,8 @@ export function SheetFilters({
             className={cn(
               "px-3 py-1.5 text-xs font-semibold transition-colors",
               year === option
-                ? "bg-tk-teal text-tk-linen"
-                : "text-tk-slate/70 hover:text-tk-onyx"
+                ? "bg-accent text-tk-linen"
+                : "text-ink-3 hover:text-tk-onyx"
             )}
           >
             {option}
@@ -73,8 +73,8 @@ export function SheetFilters({
           className={cn(
             "px-3 py-1.5 text-xs font-semibold transition-colors",
             year === "all"
-              ? "bg-tk-teal text-tk-linen"
-              : "text-tk-slate/70 hover:text-tk-onyx"
+              ? "bg-accent text-tk-linen"
+              : "text-ink-3 hover:text-tk-onyx"
           )}
         >
           All
@@ -85,7 +85,7 @@ export function SheetFilters({
         value={clientSlug}
         onChange={(event) => router.push(href({ client: event.target.value }))}
         aria-label="Client"
-        className="rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
+        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
       >
         <option value="">All clients</option>
         {clients.map((client) => (
@@ -101,13 +101,13 @@ export function SheetFilters({
           "rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors",
           showSettled
             ? "border-tk-teal bg-tk-teal/10 text-tk-teal"
-            : "border-tk-slate/20 bg-white text-tk-slate/70 hover:text-tk-onyx"
+            : "border-line bg-card text-ink-3 hover:text-tk-onyx"
         )}
       >
         {showSettled ? "Hiding nothing" : "Hiding paid"}
       </Link>
 
-      <p className="ml-auto font-mono text-xs tabular-nums text-tk-slate/60">
+      <p className="ml-auto font-mono text-xs tabular-nums text-ink-3">
         {summary}
       </p>
     </div>

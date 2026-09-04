@@ -70,9 +70,9 @@ export function DeviceTokenManager({
 
   return (
     <div className="mt-6 flex flex-col gap-6">
-      <section className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
+      <section className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
         <h2 className="text-sm font-semibold text-tk-onyx">Add a device</h2>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           Name it after the thing holding it, so revoking the right one later is
           obvious.
         </p>
@@ -85,13 +85,13 @@ export function DeviceTokenManager({
             }}
             placeholder="Karol's Apple Watch"
             aria-label="Device name"
-            className="w-64 rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-sm text-tk-onyx outline-none placeholder:text-tk-slate/35 focus:border-tk-teal"
+            className="w-64 rounded-lg border border-line bg-card px-3 py-1.5 text-sm text-tk-onyx outline-none placeholder:text-ink-3 focus:border-tk-teal"
           />
           <button
             type="button"
             onClick={issue}
             disabled={busy || !name.trim()}
-            className="inline-flex items-center gap-1.5 rounded-full bg-tk-teal px-3.5 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3.5 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-50"
           >
             <Plus className="size-3.5" />
             {busy ? "Issuing…" : "Issue token"}
@@ -104,7 +104,7 @@ export function DeviceTokenManager({
               {issued.name} — copy this now
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <code className="min-w-0 flex-1 break-all rounded-lg bg-white px-3 py-2 font-mono text-xs text-tk-onyx">
+              <code className="min-w-0 flex-1 break-all rounded-lg bg-card px-3 py-2 font-mono text-xs text-tk-onyx">
                 {issued.token}
               </code>
               <button
@@ -116,7 +116,7 @@ export function DeviceTokenManager({
                 {copied ? "Copied" : "Copy"}
               </button>
             </div>
-            <p className="mt-2 text-xs text-tk-slate/70">
+            <p className="mt-2 text-xs text-ink-3">
               This is the only time it is shown. It is stored hashed — nobody,
               including this page, can read it back.
             </p>
@@ -130,12 +130,12 @@ export function DeviceTokenManager({
         ) : null}
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-        <h2 className="border-b border-tk-slate/10 px-5 py-3 text-sm font-semibold text-tk-onyx">
+      <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+        <h2 className="border-b border-line px-5 py-3 text-sm font-semibold text-tk-onyx">
           Devices
         </h2>
         {live.length === 0 && revoked.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-tk-slate/60">
+          <p className="px-5 py-6 text-sm text-ink-3">
             No devices yet. Issue one above, then point a watch app, a phone
             shortcut, or a curl command at the clock API.
           </p>
@@ -144,18 +144,18 @@ export function DeviceTokenManager({
             {[...live, ...revoked].map((row) => (
               <li
                 key={row.id}
-                className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-tk-slate/10 px-5 py-3 text-sm last:border-0"
+                className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-line px-5 py-3 text-sm last:border-0"
               >
                 <span
                   className={
                     row.revokedAt
-                      ? "font-medium text-tk-slate/45 line-through"
+                      ? "font-medium text-ink-3 line-through"
                       : "font-medium text-tk-onyx"
                   }
                 >
                   {row.name}
                 </span>
-                <span className="text-xs text-tk-slate/60">
+                <span className="text-xs text-ink-3">
                   {row.revokedAt
                     ? `revoked ${stamp(row.revokedAt)}`
                     : row.lastUsedAt
@@ -167,7 +167,7 @@ export function DeviceTokenManager({
                     type="button"
                     disabled={busy}
                     onClick={() => revoke(row.id, row.name)}
-                    className="ml-auto rounded-full border border-tk-slate/20 px-3 py-1 text-xs font-semibold text-tk-slate/70 hover:border-red-400 hover:text-red-700 disabled:opacity-50"
+                    className="ml-auto rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink-3 hover:border-red-400 hover:text-red-700 disabled:opacity-50"
                   >
                     Revoke
                   </button>
@@ -178,9 +178,9 @@ export function DeviceTokenManager({
         )}
       </section>
 
-      <section className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
+      <section className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
         <h2 className="text-sm font-semibold text-tk-onyx">Workspace timezone</h2>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           Punches are stored as real timestamps. This is the zone they turn into
           a day and a wall-clock time on the sheet.
         </p>
@@ -193,7 +193,7 @@ export function DeviceTokenManager({
             }}
             aria-label="Timezone"
             placeholder="America/New_York"
-            className="w-56 rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-sm text-tk-onyx outline-none focus:border-tk-teal"
+            className="w-56 rounded-lg border border-line bg-card px-3 py-1.5 text-sm text-tk-onyx outline-none focus:border-tk-teal"
           />
           <button
             type="button"
@@ -206,18 +206,18 @@ export function DeviceTokenManager({
                 else setError(result.error)
               })
             }}
-            className="rounded-full border border-tk-slate/20 px-3.5 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal disabled:opacity-50"
+            className="rounded-full border border-line px-3.5 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal disabled:opacity-50"
           >
             {zoneSaved ? "Saved" : "Save"}
           </button>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
+      <section className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
         <h2 className="text-sm font-semibold text-tk-onyx">Clock API</h2>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           Every route takes{" "}
-          <code className="rounded bg-tk-linen px-1.5 py-0.5 font-mono text-xs">
+          <code className="rounded bg-well px-1.5 py-0.5 font-mono text-xs">
             Authorization: Bearer &lt;token&gt;
           </code>
           .
@@ -229,7 +229,7 @@ POST ${appUrl}/api/time/clock-in    { projectId | clientId, note?, at?, switch? 
 POST ${appUrl}/api/time/clock-out   { note?, at? }
 POST ${appUrl}/api/time/punches/:id/approve`}
         </pre>
-        <p className="mt-3 text-xs text-tk-slate/60">
+        <p className="mt-3 text-xs text-ink-3">
           Send a <code className="font-mono">clientRequestId</code> with a
           clock-in and a retry over a bad connection is a no-op instead of a
           duplicate. Send <code className="font-mono">at</code> as an ISO

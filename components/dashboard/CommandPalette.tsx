@@ -139,14 +139,14 @@ function PaletteDialog({
         type="button"
         aria-label="Close"
         onClick={onClose}
-        className="absolute inset-0 bg-tk-onyx/45 backdrop-blur-[3px]"
+        className="absolute inset-0 bg-scrim backdrop-blur-[3px]"
       />
       <div
         onKeyDown={onKey}
-        className="absolute left-1/2 top-[14vh] w-[min(640px,92vw)] -translate-x-1/2 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white text-tk-onyx shadow-hover motion-safe:animate-[tk-rise_.2s_ease_both]"
+        className="absolute left-1/2 top-[14vh] w-[min(640px,92vw)] -translate-x-1/2 overflow-hidden rounded-2xl border border-line bg-card text-tk-onyx shadow-hover motion-safe:animate-[tk-rise_.2s_ease_both]"
       >
-        <div className="flex items-center gap-2.5 border-b border-tk-slate/10 px-4 py-3">
-          <Search className="size-[18px] text-tk-slate/70" aria-hidden />
+        <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
+          <Search className="size-[18px] text-ink-3" aria-hidden />
           <input
             ref={input}
             type="text"
@@ -154,15 +154,15 @@ function PaletteDialog({
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search clients, projects, retainers, or jump to a page…"
             aria-label="Search"
-            className="flex-1 bg-transparent text-[15px] text-tk-onyx outline-none placeholder:text-tk-slate"
+            className="flex-1 bg-transparent text-[15px] text-tk-onyx outline-none placeholder:text-ink-3"
           />
-          <kbd className="rounded-md border border-tk-slate/15 px-1.5 py-0.5 font-ui text-[10.5px] font-semibold text-tk-slate/70">
+          <kbd className="rounded-md border border-line px-1.5 py-0.5 font-ui text-[10.5px] font-semibold text-ink-3">
             esc
           </kbd>
         </div>
         <div ref={list} className="max-h-[60vh] overflow-y-auto p-2" role="listbox">
           {visible.length === 0 ? (
-            <p className="px-3 py-6 text-center text-sm text-tk-slate/70">
+            <p className="px-3 py-6 text-center text-sm text-ink-3">
               Nothing matches “{q}”.
             </p>
           ) : null}
@@ -172,7 +172,7 @@ function PaletteDialog({
             return (
               <div key={`${entry.kind}:${entry.href}`}>
                 {heading ? (
-                  <p className="px-2.5 pb-1 pt-2 font-ui text-[10.5px] font-bold uppercase tracking-[0.1em] text-tk-slate/70">
+                  <p className="px-2.5 pb-1 pt-2 font-ui text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-3">
                     {heading}
                   </p>
                 ) : null}
@@ -185,7 +185,7 @@ function PaletteDialog({
                   onClick={() => go(entry)}
                   className={cn(
                     "flex h-[38px] w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] text-tk-onyx",
-                    index === cursor && "bg-tk-linen"
+                    index === cursor && "bg-well"
                   )}
                 >
                   {entry.slug ? (
@@ -197,7 +197,7 @@ function PaletteDialog({
                   ) : null}
                   <span className="truncate font-medium">{entry.label}</span>
                   {entry.sub ? (
-                    <span className="ml-auto shrink-0 font-ui text-[11.5px] text-tk-slate/70">
+                    <span className="ml-auto shrink-0 font-ui text-[11.5px] text-ink-3">
                       {entry.sub}
                     </span>
                   ) : null}

@@ -33,14 +33,14 @@ export default async function TaskPage({ params }: { params: { id: string } }) {
         actions={
           <Link
             href={ROUTES.tasks}
-            className="inline-flex items-center gap-1.5 rounded-full border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+            className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
           >
             <ArrowLeft className="size-3.5" />
             All tasks
           </Link>
         }
       />
-      <div className="mt-6 max-w-2xl overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+      <div className="mt-6 max-w-2xl overflow-hidden rounded-2xl border border-line bg-card shadow-card">
         <TaskDetailBody id={params.id} />
       </div>
     </>

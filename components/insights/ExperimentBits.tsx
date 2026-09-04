@@ -44,7 +44,7 @@ export function CaptureReading({
 
   if (!ready) {
     return (
-      <span className="text-[11px] text-tk-slate/45" title={`Window closes ${windowTo}`}>
+      <span className="text-[11px] text-ink-3" title={`Window closes ${windowTo}`}>
         opens {windowTo}
       </span>
     )
@@ -59,13 +59,13 @@ export function CaptureReading({
         className={cn(
           "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors disabled:opacity-50",
           captured
-            ? "border border-tk-slate/20 bg-white text-tk-slate hover:border-tk-teal hover:text-tk-teal"
-            : "bg-tk-teal text-tk-linen hover:bg-tk-teal/90"
+            ? "border border-line bg-card text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
+            : "bg-accent text-tk-linen hover:bg-tk-teal/90"
         )}
       >
         {pending ? "Reading…" : captured ? "Re-capture" : `Capture ${label}`}
       </button>
-      {error ? <span className="text-[11px] text-[#A62228]">{error}</span> : null}
+      {error ? <span className="text-[11px] text-bad">{error}</span> : null}
     </span>
   )
 }
@@ -112,7 +112,7 @@ export function ExperimentOutcome({
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {status === "running" ? (
-        <span className="text-[11px] text-tk-slate/55">Call it:</span>
+        <span className="text-[11px] text-ink-3">Call it:</span>
       ) : null}
       {options.map((option) => (
         <button
@@ -124,13 +124,13 @@ export function ExperimentOutcome({
             "rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors disabled:opacity-50",
             verdict === option.verdict && status !== "running"
               ? "border-tk-teal bg-tk-teal/10 text-tk-teal"
-              : "border-tk-slate/20 bg-white text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+              : "border-line bg-card text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
           )}
         >
           {option.label}
         </button>
       ))}
-      {error ? <span className="text-[11px] text-[#A62228]">{error}</span> : null}
+      {error ? <span className="text-[11px] text-bad">{error}</span> : null}
     </div>
   )
 }

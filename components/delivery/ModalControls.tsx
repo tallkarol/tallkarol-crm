@@ -61,17 +61,17 @@ export function AddWorkstream({ projectId }: { projectId: string }) {
         }}
         placeholder="Workstream title…"
         aria-label="New workstream title"
-        className="w-40 rounded-md border border-tk-slate/20 bg-white px-2 py-1 text-[11.5px] outline-none focus:border-tk-teal"
+        className="w-40 rounded-md border border-line bg-card px-2 py-1 text-[11.5px] outline-none focus:border-tk-teal"
       />
       <button
         type="button"
         onClick={submit}
         disabled={pending}
-        className="rounded-full bg-tk-teal px-2.5 py-1 text-[10.5px] font-semibold text-tk-linen disabled:opacity-60"
+        className="rounded-full bg-accent px-2.5 py-1 text-[10.5px] font-semibold text-tk-linen disabled:opacity-60"
       >
         {pending ? "Adding…" : "Add"}
       </button>
-      {error ? <span className="text-[10.5px] text-[#B4322A]">{error}</span> : null}
+      {error ? <span className="text-[10.5px] text-bad">{error}</span> : null}
     </span>
   )
 }
@@ -104,8 +104,8 @@ export function DeliverableInvoiceButton({ deliverableId }: { deliverableId: str
       className={cn(
         "inline-flex h-[21px] shrink-0 items-center rounded-full px-2 text-[10.5px] font-semibold",
         error
-          ? "bg-white text-[#B4322A] ring-1 ring-[#B4322A]/40"
-          : "bg-[#8A5A05] text-white hover:brightness-110",
+          ? "bg-card text-bad ring-1 ring-transparent"
+          : "bg-warn text-white hover:brightness-110",
         pending && "opacity-60"
       )}
     >

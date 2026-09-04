@@ -199,7 +199,7 @@ export function CalendarBoard({
           </MonthLink>
           <Link
             href={`/calendar?month=${thisMonth}`}
-            className="ml-2 rounded-full border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+            className="ml-2 rounded-full border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
           >
             Today
           </Link>
@@ -210,14 +210,14 @@ export function CalendarBoard({
             type="button"
             onClick={runSync}
             disabled={pending || connected === 0}
-            className="rounded-full border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate transition-colors hover:border-tk-teal hover:text-tk-teal disabled:opacity-50"
+            className="rounded-full border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal disabled:opacity-50"
           >
             {pending ? "Syncing…" : "Sync now"}
           </button>
           <button
             type="button"
             onClick={() => setComposing((value) => !value)}
-            className="rounded-full bg-tk-teal px-3 py-1.5 text-xs font-semibold text-tk-linen"
+            className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-tk-linen"
           >
             {composing ? "Close" : "New event"}
           </button>
@@ -225,7 +225,7 @@ export function CalendarBoard({
       </div>
 
       {notice ? (
-        <p className="mt-3 rounded-2xl border border-tk-slate/15 bg-white px-4 py-2.5 text-sm text-tk-slate/80 shadow-sm">
+        <p className="mt-3 rounded-2xl border border-line bg-card px-4 py-2.5 text-sm text-tk-slate shadow-card">
           {notice}
         </p>
       ) : null}
@@ -253,8 +253,8 @@ export function CalendarBoard({
                 className={cn(
                   "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
                   off
-                    ? "border-tk-slate/15 bg-white text-tk-slate/45"
-                    : "border-tk-slate/25 bg-white text-tk-slate"
+                    ? "border-line bg-card text-ink-3"
+                    : "border-line-strong bg-card text-tk-slate"
                 )}
                 aria-pressed={!off}
               >
@@ -270,12 +270,12 @@ export function CalendarBoard({
         </div>
       ) : null}
 
-      <div className="mt-5 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-        <div className="grid grid-cols-7 border-b border-tk-slate/10">
+      <div className="mt-5 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+        <div className="grid grid-cols-7 border-b border-line">
           {WEEKDAYS.map((label) => (
             <div
               key={label}
-              className="px-2 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-tk-slate/55"
+              className="px-2 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-ink-3"
             >
               {label}
             </div>
@@ -291,18 +291,18 @@ export function CalendarBoard({
               <div
                 key={cell.key}
                 className={cn(
-                  "min-h-[6.5rem] border-b border-r border-tk-slate/10 p-1.5 text-left align-top last:border-r-0",
-                  !cell.inMonth && "bg-tk-linen/25",
-                  isSelected && "bg-tk-linen/60"
+                  "min-h-[6.5rem] border-b border-r border-line p-1.5 text-left align-top last:border-r-0",
+                  !cell.inMonth && "bg-well",
+                  isSelected && "bg-well"
                 )}
               >
                 <button
                   type="button"
                   onClick={() => setSelected(cell.key)}
                   className={cn(
-                    "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs tabular-nums hover:bg-tk-linen",
-                    cell.inMonth ? "text-tk-onyx" : "text-tk-slate/40",
-                    isToday && "bg-tk-teal font-semibold text-tk-linen hover:bg-tk-teal"
+                    "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs tabular-nums hover:bg-well transition-colors duration-[120ms]",
+                    cell.inMonth ? "text-tk-onyx" : "text-ink-3",
+                    isToday && "bg-accent font-semibold text-tk-linen hover:bg-accent"
                   )}
                 >
                   {cell.day}
@@ -339,7 +339,7 @@ export function CalendarBoard({
                     <button
                       type="button"
                       onClick={() => setSelected(cell.key)}
-                      className="block w-full px-1 text-left text-[11px] text-tk-slate/55 hover:text-tk-onyx"
+                      className="block w-full px-1 text-left text-[11px] text-ink-3 hover:text-tk-onyx"
                     >
                       +{items.length - 3} more
                     </button>
@@ -351,8 +351,8 @@ export function CalendarBoard({
         </div>
       </div>
 
-      <section className="mt-6 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-        <div className="border-b border-tk-slate/10 px-5 py-3">
+      <section className="mt-6 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+        <div className="border-b border-line px-5 py-3">
           <h2 className="text-sm font-semibold text-tk-onyx">
             {agendaDay
               ? new Date(`${agendaDay}T12:00:00`).toLocaleDateString(undefined, {
@@ -365,9 +365,9 @@ export function CalendarBoard({
         </div>
 
         {agenda.length === 0 ? (
-          <p className="px-5 py-8 text-sm text-tk-slate/70">Nothing on this day.</p>
+          <p className="px-5 py-8 text-sm text-ink-3">Nothing on this day.</p>
         ) : (
-          <ul className="divide-y divide-tk-slate/10">
+          <ul className="divide-y divide-line">
             {agenda.map((item) => {
               const lane = laneById.get(item.laneId)
               return (
@@ -375,7 +375,7 @@ export function CalendarBoard({
                   <button
                     type="button"
                     onClick={() => setOpenEvent(item)}
-                    className="flex w-full gap-3 px-5 py-3.5 text-left hover:bg-tk-linen/60"
+                    className="flex w-full gap-3 px-5 py-3.5 text-left hover:bg-well"
                   >
                     <span
                       className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full"
@@ -393,13 +393,13 @@ export function CalendarBoard({
                         </p>
                         {item.cancelled ? <Badge tone="muted">Cancelled</Badge> : null}
                       </div>
-                      <p className="mt-0.5 text-sm text-tk-slate/70">
+                      <p className="mt-0.5 text-sm text-ink-3">
                         {[rangeLabel(item), lane?.label, item.location]
                           .filter(Boolean)
                           .join(" · ")}
                       </p>
                       {item.attendees.length ? (
-                        <p className="mt-1 truncate text-xs text-tk-slate/55">
+                        <p className="mt-1 truncate text-xs text-ink-3">
                           {item.attendees
                             .map((person) => person.name || person.email)
                             .join(", ")}
@@ -436,7 +436,7 @@ function MonthLink({
     <Link
       href={href}
       aria-label={label}
-      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-tk-slate/20 bg-white text-tk-slate transition-colors hover:border-tk-teal hover:text-tk-teal"
+      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-line bg-card text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
     >
       {children}
     </Link>

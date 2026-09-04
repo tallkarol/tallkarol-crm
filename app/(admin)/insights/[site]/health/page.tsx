@@ -13,13 +13,13 @@ export const dynamic = "force-dynamic"
 
 function Checklist({ items }: { items: { title: string; body: string }[] }) {
   return (
-    <ol className="divide-y divide-tk-slate/10">
+    <ol className="divide-y divide-line">
       {items.map((item, index) => (
         <li key={item.title} className="px-5 py-3">
           <p className="text-sm font-medium text-tk-onyx">
             {index + 1}. {item.title}
           </p>
-          <p className="mt-1 text-sm leading-relaxed text-tk-slate/70">{item.body}</p>
+          <p className="mt-1 text-sm leading-relaxed text-ink-3">{item.body}</p>
         </li>
       ))}
     </ol>
@@ -28,14 +28,14 @@ function Checklist({ items }: { items: { title: string; body: string }[] }) {
 
 function Setup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <details className="group rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+    <details className="group rounded-2xl border border-line bg-card shadow-card">
       <summary className="cursor-pointer list-none px-5 py-3.5 text-[13px] font-bold text-tk-onyx marker:content-none">
-        <span className="mr-2 inline-block text-tk-slate/40 transition-transform group-open:rotate-90">
+        <span className="mr-2 inline-block text-ink-3 transition-transform group-open:rotate-90">
           ▸
         </span>
         {title}
       </summary>
-      <div className="border-t border-tk-slate/10">{children}</div>
+      <div className="border-t border-line">{children}</div>
     </details>
   )
 }
@@ -62,7 +62,7 @@ export default async function InsightsHealthPage({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-tk-slate/60">
+        <p className="text-xs text-ink-3">
           Statuses are from the last fetch — refresh to re-probe every source.
         </p>
         <RefreshInsights slug={site.slug} refreshedAt={refreshedAt} />
@@ -73,10 +73,10 @@ export default async function InsightsHealthPage({
           {snapshot.health.map((h) => (
             <div
               key={h.id}
-              className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-3 shadow-sm"
+              className="rounded-2xl border border-line bg-card px-5 py-3 shadow-card"
             >
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                   {h.label}
                 </p>
                 <Badge tone={h.ok === true ? "teal" : h.ok === false ? "muted" : "neutral"}>
@@ -88,7 +88,7 @@ export default async function InsightsHealthPage({
           ))}
         </div>
       ) : (
-        <p className="mt-4 rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 px-5 py-6 text-sm text-tk-slate/70 shadow-sm">
+        <p className="mt-4 rounded-2xl border border-dashed border-line bg-well px-5 py-6 text-sm text-ink-3 shadow-card">
           No snapshot yet — fetch once and every applicable source reports in here.
         </p>
       )}
@@ -96,13 +96,13 @@ export default async function InsightsHealthPage({
       <IndexHealth scan={scan} open={open} resolvedThisPeriod={pkg.resolved} />
 
       <Card title="Service account" className="mt-3">
-        <div className="px-5 py-3.5 text-sm text-tk-slate/80">
+        <div className="px-5 py-3.5 text-sm text-tk-slate">
           {sa ? (
             <>
               <p>
                 Robot: <code className="text-tk-onyx">{sa.client_email}</code>
               </p>
-              <p className="mt-1 text-xs text-tk-slate/60">
+              <p className="mt-1 text-xs text-ink-3">
                 Grant this address GA4 Viewer, Search Console, and Google Ads
                 Read-only for every property you add. <code>npm run google:check</code>{" "}
                 names anything still missing; <code>npm run site:discover</code> lists
@@ -128,7 +128,7 @@ export default async function InsightsHealthPage({
       ) : null}
 
       <div className="mt-5 space-y-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/55">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
           Setup guides — the full walkthrough lives in crm/ANALYTICS.md
         </p>
 

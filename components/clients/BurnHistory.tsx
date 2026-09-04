@@ -29,15 +29,15 @@ export function BurnHistory({
             <div
               className={cn(
                 "w-full rounded-t",
-                h.month === currentMonth ? "bg-tk-teal/25" : "bg-tk-teal"
+                h.month === currentMonth ? "bg-tk-teal/25" : "bg-accent"
               )}
               style={{ height: `${Math.max(2, Math.round((h.hours / max) * 44))}px` }}
             />
-            <span className="text-[9.5px] tabular-nums text-tk-slate/50">{h.label}</span>
+            <span className="text-[9.5px] tabular-nums text-ink-3">{h.label}</span>
           </div>
         ))}
       </div>
-      <figcaption className="mt-1.5 text-[11px] text-tk-slate/50">
+      <figcaption className="mt-1.5 text-[11px] text-ink-3">
         Hours used, last 6 months · cap <span className="tabular-nums">{cap}</span>
       </figcaption>
     </figure>

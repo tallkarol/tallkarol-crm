@@ -47,7 +47,7 @@ export default async function VaultPage({
   return (
     <>
       <PageHeader title="Vault" />
-      <p className="mt-1 text-[11.5px] text-tk-slate/60">
+      <p className="mt-1 text-[11.5px] text-ink-3">
         {plural(entries.length, "credential")}
         {q || clientSlug
           ? ` · showing ${shown.length}`
@@ -68,11 +68,11 @@ export default async function VaultPage({
           name="q"
           defaultValue={q}
           placeholder="Search title, user, URL, note…"
-          className="min-w-[16rem] flex-1 rounded-lg border border-tk-slate/20 bg-white px-3 py-2 text-sm outline-none focus:border-tk-teal"
+          className="min-w-[16rem] flex-1 rounded-lg border border-line bg-card px-3 py-2 text-sm outline-none focus:border-tk-teal"
         />
         <button
           type="submit"
-          className="rounded-lg border border-tk-slate/20 px-3 py-2 text-[13px] font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+          className="rounded-lg border border-line px-3 py-2 text-[13px] font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
         >
           Search
         </button>
@@ -104,8 +104,8 @@ export default async function VaultPage({
                 className={cn(
                   "rounded-full border px-2.5 py-1 text-[12px] font-semibold",
                   active
-                    ? "border-tk-onyx bg-tk-onyx text-white"
-                    : "border-tk-slate/20 bg-white text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+                    ? "border-ink bg-ink text-canvas"
+                    : "border-line bg-card text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
                 )}
               >
                 <span
@@ -129,7 +129,7 @@ export default async function VaultPage({
       ) : null}
 
       {shown.length === 0 ? (
-        <p className="mt-8 text-sm text-tk-slate/70">
+        <p className="mt-8 text-sm text-ink-3">
           {entries.length === 0
             ? "Nothing stored yet. Save the first login or key in the form above."
             : "Nothing matches that search."}
@@ -142,12 +142,12 @@ export default async function VaultPage({
                 <h2 className="font-['Inter_Tight',sans-serif] text-lg font-bold tracking-tight text-tk-onyx">
                   {group.label}
                 </h2>
-                <p className="text-[11px] tabular-nums text-tk-slate/50">
+                <p className="text-[11px] tabular-nums text-ink-3">
                   {plural(group.entries.length, "entry")}
                 </p>
               </div>
-              <div className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-                <ul className="divide-y divide-tk-slate/10">
+              <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+                <ul className="divide-y divide-line">
                   {group.entries.map((entry) => (
                     <VaultRow
                       key={entry.id}

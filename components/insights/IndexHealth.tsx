@@ -33,7 +33,7 @@ function Stat({ n, label }: { n: number | string; label: string }) {
   return (
     <div className="px-5 py-3">
       <p className="text-xl font-semibold tabular-nums text-tk-onyx">{n}</p>
-      <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-tk-slate/55">
+      <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-ink-3">
         {label}
       </p>
     </div>
@@ -52,7 +52,7 @@ export function IndexHealth({
   if (!scan) {
     return (
       <Card title="Index coverage" note="no scan yet" className="mt-3">
-        <p className="px-5 py-4 text-sm text-tk-slate/70">
+        <p className="px-5 py-4 text-sm text-ink-3">
           Nothing scanned yet. The scan runs from{" "}
           <code className="text-tk-onyx">/api/insights/gsc-scan?site=&lt;slug&gt;</code> — one
           URL Inspection call per sitemap URL, so it runs on a schedule rather than
@@ -79,7 +79,7 @@ export function IndexHealth({
       note={`scanned ${scan.scannedOn}`}
       className="mt-3"
     >
-      <div className="grid grid-cols-2 divide-x divide-tk-slate/10 border-b border-tk-slate/10 sm:grid-cols-4">
+      <div className="grid grid-cols-2 divide-x divide-line border-b border-line sm:grid-cols-4">
         <Stat n={`${scan.passCount}/${scan.urlCount}`} label="Indexed" />
         <Stat n={ticketable.length} label="To fix" />
         <Stat n={resolvedThisPeriod.length} label="Fixed this period" />
@@ -87,11 +87,11 @@ export function IndexHealth({
       </div>
 
       {ticketable.length === 0 ? (
-        <p className="px-5 py-4 text-sm text-tk-slate/70">
+        <p className="px-5 py-4 text-sm text-ink-3">
           Nothing to fix. {scan.passCount} of {scan.urlCount} sitemap URLs are indexed.
         </p>
       ) : (
-        <ul className="divide-y divide-tk-slate/10">
+        <ul className="divide-y divide-line">
           {ticketable.map((f) => (
             <li key={f.id} className="px-5 py-3">
               <div className="flex flex-wrap items-center gap-2">
@@ -101,10 +101,10 @@ export function IndexHealth({
                 <p className="text-sm font-medium text-tk-onyx">
                   {RULE_LABELS[f.rule] ?? f.rule}
                 </p>
-                <code className="text-xs text-tk-slate/70">{path(f.url)}</code>
+                <code className="text-xs text-ink-3">{path(f.url)}</code>
               </div>
-              <p className="mt-1 text-sm leading-relaxed text-tk-slate/70">{f.detail}</p>
-              <p className="mt-1 text-[11px] text-tk-slate/50">
+              <p className="mt-1 text-sm leading-relaxed text-ink-3">{f.detail}</p>
+              <p className="mt-1 text-[11px] text-ink-3">
                 First seen {f.firstSeenOn}
                 {f.timesSeen > 1 ? ` · seen in ${f.timesSeen} scans` : ""}
               </p>
@@ -114,18 +114,18 @@ export function IndexHealth({
       )}
 
       {resolvedThisPeriod.length > 0 ? (
-        <div className="border-t border-tk-slate/10 bg-tk-linen/40">
-          <p className="px-5 pt-3 text-[11px] font-semibold uppercase tracking-wide text-tk-slate/55">
+        <div className="border-t border-line bg-well">
+          <p className="px-5 pt-3 text-[11px] font-semibold uppercase tracking-wide text-ink-3">
             Fixed this period — the billable half
           </p>
-          <ul className="divide-y divide-tk-slate/10">
+          <ul className="divide-y divide-line">
             {resolvedThisPeriod.map((f) => (
               <li key={f.id} className="px-5 py-2.5">
                 <p className="text-sm text-tk-onyx">
                   {RULE_LABELS[f.rule] ?? f.rule}{" "}
-                  <code className="text-xs text-tk-slate/70">{path(f.url)}</code>
+                  <code className="text-xs text-ink-3">{path(f.url)}</code>
                 </p>
-                <p className="mt-0.5 text-[11px] text-tk-slate/55">
+                <p className="mt-0.5 text-[11px] text-ink-3">
                   Open {f.firstSeenOn} → gone {f.resolvedOn}
                 </p>
               </li>
@@ -135,7 +135,7 @@ export function IndexHealth({
       ) : null}
 
       {sitemaps.length > 0 ? (
-        <p className="border-t border-tk-slate/10 px-5 py-2.5 text-[11px] text-tk-slate/55">
+        <p className="border-t border-line px-5 py-2.5 text-[11px] text-ink-3">
           Sitemap:{" "}
           {sitemaps
             .map((m) => `${m.submitted} URLs, ${m.errors} errors, ${m.warnings} warnings`)

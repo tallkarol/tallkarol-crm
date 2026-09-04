@@ -45,7 +45,7 @@ export function HideMoneyToggle({
         className={cn(
           "flex size-8 items-center justify-center rounded-lg disabled:opacity-60",
           on
-            ? "bg-tk-teal text-tk-linen"
+            ? "bg-accent-mark text-tk-linen"
             : "text-rail-ink/60 hover:bg-rail-ink/[0.06] hover:text-rail-ink"
         )}
       >
@@ -70,12 +70,12 @@ export function HideMoneyToggle({
         onClick={flip}
         className={cn(
           "relative h-5 w-9 shrink-0 rounded-full transition-colors disabled:opacity-60",
-          on ? "bg-tk-teal" : "bg-rail-ink/25"
+          on ? "bg-accent-mark" : "bg-rail-ink/25"
         )}
       >
         <span
           className={cn(
-            "absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
+            "absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-card shadow transition-transform",
             on && "translate-x-4"
           )}
           style={{ background: "#fff" }}

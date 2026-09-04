@@ -59,32 +59,32 @@ export default async function ExpensesPage() {
 
       <Importer clients={clients.map((c) => ({ id: c.id, name: c.name, slug: c.slug }))} />
 
-      <section className="mt-6 rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm">
+      <section className="mt-6 rounded-2xl border border-line bg-card p-5 shadow-card">
         <h2 className="text-sm font-semibold text-tk-onyx">Add an expense</h2>
         <form action={addExpense} className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
           <label className="block text-sm">
-            <span className="text-xs font-medium text-tk-slate/70">Date</span>
-            <input name="occurredOn" type="date" required className="mt-1 w-full rounded-lg border border-tk-slate/20 bg-tk-linen px-3 py-2 text-sm outline-none focus:border-tk-teal" />
+            <span className="text-xs font-medium text-ink-3">Date</span>
+            <input name="occurredOn" type="date" required className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal" />
           </label>
           <label className="block text-sm">
-            <span className="text-xs font-medium text-tk-slate/70">Vendor</span>
-            <input name="vendor" required placeholder="Railway, Adobe…" className="mt-1 w-full rounded-lg border border-tk-slate/20 bg-tk-linen px-3 py-2 text-sm outline-none focus:border-tk-teal" />
+            <span className="text-xs font-medium text-ink-3">Vendor</span>
+            <input name="vendor" required placeholder="Railway, Adobe…" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal" />
           </label>
           <label className="block text-sm">
-            <span className="text-xs font-medium text-tk-slate/70">Amount</span>
-            <input name="amount" required inputMode="decimal" placeholder="20.00" className="mt-1 w-full rounded-lg border border-tk-slate/20 bg-tk-linen px-3 py-2 text-sm outline-none focus:border-tk-teal" />
+            <span className="text-xs font-medium text-ink-3">Amount</span>
+            <input name="amount" required inputMode="decimal" placeholder="20.00" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal" />
           </label>
           <label className="block text-sm">
-            <span className="text-xs font-medium text-tk-slate/70">Category</span>
-            <select name="category" className="mt-1 w-full rounded-lg border border-tk-slate/20 bg-tk-linen px-3 py-2 text-sm outline-none focus:border-tk-teal">
+            <span className="text-xs font-medium text-ink-3">Category</span>
+            <select name="category" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal">
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </label>
           <label className="block text-sm">
-            <span className="text-xs font-medium text-tk-slate/70">Client (optional)</span>
-            <select name="clientId" className="mt-1 w-full rounded-lg border border-tk-slate/20 bg-tk-linen px-3 py-2 text-sm outline-none focus:border-tk-teal">
+            <span className="text-xs font-medium text-ink-3">Client (optional)</span>
+            <select name="clientId" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal">
               <option value="">— overhead</option>
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
@@ -92,24 +92,24 @@ export default async function ExpensesPage() {
             </select>
           </label>
           <div className="flex items-end">
-            <button type="submit" className="w-full rounded-lg bg-tk-teal px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90">
+            <button type="submit" className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90">
               Add
             </button>
           </div>
           <label className="block text-sm sm:col-span-2 lg:col-span-6">
-            <span className="text-xs font-medium text-tk-slate/70">Note (optional)</span>
-            <input name="description" placeholder="What was it for?" className="mt-1 w-full rounded-lg border border-tk-slate/20 bg-tk-linen px-3 py-2 text-sm outline-none focus:border-tk-teal" />
+            <span className="text-xs font-medium text-ink-3">Note (optional)</span>
+            <input name="description" placeholder="What was it for?" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal" />
           </label>
         </form>
       </section>
 
       {rows.length === 0 ? (
-        <p className="mt-8 text-sm text-tk-slate/70">
+        <p className="mt-8 text-sm text-ink-3">
           No expenses yet. Drop a statement in the importer above, or add one by hand.
         </p>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-          <ul className="divide-y divide-tk-slate/10">
+        <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+          <ul className="divide-y divide-line">
             {rows.map((e) => (
               <li key={e.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
                 <span
@@ -120,10 +120,10 @@ export default async function ExpensesPage() {
                   <span className="block truncate font-medium text-tk-onyx">
                     {e.vendor}
                     {e.description ? (
-                      <span className="font-normal text-tk-slate/60"> · {e.description}</span>
+                      <span className="font-normal text-ink-3"> · {e.description}</span>
                     ) : null}
                   </span>
-                  <span className="block text-xs text-tk-slate/60">
+                  <span className="block text-xs text-ink-3">
                     {formatDay(e.occurredOn)} · {e.category}
                   </span>
                 </span>
@@ -135,20 +135,20 @@ export default async function ExpensesPage() {
                   <select
                     name="clientId"
                     defaultValue={e.clientId ?? ""}
-                    className="rounded-lg border border-tk-slate/20 bg-white px-2 py-1 text-xs outline-none focus:border-tk-teal"
+                    className="rounded-lg border border-line bg-card px-2 py-1 text-xs outline-none focus:border-tk-teal"
                   >
                     <option value="">overhead</option>
                     {clients.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>
-                  <button type="submit" className="rounded-full border border-tk-slate/20 px-2.5 py-1 text-[11px] font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal">
+                  <button type="submit" className="rounded-full border border-line px-2.5 py-1 text-[11px] font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal">
                     Save
                   </button>
                 </form>
                 <form action={deleteExpense}>
                   <input type="hidden" name="id" value={e.id} />
-                  <button type="submit" aria-label={`Delete ${e.vendor} expense`} className="rounded-full px-2 py-1 text-[11px] font-semibold text-tk-slate/50 hover:text-red-700">
+                  <button type="submit" aria-label={`Delete ${e.vendor} expense`} className="rounded-full px-2 py-1 text-[11px] font-semibold text-ink-3 hover:text-red-700">
                     ✕
                   </button>
                 </form>
@@ -163,10 +163,10 @@ export default async function ExpensesPage() {
 
 function SummaryCard({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wider text-tk-slate/70">{label}</p>
+    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+      <p className="text-xs font-semibold uppercase tracking-wider text-ink-3">{label}</p>
       <p className="mt-2 text-2xl font-semibold tracking-tight text-tk-onyx tabular-nums">{value}</p>
-      <p className="mt-1 truncate text-xs text-tk-slate/60">{sub}</p>
+      <p className="mt-1 truncate text-xs text-ink-3">{sub}</p>
     </div>
   )
 }

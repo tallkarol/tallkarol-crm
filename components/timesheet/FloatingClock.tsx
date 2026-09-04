@@ -202,7 +202,7 @@ export function FloatingClock({ initial }: { initial: PunchView[] }) {
       className={cn(
         // Above everything the app draws — menus, peeks, modals, toasts.
         "fixed right-4 top-[4.25rem] z-[100] flex max-w-[calc(100vw-2rem)] items-stretch md:right-6 md:top-4",
-        "rounded-full bg-tk-teal text-xs font-semibold text-tk-linen shadow-[0_6px_20px_rgba(15,22,21,0.28)]",
+        "rounded-full bg-accent text-xs font-semibold text-tk-linen shadow-[0_6px_20px_rgba(15,22,21,0.28)]",
         dragging ? "cursor-grabbing select-none" : "transition-shadow",
         !placed && "invisible"
       )}

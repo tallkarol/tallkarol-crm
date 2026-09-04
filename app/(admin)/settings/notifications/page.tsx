@@ -24,9 +24,9 @@ export default async function NotificationSettingsPage() {
     <>
       <PageHeader title="Notifications" />
 
-      <section className="mt-8 max-w-2xl rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm">
+      <section className="mt-8 max-w-2xl rounded-2xl border border-line bg-card p-5 shadow-card">
         <h2 className="text-sm font-semibold text-tk-onyx">This device</h2>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           Push notifications reach any browser you enable them in — Chrome on
           Android, or the CRM added to an iPhone or iPad Home Screen.{" "}
           {devices === 0
@@ -38,9 +38,9 @@ export default async function NotificationSettingsPage() {
         </div>
       </section>
 
-      <section className="mt-6 max-w-2xl rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm">
+      <section className="mt-6 max-w-2xl rounded-2xl border border-line bg-card p-5 shadow-card">
         <h2 className="text-sm font-semibold text-tk-onyx">What gets sent</h2>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           Each alert is sent once per thing. A flag that stays raised for a week
           is mentioned on the first day and not again.
         </p>
@@ -57,38 +57,38 @@ export default async function NotificationSettingsPage() {
         </div>
       </section>
 
-      <section className="mt-6 max-w-2xl rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm">
+      <section className="mt-6 max-w-2xl rounded-2xl border border-line bg-card p-5 shadow-card">
         <h2 className="text-sm font-semibold text-tk-onyx">Quiet hours</h2>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           Nothing is sent between these hours, workspace time — except a
           monitor raising a ticket, which is the one thing worth waking you for.
         </p>
         <form action={saveQuietHours} className="mt-4 flex flex-wrap items-end gap-3">
           <label className="block text-sm">
-            <span className="text-xs font-medium text-tk-slate/70">From (hour)</span>
+            <span className="text-xs font-medium text-ink-3">From (hour)</span>
             <input
               name="from"
               type="number"
               min={0}
               max={23}
               defaultValue={prefs.quietFrom}
-              className="mt-1 w-24 rounded-lg border border-tk-slate/20 bg-tk-linen px-3 py-2 text-sm outline-none focus:border-tk-teal"
+              className="mt-1 w-24 rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal"
             />
           </label>
           <label className="block text-sm">
-            <span className="text-xs font-medium text-tk-slate/70">To (hour)</span>
+            <span className="text-xs font-medium text-ink-3">To (hour)</span>
             <input
               name="to"
               type="number"
               min={0}
               max={23}
               defaultValue={prefs.quietTo}
-              className="mt-1 w-24 rounded-lg border border-tk-slate/20 bg-tk-linen px-3 py-2 text-sm outline-none focus:border-tk-teal"
+              className="mt-1 w-24 rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal"
             />
           </label>
           <button
             type="submit"
-            className="rounded-lg bg-tk-teal px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90"
           >
             Save
           </button>

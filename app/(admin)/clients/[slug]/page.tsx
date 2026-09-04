@@ -210,7 +210,7 @@ export default async function ClientDetailPage({
                 </StatusPill>
               ) : null}
               {client.domains.map((domain) => (
-                <span key={domain} className="font-mono text-xs text-tk-slate/50">
+                <span key={domain} className="font-mono text-xs text-ink-3">
                   @{domain}
                 </span>
               ))}
@@ -220,14 +220,14 @@ export default async function ClientDetailPage({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={ROUTES.timesheetFor(client.slug, currentMonth(now))}
-            className="rounded-lg bg-tk-teal px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-tk-teal/90"
+            className="rounded-lg bg-accent px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-tk-teal/90"
           >
             Timesheet
           </Link>
           {hub.sites.length > 0 ? (
             <Link
               href={`${ROUTES.insights}/${hub.sites[0].slug}`}
-              className="rounded-lg border border-tk-slate/20 bg-white px-3.5 py-1.5 text-sm font-semibold text-tk-onyx hover:border-tk-teal hover:text-tk-teal"
+              className="rounded-lg border border-line bg-card px-3.5 py-1.5 text-sm font-semibold text-tk-onyx hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
             >
               Insights
             </Link>
@@ -235,7 +235,7 @@ export default async function ClientDetailPage({
           {adsViews[0] ? (
             <Link
               href={`${ROUTES.paidAds}/${adsViews[0].site.slug}`}
-              className="rounded-lg border border-tk-slate/20 bg-white px-3.5 py-1.5 text-sm font-semibold text-tk-onyx hover:border-tk-teal hover:text-tk-teal"
+              className="rounded-lg border border-line bg-card px-3.5 py-1.5 text-sm font-semibold text-tk-onyx hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
             >
               Paid Ads
             </Link>
@@ -247,7 +247,7 @@ export default async function ClientDetailPage({
             ))}
           <Link
             href={ROUTES.invoices}
-            className="rounded-lg border border-tk-slate/20 bg-white px-3.5 py-1.5 text-sm font-semibold text-tk-onyx hover:border-tk-teal hover:text-tk-teal"
+            className="rounded-lg border border-line bg-card px-3.5 py-1.5 text-sm font-semibold text-tk-onyx hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
           >
             New invoice
           </Link>
@@ -263,7 +263,7 @@ export default async function ClientDetailPage({
             <>
               <p className="text-xl font-bold tabular-nums text-tk-onyx">
                 {fmtH(hub.monthHours)}
-                <span className="text-[13px] font-semibold text-tk-slate/50">
+                <span className="text-[13px] font-semibold text-ink-3">
                   {" "}
                   / {hub.monthCap} hr
                 </span>
@@ -275,7 +275,7 @@ export default async function ClientDetailPage({
               <p className="text-xl font-bold tabular-nums text-tk-onyx">
                 {fmtH(hub.monthHours)} hr
               </p>
-              <p className="mt-0.5 text-xs text-tk-slate/60">logged · no retainer cap</p>
+              <p className="mt-0.5 text-xs text-ink-3">logged · no retainer cap</p>
             </>
           )}
         </Kpi>
@@ -283,27 +283,27 @@ export default async function ClientDetailPage({
           <p
             className={cn(
               "text-xl font-bold tabular-nums",
-              hub.outstandingCents > 0 ? "text-tk-onyx" : "text-tk-slate/40"
+              hub.outstandingCents > 0 ? "text-tk-onyx" : "text-ink-3"
             )}
           >
             {formatMoney(hub.outstandingCents)}
           </p>
           {hub.outstandingNote ? (
-            <p className="mt-0.5 text-xs font-semibold text-[#A32C1E]">
+            <p className="mt-0.5 text-xs font-semibold text-bad">
               {hub.outstandingNote}
             </p>
           ) : (
-            <p className="mt-0.5 text-xs text-tk-slate/60">nothing unpaid</p>
+            <p className="mt-0.5 text-xs text-ink-3">nothing unpaid</p>
           )}
         </Kpi>
         <Kpi label="Open tasks">
           <p className="text-xl font-bold tabular-nums text-tk-onyx">{openTasks.length}</p>
           {overdueTasks > 0 ? (
-            <p className="mt-0.5 text-xs font-semibold text-[#A32C1E]">
+            <p className="mt-0.5 text-xs font-semibold text-bad">
               {overdueTasks} overdue
             </p>
           ) : (
-            <p className="mt-0.5 text-xs text-tk-slate/60">nothing overdue</p>
+            <p className="mt-0.5 text-xs text-ink-3">nothing overdue</p>
           )}
         </Kpi>
         <Kpi label="Next meeting">
@@ -312,14 +312,14 @@ export default async function ClientDetailPage({
               <p className="text-xl font-bold text-tk-onyx">
                 <LocalTime iso={nextMeeting.startsAt} />
               </p>
-              <p className="mt-0.5 truncate text-xs text-tk-slate/60">
+              <p className="mt-0.5 truncate text-xs text-ink-3">
                 {nextMeeting.title}
               </p>
             </>
           ) : (
             <>
-              <p className="text-xl font-bold text-tk-slate/40">—</p>
-              <p className="mt-0.5 text-xs text-tk-slate/60">nothing scheduled</p>
+              <p className="text-xl font-bold text-ink-3">—</p>
+              <p className="mt-0.5 text-xs text-ink-3">nothing scheduled</p>
             </>
           )}
         </Kpi>
@@ -328,11 +328,11 @@ export default async function ClientDetailPage({
             {hub.openTickets.length}
           </p>
           {waitingTicket ? (
-            <p className="mt-0.5 text-xs font-semibold text-[#8A5A05]">
+            <p className="mt-0.5 text-xs font-semibold text-warn">
               waiting on you {waitingTicket.waitingOnYouDays}d
             </p>
           ) : (
-            <p className="mt-0.5 text-xs text-tk-slate/60">
+            <p className="mt-0.5 text-xs text-ink-3">
               {hub.openTickets.length > 0 ? "none waiting on you" : "all quiet"}
             </p>
           )}
@@ -357,7 +357,7 @@ export default async function ClientDetailPage({
               />
             </div>
             {clientTasks.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-tk-slate/20 bg-white/70 px-6 py-8 text-center text-sm text-tk-slate/60">
+              <p className="rounded-2xl border border-dashed border-line bg-well px-6 py-8 text-center text-sm text-ink-3">
                 Nothing open. Anything typed above lands on {client.name}.
               </p>
             ) : (
@@ -385,7 +385,7 @@ export default async function ClientDetailPage({
                           >
                             {retainer.name}
                           </Link>
-                          <p className="mt-0.5 text-xs text-tk-slate/70">
+                          <p className="mt-0.5 text-xs text-ink-3">
                             <span className="tabular-nums">{retainer.hoursPerMonth}</span>{" "}
                             hr/mo
                             {rate ? (
@@ -411,7 +411,7 @@ export default async function ClientDetailPage({
                       {retainer.status === "active" ? (
                         <div className="mt-4 flex flex-wrap items-end gap-6">
                           <div className="min-w-[200px] flex-1">
-                            <div className="mb-1.5 flex justify-between text-xs text-tk-slate/70">
+                            <div className="mb-1.5 flex justify-between text-xs text-ink-3">
                               <span>{monthName(hub.month)}</span>
                               <span className="tabular-nums">
                                 {fmtH(monthHours)} / {retainer.hoursPerMonth} hr
@@ -452,7 +452,7 @@ export default async function ClientDetailPage({
                           >
                             {project.name}
                           </Link>
-                          <p className="mt-0.5 text-xs text-tk-slate/70">
+                          <p className="mt-0.5 text-xs text-ink-3">
                             {fee > 0 ? (
                               <>
                                 Fee{" "}
@@ -486,8 +486,8 @@ export default async function ClientDetailPage({
                                     className={cn(
                                       "grid h-4 w-4 shrink-0 place-items-center rounded-full border",
                                       finished
-                                        ? "border-tk-teal bg-tk-teal text-white"
-                                        : "border-tk-slate/25 bg-white"
+                                        ? "border-tk-teal bg-accent text-white"
+                                        : "border-line-strong bg-card"
                                     )}
                                   >
                                     {finished ? (
@@ -509,7 +509,7 @@ export default async function ClientDetailPage({
                                   <span
                                     className={cn(
                                       finished
-                                        ? "text-tk-slate/45 line-through decoration-tk-slate/30"
+                                        ? "text-ink-3 line-through decoration-ink-3"
                                         : "text-tk-onyx"
                                     )}
                                   >
@@ -521,8 +521,8 @@ export default async function ClientDetailPage({
                                       className={cn(
                                         "text-[11px] font-semibold",
                                         d.dueOn < today
-                                          ? "text-[#A32C1E]"
-                                          : "text-tk-slate/50"
+                                          ? "text-bad"
+                                          : "text-ink-3"
                                       )}
                                     >
                                       due {formatDay(d.dueOn)}
@@ -540,22 +540,22 @@ export default async function ClientDetailPage({
                 {closedProjects.length > 0 ? (
                   <Card>
                     <details className="group">
-                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-semibold text-tk-slate/70 hover:text-tk-onyx">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-semibold text-ink-3 hover:text-tk-onyx">
                         <span>
                           {closedProjects.length} completed project
                           {closedProjects.length === 1 ? "" : "s"}
                         </span>
-                        <span aria-hidden="true" className="text-tk-slate/40 group-open:hidden">
+                        <span aria-hidden="true" className="text-ink-3 group-open:hidden">
                           Show
                         </span>
                         <span
                           aria-hidden="true"
-                          className="hidden text-tk-slate/40 group-open:inline"
+                          className="hidden text-ink-3 group-open:inline"
                         >
                           Hide
                         </span>
                       </summary>
-                      <ul className="mt-3 space-y-1.5 border-t border-tk-slate/10 pt-3">
+                      <ul className="mt-3 space-y-1.5 border-t border-line pt-3">
                         {closedProjects.map((project) => (
                           <li
                             key={project.id}
@@ -568,7 +568,7 @@ export default async function ClientDetailPage({
                               {project.name}
                             </Link>
                             {project.completedAt ? (
-                              <span className="text-[11px] tabular-nums text-tk-slate/45">
+                              <span className="text-[11px] tabular-nums text-ink-3">
                                 {formatDay(project.completedAt.toISOString().slice(0, 10))}
                               </span>
                             ) : null}
@@ -590,7 +590,7 @@ export default async function ClientDetailPage({
                           {product.name}
                         </Link>
                         {product.tagline ? (
-                          <p className="mt-0.5 text-xs text-tk-slate/70">
+                          <p className="mt-0.5 text-xs text-ink-3">
                             {product.tagline}
                           </p>
                         ) : null}
@@ -627,8 +627,8 @@ export default async function ClientDetailPage({
                 </Link>
               }
             >
-              <div className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-                <div className="flex flex-wrap gap-8 border-b border-tk-slate/10 px-5 py-4">
+              <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+                <div className="flex flex-wrap gap-8 border-b border-line px-5 py-4">
                   <Stat
                     label="Outstanding"
                     value={formatMoney(hub.outstandingCents)}
@@ -646,7 +646,7 @@ export default async function ClientDetailPage({
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[540px] border-collapse text-left">
                       <thead>
-                        <tr className="border-b border-tk-slate/10 text-[10.5px] font-bold uppercase tracking-[0.1em] text-tk-slate/50">
+                        <tr className="border-b border-line text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-3">
                           <th className="px-5 py-2.5 font-bold">Invoice</th>
                           <th className="px-3 py-2.5 font-bold">Issued</th>
                           <th className="px-3 py-2.5 font-bold">For</th>
@@ -661,7 +661,7 @@ export default async function ClientDetailPage({
                           return (
                             <tr
                               key={invoice.id}
-                              className="border-b border-tk-slate/10 text-[13.5px] last:border-0 hover:bg-tk-linen/40"
+                              className="border-b border-line text-[13.5px] last:border-0 hover:bg-well"
                             >
                               <td className="px-5 py-2.5">
                                 <Link
@@ -671,13 +671,13 @@ export default async function ClientDetailPage({
                                   {invoice.number}
                                 </Link>
                               </td>
-                              <td className="px-3 py-2.5 tabular-nums text-tk-slate/70">
+                              <td className="px-3 py-2.5 tabular-nums text-ink-3">
                                 {formatDay(invoice.issuedOn)}
                               </td>
-                              <td className="max-w-[220px] truncate px-3 py-2.5 text-tk-slate/70">
+                              <td className="max-w-[220px] truncate px-3 py-2.5 text-ink-3">
                                 {invoice.description || "—"}
                               </td>
-                              <td className="px-3 py-2.5 text-right tabular-nums text-tk-slate/70">
+                              <td className="px-3 py-2.5 text-right tabular-nums text-ink-3">
                                 {invoice.hours ? formatHours(invoice.hours) : "—"}
                               </td>
                               <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-tk-onyx">
@@ -708,18 +708,18 @@ export default async function ClientDetailPage({
               </div>
 
               {sortedContracts.length > 0 ? (
-                <div className="mt-3 divide-y divide-tk-slate/10 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+                <div className="mt-3 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card shadow-card">
                   {sortedContracts.map((contract) => (
                     <Link
                       key={contract.id}
                       href={ROUTES.contract(contract.slug)}
-                      className="flex items-center justify-between gap-4 px-5 py-3 hover:bg-tk-linen/40"
+                      className="flex items-center justify-between gap-4 px-5 py-3 hover:bg-well"
                     >
                       <div className="min-w-0">
                         <p className="truncate text-[13.5px] font-semibold text-tk-onyx">
                           {contract.title}
                         </p>
-                        <p className="mt-0.5 text-xs text-tk-slate/60">
+                        <p className="mt-0.5 text-xs text-ink-3">
                           {[
                             contract.effectiveOn
                               ? `Effective ${formatDay(contract.effectiveOn)}`
@@ -763,7 +763,7 @@ export default async function ClientDetailPage({
               </Link>
             }
           >
-            <div className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
               <MeetingList upcoming={hub.upcoming} recent={hub.recentMeetings} />
             </div>
           </Block>
@@ -784,7 +784,7 @@ export default async function ClientDetailPage({
                 </Link>
               }
             >
-              <div className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+              <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
                 <TicketList tickets={hub.openTickets} />
               </div>
             </Block>
@@ -793,7 +793,7 @@ export default async function ClientDetailPage({
           {/* --------------------------------------------------- reports */}
           {sortedReports.length > 0 ? (
             <Block id="reports" title="Reports">
-              <div className="divide-y divide-tk-slate/10 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+              <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card shadow-card">
                 {sortedReports.map((report) => (
                   <div
                     key={report.id}
@@ -803,7 +803,7 @@ export default async function ClientDetailPage({
                       <p className="truncate text-[13.5px] font-semibold text-tk-onyx">
                         {report.title}
                       </p>
-                      <p className="mt-0.5 text-xs text-tk-slate/60">
+                      <p className="mt-0.5 text-xs text-ink-3">
                         {[
                           report.cadence !== "none"
                             ? CADENCE_LABEL[report.cadence]
@@ -837,7 +837,7 @@ export default async function ClientDetailPage({
 
           {sortedProposals.length > 0 ? (
             <Block id="proposals" title="Proposals">
-              <div className="divide-y divide-tk-slate/10 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+              <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card shadow-card">
                 {sortedProposals.map((proposal) => (
                   <div
                     key={proposal.id}
@@ -847,7 +847,7 @@ export default async function ClientDetailPage({
                       <p className="truncate text-[13.5px] font-semibold text-tk-onyx">
                         {proposal.title}
                       </p>
-                      <p className="mt-0.5 text-xs text-tk-slate/60">
+                      <p className="mt-0.5 text-xs text-ink-3">
                         {[
                           proposal.seriesPart && proposal.seriesOf
                             ? `${proposal.series} · ${proposal.seriesPart} of ${proposal.seriesOf}`
@@ -905,7 +905,7 @@ export default async function ClientDetailPage({
                           >
                             {ads?.accountName || site.name}
                           </Link>
-                          <p className="mt-0.5 font-mono text-xs text-tk-slate/60">
+                          <p className="mt-0.5 font-mono text-xs text-ink-3">
                             {fmtCustomerId(site.adsCustomerId)}
                             {win?.label ? ` · ${win.label}` : ""}
                           </p>
@@ -938,7 +938,7 @@ export default async function ClientDetailPage({
                           />
                         </div>
                       ) : (
-                        <p className="mt-3 text-sm text-tk-slate/60">
+                        <p className="mt-3 text-sm text-ink-3">
                           {snapshot
                             ? ads?.error ||
                               "Ads did not load on the last fetch — refresh from the dashboard."
@@ -955,11 +955,11 @@ export default async function ClientDetailPage({
           {/* ------------------------------------------------ brainstorm */}
           {brainstorm.length > 0 ? (
             <Block id="brainstorm" title="Brainstorm">
-              <div className="divide-y divide-tk-slate/10 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+              <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card shadow-card">
                 {brainstorm.map((note) => (
                   <div key={note.id} className="px-5 py-3">
                     <p className="text-[13.5px] text-tk-onyx">{note.body}</p>
-                    <p className="mt-1 text-xs text-tk-slate/60">
+                    <p className="mt-1 text-xs text-ink-3">
                       {[
                         note.topic || null,
                         note.source === "mail" ? "from mail" : null,
@@ -977,7 +977,7 @@ export default async function ClientDetailPage({
           {/* ------------------------------------------------ worksheets */}
           {sortedWorksheets.length > 0 ? (
             <Block id="worksheets" title="Worksheets">
-              <div className="divide-y divide-tk-slate/10 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+              <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card shadow-card">
                 {sortedWorksheets.map((worksheet) => (
                   <div
                     key={worksheet.id}
@@ -987,7 +987,7 @@ export default async function ClientDetailPage({
                       <p className="truncate text-[13.5px] font-semibold text-tk-onyx">
                         {worksheet.title}
                       </p>
-                      <p className="mt-0.5 text-xs text-tk-slate/60">
+                      <p className="mt-0.5 text-xs text-ink-3">
                         {[
                           worksheet.instrument
                             ? `${worksheet.instrument}${worksheet.version ? ` ${worksheet.version}` : ""}`
@@ -1048,14 +1048,14 @@ export default async function ClientDetailPage({
                       <p className="truncate text-[13px] font-semibold text-tk-onyx">
                         {email.split("@")[0]}
                       </p>
-                      <p className="truncate font-mono text-[11px] text-tk-slate/50">
+                      <p className="truncate font-mono text-[11px] text-ink-3">
                         {email}
                       </p>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-xs text-tk-slate/60">
+                <p className="text-xs text-ink-3">
                   No portal contacts yet · meeting invites match{" "}
                   {client.domains.map((d) => `@${d}`).join(", ")}
                 </p>
@@ -1065,7 +1065,7 @@ export default async function ClientDetailPage({
 
           {hub.sites.length > 0 ? (
             <RailCard title="Sites">
-              <ul className="divide-y divide-tk-slate/10">
+              <ul className="divide-y divide-line">
                 {hub.sites.map((site) => (
                   <li
                     key={site.id}
@@ -1098,7 +1098,7 @@ export default async function ClientDetailPage({
 
           {codebases.length > 0 ? (
             <RailCard title="Codebases">
-              <ul className="divide-y divide-tk-slate/10">
+              <ul className="divide-y divide-line">
                 {codebases.map((cb) => {
                   const docs = codebaseDocs.filter((d) => d.codebase === cb)
                   const spec = docs.find((d) => d.kind === "spec")
@@ -1111,14 +1111,14 @@ export default async function ClientDetailPage({
                       >
                         <span className="flex items-baseline justify-between gap-2">
                           <span className="truncate text-[13px] font-semibold text-tk-onyx">{spec?.title || cb}</span>
-                          <span className="shrink-0 text-[10.5px] text-tk-slate/45">
+                          <span className="shrink-0 text-[10.5px] text-ink-3">
                             {newest.generatedAt.toISOString().slice(0, 10)}
                           </span>
                         </span>
                         {spec?.summary ? (
-                          <span className="block truncate text-xs text-tk-slate/60">{spec.summary}</span>
+                          <span className="block truncate text-xs text-ink-3">{spec.summary}</span>
                         ) : null}
-                        <span className="mt-0.5 block text-[10.5px] text-tk-slate/45">
+                        <span className="mt-0.5 block text-[10.5px] text-ink-3">
                           {docs.map((d) => DOC_KIND_LABEL[d.kind as DocKind] ?? d.kind).join(" · ")}
                         </span>
                       </Link>
@@ -1131,7 +1131,7 @@ export default async function ClientDetailPage({
 
           {client.notionLinks.length > 0 ? (
             <RailCard title="Links">
-              <ul className="divide-y divide-tk-slate/10">
+              <ul className="divide-y divide-line">
                 {client.notionLinks.map((link) => (
                   <li key={link.id} className="py-1.5 first:pt-0 last:pb-0">
                     <a
@@ -1141,7 +1141,7 @@ export default async function ClientDetailPage({
                       className="flex items-center justify-between gap-2 text-[13px] text-tk-onyx hover:text-tk-teal"
                     >
                       <span className="truncate">{link.title || "Untitled page"}</span>
-                      <span className="shrink-0 text-[11px] text-tk-slate/45">
+                      <span className="shrink-0 text-[11px] text-ink-3">
                         Notion ↗
                       </span>
                     </a>
@@ -1169,8 +1169,8 @@ function monthName(month: string) {
 
 function Kpi({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-tk-slate/15 bg-white px-4 py-3 shadow-sm">
-      <p className="mb-1.5 text-[10.5px] font-bold uppercase tracking-[0.12em] text-tk-slate/50">
+    <div className="rounded-2xl border border-line bg-card px-4 py-3 shadow-card">
+      <p className="mb-1.5 text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-3">
         {label}
       </p>
       {children}
@@ -1202,7 +1202,7 @@ function Block({
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
+    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
       {children}
     </div>
   )
@@ -1211,7 +1211,7 @@ function Card({ children }: { children: React.ReactNode }) {
 function HubAdStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-tk-slate/50">
+      <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-3">
         {label}
       </p>
       <p className="mt-0.5 text-lg font-bold tabular-nums text-tk-onyx">{value}</p>
@@ -1230,13 +1230,13 @@ function Stat({
 }) {
   return (
     <div>
-      <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-tk-slate/50">
+      <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-3">
         {label}
       </p>
       <p
         className={cn(
           "mt-0.5 text-lg font-bold tabular-nums",
-          tone === "crit" ? "text-[#A32C1E]" : "text-tk-onyx"
+          tone === "crit" ? "text-bad" : "text-tk-onyx"
         )}
       >
         {value}
@@ -1247,8 +1247,8 @@ function Stat({
 
 function RailCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-tk-slate/15 bg-white px-4 py-3.5 shadow-sm">
-      <h3 className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.12em] text-tk-slate/50">
+    <div className="rounded-2xl border border-line bg-card px-4 py-3.5 shadow-card">
+      <h3 className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-3">
         {title}
       </h3>
       {children}

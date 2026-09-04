@@ -43,7 +43,7 @@ export async function InvoicePeek({ number }: { number: string }) {
             <p className="text-[26px] font-semibold leading-tight text-tk-onyx">
               {formatMoney(invoice.amountCents, invoice.currency)}
             </p>
-            <p className="mt-1 text-sm text-tk-slate/70">
+            <p className="mt-1 text-sm text-ink-3">
               <EntityLink
                 href={ROUTES.client(invoice.client.slug)}
                 color={clientColor(invoice.client.slug)}
@@ -57,7 +57,7 @@ export async function InvoicePeek({ number }: { number: string }) {
             <p
               className={
                 overdue
-                  ? "rounded-full bg-[#A62228]/10 px-2.5 py-1 text-[11px] font-bold text-[#A62228]"
+                  ? "rounded-full bg-bad-soft px-2.5 py-1 text-[11px] font-bold text-bad"
                   : "rounded-full bg-amber-700/10 px-2.5 py-1 text-[11px] font-bold text-amber-800"
               }
             >
@@ -106,7 +106,7 @@ export async function InvoicePeek({ number }: { number: string }) {
             <Fact label="Hours">
               <span className="tabular-nums">{formatHours(invoice.hours)}</span>
               {rate ? (
-                <span className="text-tk-slate/55"> · {formatMoney(Math.round(rate))}/hr</span>
+                <span className="text-ink-3"> · {formatMoney(Math.round(rate))}/hr</span>
               ) : null}
             </Fact>
           ) : null}
@@ -130,7 +130,7 @@ export async function InvoicePeek({ number }: { number: string }) {
           ) : null}
           {invoice.description ? (
             <Fact label="Description" wide>
-              <span className="whitespace-pre-wrap text-tk-slate/80">
+              <span className="whitespace-pre-wrap text-tk-slate">
                 {invoice.description}
               </span>
             </Fact>
@@ -143,8 +143,8 @@ export async function InvoicePeek({ number }: { number: string }) {
           <ul className="space-y-1.5">
             {sessions.slice(0, 8).map((entry) => (
               <li key={entry.id} className="flex items-baseline justify-between gap-3 text-xs">
-                <span className="min-w-0 truncate text-tk-slate/80">
-                  <span className="mr-2 tabular-nums text-tk-slate/50">
+                <span className="min-w-0 truncate text-tk-slate">
+                  <span className="mr-2 tabular-nums text-ink-3">
                     {formatDay(entry.occurredOn)}
                   </span>
                   {entry.summary || "—"}
@@ -155,7 +155,7 @@ export async function InvoicePeek({ number }: { number: string }) {
               </li>
             ))}
             {sessions.length > 8 ? (
-              <li className="text-[11px] text-tk-slate/55">
+              <li className="text-[11px] text-ink-3">
                 + {sessions.length - 8} more on the full page
               </li>
             ) : null}

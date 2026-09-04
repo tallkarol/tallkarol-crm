@@ -22,9 +22,9 @@ export default async function InsightsTrafficPage({
 
   if (!snapshot.ga4.ok) {
     return (
-      <div className="rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 px-6 py-10 text-center shadow-sm">
+      <div className="rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
         <p className="text-sm font-semibold text-tk-onyx">GA4 is not connected</p>
-        <p className="mx-auto mt-1 max-w-md text-sm text-tk-slate/70">
+        <p className="mx-auto mt-1 max-w-md text-sm text-ink-3">
           {snapshot.ga4.error ||
             "Add a GA4 property id to this site and grant the service account, then refresh."}{" "}
           The Health tab has the exact steps.
@@ -37,7 +37,7 @@ export default async function InsightsTrafficPage({
 
   return (
     <>
-      <p className="text-xs text-tk-slate/60">
+      <p className="text-xs text-ink-3">
         Breakdowns cover the fixed {TABLE_WINDOW_DAYS}-day fetch window · realtime is as of
         the last fetch
       </p>
@@ -58,7 +58,7 @@ export default async function InsightsTrafficPage({
             <table className="w-full border-collapse text-xs">
               <tbody>
                 {ga4.events.map((row) => (
-                  <tr key={row.name} className="border-b border-tk-slate/[.06] last:border-0">
+                  <tr key={row.name} className="border-b border-line last:border-0">
                     <td className="px-5 py-2 font-medium text-tk-onyx">{row.name}</td>
                     <td className="px-5 py-2 text-right tabular-nums text-tk-onyx">
                       {fmtInt(row.value)}
@@ -79,7 +79,7 @@ export default async function InsightsTrafficPage({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] border-collapse text-xs">
             <thead>
-              <tr className="border-b border-tk-slate/12 text-left text-[10px] font-bold uppercase tracking-wide text-tk-slate/55">
+              <tr className="border-b border-line text-left text-[10px] font-bold uppercase tracking-wide text-ink-3">
                 <th className="px-5 py-2 font-bold">Page</th>
                 <th className="px-3 py-2 text-right font-bold">Sessions</th>
                 <th className="px-5 py-2 text-right font-bold">Key events</th>
@@ -87,7 +87,7 @@ export default async function InsightsTrafficPage({
             </thead>
             <tbody>
               {ga4.pages.map((row) => (
-                <tr key={row.name} className="border-b border-tk-slate/[.06] last:border-0">
+                <tr key={row.name} className="border-b border-line last:border-0">
                   <td className="max-w-[26rem] truncate px-5 py-2 font-medium text-tk-onyx" title={row.name}>
                     {row.name}
                   </td>
@@ -116,16 +116,16 @@ export default async function InsightsTrafficPage({
             <p className="text-3xl font-semibold tabular-nums text-tk-onyx">
               {fmtInt(ga4.realtimeUsers)}
             </p>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
               Active users
             </p>
           </div>
           {ga4.realtimeEvents.length > 0 ? (
-            <div className="border-t border-tk-slate/[.06]">
+            <div className="border-t border-line">
               {ga4.realtimeEvents.map((row) => (
                 <p
                   key={row.name}
-                  className="flex justify-between border-b border-tk-slate/[.06] px-5 py-2 text-xs last:border-0"
+                  className="flex justify-between border-b border-line px-5 py-2 text-xs last:border-0"
                 >
                   <span className="font-medium text-tk-onyx">{row.name}</span>
                   <span className="tabular-nums text-tk-onyx">{fmtInt(row.value)}</span>
@@ -133,7 +133,7 @@ export default async function InsightsTrafficPage({
               ))}
             </div>
           ) : (
-            <p className="border-t border-tk-slate/[.06] px-5 py-3 text-xs text-tk-slate/60">
+            <p className="border-t border-line px-5 py-3 text-xs text-ink-3">
               No events in the 30 minutes before the last fetch.
             </p>
           )}

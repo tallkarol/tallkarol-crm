@@ -46,14 +46,14 @@ export function MonthBilled({
     : null
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-card">
-      <div className="flex items-center justify-between gap-3 border-b border-tk-slate/10 px-[18px] py-3">
+    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <div className="flex items-center justify-between gap-3 border-b border-line px-[18px] py-3">
         <h2 className="font-ui text-[13.5px] font-bold tracking-tight text-tk-onyx">
           Billed · {monthLabel}
         </h2>
         <Link
           href={ROUTES.invoices}
-          className="font-ui text-xs font-bold text-tk-slate/70 hover:text-tk-onyx hover:underline"
+          className="font-ui text-xs font-bold text-ink-3 hover:text-tk-onyx hover:underline"
         >
           Invoices →
         </Link>
@@ -63,7 +63,7 @@ export function MonthBilled({
           <span className="font-display text-[34px] font-semibold leading-none tracking-[-0.035em] text-tk-onyx tabular-nums">
             {formatMoney(billedCents)}
           </span>
-          <span className="font-ui text-sm font-medium text-tk-slate/70">
+          <span className="font-ui text-sm font-medium text-ink-3">
             {monthlyGoalCents ? (
               <>
                 <b className="font-bold text-tk-onyx">{pct}%</b> of {formatMoney(monthlyGoalCents)} goal
@@ -83,19 +83,19 @@ export function MonthBilled({
           />
         ) : null}
 
-        <div className="mt-3 border-t border-tk-slate/10 text-[12.5px]">
+        <div className="mt-3 border-t border-line text-[12.5px]">
           {invoices.length === 0 && expected.length === 0 ? (
-            <p className="py-3 text-xs text-tk-slate/70">Nothing invoiced or expected yet this month.</p>
+            <p className="py-3 text-xs text-ink-3">Nothing invoiced or expected yet this month.</p>
           ) : null}
           {invoices.map((i) => (
             <Link
               key={i.number}
               href={`/?peek=invoice:${encodeURIComponent(i.number)}`}
               scroll={false}
-              className="grid h-8 grid-cols-[96px_1fr_auto] items-center gap-2.5 border-b border-tk-slate/10 hover:bg-tk-linen"
+              className="grid h-8 grid-cols-[96px_1fr_auto] items-center gap-2.5 border-b border-line hover:bg-well transition-colors duration-[120ms]"
             >
               <ClientChip name={i.clientName} slug={i.clientSlug} />
-              <span className="min-w-0 truncate text-tk-slate/70">
+              <span className="min-w-0 truncate text-ink-3">
                 {i.number}
                 {i.status !== "paid" ? (
                   <span
@@ -107,7 +107,7 @@ export function MonthBilled({
                     {i.status}
                   </span>
                 ) : (
-                  <span className="ml-1.5 text-tk-slate/70">paid</span>
+                  <span className="ml-1.5 text-ink-3">paid</span>
                 )}
               </span>
               <span className="font-semibold tabular-nums text-tk-onyx">
@@ -118,7 +118,7 @@ export function MonthBilled({
           {expected.map((line) => (
             <div
               key={line.label}
-              className="grid h-8 grid-cols-[96px_1fr_auto] items-center gap-2.5 border-b border-tk-slate/10"
+              className="grid h-8 grid-cols-[96px_1fr_auto] items-center gap-2.5 border-b border-line"
             >
               {line.slug ? (
                 <ClientChip name={line.label} slug={line.slug} />
@@ -127,7 +127,7 @@ export function MonthBilled({
                   {line.label}
                 </span>
               )}
-              <span className="min-w-0 truncate italic text-tk-slate/70">
+              <span className="min-w-0 truncate italic text-ink-3">
                 {line.sub ?? line.label}
                 <span className="ml-1 text-[10px] uppercase tracking-wide not-italic">expected</span>
               </span>
@@ -139,7 +139,7 @@ export function MonthBilled({
           {expected.length > 0 ? (
             <div className="grid h-9 grid-cols-[96px_1fr_auto] items-center gap-2.5">
               <span className="font-ui text-xs font-bold text-tk-slate">Expected</span>
-              <span className="text-tk-slate/70">
+              <span className="text-ink-3">
                 {expectedPct != null ? (
                   <>
                     <b className="font-bold text-tk-onyx">{expectedPct}%</b> of goal
@@ -177,7 +177,7 @@ function GoalBar({ billed, expected }: { billed: number; expected: number }) {
     <span
       role="img"
       aria-label={`${Math.round(billed * 100)}% billed, ${Math.round(expected * 100)}% expected`}
-      className="relative mt-3 block h-2 overflow-hidden rounded-full border border-tk-slate/10 bg-tk-linen"
+      className="relative mt-3 block h-2 overflow-hidden rounded-full border border-line bg-well"
     >
       <span
         className="absolute inset-y-0 left-0 rounded-full border-r border-tk-teal transition-[width] duration-700 ease-out"
@@ -188,7 +188,7 @@ function GoalBar({ billed, expected }: { billed: number; expected: number }) {
         }}
       />
       <span
-        className="absolute inset-y-0 left-0 rounded-full bg-tk-teal transition-[width] duration-700 ease-out"
+        className="absolute inset-y-0 left-0 rounded-full bg-accent transition-[width] duration-700 ease-out"
         style={{ width: `${(clamp(billed) * 100).toFixed(1)}%` }}
       />
     </span>

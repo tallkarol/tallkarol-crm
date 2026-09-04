@@ -26,7 +26,7 @@ export function TimesheetTabs({ pending = 0 }: { pending?: number }) {
   return (
     <nav
       aria-label="Timesheet sections"
-      className="mt-5 flex gap-0.5 overflow-x-auto shadow-[inset_0_-1px_0_rgba(31,44,43,0.15)]"
+      className="mt-5 flex gap-0.5 overflow-x-auto border-b border-line"
     >
       {TABS.map((tab) => {
         const active = tab.exact
@@ -43,12 +43,12 @@ export function TimesheetTabs({ pending = 0 }: { pending?: number }) {
               "flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 pb-2.5 pt-1.5 text-xs font-semibold transition-colors",
               active
                 ? "border-tk-teal text-tk-teal"
-                : "border-transparent text-tk-slate/60 hover:text-tk-onyx"
+                : "border-transparent text-ink-3 hover:text-tk-onyx"
             )}
           >
             {tab.label}
             {tab.href === ROUTES.timesheetReview && pending > 0 ? (
-              <span className="rounded-full bg-tk-teal px-1.5 py-0.5 text-[10px] font-bold leading-none text-tk-linen">
+              <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold leading-none text-tk-linen">
                 {pending}
               </span>
             ) : null}

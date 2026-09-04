@@ -271,8 +271,8 @@ export const STATE_DOT: Record<HealthState, string> = {
 }
 
 export const BAR_TONE: Record<BarTone, string> = {
-  ok: "bg-[#2E7D57]",
-  warn: "bg-[#A97A22]",
-  bad: "bg-[#B4322A]",
-  idle: "bg-tk-slate/20",
+  ok: "bg-good",
+  warn: "bg-warn",
+  bad: "bg-bad",
+  idle: "bg-line-strong",
 }

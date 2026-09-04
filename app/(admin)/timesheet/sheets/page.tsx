@@ -113,9 +113,9 @@ export default async function SheetsPage({
       />
 
       {visible.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 px-6 py-10 text-center shadow-sm">
+        <div className="mt-6 rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
           <p className="text-sm font-semibold text-tk-onyx">No sheets here</p>
-          <p className="mt-1 text-sm text-tk-slate/70">
+          <p className="mt-1 text-sm text-ink-3">
             A sheet appears once its month has hours on it. Widen the year or
             client filter to see more.
           </p>
@@ -131,7 +131,7 @@ export default async function SheetsPage({
       )}
 
       {!showSettled && hiddenPaid > 0 ? (
-        <p className="mt-4 text-sm text-tk-slate/55">
+        <p className="mt-4 text-sm text-ink-3">
           {hiddenPaid} paid {hiddenPaid === 1 ? "sheet is" : "sheets are"} hidden.{" "}
           <Link
             href={buildHref({ year, client: clientSlug, show: "all" })}
@@ -151,15 +151,15 @@ function SheetGroup({ group, rows }: { group: Group; rows: SheetSummary[] }) {
   const value = rows.reduce((sum, row) => sum + (row.valueCents ?? 0), 0)
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-tk-slate/10 bg-tk-linen/50 px-5 py-3">
+    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-line bg-well px-5 py-3">
         <div>
           <h2 className="text-sm font-semibold text-tk-onyx">{group.title}</h2>
           {group.note ? (
-            <p className="mt-0.5 text-xs text-tk-slate/60">{group.note}</p>
+            <p className="mt-0.5 text-xs text-ink-3">{group.note}</p>
           ) : null}
         </div>
-        <p className="font-mono text-xs tabular-nums text-tk-slate/70">
+        <p className="font-mono text-xs tabular-nums text-ink-3">
           {rows.length} · {round(hours)} hr
           {unbilled > 0 ? ` · ${round(unbilled)} hr unbilled` : ""}
           {value > 0 ? ` · ${formatMoney(value)}` : ""}
@@ -169,7 +169,7 @@ function SheetGroup({ group, rows }: { group: Group; rows: SheetSummary[] }) {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] border-collapse text-sm">
           <thead>
-            <tr className="border-b border-tk-slate/15 text-left text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+            <tr className="border-b border-line text-left text-[11px] font-semibold uppercase tracking-wide text-ink-3">
               <th className="px-5 py-2 font-semibold">Client</th>
               <th className="px-3 py-2 font-semibold">Month</th>
               <th className="px-3 py-2 text-right font-semibold">Hours</th>
@@ -183,7 +183,7 @@ function SheetGroup({ group, rows }: { group: Group; rows: SheetSummary[] }) {
             {rows.map((row) => (
               <tr
                 key={row.key}
-                className="border-b border-tk-slate/10 transition-colors last:border-0 hover:bg-tk-linen/40"
+                className="border-b border-line transition-colors last:border-0 hover:bg-well"
               >
                 <td className="px-5 py-2.5">
                   <Link
@@ -224,10 +224,10 @@ function SheetGroup({ group, rows }: { group: Group; rows: SheetSummary[] }) {
                       {row.invoiceNumber}
                     </Link>
                   ) : (
-                    <span className="text-tk-slate/40">—</span>
+                    <span className="text-ink-3">—</span>
                   )}
                 </td>
-                <td className="px-5 py-2.5 text-right text-xs text-tk-slate/60">
+                <td className="px-5 py-2.5 text-right text-xs text-ink-3">
                   {shortDay(row.lastEditedOn)}
                 </td>
               </tr>
@@ -248,8 +248,8 @@ function StateBadge({ state }: { state: SheetState }) {
         "inline-flex shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold",
         state === "open" && "bg-tk-teal/10 text-tk-teal",
         state === "unbilled" && "bg-amber-100 text-amber-800",
-        state === "invoiced" && "bg-tk-linen text-tk-slate",
-        state === "paid" && "bg-tk-slate/10 text-tk-slate/70"
+        state === "invoiced" && "bg-well text-tk-slate",
+        state === "paid" && "bg-well text-ink-3"
       )}
       data-tone={tone}
     >

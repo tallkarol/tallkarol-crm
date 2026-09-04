@@ -224,7 +224,7 @@ function Badge({ tone, children }: { tone: "ok" | "warn" | "mute"; children: Rea
   const tones = {
     ok: "bg-tk-teal/12 text-tk-teal",
     warn: "bg-tk-tomato/10 text-tk-tomato",
-    mute: "bg-tk-slate/8 text-ink-3",
+    mute: "bg-well text-ink-3",
   }
   return (
     <span

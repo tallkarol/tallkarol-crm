@@ -59,7 +59,7 @@ export function RevenueChart({
               if (!active || !payload?.length) return null
               const total = payload.reduce((s, p) => s + (Number(p.value) || 0), 0)
               return (
-                <div className="rounded-xl bg-tk-onyx px-3 py-2 text-xs text-tk-linen shadow-lg">
+                <div className="rounded-xl bg-tk-onyx px-3 py-2 text-xs text-tk-linen shadow-overlay">
                   <p className="font-semibold">
                     {label} · {formatMoney(total)}
                   </p>

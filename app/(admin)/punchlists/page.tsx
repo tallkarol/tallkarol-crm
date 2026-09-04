@@ -27,7 +27,7 @@ export default async function PunchlistsPage({
   return (
     <>
       <PageHeader title="Punch lists" />
-      <p className="mt-1 text-xs text-tk-slate/60">
+      <p className="mt-1 text-xs text-ink-3">
         Checklists an agent cut from an email, a document or a transcript. Every
         item is a task; ticking one here ticks it everywhere.
       </p>
@@ -37,10 +37,10 @@ export default async function PunchlistsPage({
       ) : null}
 
       {rows.length === 0 ? (
-        <div className="mt-8 rounded-2xl border border-dashed border-tk-slate/25 bg-white px-6 py-10 text-center">
+        <div className="mt-8 rounded-2xl border border-dashed border-line-strong bg-card px-6 py-10 text-center">
           <p className="text-sm font-semibold text-tk-onyx">No punch lists yet</p>
-          <p className="mt-1 text-sm text-tk-slate/70">
-            They are only ever generated — run <code className="rounded bg-tk-linen px-1">/punchlist</code> in a
+          <p className="mt-1 text-sm text-ink-3">
+            They are only ever generated — run <code className="rounded bg-well px-1">/punchlist</code> in a
             session with the source in hand.
           </p>
         </div>
@@ -53,13 +53,13 @@ export default async function PunchlistsPage({
               <section key={band.key}>
                 <div className="flex items-baseline justify-between px-1 pb-2">
                   <h2 className="text-[12.5px] font-bold text-tk-onyx">{band.title}</h2>
-                  <span className="font-mono text-[11px] tabular-nums text-tk-slate/55">{inBand.length}</span>
+                  <span className="font-mono text-[11px] tabular-nums text-ink-3">{inBand.length}</span>
                 </div>
-                <ul className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+                <ul className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
                   {inBand.map((row) => (
                     <li
                       key={row.id}
-                      className="flex items-center justify-between gap-4 border-b border-tk-slate/10 px-5 py-3.5 last:border-0"
+                      className="flex items-center justify-between gap-4 border-b border-line px-5 py-3.5 last:border-0"
                     >
                       <div className="min-w-0">
                         <Link
@@ -68,7 +68,7 @@ export default async function PunchlistsPage({
                         >
                           {row.title}
                         </Link>
-                        <p className="mt-0.5 text-sm text-tk-slate/70">
+                        <p className="mt-0.5 text-sm text-ink-3">
                           <Link href={ROUTES.client(row.client.slug)} className="font-semibold text-tk-teal hover:underline">
                             {row.client.name}
                           </Link>
@@ -89,11 +89,11 @@ export default async function PunchlistsPage({
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <span className="flex items-center gap-2">
-                          <span className="font-mono text-[11.5px] tabular-nums text-tk-slate/70">
+                          <span className="font-mono text-[11.5px] tabular-nums text-ink-3">
                             {row.progress.done}/{row.progress.total}
                           </span>
-                          <span className="h-1.5 w-20 overflow-hidden rounded-full bg-tk-slate/10" aria-hidden>
-                            <span className="block h-full rounded-full bg-tk-teal" style={{ width: `${row.progress.pct}%` }} />
+                          <span className="h-1.5 w-20 overflow-hidden rounded-full bg-well" aria-hidden>
+                            <span className="block h-full rounded-full bg-accent" style={{ width: `${row.progress.pct}%` }} />
                           </span>
                         </span>
                         {row.testSummary.fail > 0 ? (

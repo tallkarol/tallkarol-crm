@@ -54,7 +54,7 @@ const TONE: Record<AttentionTone, string> = {
   bad: "text-bad",
   warn: "text-warn",
   ok: "text-tk-teal",
-  neutral: "text-tk-slate/70",
+  neutral: "text-ink-3",
 }
 
 type Layout = "rows" | "cards"
@@ -164,15 +164,15 @@ export function NeedsAttention({
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-card">
-      <div className="flex items-center gap-2.5 border-b border-tk-slate/10 px-[18px] py-3">
+    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <div className="flex items-center gap-2.5 border-b border-line px-[18px] py-3">
         <h2 className="font-ui text-[13.5px] font-bold tracking-tight text-tk-onyx">Needs attention</h2>
         {count > 0 ? (
-          <span className="grid h-5 min-w-5 place-items-center rounded-full border border-tk-slate/15 bg-tk-linen px-1.5 font-ui text-[11px] font-bold tabular-nums text-tk-slate">
+          <span className="grid h-5 min-w-5 place-items-center rounded-full border border-line bg-well px-1.5 font-ui text-[11px] font-bold tabular-nums text-tk-slate">
             {count}
           </span>
         ) : null}
-        <span className="ml-auto inline-flex rounded-lg border border-tk-slate/15 bg-tk-linen p-0.5">
+        <span className="ml-auto inline-flex rounded-lg border border-line bg-well p-0.5">
           <LayoutButton
             active={layout === "rows"}
             label="Row view"
@@ -217,11 +217,11 @@ export function NeedsAttention({
       ) : null}
 
       {count === 0 ? (
-        <p className="px-[18px] py-8 text-sm text-tk-slate/70">
+        <p className="px-[18px] py-8 text-sm text-ink-3">
           All clear — nothing waiting on you.
         </p>
       ) : visible.length === 0 ? (
-        <p className="px-[18px] py-6 text-sm text-tk-slate/70">Nothing in that group.</p>
+        <p className="px-[18px] py-6 text-sm text-ink-3">Nothing in that group.</p>
       ) : (
         <div className="pb-1.5">
           {visible.map((group) => (
@@ -229,7 +229,7 @@ export function NeedsAttention({
               <div
                 className={cn(
                   "flex items-baseline gap-2 px-[18px] pb-1 pt-3 font-ui text-[10.5px] font-bold uppercase tracking-[0.12em]",
-                  group.tone === "bad" ? "text-bad" : group.tone === "warn" ? "text-warn" : "text-tk-slate/70"
+                  group.tone === "bad" ? "text-bad" : group.tone === "warn" ? "text-warn" : "text-ink-3"
                 )}
               >
                 {group.label}
@@ -271,7 +271,7 @@ export function NeedsAttention({
       )}
 
       {more && more.count > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-tk-slate/10 px-[18px] py-2.5 text-xs text-tk-slate/70">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-[18px] py-2.5 text-xs text-ink-3">
           <span className="min-w-0 truncate">
             {more.count} more {more.label}
             {more.byClient.length
@@ -311,8 +311,8 @@ function FilterChip({
       className={cn(
         "inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 font-ui text-xs font-semibold transition-colors",
         active
-          ? "border border-tk-slate/15 bg-tk-linen text-tk-onyx"
-          : "border border-transparent text-tk-slate hover:bg-tk-linen hover:text-tk-onyx"
+          ? "border border-line bg-well text-tk-onyx"
+          : "border border-transparent text-tk-slate hover:bg-well transition-colors duration-[120ms] hover:text-tk-onyx"
       )}
     >
       {children}
@@ -324,7 +324,7 @@ function FilterChip({
               ? "bg-bad/10 text-bad"
               : count > 0 && tone === "warn"
                 ? "bg-warn/10 text-warn"
-                : "border border-tk-slate/15 bg-white text-tk-slate/70"
+                : "border border-line bg-card text-ink-3"
           )}
         >
           {count}
@@ -412,7 +412,7 @@ function SortableAttentionItem({
       dragHandle={
         <button
           type="button"
-          className="grid size-7 shrink-0 touch-none cursor-grab place-items-center rounded-md text-tk-slate/35 opacity-0 transition-opacity hover:bg-tk-slate/5 hover:text-tk-slate focus-visible:opacity-100 group-hover:opacity-100 active:cursor-grabbing"
+          className="grid size-7 shrink-0 touch-none cursor-grab place-items-center rounded-md text-ink-3 opacity-0 transition-opacity hover:bg-well hover:text-tk-slate focus-visible:opacity-100 group-hover:opacity-100 active:cursor-grabbing"
           aria-label={`Drag to reorder ${item.title}`}
           {...listeners}
           {...attributes}
@@ -431,7 +431,7 @@ function SortableAttentionItem({
         zIndex: isDragging ? 20 : undefined,
       }}
       className={cn(
-        isDragging && "relative opacity-70 shadow-xl",
+        isDragging && "relative opacity-70 shadow-overlay",
         isOver && !isDragging && "ring-2 ring-inset ring-tk-teal/45"
       )}
     />
@@ -480,7 +480,7 @@ function AttentionItemView({
         ref={itemRef}
         style={{ ...style, ...clientTint(item.color) }}
         className={cn(
-          "relative flex min-h-36 flex-col rounded-lg border border-t-4 bg-white shadow-card transition-[box-shadow,transform]",
+          "relative flex min-h-36 flex-col rounded-lg border border-t-4 bg-card shadow-card transition-[box-shadow,transform]",
           className
         )}
       >
@@ -524,7 +524,7 @@ function AttentionItemView({
       ref={itemRef}
       style={style}
       className={cn(
-        "group grid grid-cols-[28px_22px_minmax(0,1fr)_auto] items-center gap-2 rounded-lg bg-white px-1.5 py-1.5 transition-[box-shadow,background-color,transform] hover:bg-tk-linen",
+        "group grid grid-cols-[28px_22px_minmax(0,1fr)_auto] items-center gap-2 rounded-lg bg-card px-1.5 py-1.5 transition-[box-shadow,background-color,transform] hover:bg-well transition-colors duration-[120ms]",
         className
       )}
     >
@@ -538,7 +538,7 @@ function AttentionItemView({
       ) : (
         <span
           aria-hidden
-          className="size-[18px] justify-self-center rounded-full border-[1.5px] border-dashed border-tk-slate/25"
+          className="size-[18px] justify-self-center rounded-full border-[1.5px] border-dashed border-line-strong"
         />
       )}
       <Link
@@ -549,7 +549,7 @@ function AttentionItemView({
         <span className="min-w-0 truncate text-[13.5px] font-medium text-tk-onyx">
           {item.title}
         </span>
-        <span className="flex min-w-0 items-center gap-2 text-[11.5px] text-tk-slate/70">
+        <span className="flex min-w-0 items-center gap-2 text-[11.5px] text-ink-3">
           {meta ? <ClientChip name={meta} color={item.color} /> : null}
           {item.detail ? (
             <span className={cn("min-w-0 truncate", item.tone === "neutral" ? "" : cn("font-semibold", TONE[item.tone]))}>
@@ -567,7 +567,7 @@ function AttentionItemView({
           <span
             className={cn(
               "whitespace-nowrap font-ui text-[11.5px] font-semibold",
-              item.whenTone ? TONE[item.whenTone] : "text-tk-slate/70"
+              item.whenTone ? TONE[item.whenTone] : "text-ink-3"
             )}
           >
             {item.when}
@@ -596,8 +596,8 @@ function CompleteButton({
       title="Mark done"
       className={cn(
         "group/check grid size-[20px] shrink-0 place-items-center justify-self-center rounded-full border-[1.5px] text-transparent transition-all",
-        "border-tk-slate/25 hover:border-tk-teal hover:bg-tk-teal hover:text-white hover:shadow-sm",
-        "disabled:cursor-wait disabled:border-tk-teal disabled:bg-tk-teal disabled:text-white disabled:opacity-70"
+        "border-line-strong hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:bg-accent hover:text-white hover:shadow-hover",
+        "disabled:cursor-wait disabled:border-tk-teal disabled:bg-accent disabled:text-white disabled:opacity-70"
       )}
     >
       {completing ? <Spinner /> : <CheckIcon />}
@@ -653,8 +653,8 @@ function LayoutButton({
       className={cn(
         "grid size-7 place-items-center rounded-md transition-colors",
         active
-          ? "bg-white text-tk-onyx shadow-card"
-          : "text-tk-slate/45 hover:text-tk-slate"
+          ? "bg-card text-tk-onyx shadow-card"
+          : "text-ink-3 hover:text-tk-slate"
       )}
     >
       {icon === "rows" ? <RowsIcon /> : <CardsIcon />}

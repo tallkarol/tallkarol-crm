@@ -21,7 +21,7 @@ export default async function DevicesPage() {
   return (
     <>
       <PageHeader title="Devices" />
-      <p className="mt-2 max-w-2xl text-sm text-tk-slate/70">
+      <p className="mt-2 max-w-2xl text-sm text-ink-3">
         A watch, a phone, or a shortcut cannot carry your browser session, so
         each one gets its own token. Revoking one leaves every other device
         working.

@@ -131,14 +131,14 @@ export function VaultRow({
             <button
               type="submit"
               disabled={pending}
-              className="rounded-lg bg-tk-teal px-3.5 py-1.5 text-[13px] font-semibold text-tk-linen hover:bg-tk-teal/90 disabled:opacity-60"
+              className="rounded-lg bg-accent px-3.5 py-1.5 text-[13px] font-semibold text-tk-linen hover:bg-tk-teal/90 disabled:opacity-60"
             >
               {pending ? "Saving…" : "Save"}
             </button>
             <button
               type="button"
               onClick={() => setEditing(false)}
-              className="rounded-lg border border-tk-slate/20 px-3.5 py-1.5 text-[13px] font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+              className="rounded-lg border border-line px-3.5 py-1.5 text-[13px] font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
             >
               Cancel
             </button>
@@ -172,11 +172,11 @@ export function VaultRow({
           ) : (
             <span className="truncate font-medium text-tk-onyx">{entry.title}</span>
           )}
-          <span className="rounded-full bg-tk-slate/10 px-2 py-0.5 text-[11px] font-semibold text-tk-slate/65">
+          <span className="rounded-full bg-well px-2 py-0.5 text-[11px] font-semibold text-ink-3">
             {VAULT_KIND_LABEL[entry.kind]}
           </span>
         </span>
-        <span className="mt-0.5 block truncate text-xs text-tk-slate/60">
+        <span className="mt-0.5 block truncate text-xs text-ink-3">
           {entry.username || "no username"}
           {entry.notes ? ` · ${entry.notes}` : ""}
         </span>
@@ -245,7 +245,7 @@ export function VaultRow({
           <button
             type="submit"
             aria-label={`Delete ${entry.title}`}
-            className="rounded-full px-2 py-1 text-[11px] font-semibold text-tk-slate/50 hover:text-red-700"
+            className="rounded-full px-2 py-1 text-[11px] font-semibold text-ink-3 hover:text-red-700"
           >
             ✕
           </button>
@@ -266,20 +266,20 @@ function Field({
 }) {
   return (
     <label className={cn("block text-sm", className)}>
-      <span className="text-xs font-medium text-tk-slate/70">{label}</span>
+      <span className="text-xs font-medium text-ink-3">{label}</span>
       {children}
     </label>
   )
 }
 
 const fieldClass =
-  "mt-1 w-full rounded-lg border border-tk-slate/20 bg-tk-linen px-3 py-2 text-sm outline-none focus:border-tk-teal"
+  "mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal"
 
 function chipClass(done: boolean) {
   return cn(
     "rounded-md border px-2 py-0.5 font-mono text-[10.5px]",
     done
-      ? "border-tk-teal bg-tk-teal text-tk-linen"
-      : "border-tk-slate/20 text-tk-slate/70 hover:border-tk-teal hover:text-tk-teal"
+      ? "border-tk-teal bg-accent text-tk-linen"
+      : "border-line text-ink-3 hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
   )
 }

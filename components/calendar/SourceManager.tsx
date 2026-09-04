@@ -13,9 +13,9 @@ import type { CalendarSourceKind } from "@/db/schema"
 import { cn } from "@/lib/cn"
 
 const field =
-  "mt-1 w-full rounded-xl border border-tk-slate/20 bg-white px-3 py-2 text-sm text-tk-onyx outline-none focus:border-tk-teal"
+  "mt-1 w-full rounded-xl border border-line bg-card px-3 py-2 text-sm text-tk-onyx outline-none focus:border-tk-teal"
 const label =
-  "text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60"
+  "text-[11px] font-semibold uppercase tracking-wide text-ink-3"
 
 function relative(iso: string | null) {
   if (!iso) return "never"
@@ -62,8 +62,8 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
         />
       </div>
 
-      <section className="mt-6 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-        <div className="flex items-center justify-between gap-3 border-b border-tk-slate/10 px-5 py-3">
+      <section className="mt-6 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+        <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3">
           <h2 className="text-sm font-semibold text-tk-onyx">Connected</h2>
           <button
             type="button"
@@ -77,18 +77,18 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
                   : { ok: true }
               }, "Synced.")
             }
-            className="rounded-full border border-tk-slate/20 px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal disabled:opacity-50"
+            className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal disabled:opacity-50"
           >
             {pending ? "Working…" : "Sync all"}
           </button>
         </div>
 
         {snapshot.sources.length === 0 ? (
-          <p className="px-5 py-8 text-sm text-tk-slate/70">
+          <p className="px-5 py-8 text-sm text-ink-3">
             Nothing connected yet.
           </p>
         ) : (
-          <ul className="divide-y divide-tk-slate/10">
+          <ul className="divide-y divide-line">
             {snapshot.sources.map((source) => (
               <li key={source.id} className="px-5 py-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -108,14 +108,14 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
                       {!source.enabled ? <Badge tone="muted">Off</Badge> : null}
                     </div>
                     {source.externalId ? (
-                      <p className="mt-1 break-all text-sm text-tk-slate/70">
+                      <p className="mt-1 break-all text-sm text-ink-3">
                         {source.externalId}
                       </p>
                     ) : null}
                     <p
                       className={cn(
                         "mt-1 text-xs",
-                        source.lastError ? "text-tk-slate" : "text-tk-slate/55"
+                        source.lastError ? "text-tk-slate" : "text-ink-3"
                       )}
                     >
                       {source.lastError
@@ -135,7 +135,7 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
                           })
                         )
                       }
-                      className="rounded-full border border-tk-slate/20 px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal disabled:opacity-50"
+                      className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal disabled:opacity-50"
                     >
                       {source.enabled ? "Turn off" : "Turn on"}
                     </button>
@@ -150,7 +150,7 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
                             `${source.label} now receives events made here.`
                           )
                         }
-                        className="rounded-full border border-tk-slate/20 px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal disabled:opacity-50"
+                        className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal disabled:opacity-50"
                       >
                         Make destination
                       </button>
@@ -159,7 +159,7 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
                       type="button"
                       disabled={pending}
                       onClick={() => act(() => deleteCalendarSource(source.id))}
-                      className="rounded-full border border-tk-slate/20 px-3 py-1.5 text-xs font-semibold text-tk-slate/70 hover:border-tk-slate/50 disabled:opacity-50"
+                      className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-ink-3 hover:border-line-strong disabled:opacity-50"
                     >
                       Remove
                     </button>
@@ -172,12 +172,12 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
       </section>
 
       {notice ? (
-        <p className="mt-3 rounded-2xl border border-tk-slate/15 bg-white px-4 py-2.5 text-sm text-tk-slate/80 shadow-sm">
+        <p className="mt-3 rounded-2xl border border-line bg-card px-4 py-2.5 text-sm text-tk-slate shadow-card">
           {notice}
         </p>
       ) : null}
 
-      <section className="mt-6 rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
+      <section className="mt-6 rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
         <h2 className="text-sm font-semibold text-tk-onyx">Connect a calendar</h2>
 
         <div className="mt-3 flex flex-wrap gap-2">
@@ -190,8 +190,8 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
               className={cn(
                 "rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-40",
                 kind === option
-                  ? "bg-tk-teal text-tk-linen"
-                  : "border border-tk-slate/20 text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+                  ? "bg-accent text-tk-linen"
+                  : "border border-line text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
               )}
             >
               {SOURCE_KIND_LABEL[option]}
@@ -235,13 +235,13 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
               return result
             }, "Connected. Run a sync to pull events.")
           }
-          className="mt-4 rounded-full bg-tk-teal px-4 py-2 text-xs font-semibold text-tk-linen disabled:opacity-50"
+          className="mt-4 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-tk-linen disabled:opacity-50"
         >
           Connect
         </button>
 
         {kind === "google" ? (
-          <p className="mt-3 max-w-2xl text-xs text-tk-slate/60">
+          <p className="mt-3 max-w-2xl text-xs text-ink-3">
             In Google Calendar, open that calendar’s settings → <em>Share with
             specific people</em> → add the service account address. Use{" "}
             <em>See all event details</em> to read it, or <em>Make changes to
@@ -265,9 +265,9 @@ function ConfigRow({
   missingText: string
 }) {
   return (
-    <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-3 shadow-sm">
+    <div className="rounded-2xl border border-line bg-card px-5 py-3 shadow-card">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
           {title}
         </p>
         <Badge tone={ok ? "teal" : "muted"}>{ok ? "Ready" : "Missing"}</Badge>

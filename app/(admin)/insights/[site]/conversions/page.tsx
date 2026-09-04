@@ -48,7 +48,7 @@ export default async function InsightsConversionsPage({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-tk-slate/60">
+        <p className="text-xs text-ink-3">
           {win.label} · GA4 events joined with this CRM&rsquo;s inquiries
         </p>
         <RangeSwitcher />
@@ -65,14 +65,14 @@ export default async function InsightsConversionsPage({
       <div className="mt-3 grid gap-3 xl:grid-cols-12">
         <Card title="Inquiries in this window" className="xl:col-span-8">
           {crm.recent.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-tk-slate/70">
+            <p className="px-5 py-6 text-sm text-ink-3">
               No inquiries landed in this window.
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[520px] border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-tk-slate/12 text-left text-[10px] font-bold uppercase tracking-wide text-tk-slate/55">
+                  <tr className="border-b border-line text-left text-[10px] font-bold uppercase tracking-wide text-ink-3">
                     <th className="px-5 py-2 font-bold">Who</th>
                     <th className="px-3 py-2 font-bold">Source</th>
                     <th className="px-3 py-2 font-bold">Qualification</th>
@@ -81,7 +81,7 @@ export default async function InsightsConversionsPage({
                 </thead>
                 <tbody>
                   {crm.recent.map((row) => (
-                    <tr key={row.id} className="border-b border-tk-slate/[.06] last:border-0">
+                    <tr key={row.id} className="border-b border-line last:border-0">
                       <td className="px-5 py-2.5">
                         <Link
                           href={`/inquiries/${row.id}`}
@@ -90,10 +90,10 @@ export default async function InsightsConversionsPage({
                           {row.name}
                         </Link>
                         {row.company ? (
-                          <span className="ml-1.5 text-tk-slate/55">· {row.company}</span>
+                          <span className="ml-1.5 text-ink-3">· {row.company}</span>
                         ) : null}
                       </td>
-                      <td className="px-3 py-2.5 text-tk-slate/80">
+                      <td className="px-3 py-2.5 text-tk-slate">
                         {row.sourceLabel ?? "—"}
                       </td>
                       <td className="px-3 py-2.5">
@@ -101,7 +101,7 @@ export default async function InsightsConversionsPage({
                           {row.qualification}
                         </Badge>
                       </td>
-                      <td className="px-5 py-2.5 text-right tabular-nums text-tk-slate/70">
+                      <td className="px-5 py-2.5 text-right tabular-nums text-ink-3">
                         {new Date(row.createdAt).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
@@ -113,7 +113,7 @@ export default async function InsightsConversionsPage({
               </table>
             </div>
           )}
-          <p className="border-t border-tk-slate/[.06] px-5 py-2.5 text-[11px] text-tk-slate/55">
+          <p className="border-t border-line px-5 py-2.5 text-[11px] text-ink-3">
             Attribution is first/last-touch from the intake form.{" "}
             <Link href="/leads" className="font-semibold text-tk-teal hover:underline">
               Work the leads →
@@ -127,7 +127,7 @@ export default async function InsightsConversionsPage({
           className="xl:col-span-4"
         >
           {leadEvents.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-tk-slate/70">
+            <p className="px-5 py-6 text-sm text-ink-3">
               No lead, form, or CTA events in the window yet.
             </p>
           ) : (
@@ -135,7 +135,7 @@ export default async function InsightsConversionsPage({
               {leadEvents.map((row) => (
                 <p
                   key={row.name}
-                  className="flex justify-between border-b border-tk-slate/[.06] px-5 py-2 text-xs last:border-0"
+                  className="flex justify-between border-b border-line px-5 py-2 text-xs last:border-0"
                 >
                   <span className="font-medium text-tk-onyx">{row.name}</span>
                   <span className="tabular-nums text-tk-onyx">{fmtInt(row.value)}</span>

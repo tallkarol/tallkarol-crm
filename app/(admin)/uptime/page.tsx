@@ -40,16 +40,16 @@ export default async function UptimePage({
 
       <section className="mt-6">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/55">
+          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
             Apps
           </h2>
           {!WIRED ? (
-            <p className="rounded-full border border-dashed border-tk-slate/25 px-2 py-0.5 font-mono text-[10.5px] text-tk-slate/55">
+            <p className="rounded-full border border-dashed border-line-strong px-2 py-0.5 font-mono text-[10.5px] text-ink-3">
               preview · nothing polled yet
             </p>
           ) : null}
         </div>
-        <p className="mt-1.5 font-mono text-[11.5px] text-tk-slate/55">
+        <p className="mt-1.5 font-mono text-[11.5px] text-ink-3">
           {APP_HEALTH.length} {APP_HEALTH.length === 1 ? "app" : "apps"} · server,
           frontend, latest run, email
         </p>
@@ -65,13 +65,13 @@ export default async function UptimePage({
       </section>
 
       <section className="mt-8">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/55">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
           Sites
         </h2>
         {sites.rows.length === 0 ? (
-          <div className="mt-2 max-w-2xl rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 p-6 text-sm text-tk-slate">
+          <div className="mt-2 max-w-2xl rounded-2xl border border-dashed border-line bg-well p-6 text-sm text-tk-slate">
             <p className="font-semibold text-tk-onyx">No site monitors wired</p>
-            <p className="mt-1.5 text-tk-slate/70">
+            <p className="mt-1.5 text-ink-3">
               {sites.configured
                 ? "UptimeRobot is reachable. Attach a monitor id to a site:"
                 : "Add a read-only UPTIMEROBOT_API_KEY, then attach a monitor id to a site:"}
@@ -83,7 +83,7 @@ npm run site:set -- <slug> uptimeMonitorId <id>`}</code>
           </div>
         ) : (
           <>
-            <p className="mt-1.5 font-mono text-[11.5px] text-tk-slate/55">
+            <p className="mt-1.5 font-mono text-[11.5px] text-ink-3">
               {sites.rows.length} {sites.rows.length === 1 ? "monitor" : "monitors"}
               {sites.error ? ` · ${sites.error}` : down ? ` · ${down} down` : " · all up"}
             </p>
@@ -101,13 +101,13 @@ npm run site:set -- <slug> uptimeMonitorId <id>`}</code>
       </section>
 
       <section className="mt-8">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/55">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
           Jobs
         </h2>
         {board.length === 0 ? (
-          <div className="mt-2 max-w-2xl rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 p-6 text-sm text-tk-slate">
+          <div className="mt-2 max-w-2xl rounded-2xl border border-dashed border-line bg-well p-6 text-sm text-tk-slate">
             <p className="font-semibold text-tk-onyx">No jobs yet</p>
-            <p className="mt-1.5 text-tk-slate/70">
+            <p className="mt-1.5 text-ink-3">
               A job monitor is a scheduled run you expect to see. Wire the app, then add the job:
             </p>
             <pre className="mt-3 overflow-x-auto rounded-lg bg-tk-onyx px-3.5 py-3 font-mono text-[11.5px] leading-relaxed text-[#CFD8D4]">
@@ -115,19 +115,19 @@ npm run site:set -- <slug> uptimeMonitorId <id>`}</code>
 npm run wire:monitor -- artist-house-daily-ingest "Daily ingest" \\
   artist-house 1440 180 "11:30 UTC daily" 720`}</code>
             </pre>
-            <p className="mt-3 text-tk-slate/70">
+            <p className="mt-3 text-ink-3">
               The app posts each run to{" "}
-              <code className="rounded bg-tk-linen px-1 py-0.5 text-xs">/api/events/run</code>. A
+              <code className="rounded bg-well px-1 py-0.5 text-xs">/api/events/run</code>. A
               window that closes with no run raises a ticket on its own.
             </p>
           </div>
         ) : (
           <>
-            <p className="mt-1.5 font-mono text-[11.5px] text-tk-slate/55">
+            <p className="mt-1.5 font-mono text-[11.5px] text-ink-3">
               {board.length} {board.length === 1 ? "job" : "jobs"}
               {failing ? ` · ${failing} failing` : " · all healthy"}
             </p>
-            <div className="mt-3 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+            <div className="mt-3 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
               {board.map(({ monitor, runs }) => {
                 const ticket = monitor.openTicketId ? ticketById.get(monitor.openTicketId) : null
                 return (
@@ -147,11 +147,11 @@ npm run wire:monitor -- artist-house-daily-ingest "Daily ingest" \\
                 )
               })}
             </div>
-            <p className="mt-3 text-xs text-tk-slate/55">
+            <p className="mt-3 text-xs text-ink-3">
               Each monitor sets how often a missed window is looked for, so detection
             follows the engagement rather than one global setting. The sweeper runs on
             Railway cron —{" "}
-              <code className="rounded bg-tk-linen px-1 py-0.5 text-[11px]">
+              <code className="rounded bg-well px-1 py-0.5 text-[11px]">
                 GET /api/monitors/sweep
               </code>{" "}
               on Railway cron. Tickets it raises land in{" "}

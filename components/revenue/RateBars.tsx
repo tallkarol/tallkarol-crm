@@ -10,15 +10,15 @@ export function RateBars({ rows }: { rows: ClientRow[] }) {
   const max = Math.max(...ranked.map((row) => row.hourlyCents ?? 0), 1)
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-      <div className="border-b border-tk-slate/10 px-5 py-3.5">
+    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <div className="border-b border-line px-5 py-3.5">
         <h2 className="text-sm font-semibold text-tk-onyx">Per hour</h2>
-        <p className="mt-0.5 text-xs text-tk-slate/60">
+        <p className="mt-0.5 text-xs text-ink-3">
           Billed ÷ hours on the invoice
         </p>
       </div>
       {ranked.length === 0 ? (
-        <p className="px-5 py-8 text-sm text-tk-slate/70">
+        <p className="px-5 py-8 text-sm text-ink-3">
           No hourly invoices in this window.
         </p>
       ) : (
@@ -47,7 +47,7 @@ export function RateBars({ rows }: { rows: ClientRow[] }) {
                   <span className="font-semibold text-tk-onyx">
                     {formatMoney(rate)}
                   </span>
-                  <span className="block text-[10px] font-medium text-tk-slate/50">
+                  <span className="block text-[10px] font-medium text-ink-3">
                     {fmtHours(row.invoiceHours)} hr
                   </span>
                 </p>

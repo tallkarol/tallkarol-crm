@@ -35,7 +35,7 @@ export const PRODUCT_STATUS_LABEL: Record<ProductStatus, string> = {
 export function productStatusClass(status: ProductStatus) {
   if (status === "live") return "bg-emerald-800/10 text-emerald-800"
   if (status === "paused") return "bg-amber-800/10 text-amber-800"
-  if (status === "idea") return "bg-tk-slate/10 text-tk-slate/70"
+  if (status === "idea") return "bg-well text-ink-3"
   return "bg-tk-teal/10 text-tk-teal"
 }
 

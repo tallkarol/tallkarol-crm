@@ -13,9 +13,9 @@ export default async function PaidAdsIndexPage() {
   return (
     <>
       <PageHeader title="Paid Ads" />
-      <div className="mt-10 rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 px-6 py-10 text-center shadow-sm">
+      <div className="mt-10 rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
         <p className="text-sm font-semibold text-tk-onyx">No Ads accounts yet</p>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           Attach a customer id with <code>npm run site:set -- &lt;slug&gt; adsCustomerId &lt;id&gt;</code>,
           then refresh the snapshot from Analytics.
         </p>

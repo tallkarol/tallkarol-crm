@@ -67,7 +67,7 @@ function PageTable({
     <div className="overflow-x-auto px-5 pb-4 pt-3">
       <table className="w-full min-w-[640px] text-sm">
         <thead>
-          <tr className="border-b border-tk-slate/15 text-[10.5px] uppercase tracking-wide text-tk-slate/55">
+          <tr className="border-b border-line text-[10.5px] uppercase tracking-wide text-ink-3">
             <th className="pb-2 pr-3 text-left font-semibold">Page</th>
             <th className="pb-2 px-2 text-right font-semibold">Sessions</th>
             <th className="pb-2 px-2 text-right font-semibold">Form starts</th>
@@ -81,13 +81,13 @@ function PageTable({
             const base = countsFor(baseline, page.key)
             const now = countsFor(latest, page.key)
             return (
-              <tr key={page.key} className="border-b border-tk-slate/8 last:border-0">
+              <tr key={page.key} className="border-b border-line last:border-0">
                 <td className="py-2 pr-3">
                   <span className="flex flex-wrap items-center gap-1.5">
                     <span className="font-semibold text-tk-onyx">{page.label}</span>
                     <Badge tone={ROLE_TONE[page.role]}>{page.role}</Badge>
                   </span>
-                  <span className="mt-0.5 block font-mono text-[11px] text-tk-slate/50">
+                  <span className="mt-0.5 block font-mono text-[11px] text-ink-3">
                     {page.path}
                   </span>
                 </td>
@@ -107,7 +107,7 @@ function PageTable({
           })}
         </tbody>
       </table>
-      <p className="mt-2 text-[11px] text-tk-slate/55">
+      <p className="mt-2 text-[11px] text-ink-3">
         Small figure is the baseline; large figure is {latestLabel}.
       </p>
     </div>
@@ -120,7 +120,7 @@ function Cells({ base, now }: { base: number | null; now: number | null }) {
       <span className="block font-semibold text-tk-onyx">
         {now === null ? "—" : fmtInt(now)}
       </span>
-      <span className="block text-[11px] text-tk-slate/50">
+      <span className="block text-[11px] text-ink-3">
         {base === null ? "—" : fmtInt(base)}
       </span>
     </td>
@@ -131,7 +131,7 @@ function RateCells({ base, now }: { base: number | null; now: number | null }) {
   return (
     <td className="px-2 py-2 text-right tabular-nums">
       <span className="block font-semibold text-tk-onyx">{pct(now)}</span>
-      <span className="block text-[11px] text-tk-slate/50">{pct(base)}</span>
+      <span className="block text-[11px] text-ink-3">{pct(base)}</span>
     </td>
   )
 }
@@ -177,15 +177,15 @@ function ExperimentCard({
       }
     >
       <div className="px-5 pb-1 pt-2">
-        <p className="text-[11px] text-tk-slate/55">
+        <p className="text-[11px] text-ink-3">
           Shipped {fmtDayYear(experiment.startedOn)} · baseline{" "}
           {fmtDayYear(experiment.baselineFrom)} → {fmtDayYear(experiment.baselineTo)}
         </p>
         {experiment.changeNote ? (
-          <p className="mt-2 text-sm text-tk-slate/80">{experiment.changeNote}</p>
+          <p className="mt-2 text-sm text-tk-slate">{experiment.changeNote}</p>
         ) : null}
         {experiment.hypothesis ? (
-          <p className="mt-2 border-l-2 border-tk-teal/40 pl-3 text-sm italic text-tk-slate/70">
+          <p className="mt-2 border-l-2 border-tk-teal/40 pl-3 text-sm italic text-ink-3">
             {experiment.hypothesis}
           </p>
         ) : null}
@@ -201,15 +201,15 @@ function ExperimentCard({
       ) : null}
 
       {locationRows.length ? (
-        <div className="border-t border-tk-slate/10 px-5 py-3">
-          <p className="text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/55">
+        <div className="border-t border-line px-5 py-3">
+          <p className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">
             By form location — {latestCaptured ? CHECKPOINT_LABEL[latestCaptured] : ""}
           </p>
           <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1.5">
             {locationRows.map(({ spec, counts }) => (
               <span key={spec.key} className="text-sm">
                 <span className="font-semibold text-tk-onyx">{spec.label}</span>{" "}
-                <span className="tabular-nums text-tk-slate/70">
+                <span className="tabular-nums text-ink-3">
                   {fmtInt(counts!.formStarts)} starts · {fmtInt(counts!.leads)} enquiries
                 </span>
               </span>
@@ -218,13 +218,13 @@ function ExperimentCard({
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-tk-slate/10 px-5 py-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line px-5 py-3">
         {CHECKPOINTS.map((checkpoint) => {
           const window = checkpointWindow(experiment, checkpoint)
           const captured = Boolean(readingFor(experiment, checkpoint))
           return (
             <span key={checkpoint} className="flex items-center gap-1.5">
-              <span className="text-[11px] font-semibold text-tk-slate/70">
+              <span className="text-[11px] font-semibold text-ink-3">
                 {CHECKPOINT_LABEL[checkpoint]}
               </span>
               <CaptureReading
@@ -242,7 +242,7 @@ function ExperimentCard({
       </div>
 
       {caveats.length ? (
-        <ul className="border-t border-tk-slate/10 px-5 py-3 text-[11px] text-tk-slate/55">
+        <ul className="border-t border-line px-5 py-3 text-[11px] text-ink-3">
           {caveats.map((caveat) => (
             <li key={caveat} className="before:mr-1.5 before:content-['·']">
               {caveat}
@@ -251,7 +251,7 @@ function ExperimentCard({
         </ul>
       ) : null}
 
-      <div className="border-t border-tk-slate/10 px-5 py-3">
+      <div className="border-t border-line px-5 py-3">
         <ExperimentOutcome
           siteSlug={siteSlug}
           experimentSlug={experiment.slug}
@@ -277,12 +277,12 @@ export default async function InsightsExperimentsPage({
 
   if (!all.length) {
     return (
-      <div className="rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 px-6 py-10 text-center shadow-sm">
+      <div className="rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
         <p className="text-sm font-semibold text-tk-onyx">No experiments yet</p>
-        <p className="mx-auto mt-1 max-w-md text-sm text-tk-slate/70">
+        <p className="mx-auto mt-1 max-w-md text-sm text-ink-3">
           An experiment is a change you made on purpose, with readings taken at
           30, 60 and 90 days so you can see what it did. Seed one with{" "}
-          <code className="rounded bg-tk-linen px-1 py-0.5 font-mono text-[11px]">
+          <code className="rounded bg-well px-1 py-0.5 font-mono text-[11px]">
             npm run experiment:seed
           </code>
           .

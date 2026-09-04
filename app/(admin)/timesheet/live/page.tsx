@@ -36,7 +36,7 @@ export default async function ClockPage() {
 
       <section>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
             Recently closed out
           </h2>
           <Link
@@ -48,37 +48,37 @@ export default async function ClockPage() {
         </div>
 
         {recent.length === 0 ? (
-          <p className="mt-3 text-sm text-tk-slate/60">
+          <p className="mt-3 text-sm text-ink-3">
             Nothing approved or discarded yet. Punches land in Review first.
           </p>
         ) : (
-          <ul className="mt-2 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+          <ul className="mt-2 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
             {recent.map((punch) => (
               <li
                 key={punch.id}
-                className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-tk-slate/10 px-5 py-3 text-sm last:border-0"
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line px-5 py-3 text-sm last:border-0"
               >
                 <span className="font-medium text-tk-onyx">
                   {punch.projectName
                     ? `${punch.clientName} · ${punch.projectName}`
                     : punch.clientName}
                 </span>
-                <span className="text-tk-slate/60">
+                <span className="text-ink-3">
                   {punch.startClock} – {punch.endClock}
                 </span>
-                <span className="ml-auto font-mono text-xs tabular-nums text-tk-slate/70">
+                <span className="ml-auto font-mono text-xs tabular-nums text-ink-3">
                   {punch.hours.toFixed(2)} hr
                 </span>
                 <span
                   className={
                     punch.status === "approved"
                       ? "rounded-full bg-tk-teal/10 px-2 py-0.5 text-[11px] font-semibold text-tk-teal"
-                      : "rounded-full bg-tk-slate/10 px-2 py-0.5 text-[11px] font-semibold text-tk-slate/70"
+                      : "rounded-full bg-well px-2 py-0.5 text-[11px] font-semibold text-ink-3"
                   }
                 >
                   {punch.status === "approved" ? "On the sheet" : "Discarded"}
                 </span>
-                <span className="text-[11px] text-tk-slate/45">
+                <span className="text-[11px] text-ink-3">
                   {sourceLabel(punch.source)}
                 </span>
               </li>
@@ -87,7 +87,7 @@ export default async function ClockPage() {
         )}
       </section>
 
-      <p className="text-sm text-tk-slate/55">
+      <p className="text-sm text-ink-3">
         Punching from a watch or phone app? Issue a device token in{" "}
         <Link
           href={ROUTES.settingsDevices}

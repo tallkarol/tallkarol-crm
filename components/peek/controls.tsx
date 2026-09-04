@@ -67,7 +67,7 @@ export function PickButtons({
     <div>
       <div
         className={cn(
-          "inline-flex flex-wrap gap-1 rounded-xl border border-tk-slate/15 bg-tk-linen/40 p-1",
+          "inline-flex flex-wrap gap-1 rounded-xl border border-line bg-well p-1",
           pending && "opacity-70"
         )}
         role="group"
@@ -86,11 +86,11 @@ export function PickButtons({
                 size === "md" ? "px-3 py-1.5 text-xs" : "px-2 py-1 text-[11px]",
                 isActive
                   ? opt.tone === "danger"
-                    ? "bg-[#A62228] text-white"
+                    ? "bg-bad text-white"
                     : opt.tone === "neutral"
                       ? "bg-tk-onyx text-tk-linen"
-                      : "bg-tk-teal text-tk-linen"
-                  : "text-tk-slate/70 hover:bg-white hover:text-tk-onyx"
+                      : "bg-accent text-tk-linen"
+                  : "text-ink-3 hover:bg-card hover:text-tk-onyx"
               )}
             >
               {opt.label}
@@ -98,7 +98,7 @@ export function PickButtons({
           )
         })}
       </div>
-      {error ? <p className="mt-1.5 text-xs text-[#A62228]">{error}</p> : null}
+      {error ? <p className="mt-1.5 text-xs text-bad">{error}</p> : null}
     </div>
   )
 }
@@ -146,7 +146,7 @@ export function DueDateControl({
           value={value ?? ""}
           onChange={(e) => set(e.target.value || null)}
           disabled={pending}
-          className="rounded-lg border border-tk-slate/20 bg-white px-2.5 py-1.5 text-xs font-medium text-tk-onyx disabled:opacity-60"
+          className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-xs font-medium text-tk-onyx disabled:opacity-60"
           aria-label="Due date"
         />
         <QuickChip label="Today" onClick={() => set(todayIso())} disabled={pending} />
@@ -156,7 +156,7 @@ export function DueDateControl({
           <QuickChip label="Clear" onClick={() => set(null)} disabled={pending} muted />
         ) : null}
       </div>
-      {error ? <p className="mt-1.5 text-xs text-[#A62228]">{error}</p> : null}
+      {error ? <p className="mt-1.5 text-xs text-bad">{error}</p> : null}
     </div>
   )
 }
@@ -180,8 +180,8 @@ function QuickChip({
       className={cn(
         "rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors disabled:opacity-50",
         muted
-          ? "border-tk-slate/15 text-tk-slate/55 hover:border-tk-slate/30 hover:text-tk-slate"
-          : "border-tk-slate/20 bg-white text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+          ? "border-line text-ink-3 hover:border-line-strong hover:text-tk-slate"
+          : "border-line bg-card text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
       )}
     >
       {label}
@@ -238,15 +238,15 @@ export function NotesControl({
         }}
         rows={rows}
         placeholder={placeholder}
-        className="w-full resize-y rounded-xl border border-tk-slate/20 bg-white px-3 py-2 text-sm leading-relaxed text-tk-onyx placeholder:text-tk-slate/40 focus:border-tk-teal focus:outline-none"
+        className="w-full resize-y rounded-xl border border-line bg-card px-3 py-2 text-sm leading-relaxed text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:outline-none"
       />
-      <p className="mt-1 min-h-4 text-[11px] text-tk-slate/50">
+      <p className="mt-1 min-h-4 text-[11px] text-ink-3">
         {state === "saving"
           ? "Saving…"
           : state === "saved"
             ? "Saved"
             : state === "error"
-              ? <span className="text-[#A62228]">{error}</span>
+              ? <span className="text-bad">{error}</span>
               : draft !== value
                 ? "Unsaved — click away or ⌘↵ to save"
                 : ""}
@@ -289,11 +289,11 @@ export function PrimaryAction({
         type="button"
         onClick={run}
         disabled={pending || done}
-        className="rounded-xl bg-tk-teal px-4 py-2 text-sm font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90 disabled:opacity-60"
+        className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90 disabled:opacity-60"
       >
         {done ? (doneLabel ?? "Done") : pending ? "Saving…" : label}
       </button>
-      {error ? <p className="text-xs text-[#A62228]">{error}</p> : null}
+      {error ? <p className="text-xs text-bad">{error}</p> : null}
     </div>
   )
 }

@@ -29,11 +29,11 @@ export const dynamic = "force-dynamic"
  */
 
 const CHIP: Record<NoteState, string> = {
-  blocked: "text-[#A62228] bg-[#A62228]/[0.07] ring-[#A62228]/25",
-  parked: "text-[#8A5A05] bg-[#8A5A05]/[0.07] ring-[#8A5A05]/25",
+  blocked: "text-bad bg-bad-soft ring-transparent",
+  parked: "text-warn bg-warn-soft ring-transparent",
   waiting: "text-tk-teal bg-tk-teal/[0.06] ring-tk-teal/25",
-  working: "text-tk-slate bg-tk-linen ring-tk-slate/15",
-  gone: "text-tk-slate/60 bg-transparent ring-tk-slate/15",
+  working: "text-tk-slate bg-well ring-line",
+  gone: "text-ink-3 bg-transparent ring-line",
 }
 
 const SURFACE_LABEL: Record<string, string> = {
@@ -83,7 +83,7 @@ function Meta({ row }: { row: SessionHistoryRow }) {
     .filter(Boolean)
     .join(" · ")
   return (
-    <span className="text-xs font-normal text-tk-slate/60">
+    <span className="text-xs font-normal text-ink-3">
       {SURFACE_LABEL[row.surface] ?? row.surface}
       {where ? ` · ${where}` : ""}
       {row.messageCount ? ` · ${row.messageCount} message${row.messageCount === 1 ? "" : "s"}` : ""}
@@ -101,7 +101,7 @@ function Row({
   children?: React.ReactNode
 }) {
   return (
-    <li className="px-5 py-3 hover:bg-tk-linen/40">
+    <li className="px-5 py-3 hover:bg-well">
       <Link href={href} scroll={false} className="block">
         <p className="flex items-start gap-2 text-sm font-semibold text-tk-onyx">
           <span
@@ -116,7 +116,7 @@ function Row({
             {row.title || "Untitled conversation"} <Meta row={row} />
           </span>
           {row.client ? (
-            <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-normal text-tk-slate/70">
+            <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-normal text-ink-3">
               <span
                 aria-hidden
                 className="size-2 rounded-full"
@@ -207,15 +207,15 @@ export default async function SessionsPage({
       ) : null}
 
       {q ? (
-        <section className="mt-5 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-          <ul className="divide-y divide-tk-slate/10">
+        <section className="mt-5 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+          <ul className="divide-y divide-line">
             {results.map((row) => (
               <Row key={row.sessionRef} row={row} href={peekHref(row.sessionRef)}>
                 {row.hits.length ? (
                   <ul className="mt-1.5 space-y-1">
                     {row.hits.map((hit, i) => (
-                      <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-tk-slate/85">
-                        <span className="mt-px shrink-0 font-mono text-[10px] font-semibold uppercase tracking-wide text-tk-slate/45">
+                      <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-tk-slate">
+                        <span className="mt-px shrink-0 font-mono text-[10px] font-semibold uppercase tracking-wide text-ink-3">
                           {hit.role === "user" ? "you" : "it"}
                         </span>
                         <span className="min-w-0">
@@ -225,11 +225,11 @@ export default async function SessionsPage({
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-0.5 line-clamp-2 text-sm text-tk-slate/70">
+                  <p className="mt-0.5 line-clamp-2 text-sm text-ink-3">
                     {row.summary || row.lastReply}
                   </p>
                 )}
-                <p className="mt-1 text-xs text-tk-slate/45">
+                <p className="mt-1 text-xs text-ink-3">
                   {new Date(row.at).toLocaleDateString("en-US", {
                     weekday: "short",
                     month: "short",
@@ -242,22 +242,22 @@ export default async function SessionsPage({
           </ul>
         </section>
       ) : days.length ? (
-        <section className="mt-5 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+        <section className="mt-5 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
           {days.map((day) => (
             <div key={day.day}>
-              <p className="flex items-baseline gap-2 border-y border-tk-slate/10 bg-tk-linen/40 px-5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-tk-slate/70 first:border-t-0">
+              <p className="flex items-baseline gap-2 border-y border-line bg-well px-5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-ink-3 first:border-t-0">
                 {day.label}
-                <span className="font-normal normal-case tracking-normal text-tk-slate/50">
+                <span className="font-normal normal-case tracking-normal text-ink-3">
                   {day.sessions.length} {day.sessions.length === 1 ? "conversation" : "conversations"}
                 </span>
               </p>
-              <ul className="divide-y divide-tk-slate/10">
+              <ul className="divide-y divide-line">
                 {day.sessions.map((row) => (
                   <Row key={row.sessionRef} row={row} href={peekHref(row.sessionRef)}>
-                    <p className="mt-0.5 line-clamp-2 text-sm text-tk-slate/75">
+                    <p className="mt-0.5 line-clamp-2 text-sm text-tk-slate">
                       {row.summary || row.body || row.lastReply || row.lastPrompt}
                     </p>
-                    <p className="mt-1 text-xs text-tk-slate/45">
+                    <p className="mt-1 text-xs text-ink-3">
                       {[span(row), row.state === "gone" ? "" : agoLabel(new Date(row.at), now)]
                         .filter(Boolean)
                         .join(" · ")}
@@ -276,9 +276,9 @@ export default async function SessionsPage({
 
 function Empty({ title, line }: { title: string; line: string }) {
   return (
-    <div className="mt-6 rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 px-6 py-10 text-center shadow-sm">
+    <div className="mt-6 rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
       <p className="text-sm font-semibold text-tk-onyx">{title}</p>
-      <p className="mt-1 text-sm text-tk-slate/70">{line}</p>
+      <p className="mt-1 text-sm text-ink-3">{line}</p>
     </div>
   )
 }

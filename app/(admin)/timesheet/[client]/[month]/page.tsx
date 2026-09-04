@@ -140,7 +140,7 @@ export default async function SheetPage({
         invoices={sheetInvoices}
       />
 
-      <p className="mt-4 text-sm text-tk-slate/55">
+      <p className="mt-4 text-sm text-ink-3">
         <Link
           href={ROUTES.timesheetSheets}
           className="font-semibold text-tk-teal hover:underline"

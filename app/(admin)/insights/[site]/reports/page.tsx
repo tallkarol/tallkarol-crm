@@ -45,9 +45,9 @@ export default async function InsightsReportsPage({
     <div className="grid gap-3 xl:grid-cols-12">
       <div className="xl:col-span-7">
         {archives.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 px-6 py-10 text-center shadow-sm">
+          <div className="rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
             <p className="text-sm font-semibold text-tk-onyx">No frozen snapshots yet</p>
-            <p className="mx-auto mt-1 max-w-sm text-sm text-tk-slate/70">
+            <p className="mx-auto mt-1 max-w-sm text-sm text-ink-3">
               The first refresh after a month ends freezes it automatically, or
               generate one now from the panel on the right.
             </p>
@@ -60,13 +60,13 @@ export default async function InsightsReportsPage({
               return (
                 <div
                   key={row.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-tk-slate/15 bg-white px-5 py-3.5 shadow-sm"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-card px-5 py-3.5 shadow-card"
                 >
                   <div>
                     <p className="text-sm font-semibold text-tk-onyx">
                       {row.label || row.period} — monthly snapshot
                     </p>
-                    <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-tk-slate/60">
+                    <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-3">
                       {payload?.range ? `${payload.range.start} → ${payload.range.end}` : row.period}
                       {payload?.partial ? <Badge tone="neutral">To date</Badge> : null}
                       <Badge tone={filed ? "muted" : "teal"}>{filed ? "Sent" : "Ready"}</Badge>
@@ -75,21 +75,21 @@ export default async function InsightsReportsPage({
                   <div className="flex flex-wrap items-center gap-1.5">
                     <Link
                       href={`/insights-report/${site.slug}?period=${row.period}`}
-                      className="rounded-md bg-tk-teal px-2.5 py-1 text-[10.5px] font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90"
+                      className="rounded-md bg-accent px-2.5 py-1 text-[10.5px] font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90"
                     >
                       View / PDF
                     </Link>
                     <a
                       href={`/api/insights/export?site=${site.slug}&table=daily&period=${row.period}`}
                       download
-                      className="rounded-md border border-tk-slate/20 bg-white px-2 py-1 text-[10.5px] font-semibold text-tk-slate transition-colors hover:border-tk-teal hover:text-tk-teal"
+                      className="rounded-md border border-line bg-card px-2 py-1 text-[10.5px] font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
                     >
                       Daily CSV ↓
                     </a>
                     <a
                       href={`/api/insights/export?site=${site.slug}&table=queries&period=${row.period}`}
                       download
-                      className="rounded-md border border-tk-slate/20 bg-white px-2 py-1 text-[10.5px] font-semibold text-tk-slate transition-colors hover:border-tk-teal hover:text-tk-teal"
+                      className="rounded-md border border-line bg-card px-2 py-1 text-[10.5px] font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
                     >
                       Queries CSV ↓
                     </a>
@@ -98,7 +98,7 @@ export default async function InsightsReportsPage({
                 </div>
               )
             })}
-            <p className="px-1 text-[11px] text-tk-slate/55">
+            <p className="px-1 text-[11px] text-ink-3">
               A month freezes automatically on the first refresh after it ends,
               and its draft lands on the{" "}
               <Link href="/reports" className="font-semibold text-tk-teal hover:underline">

@@ -23,10 +23,10 @@ export default async function ClientsPage() {
   return (
     <>
       <PageHeader title="Clients" actions={<ClientComposer />} />
-      <p className="mt-1 text-sm text-tk-slate/70">{subtitle}</p>
+      <p className="mt-1 text-sm text-ink-3">{subtitle}</p>
 
       {rows.length === 0 ? (
-        <p className="mt-8 text-sm text-tk-slate/70">No clients yet.</p>
+        <p className="mt-8 text-sm text-ink-3">No clients yet.</p>
       ) : (
         <>
           <StatusBoard rows={rows} />

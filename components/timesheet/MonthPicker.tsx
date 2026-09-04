@@ -62,10 +62,10 @@ export function MonthPicker({
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className="inline-flex min-w-[9.5rem] items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-semibold text-tk-onyx hover:bg-white"
+        className="inline-flex min-w-[9.5rem] items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-semibold text-tk-onyx hover:bg-card"
       >
         {monthLong(month)}
-        <ChevronDown className="size-3.5 text-tk-slate/50" />
+        <ChevronDown className="size-3.5 text-ink-3" />
       </button>
 
       <Stepper
@@ -79,14 +79,14 @@ export function MonthPicker({
         <div
           role="dialog"
           aria-label="Pick a month"
-          className="absolute right-0 top-full z-20 mt-2 w-64 rounded-xl border border-tk-slate/15 bg-white p-3 shadow-lg"
+          className="absolute right-0 top-full z-20 mt-2 w-64 rounded-xl border border-line bg-card p-3 shadow-overlay"
         >
           <div className="flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => setYear((y) => y - 1)}
               aria-label="Previous year"
-              className="flex size-7 items-center justify-center rounded-md text-tk-slate hover:bg-tk-linen"
+              className="flex size-7 items-center justify-center rounded-md text-tk-slate hover:bg-well transition-colors duration-[120ms]"
             >
               <ChevronLeft className="size-4" />
             </button>
@@ -94,7 +94,7 @@ export function MonthPicker({
               value={year}
               onChange={(event) => setYear(Number(event.target.value))}
               aria-label="Year"
-              className="rounded-md border border-tk-slate/20 px-2 py-1 text-xs font-semibold text-tk-onyx outline-none focus:border-tk-teal"
+              className="rounded-md border border-line px-2 py-1 text-xs font-semibold text-tk-onyx outline-none focus:border-tk-teal"
             >
               {years.map((option) => (
                 <option key={option} value={option}>
@@ -106,7 +106,7 @@ export function MonthPicker({
               type="button"
               onClick={() => setYear((y) => y + 1)}
               aria-label="Next year"
-              className="flex size-7 items-center justify-center rounded-md text-tk-slate hover:bg-tk-linen"
+              className="flex size-7 items-center justify-center rounded-md text-tk-slate hover:bg-well transition-colors duration-[120ms]"
             >
               <ChevronRight className="size-4" />
             </button>
@@ -125,10 +125,10 @@ export function MonthPicker({
                   className={cn(
                     "rounded-md px-2 py-2 text-center text-xs font-semibold transition-colors",
                     current
-                      ? "bg-tk-teal text-tk-linen"
+                      ? "bg-accent text-tk-linen"
                       : filled
-                        ? "text-tk-onyx hover:bg-tk-linen"
-                        : "text-tk-slate/35 hover:bg-tk-linen/60"
+                        ? "text-tk-onyx hover:bg-well transition-colors duration-[120ms]"
+                        : "text-ink-3 hover:bg-well"
                   )}
                 >
                   {option.label}
@@ -137,7 +137,7 @@ export function MonthPicker({
             })}
           </div>
 
-          <p className="mt-2 text-[11px] text-tk-slate/50">
+          <p className="mt-2 text-[11px] text-ink-3">
             Dimmed months have no entries.
           </p>
         </div>
@@ -169,7 +169,7 @@ function Stepper({
     <Link
       href={href}
       aria-label={label}
-      className="flex size-8 items-center justify-center rounded-lg text-tk-slate hover:bg-white hover:text-tk-onyx"
+      className="flex size-8 items-center justify-center rounded-lg text-tk-slate hover:bg-card hover:text-tk-onyx"
     >
       {children}
     </Link>

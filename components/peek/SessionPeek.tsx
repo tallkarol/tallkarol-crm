@@ -23,7 +23,7 @@ function Message({ message }: { message: SessionMessageView }) {
   const text = message.text.length > 600 ? `${message.text.slice(0, 599)}…` : message.text
   return (
     <li className="text-[12.5px] leading-relaxed">
-      <p className="font-mono text-[10px] font-semibold uppercase tracking-wide text-tk-slate/45">
+      <p className="font-mono text-[10px] font-semibold uppercase tracking-wide text-ink-3">
         {message.role === "user" ? "You" : "It"}
         {message.at
           ? ` · ${new Date(message.at).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}`
@@ -106,7 +106,7 @@ export async function SessionPeek({ sessionRef }: { sessionRef: string }) {
     <>
       <div className="px-6 pt-5">
         <p className="text-base font-semibold text-tk-onyx">{info.name || "Untitled conversation"}</p>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           {info.surface}
           {" · "}
           <span className="font-mono text-[12px]">{sessionRef.slice(0, 8)}</span>
@@ -130,9 +130,9 @@ export async function SessionPeek({ sessionRef }: { sessionRef: string }) {
         {info.summary ? (
           <p className="mt-3 text-[13.5px] leading-relaxed text-tk-onyx">{info.summary}</p>
         ) : (
-          <p className="mt-3 text-[13px] italic text-tk-slate/60">
+          <p className="mt-3 text-[13px] italic text-ink-3">
             No summary yet — the Mac writes one when the session ends, or on the next
-            <code className="mx-1 rounded bg-tk-linen px-1 not-italic">log-session propose</code>.
+            <code className="mx-1 rounded bg-well px-1 not-italic">log-session propose</code>.
           </p>
         )}
       </div>
@@ -177,7 +177,7 @@ export async function SessionPeek({ sessionRef }: { sessionRef: string }) {
             </p>
           ) : null}
           {resume ? (
-            <p className="mt-2 break-all rounded bg-tk-linen px-2 py-1.5 font-mono text-[11px] text-tk-slate">
+            <p className="mt-2 break-all rounded bg-well px-2 py-1.5 font-mono text-[11px] text-tk-slate">
               {resume}
             </p>
           ) : null}
@@ -202,7 +202,7 @@ export async function SessionPeek({ sessionRef }: { sessionRef: string }) {
             ))}
             {conversation.tail.length &&
             conversation.total > conversation.head.length + conversation.tail.length ? (
-              <li className="text-[11.5px] italic text-tk-slate/50">
+              <li className="text-[11.5px] italic text-ink-3">
                 {conversation.total - conversation.head.length - conversation.tail.length} more in
                 between — search finds them.
               </li>
@@ -230,7 +230,7 @@ export async function SessionPeek({ sessionRef }: { sessionRef: string }) {
             <p className="text-[12.5px] text-tk-slate">{info.repos.join(" · ")}</p>
           ) : null}
           {info.filesTouched.length > 0 ? (
-            <ul className="mt-1 max-h-48 overflow-auto font-mono text-[11.5px] leading-relaxed text-tk-slate/80">
+            <ul className="mt-1 max-h-48 overflow-auto font-mono text-[11.5px] leading-relaxed text-tk-slate">
               {info.filesTouched.map((f, i) => (
                 <li key={i} className="break-all">{f}</li>
               ))}
@@ -241,7 +241,7 @@ export async function SessionPeek({ sessionRef }: { sessionRef: string }) {
 
       <PeekSection title="Billed as">
         {info.entries.length === 0 ? (
-          <p className="text-[12.5px] text-tk-slate/60">Not on the timesheet yet.</p>
+          <p className="text-[12.5px] text-ink-3">Not on the timesheet yet.</p>
         ) : (
           <ul className="space-y-1.5 text-[12.5px] text-tk-slate">
             {info.entries.map((link) => (

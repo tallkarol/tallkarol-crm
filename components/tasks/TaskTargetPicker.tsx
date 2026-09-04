@@ -172,8 +172,8 @@ function Select({
         className={cn(
           "rounded-lg border px-2.5 py-1.5 text-xs outline-none focus:border-tk-teal disabled:opacity-50",
           value
-            ? "border-tk-slate/20 bg-tk-linen/60 text-tk-slate"
-            : "border-dashed border-tk-slate/25 bg-white text-tk-slate/50"
+            ? "border-line bg-well text-tk-slate"
+            : "border-dashed border-line-strong bg-card text-ink-3"
         )}
       >
         <option value="">{empty}</option>

@@ -230,7 +230,7 @@ const ITEM_TONE: Record<string, string> = {
   done: "bg-tk-teal/10 text-tk-teal",
   "in progress": "bg-well text-tk-slate",
   blocked: "bg-tk-tomato/10 text-tk-tomato",
-  queued: "bg-tk-slate/8 text-ink-3",
+  queued: "bg-well text-ink-3",
 }
 
 export function PunchlistBlock({ list }: { list: PunchlistView }) {

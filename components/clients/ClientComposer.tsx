@@ -36,7 +36,7 @@ export function ClientComposer() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-tk-teal px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-tk-teal/90"
+        className="rounded-lg bg-accent px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-tk-teal/90"
       >
         New client
       </button>
@@ -46,7 +46,7 @@ export function ClientComposer() {
   return (
     <form
       onSubmit={submit}
-      className="flex flex-wrap items-center gap-2 rounded-xl border border-tk-slate/15 bg-white px-3 py-2 shadow-sm"
+      className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-card px-3 py-2 shadow-card"
     >
       <input
         autoFocus
@@ -54,7 +54,7 @@ export function ClientComposer() {
         onChange={(e) => setName(e.target.value)}
         placeholder="Client name"
         aria-label="Client name"
-        className="w-44 rounded-lg border border-tk-slate/20 bg-white px-2.5 py-1.5 text-sm text-tk-onyx placeholder:text-tk-slate/40 focus:border-tk-teal focus:outline-none"
+        className="w-44 rounded-lg border border-line bg-card px-2.5 py-1.5 text-sm text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:outline-none"
       />
       <label className="sr-only" htmlFor="new-client-status">
         Status
@@ -63,7 +63,7 @@ export function ClientComposer() {
         id="new-client-status"
         value={status}
         onChange={(e) => setStatus(e.target.value as ClientStatus)}
-        className="rounded-lg border border-tk-slate/20 bg-white px-2.5 py-1.5 text-sm text-tk-onyx focus:border-tk-teal focus:outline-none"
+        className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-sm text-tk-onyx focus:border-tk-teal focus:outline-none"
       >
         {CLIENT_STATUSES.map((id) => (
           <option key={id} value={id}>
@@ -74,7 +74,7 @@ export function ClientComposer() {
       <button
         type="submit"
         disabled={pending || !name.trim()}
-        className="rounded-lg bg-tk-teal px-3 py-1.5 text-sm font-semibold text-white hover:bg-tk-teal/90 disabled:opacity-50"
+        className="rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-tk-teal/90 disabled:opacity-50"
       >
         {pending ? "Adding…" : "Add"}
       </button>
@@ -84,12 +84,12 @@ export function ClientComposer() {
           setOpen(false)
           setError(null)
         }}
-        className="text-sm font-semibold text-tk-slate/70 hover:text-tk-onyx"
+        className="text-sm font-semibold text-ink-3 hover:text-tk-onyx"
       >
         Cancel
       </button>
       {error ? (
-        <p role="status" className="w-full text-xs font-semibold text-[#A32C1E]">
+        <p role="status" className="w-full text-xs font-semibold text-bad">
           {error}
         </p>
       ) : null}

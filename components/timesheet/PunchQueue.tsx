@@ -147,9 +147,9 @@ export function PunchQueue({
 
   if (open.length === 0) {
     return (
-      <div className="mt-6 rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 px-6 py-10 text-center shadow-sm">
+      <div className="mt-6 rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
         <p className="text-sm font-semibold text-tk-onyx">Nothing waiting</p>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           {approvedCount > 0
             ? `${approvedCount} ${approvedCount === 1 ? "punch is" : "punches are"} on the timesheet.`
             : "Every punch has been approved or waved off."}
@@ -168,7 +168,7 @@ export function PunchQueue({
         return (
           <section key={day}>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+              <h2 className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                 {dayLabel(day)}
               </h2>
               {readyCount > 0 ? (
@@ -176,14 +176,14 @@ export function PunchQueue({
                   type="button"
                   disabled={busy != null}
                   onClick={() => approveDay(items)}
-                  className="rounded-full bg-tk-teal px-3 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-50"
+                  className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-50"
                 >
                   Approve {readyCount} · {readyHours.toFixed(2)} hr
                 </button>
               ) : null}
             </div>
 
-            <ul className="mt-2 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+            <ul className="mt-2 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
               {items.map((punch) => {
                 const draft = draftFor(punch)
                 const blocker = blockerFor(punch)
@@ -193,7 +193,7 @@ export function PunchQueue({
                 return (
                   <li
                     key={punch.id}
-                    className="flex flex-wrap items-start gap-x-4 gap-y-3 border-b border-tk-slate/10 px-5 py-4 last:border-0"
+                    className="flex flex-wrap items-start gap-x-4 gap-y-3 border-b border-line px-5 py-4 last:border-0"
                   >
                     <span
                       aria-hidden
@@ -211,12 +211,12 @@ export function PunchQueue({
                         ) : (
                           <Badge tone="muted">No project</Badge>
                         )}
-                        <span className="font-mono text-xs tabular-nums text-tk-slate/70">
+                        <span className="font-mono text-xs tabular-nums text-ink-3">
                           {punch.elapsed} raw → {punch.hours.toFixed(2)} hr
                         </span>
                       </div>
 
-                      <p className="mt-0.5 text-sm text-tk-slate/70">
+                      <p className="mt-0.5 text-sm text-ink-3">
                         {punch.startClock} – {punch.endClock} ·{" "}
                         {sourceLabel(punch.source)}
                       </p>
@@ -241,10 +241,10 @@ export function PunchQueue({
                           }
                           aria-label={`Summary for the ${punch.clientName} punch`}
                           className={cn(
-                            "min-w-[16rem] flex-1 rounded-lg border bg-white px-3 py-1.5 text-sm text-tk-onyx outline-none placeholder:text-tk-slate/35 focus:border-tk-teal",
+                            "min-w-[16rem] flex-1 rounded-lg border bg-card px-3 py-1.5 text-sm text-tk-onyx outline-none placeholder:text-ink-3 focus:border-tk-teal",
                             !draft.projectId && !draft.summary.trim()
-                              ? "border-amber-300"
-                              : "border-tk-slate/20"
+                              ? "border-warn"
+                              : "border-line"
                           )}
                         />
                         {clientProjects.length > 0 ? (
@@ -256,7 +256,7 @@ export function PunchQueue({
                               })
                             }
                             aria-label={`Project for the ${punch.clientName} punch`}
-                            className="rounded-lg border border-tk-slate/20 bg-white px-2.5 py-1.5 text-xs text-tk-slate outline-none focus:border-tk-teal"
+                            className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-xs text-tk-slate outline-none focus:border-tk-teal"
                           >
                             <option value="">— retainer</option>
                             {clientProjects.map((project) => (
@@ -273,7 +273,7 @@ export function PunchQueue({
                           }
                           inputMode="decimal"
                           aria-label={`Hours for the ${punch.clientName} punch`}
-                          className="w-20 rounded-lg border border-tk-slate/20 bg-white px-2.5 py-1.5 text-right text-sm tabular-nums text-tk-onyx outline-none focus:border-tk-teal"
+                          className="w-20 rounded-lg border border-line bg-card px-2.5 py-1.5 text-right text-sm tabular-nums text-tk-onyx outline-none focus:border-tk-teal"
                         />
                       </div>
 
@@ -291,7 +291,7 @@ export function PunchQueue({
                           {errors[punch.id]}
                         </p>
                       ) : blocker ? (
-                        <p className="mt-2 text-xs text-tk-slate/60">{blocker}</p>
+                        <p className="mt-2 text-xs text-ink-3">{blocker}</p>
                       ) : null}
                     </div>
 
@@ -301,7 +301,7 @@ export function PunchQueue({
                         disabled={busy != null || Boolean(blocker)}
                         onClick={() => approve(punch)}
                         title={blocker ?? undefined}
-                        className="rounded-full bg-tk-teal px-3 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-40"
+                        className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-40"
                       >
                         {busy === punch.id ? "Approving…" : "Approve"}
                       </button>
@@ -309,7 +309,7 @@ export function PunchQueue({
                         type="button"
                         disabled={busy != null}
                         onClick={() => discard(punch)}
-                        className="rounded-full border border-tk-slate/20 px-3 py-1.5 text-xs font-semibold text-tk-slate/70 hover:border-tk-slate/50 disabled:opacity-50"
+                        className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-ink-3 hover:border-line-strong disabled:opacity-50"
                       >
                         Discard
                       </button>
@@ -339,7 +339,7 @@ function EndTimeFix({
 
   return (
     <div className="mt-2 flex flex-wrap items-center gap-2">
-      <label className="text-xs font-semibold text-tk-slate/60" htmlFor={`end-${punch.id}`}>
+      <label className="text-xs font-semibold text-ink-3" htmlFor={`end-${punch.id}`}>
         End time
       </label>
       <input
@@ -347,13 +347,13 @@ function EndTimeFix({
         type="datetime-local"
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        className="rounded-lg border border-tk-slate/20 bg-white px-2.5 py-1.5 text-xs text-tk-onyx outline-none focus:border-tk-teal"
+        className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-xs text-tk-onyx outline-none focus:border-tk-teal"
       />
       <button
         type="button"
         disabled={disabled || !value}
         onClick={() => onSave(new Date(value).toISOString())}
-        className="rounded-full border border-tk-slate/20 px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal disabled:opacity-50"
+        className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal disabled:opacity-50"
       >
         Save end time
       </button>

@@ -4,11 +4,11 @@ import type { CrmSlice } from "@/lib/insights/types"
 
 function Step({ value, label }: { value: number; label: string }) {
   return (
-    <div className="rounded-xl border border-tk-slate/12 bg-tk-linen/40 px-3 py-2">
+    <div className="rounded-xl border border-line bg-well px-3 py-2">
       <p className="text-base font-bold leading-tight tabular-nums text-tk-onyx">
         {fmtInt(value)}
       </p>
-      <p className="text-[9.5px] font-semibold uppercase tracking-wide text-tk-slate/60">
+      <p className="text-[9.5px] font-semibold uppercase tracking-wide text-ink-3">
         {label}
       </p>
     </div>
@@ -33,14 +33,14 @@ export function LoopStrip({
     <div>
       <div className="flex flex-wrap items-center gap-2 px-5 py-3.5">
         <Step value={sessions} label="Sessions" />
-        <span className="text-sm text-tk-slate/40" aria-hidden>→</span>
+        <span className="text-sm text-ink-3" aria-hidden>→</span>
         <Step value={keyEvents} label="Key events" />
-        <span className="text-sm text-tk-slate/40" aria-hidden>→</span>
+        <span className="text-sm text-ink-3" aria-hidden>→</span>
         <Step value={crm.inquiries} label="Inquiries" />
-        <span className="text-sm text-tk-slate/40" aria-hidden>→</span>
+        <span className="text-sm text-ink-3" aria-hidden>→</span>
         <Step value={crm.fit} label="Marked fit" />
       </div>
-      <p className="px-5 pb-3.5 text-[11px] text-tk-slate/60">
+      <p className="px-5 pb-3.5 text-[11px] text-ink-3">
         {crm.topSource ? (
           <>
             Top converting source:{" "}

@@ -21,24 +21,24 @@ export function InvoiceList({
   invoices: (Invoice & { clientName?: string })[]
 }) {
   return (
-    <ul className="divide-y divide-tk-slate/10">
+    <ul className="divide-y divide-line">
       {invoices.map((invoice) => (
         <li key={invoice.id}>
           <Link
             href={ROUTES.invoice(invoice.number)}
-            className="flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-tk-linen/60"
+            className="flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-well"
           >
             <div className="min-w-0">
               <p className="font-medium text-tk-onyx">
                 {invoice.number}
                 {invoice.description ? (
-                  <span className="font-normal text-tk-slate/70">
+                  <span className="font-normal text-ink-3">
                     {" "}
                     · {invoice.description}
                   </span>
                 ) : null}
               </p>
-              <p className="mt-0.5 text-sm text-tk-slate/70">
+              <p className="mt-0.5 text-sm text-ink-3">
                 {[invoice.clientName, formatDay(invoice.issuedOn)]
                   .filter(Boolean)
                   .join(" · ")}

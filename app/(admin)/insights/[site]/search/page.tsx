@@ -27,9 +27,9 @@ export default async function InsightsSearchPage({
 
   if (!snapshot.gsc.ok) {
     return (
-      <div className="rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 px-6 py-10 text-center shadow-sm">
+      <div className="rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
         <p className="text-sm font-semibold text-tk-onyx">Search Console is not connected</p>
-        <p className="mx-auto mt-1 max-w-md text-sm text-tk-slate/70">
+        <p className="mx-auto mt-1 max-w-md text-sm text-ink-3">
           {snapshot.gsc.error || "Grant the service account on this property, then refresh."}{" "}
           The Health tab has the exact steps.
         </p>
@@ -44,7 +44,7 @@ export default async function InsightsSearchPage({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-tk-slate/60">
+        <p className="text-xs text-ink-3">
           {win.label} · Search Console lags ~2 days
         </p>
         <RangeSwitcher />
@@ -108,7 +108,7 @@ export default async function InsightsSearchPage({
         className="mt-3"
       >
         <SearchTable rows={snapshot.gsc.queries} nameHeader="Query" />
-        <p className="border-t border-tk-slate/[.06] px-5 py-2.5 text-[11px] text-tk-slate/55">
+        <p className="border-t border-line px-5 py-2.5 text-[11px] text-ink-3">
           Fixed {TABLE_WINDOW_DAYS}-day window; Δ pos compares the {TABLE_WINDOW_DAYS} days
           before that. NEW = did not rank in the previous window.
         </p>

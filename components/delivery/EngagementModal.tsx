@@ -91,11 +91,11 @@ function Header({
       <div className="flex items-start gap-2.5 pr-9">
         <span className="mt-1.5 size-2.5 shrink-0 rounded-full" style={{ background: color }} />
         <div className="min-w-0">
-          <p className="text-[10.5px] font-bold uppercase tracking-[0.07em] text-tk-slate/60">
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.07em] text-ink-3">
             {crumb}
           </p>
           <h2 className="text-[17px] font-semibold tracking-tight text-tk-onyx">{name}</h2>
-          <p className="mt-0.5 text-[11.5px] text-tk-slate/65">{sub}</p>
+          <p className="mt-0.5 text-[11.5px] text-ink-3">{sub}</p>
         </div>
       </div>
       <div className="mt-2.5 flex flex-wrap gap-1.5">{chips}</div>
@@ -237,14 +237,14 @@ async function ProjectModal({ slug, closeHref }: { slug: string; closeHref: stri
       />
 
       <div className="grid lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        <div className="border-tk-slate/10 px-4 py-3.5 lg:border-r">
+        <div className="border-line px-4 py-3.5 lg:border-r">
           <Block
             title="Workstreams"
             count={project.workstreams.length || undefined}
             action={<AddWorkstream projectId={project.id} />}
           >
             {project.workstreams.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-tk-slate/20 px-3 py-2.5 text-[11.5px] text-tk-slate/60">
+              <p className="rounded-xl border border-dashed border-line px-3 py-2.5 text-[11.5px] text-ink-3">
                 No workstreams yet.
               </p>
             ) : (
@@ -261,7 +261,7 @@ async function ProjectModal({ slug, closeHref }: { slug: string; closeHref: stri
                       title="Workstream stage"
                       target={{ kind: "workstream-stage", id: w.id }}
                     />
-                    <span className="shrink-0 text-[11px] text-tk-slate/60">
+                    <span className="shrink-0 text-[11px] text-ink-3">
                       {ordinal(w.pass)} pass
                     </span>
                   </Line>
@@ -272,7 +272,7 @@ async function ProjectModal({ slug, closeHref }: { slug: string; closeHref: stri
 
           <Block title="Deliverables" count={project.deliverables.length || undefined}>
             {project.deliverables.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-tk-slate/20 px-3 py-2.5 text-[11.5px] text-tk-slate/60">
+              <p className="rounded-xl border border-dashed border-line px-3 py-2.5 text-[11.5px] text-ink-3">
                 No deliverables yet.
               </p>
             ) : (
@@ -281,7 +281,7 @@ async function ProjectModal({ slug, closeHref }: { slug: string; closeHref: stri
                   const ready = d.status === "done" && (d.feeCents ?? 0) > 0
                   return (
                     <Line key={d.id} hot={ready}>
-                      <span className="w-10 shrink-0 font-mono text-[10px] font-semibold text-tk-slate/45">
+                      <span className="w-10 shrink-0 font-mono text-[10px] font-semibold text-ink-3">
                         {d.label}
                       </span>
                       <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-tk-onyx">
@@ -296,14 +296,14 @@ async function ProjectModal({ slug, closeHref }: { slug: string; closeHref: stri
                       />
                       {ready ? <DeliverableInvoiceButton deliverableId={d.id} /> : null}
                       {d.dueOn ? (
-                        <span className="shrink-0 text-[11px] text-tk-slate/60">
+                        <span className="shrink-0 text-[11px] text-ink-3">
                           due {formatDay(d.dueOn)}
                         </span>
                       ) : null}
                       <span
                         className={
                           ready
-                            ? "shrink-0 font-mono text-[11.5px] font-semibold tabular-nums text-[#8A5A05]"
+                            ? "shrink-0 font-mono text-[11.5px] font-semibold tabular-nums text-warn"
                             : "shrink-0 font-mono text-[11.5px] font-semibold tabular-nums text-tk-onyx"
                         }
                       >
@@ -329,7 +329,7 @@ async function ProjectModal({ slug, closeHref }: { slug: string; closeHref: stri
             }
           >
             {openTasks.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-tk-slate/20 px-3 py-2.5 text-[11.5px] text-tk-slate/60">
+              <p className="rounded-xl border border-dashed border-line px-3 py-2.5 text-[11.5px] text-ink-3">
                 Nothing open against this project.
               </p>
             ) : (
@@ -339,7 +339,7 @@ async function ProjectModal({ slug, closeHref }: { slug: string; closeHref: stri
                     <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-tk-onyx">
                       {t.title}
                     </span>
-                    <span className="shrink-0 text-[11px] text-tk-slate/60">
+                    <span className="shrink-0 text-[11px] text-ink-3">
                       {t.dueOn ? `due ${formatDay(t.dueOn)}` : "no due date"}
                     </span>
                   </Line>
@@ -349,7 +349,7 @@ async function ProjectModal({ slug, closeHref }: { slug: string; closeHref: stri
           </Block>
         </div>
 
-        <div className="bg-[#FCFAF5] px-4 py-3.5">
+        <div className="bg-well px-4 py-3.5">
           <Block title="Needs you" count={flags.length || undefined}>
             <Attention flags={flags} />
           </Block>
@@ -387,7 +387,7 @@ async function ProjectModal({ slug, closeHref }: { slug: string; closeHref: stri
 
           {project.notes ? (
             <Block title="Notes">
-              <p className="rounded-xl border border-tk-slate/15 bg-tk-linen px-3 py-2 text-[11.5px] leading-relaxed text-tk-slate">
+              <p className="rounded-xl border border-line bg-well px-3 py-2 text-[11.5px] leading-relaxed text-tk-slate">
                 {project.notes}
               </p>
             </Block>
@@ -530,7 +530,7 @@ async function RetainerModal({ slug, closeHref }: { slug: string; closeHref: str
             value: (
               <>
                 {hours.toFixed(1)}
-                <span className="text-[12px] text-tk-slate/60">/{retainer.hoursPerMonth}h</span>
+                <span className="text-[12px] text-ink-3">/{retainer.hoursPerMonth}h</span>
               </>
             ),
             caption: `${plural(entries.filter((e) => e.retainerId === retainer.id && e.occurredOn.slice(0, 7) === thisMonth).length, "entry").replace("entrys", "entries")}`,
@@ -557,7 +557,7 @@ async function RetainerModal({ slug, closeHref }: { slug: string; closeHref: str
       />
 
       <div className="grid lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        <div className="border-tk-slate/10 px-4 py-3.5 lg:border-r">
+        <div className="border-line px-4 py-3.5 lg:border-r">
           <Block title="Hours by month" count="against the ceiling">
             <Burndown months={months} cap={retainer.hoursPerMonth} />
           </Block>
@@ -575,7 +575,7 @@ async function RetainerModal({ slug, closeHref }: { slug: string; closeHref: str
             }
           >
             {openTasks.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-tk-slate/20 px-3 py-2.5 text-[11.5px] text-tk-slate/60">
+              <p className="rounded-xl border border-dashed border-line px-3 py-2.5 text-[11.5px] text-ink-3">
                 Nothing open for this client.
               </p>
             ) : (
@@ -588,8 +588,8 @@ async function RetainerModal({ slug, closeHref }: { slug: string; closeHref: str
                     <span
                       className={
                         t.dueOn && (daysUntil(t.dueOn, now) ?? 99) <= 7
-                          ? "shrink-0 text-[11px] font-semibold text-[#8A5A05]"
-                          : "shrink-0 text-[11px] text-tk-slate/60"
+                          ? "shrink-0 text-[11px] font-semibold text-warn"
+                          : "shrink-0 text-[11px] text-ink-3"
                       }
                     >
                       {t.dueOn ? `due ${formatDay(t.dueOn)}` : t.cadence !== "none" ? `repeats ${t.cadence}` : "no due date"}
@@ -601,7 +601,7 @@ async function RetainerModal({ slug, closeHref }: { slug: string; closeHref: str
           </Block>
         </div>
 
-        <div className="bg-[#FCFAF5] px-4 py-3.5">
+        <div className="bg-well px-4 py-3.5">
           <Block title="Needs you" count={flags.length || undefined}>
             <Attention flags={flags} />
           </Block>

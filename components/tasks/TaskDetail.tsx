@@ -99,7 +99,7 @@ export async function TaskDetailBody({ id }: { id: string }) {
         <h2 className="text-lg font-semibold leading-snug text-tk-onyx">
           {task.title}
         </h2>
-        <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-tk-slate/70">
+        <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-3">
           {task.client ? (
             <EntityLink
               href={ROUTES.client(task.client.slug)}
@@ -115,12 +115,12 @@ export async function TaskDetailBody({ id }: { id: string }) {
               {task.product.name}
             </EntityLink>
           ) : (
-            <span className="text-tk-slate/55">No client</span>
+            <span className="text-ink-3">No client</span>
           )}
           {task.labels.map((label) => (
             <span
               key={label}
-              className="rounded bg-tk-linen px-1.5 py-0.5 font-mono text-[10.5px] text-tk-slate/70"
+              className="rounded bg-well px-1.5 py-0.5 font-mono text-[10.5px] text-ink-3"
             >
               {label}
             </span>
@@ -129,17 +129,17 @@ export async function TaskDetailBody({ id }: { id: string }) {
             <span
               className={
                 due.tone === "bad"
-                  ? "font-bold text-[#A62228]"
+                  ? "font-bold text-bad"
                   : due.tone === "warn"
                     ? "font-bold text-amber-800"
-                    : "font-medium text-tk-slate/60"
+                    : "font-medium text-ink-3"
               }
             >
               {due.text}
             </span>
           ) : null}
           {snoozed ? (
-            <span className="font-medium text-tk-slate/55">
+            <span className="font-medium text-ink-3">
               hidden until {formatDay(task.snoozedUntil!)}
             </span>
           ) : null}
@@ -168,7 +168,7 @@ export async function TaskDetailBody({ id }: { id: string }) {
           deliverables={deliverableRows}
         />
         {task.retainer ? (
-          <p className="mt-2 text-[11px] text-tk-slate/55">
+          <p className="mt-2 text-[11px] text-ink-3">
             Billing to{" "}
             <Link
               href={ROUTES.retainer(task.retainer.slug)}
@@ -220,7 +220,7 @@ export async function TaskDetailBody({ id }: { id: string }) {
           value={task.snoozedUntil}
           action={setTaskSnoozeAction.bind(null, task.id)}
         />
-        <p className="mt-2 text-[11px] text-tk-slate/55">
+        <p className="mt-2 text-[11px] text-ink-3">
           Hides it from the list until that day without touching the due date —
           a faked deadline is how &ldquo;overdue&rdquo; stops meaning anything.
         </p>
@@ -240,13 +240,13 @@ export async function TaskDetailBody({ id }: { id: string }) {
         />
         {task.cadence !== "none" ? (
           <>
-            <p className="mt-2 text-[11px] text-tk-slate/55">
+            <p className="mt-2 text-[11px] text-ink-3">
               Reopens itself once the {task.cadence === "weekly" ? "week" : task.cadence === "monthly" ? "month" : "quarter"}{" "}
               it was completed in has passed.
             </p>
             {history.length > 0 ? (
               <div className="mt-2.5">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-tk-slate/50">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-3">
                   Filed
                 </p>
                 <ul className="mt-1 flex flex-wrap gap-1">
@@ -262,7 +262,7 @@ export async function TaskDetailBody({ id }: { id: string }) {
                 </ul>
               </div>
             ) : (
-              <p className="mt-2 text-[11px] text-tk-slate/45">
+              <p className="mt-2 text-[11px] text-ink-3">
                 No periods filed yet.
               </p>
             )}

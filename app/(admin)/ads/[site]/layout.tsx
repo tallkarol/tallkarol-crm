@@ -27,7 +27,7 @@ export default async function PaidAdsSiteLayout({
 
   return (
     <>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/55">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
         Paid Ads / <span className="text-tk-onyx">{site.client?.name ?? site.name}</span>
       </p>
 
@@ -43,7 +43,7 @@ export default async function PaidAdsSiteLayout({
           <h1 className="text-2xl font-semibold tracking-tight text-tk-onyx">
             {account}
           </h1>
-          <p className="mt-1 font-mono text-xs text-tk-slate/55">
+          <p className="mt-1 font-mono text-xs text-ink-3">
             {fmtCustomerId(site.adsCustomerId)}
             {ctx.snapshot?.ads.currency ? ` · ${ctx.snapshot.ads.currency}` : ""}
             {splitNote ? ` · ${splitNote}` : ""}
@@ -53,7 +53,7 @@ export default async function PaidAdsSiteLayout({
           <RefreshInsights slug={site.slug} refreshedAt={refreshedAt} />
           <Link
             href={`${ROUTES.insights}/${site.slug}`}
-            className="rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-onyx hover:border-tk-teal hover:text-tk-teal"
+            className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-onyx hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
           >
             Analytics →
           </Link>

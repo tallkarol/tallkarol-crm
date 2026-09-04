@@ -88,7 +88,7 @@ export default async function NotebookPage({
 
   return (
     <>
-      <p className="mb-1 font-mono text-[10.5px] uppercase tracking-[0.1em] text-tk-slate/50">
+      <p className="mb-1 font-mono text-[10.5px] uppercase tracking-[0.1em] text-ink-3">
         <Link href={ROUTES.notebooks} className="hover:text-tk-teal">
           Notebooks
         </Link>{" "}
@@ -103,7 +103,7 @@ export default async function NotebookPage({
                 href={link.url}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-lg border border-tk-slate/20 px-3 py-1.5 text-[13px] font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+                className="rounded-lg border border-line px-3 py-1.5 text-[13px] font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
               >
                 Open in Notion ↗
               </a>
@@ -111,7 +111,7 @@ export default async function NotebookPage({
             <form action={syncNotebook.bind(null, link.id)}>
               <button
                 type="submit"
-                className="rounded-lg border border-tk-slate/20 px-3 py-1.5 text-[13px] font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+                className="rounded-lg border border-line px-3 py-1.5 text-[13px] font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
               >
                 Sync
               </button>
@@ -119,7 +119,7 @@ export default async function NotebookPage({
             <form action={scanNotebook.bind(null, link.id)}>
               <button
                 type="submit"
-                className="rounded-lg bg-tk-onyx px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-tk-teal"
+                className="rounded-lg bg-tk-onyx px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-accent"
               >
                 Scan for actionables
               </button>
@@ -127,20 +127,20 @@ export default async function NotebookPage({
           </>
         }
       />
-      <p className="mt-1 font-mono text-[11px] text-tk-slate/50">
+      <p className="mt-1 font-mono text-[11px] text-ink-3">
         {live.length} pages · {blocks} blocks · synced {ago(link.lastSyncedAt)}
       </p>
 
       {link.lastError ? (
-        <p className="mt-3 max-w-2xl rounded bg-[#B4322A]/10 px-3 py-2 text-[12px] text-[#B4322A]">
+        <p className="mt-3 max-w-2xl rounded bg-bad-soft px-3 py-2 text-[12px] text-bad">
           {link.lastError}
         </p>
       ) : null}
 
       <div className="mt-5 flex flex-col gap-4 xl:flex-row">
         {/* Page tree */}
-        <div className="flex shrink-0 flex-col overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm xl:w-[300px]">
-          <div className="border-b border-tk-slate/10 bg-tk-linen/50 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-tk-slate/55">
+        <div className="flex shrink-0 flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-card xl:w-[300px]">
+          <div className="border-b border-line bg-well px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">
             Pages
           </div>
           <div className="flex max-h-[520px] flex-col overflow-y-auto p-1.5">
@@ -158,7 +158,7 @@ export default async function NotebookPage({
                     "flex items-center justify-between gap-3 rounded-lg px-2.5 py-[7px] text-[13px]",
                     active
                       ? "bg-tk-teal/10 font-semibold text-tk-onyx"
-                      : "text-tk-slate hover:bg-tk-linen/60"
+                      : "text-tk-slate hover:bg-well"
                   )}
                   style={{ paddingLeft: `${10 + depth * 16}px` }}
                 >
@@ -166,7 +166,7 @@ export default async function NotebookPage({
                     <span className="truncate">{page.title}</span>
                     {edited ? (
                       <span
-                        className="size-1.5 shrink-0 rounded-full bg-[#B4790A]"
+                        className="size-1.5 shrink-0 rounded-full bg-warn"
                         title="Edited since last scan"
                       />
                     ) : null}
@@ -180,9 +180,9 @@ export default async function NotebookPage({
               )
             })}
           </div>
-          <div className="mt-auto flex items-center gap-3 border-t border-tk-slate/10 px-4 py-2.5">
-            <span className="flex items-center gap-1.5 font-mono text-[10px] text-tk-slate/50">
-              <span className="size-1.5 rounded-full bg-[#B4790A]" /> edited
+          <div className="mt-auto flex items-center gap-3 border-t border-line px-4 py-2.5">
+            <span className="flex items-center gap-1.5 font-mono text-[10px] text-ink-3">
+              <span className="size-1.5 rounded-full bg-warn" /> edited
               since scan
             </span>
             {proposals.length > 0 ? (
@@ -196,31 +196,31 @@ export default async function NotebookPage({
         {/* Inbox + reading pane */}
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           {grouped.length > 0 ? (
-            <div className="overflow-hidden rounded-2xl border border-tk-teal/30 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-tk-teal/30 bg-card shadow-card">
               <div className="flex items-center justify-between border-b border-tk-teal/20 bg-tk-teal/[0.06] px-4 py-2">
                 <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-tk-teal">
                   Proposed actionables
                 </span>
-                <span className="font-mono text-[10px] text-tk-slate/50">
+                <span className="font-mono text-[10px] text-ink-3">
                   {grouped.length} open · accepted become client tasks
                 </span>
               </div>
               {grouped.map((p) => (
                 <div
                   key={p.id}
-                  className="flex items-start justify-between gap-5 border-b border-tk-slate/[0.07] px-4 py-3.5 last:border-0"
+                  className="flex items-start justify-between gap-5 border-b border-line px-4 py-3.5 last:border-0"
                 >
                   <div className="min-w-0">
                     <p className="text-[13.5px] font-semibold text-tk-onyx">
                       {p.title}
                     </p>
                     {p.detail ? (
-                      <p className="mt-0.5 text-[12.5px] text-tk-slate/80">
+                      <p className="mt-0.5 text-[12.5px] text-tk-slate">
                         {p.detail}
                       </p>
                     ) : null}
                     {p.quote ? (
-                      <p className="mt-1.5 border-l-2 border-tk-teal/35 pl-2 text-[12px] italic text-tk-slate/60">
+                      <p className="mt-1.5 border-l-2 border-tk-teal/35 pl-2 text-[12px] italic text-ink-3">
                         “{p.quote}”
                       </p>
                     ) : null}
@@ -237,7 +237,7 @@ export default async function NotebookPage({
                     <form action={acceptProposal.bind(null, p.id)}>
                       <button
                         type="submit"
-                        className="rounded-lg bg-tk-onyx px-3 py-1 text-[12px] font-semibold text-white hover:bg-tk-teal"
+                        className="rounded-lg bg-tk-onyx px-3 py-1 text-[12px] font-semibold text-white hover:bg-accent"
                       >
                         Accept
                       </button>
@@ -245,7 +245,7 @@ export default async function NotebookPage({
                     <form action={dismissProposal.bind(null, p.id)}>
                       <button
                         type="submit"
-                        className="rounded-lg border border-tk-slate/20 px-3 py-1 text-[12px] font-semibold text-tk-slate/70 hover:border-tk-slate/40"
+                        className="rounded-lg border border-line px-3 py-1 text-[12px] font-semibold text-ink-3 hover:border-line-strong"
                       >
                         Dismiss
                       </button>
@@ -253,8 +253,8 @@ export default async function NotebookPage({
                   </div>
                 </div>
               ))}
-              <div className="flex items-center justify-end bg-tk-linen/40 px-4 py-1.5">
-                <span className="font-mono text-[10px] text-tk-slate/45">
+              <div className="flex items-center justify-end bg-well px-4 py-1.5">
+                <span className="font-mono text-[10px] text-ink-3">
                   accepted → Tasks, tagged source: notion
                 </span>
               </div>
@@ -262,12 +262,12 @@ export default async function NotebookPage({
           ) : null}
 
           {selected ? (
-            <div className="flex flex-col overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-tk-slate/10 bg-tk-linen/50 px-4 py-2">
+            <div className="flex flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-well px-4 py-2">
                 <span className="text-[13px] font-semibold text-tk-onyx">
                   {selected.title}
                 </span>
-                <span className="font-mono text-[10px] text-tk-slate/50">
+                <span className="font-mono text-[10px] text-ink-3">
                   {selected.blocks.length} blocks · edited{" "}
                   {stamp(selected.notionEditedAt)} ·{" "}
                   {selected.url ? (
@@ -284,7 +284,7 @@ export default async function NotebookPage({
               </div>
               <div className="max-h-[480px] overflow-y-auto px-5 py-4 text-[13px] leading-relaxed text-tk-slate">
                 {selected.blocks.filter((b) => b.text.trim()).length === 0 ? (
-                  <p className="italic text-tk-slate/50">No text content.</p>
+                  <p className="italic text-ink-3">No text content.</p>
                 ) : (
                   selected.blocks
                     .filter((b) => b.text.trim())
@@ -294,7 +294,7 @@ export default async function NotebookPage({
                         className={cn(
                           "my-1",
                           b.type.startsWith("heading") && "font-semibold text-tk-onyx",
-                          b.type === "to_do" && b.checked && "text-tk-slate/45 line-through",
+                          b.type === "to_do" && b.checked && "text-ink-3 line-through",
                           proposalBlockIds.has(b.id) &&
                             "rounded-md bg-tk-teal/[0.07] px-1.5 py-0.5"
                         )}
@@ -305,8 +305,8 @@ export default async function NotebookPage({
                             className={cn(
                               "mr-1.5 inline-block size-3 -mb-px rounded-[3px] border",
                               b.checked
-                                ? "border-tk-teal bg-tk-teal"
-                                : "border-tk-slate/35"
+                                ? "border-tk-teal bg-accent"
+                                : "border-line-strong"
                             )}
                           />
                         ) : null}
@@ -326,7 +326,7 @@ export default async function NotebookPage({
       </div>
 
       {archived.length > 0 ? (
-        <p className="mt-3 font-mono text-[11px] text-tk-slate/45">
+        <p className="mt-3 font-mono text-[11px] text-ink-3">
           {archived.length} archived page{archived.length === 1 ? "" : "s"} kept
           for history.
         </p>

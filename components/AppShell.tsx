@@ -86,7 +86,7 @@ export function AppShell({
     <div className="flex h-[100dvh] min-w-0 flex-1 flex-col overflow-hidden md:flex-row">
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80] focus:rounded-lg focus:bg-tk-teal focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-tk-linen"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80] focus:rounded-lg focus:bg-accent focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-tk-linen"
       >
         Skip to main content
       </a>
@@ -145,12 +145,12 @@ export function AppShell({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <header
           data-chrome="topbar"
-          className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-tk-slate/10 bg-white/95 px-4 backdrop-blur-md md:hidden"
+          className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line bg-well px-4 backdrop-blur-md md:hidden"
         >
           <BrandMark />
           <button
             type="button"
-            className="flex size-9 items-center justify-center rounded-lg text-tk-onyx hover:bg-tk-linen"
+            className="flex size-9 items-center justify-center rounded-lg text-tk-onyx hover:bg-well transition-colors duration-[120ms]"
             aria-expanded={menuOpen}
             aria-controls="tk-crm-mobile-nav"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -179,13 +179,13 @@ export function AppShell({
         <div className="fixed inset-0 z-50 md:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-tk-onyx/40"
+            className="absolute inset-0 bg-scrim"
             aria-label="Close menu"
             onClick={() => setMenuOpen(false)}
           />
           <aside
             id="tk-crm-mobile-nav"
-            className="relative flex h-full w-[min(18rem,88vw)] flex-col bg-rail text-rail-ink shadow-2xl"
+            className="relative flex h-full w-[min(18rem,88vw)] flex-col bg-rail text-rail-ink shadow-overlay"
             role="dialog"
             aria-modal="true"
             aria-label="Navigation menu"

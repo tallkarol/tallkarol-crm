@@ -26,7 +26,7 @@ export async function ProjectPeek({ slug }: { slug: string }) {
     <>
       <div className="px-6 pb-5 pt-4">
         <h2 className="text-lg font-semibold leading-snug text-tk-onyx">{project.name}</h2>
-        <p className="mt-1.5 text-sm text-tk-slate/70">
+        <p className="mt-1.5 text-sm text-ink-3">
           <EntityLink
             href={ROUTES.client(project.client.slug)}
             color={clientColor(project.client.slug)}
@@ -61,7 +61,7 @@ export async function ProjectPeek({ slug }: { slug: string }) {
 
         <div className="mt-4 grid gap-3">
           <div>
-            <p className="text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/55">
+            <p className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">
               Status
             </p>
             <div className="mt-1.5">
@@ -79,7 +79,7 @@ export async function ProjectPeek({ slug }: { slug: string }) {
             </div>
           </div>
           <div>
-            <p className="text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/55">
+            <p className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">
               Fee
             </p>
             <div className="mt-1.5">

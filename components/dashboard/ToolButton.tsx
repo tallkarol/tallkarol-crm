@@ -71,8 +71,8 @@ export function ToolButton({
           "relative grid size-10 place-items-center rounded-xl border transition-[transform,box-shadow,border-color] duration-150",
           "hover:-translate-y-px hover:shadow-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tk-teal",
           primary
-            ? "border-transparent bg-tk-teal text-tk-linen shadow-card"
-            : "border-tk-slate/15 bg-white text-tk-onyx shadow-card hover:border-tk-slate/25",
+            ? "border-transparent bg-accent text-tk-linen shadow-card"
+            : "border-line bg-card text-tk-onyx shadow-card hover:border-line-strong",
           open && !primary && "border-tk-teal"
         )}
       >
@@ -98,7 +98,7 @@ export function ToolButton({
           role="dialog"
           aria-label={label}
           style={{ width }}
-          className="absolute right-0 top-[calc(100%+8px)] z-[65] max-w-[calc(100vw-2rem)] rounded-2xl border border-tk-slate/15 bg-white p-4 text-tk-onyx shadow-hover motion-safe:animate-[tk-rise_.18s_ease_both]"
+          className="absolute right-0 top-[calc(100%+8px)] z-[65] max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-card p-4 text-tk-onyx shadow-hover motion-safe:animate-[tk-rise_.18s_ease_both]"
         >
           {children(close)}
         </div>
@@ -110,11 +110,11 @@ export function ToolButton({
 /** A small uppercase field label used inside the popovers. */
 export function FieldLabel({ children }: { children: ReactNode }) {
   return (
-    <span className="block font-ui text-[10.5px] font-bold uppercase tracking-[0.08em] text-tk-slate/70">
+    <span className="block font-ui text-[10.5px] font-bold uppercase tracking-[0.08em] text-ink-3">
       {children}
     </span>
   )
 }
 
 export const INPUT_CLASS =
-  "h-[34px] w-full rounded-lg border border-tk-slate/15 bg-tk-linen px-2.5 text-[13px] text-tk-onyx placeholder:text-tk-slate focus:border-tk-teal focus:bg-white focus:outline-none"
+  "h-[34px] w-full rounded-lg border border-line bg-well px-2.5 text-[13px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:bg-card focus:outline-none"

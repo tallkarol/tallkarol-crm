@@ -143,7 +143,7 @@ export default async function RevenuePage({
           </>
         }
       />
-      <p className="mt-1 text-sm text-tk-slate/70">
+      <p className="mt-1 text-sm text-ink-3">
         Month, quarter and year against goal — then the detail behind them. The
         range switch drives the detail; the pace board always reads the current
         period.

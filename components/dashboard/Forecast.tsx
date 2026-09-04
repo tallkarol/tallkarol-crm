@@ -75,15 +75,15 @@ export function Forecast({ months }: { months: ForecastMonth[] }) {
   const thisMonth = monthKey(new Date())
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-card">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-tk-slate/10 px-[18px] py-3">
+    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-[18px] py-3">
         <h2 className="font-ui text-[13.5px] font-bold tracking-tight text-tk-onyx">Forecast</h2>
         <label className="min-w-0">
           <span className="sr-only">Forecast breakdown</span>
           <select
             value={view}
             onChange={(e) => setView(e.target.value as ForecastView)}
-            className="max-w-full rounded-lg border border-tk-slate/15 bg-tk-linen px-2 py-1 font-ui text-[11.5px] font-semibold text-tk-slate outline-none focus:border-tk-teal"
+            className="max-w-full rounded-lg border border-line bg-well px-2 py-1 font-ui text-[11.5px] font-semibold text-tk-slate outline-none focus:border-tk-teal"
           >
             {FORECAST_VIEWS.map((option) => (
               <option key={option.id} value={option.id}>
@@ -93,7 +93,7 @@ export function Forecast({ months }: { months: ForecastMonth[] }) {
           </select>
         </label>
       </div>
-      <div className="divide-y divide-tk-slate/10">
+      <div className="divide-y divide-line">
         {months.map((m) => {
           const future = m.key > thisMonth
           const visible = linesForView(m.lines, view)
@@ -103,7 +103,7 @@ export function Forecast({ months }: { months: ForecastMonth[] }) {
           return (
             <div key={m.key} className="grid gap-2 px-[18px] py-3">
               <div className="flex items-baseline gap-2">
-                <p className="font-ui text-[10.5px] font-bold uppercase tracking-[0.12em] text-tk-slate/70">
+                <p className="font-ui text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-3">
                   {m.heading}
                 </p>
                 <p className="text-[12.5px] text-tk-slate">{m.month}</p>
@@ -113,14 +113,14 @@ export function Forecast({ months }: { months: ForecastMonth[] }) {
                   ) : (
                     <>
                       {formatHours(total.hours ?? 0)}
-                      <span className="ml-1 font-ui text-sm font-medium text-tk-slate/70">hr</span>
+                      <span className="ml-1 font-ui text-sm font-medium text-ink-3">hr</span>
                     </>
                   )}
                 </p>
               </div>
               <div
                 aria-hidden
-                className="flex h-2 overflow-hidden rounded-full border border-tk-slate/10 bg-tk-linen"
+                className="flex h-2 overflow-hidden rounded-full border border-line bg-well"
               >
                 {sum > 0
                   ? visible.map((line, i) => (
@@ -136,7 +136,7 @@ export function Forecast({ months }: { months: ForecastMonth[] }) {
                   : null}
               </div>
               {visible.length === 0 ? (
-                <p className="text-xs text-tk-slate/70">{emptyCopy(view)}</p>
+                <p className="text-xs text-ink-3">{emptyCopy(view)}</p>
               ) : (
                 <ul className="grid gap-1">
                   {visible.map((line) => {
@@ -154,9 +154,9 @@ export function Forecast({ months }: { months: ForecastMonth[] }) {
                             >
                               {line.name}
                             </span>
-                            <span className="text-tk-slate/70"> · {kindLabel(line.kind)}</span>
+                            <span className="text-ink-3"> · {kindLabel(line.kind)}</span>
                           </span>
-                          <span className={cn("tabular-nums text-tk-slate/70", !hours && "hidden")}>
+                          <span className={cn("tabular-nums text-ink-3", !hours && "hidden")}>
                             {hours}
                           </span>
                           <span className="min-w-[72px] text-right font-medium tabular-nums text-tk-onyx">

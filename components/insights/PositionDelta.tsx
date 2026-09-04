@@ -18,7 +18,7 @@ export function PositionDelta({
   }
   const moved = prevPosition - position
   if (Math.abs(moved) < 0.05) {
-    return <span className="text-[11px] font-medium text-tk-slate/50">—</span>
+    return <span className="text-[11px] font-medium text-ink-3">—</span>
   }
   const better = moved > 0
   return (

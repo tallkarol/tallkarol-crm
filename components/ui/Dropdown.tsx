@@ -75,15 +75,15 @@ export function Dropdown({
           variant === "status"
             ? cn(
                 "h-[23px] rounded-full px-2 text-[11px] font-semibold hover:brightness-[0.97]",
-                tone ?? "border-tk-slate/15 bg-white text-tk-slate/70",
+                tone ?? "border-line bg-card text-ink-3",
                 pending && "opacity-60",
                 open && "ring-1 ring-tk-teal/40"
               )
             : cn(
                 "rounded-lg px-2.5 py-1.5 text-xs font-medium",
                 on
-                  ? "border-tk-teal bg-tk-teal text-tk-linen"
-                  : "border-tk-slate/20 bg-white text-tk-slate hover:border-tk-teal hover:text-tk-teal",
+                  ? "border-tk-teal bg-accent text-tk-linen"
+                  : "border-line bg-card text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal",
                 open && !on && "border-tk-teal bg-tk-teal/5 text-tk-teal"
               )
         )}
@@ -94,7 +94,7 @@ export function Dropdown({
           <span
             className={cn(
               "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-mono text-[10px]",
-              on ? "bg-white/25 text-tk-linen" : "bg-tk-teal text-tk-linen"
+              on ? "bg-on-accent/25 text-tk-linen" : "bg-accent text-tk-linen"
             )}
           >
             {count}
@@ -113,7 +113,7 @@ export function Dropdown({
           id={id}
           role="menu"
           className={cn(
-            "absolute top-[calc(100%+5px)] z-30 max-h-[330px] min-w-[232px] overflow-y-auto rounded-xl border border-tk-slate/20 bg-white p-1.5 shadow-xl",
+            "absolute top-[calc(100%+5px)] z-30 max-h-[330px] min-w-[232px] overflow-y-auto rounded-xl border border-line bg-card p-1.5 shadow-overlay",
             align === "right" ? "right-0" : "left-0"
           )}
         >
@@ -132,7 +132,7 @@ export function MenuHead({
   onClear?: () => void
 }) {
   return (
-    <div className="flex items-center gap-2 px-2 pb-1.5 pt-1 text-[9.5px] font-semibold uppercase tracking-[0.12em] text-tk-slate/50">
+    <div className="flex items-center gap-2 px-2 pb-1.5 pt-1 text-[9.5px] font-semibold uppercase tracking-[0.12em] text-ink-3">
       {children}
       {onClear ? (
         <button
@@ -168,14 +168,14 @@ export function MenuOption({
       role={kind === "check" ? "menuitemcheckbox" : "menuitemradio"}
       aria-checked={checked}
       onClick={onSelect}
-      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-tk-slate hover:bg-tk-linen"
+      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-tk-slate hover:bg-well transition-colors duration-[120ms]"
     >
       {kind === "check" ? (
         <span
           aria-hidden
           className={cn(
             "grid size-3.5 shrink-0 place-items-center rounded border-[1.5px] text-[9px] text-white",
-            checked ? "border-tk-teal bg-tk-teal" : "border-tk-slate/25"
+            checked ? "border-tk-teal bg-accent" : "border-line-strong"
           )}
         >
           {checked ? "✓" : ""}
@@ -185,10 +185,10 @@ export function MenuOption({
           aria-hidden
           className={cn(
             "grid size-3.5 shrink-0 place-items-center rounded-full border-[1.5px]",
-            checked ? "border-tk-teal" : "border-tk-slate/25"
+            checked ? "border-tk-teal" : "border-line-strong"
           )}
         >
-          {checked ? <span className="size-1.5 rounded-full bg-tk-teal" /> : null}
+          {checked ? <span className="size-1.5 rounded-full bg-accent" /> : null}
         </span>
       )}
       {swatch ? (
@@ -200,19 +200,19 @@ export function MenuOption({
       ) : null}
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {count != null ? (
-        <span className="font-mono text-[10.5px] text-tk-slate/45">{count}</span>
+        <span className="font-mono text-[10.5px] text-ink-3">{count}</span>
       ) : null}
     </button>
   )
 }
 
 export function MenuRule() {
-  return <div className="mx-1.5 my-1 h-px bg-tk-slate/10" />
+  return <div className="mx-1.5 my-1 h-px bg-line" />
 }
 
 export function MenuLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-2 pb-0.5 pt-1.5 text-[9.5px] font-semibold uppercase tracking-[0.1em] text-tk-slate/45">
+    <p className="px-2 pb-0.5 pt-1.5 text-[9.5px] font-semibold uppercase tracking-[0.1em] text-ink-3">
       {children}
     </p>
   )

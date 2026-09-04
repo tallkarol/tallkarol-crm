@@ -29,7 +29,7 @@ export function AppHealthPeek({ slug }: { slug: string }) {
           <span aria-hidden className="size-2.5 rounded-[3px]" style={{ background: color }} />
           {app.name}
         </h2>
-        <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-sm text-tk-slate/70">
+        <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-sm text-ink-3">
           <span
             aria-hidden
             className="size-2 rounded-full"
@@ -39,20 +39,20 @@ export function AppHealthPeek({ slug }: { slug: string }) {
             className={cn(
               "font-semibold",
               verdict.state === "down"
-                ? "text-[#B4322A]"
+                ? "text-bad"
                 : verdict.state === "degraded"
-                  ? "text-[#8A5A05]"
+                  ? "text-warn"
                   : "text-tk-onyx"
             )}
           >
             {verdict.label}
           </span>
-          <span className="text-tk-slate/25">·</span>
+          <span className="text-ink-3">·</span>
           <span>{app.stack}</span>
         </p>
 
         {!WIRED ? (
-          <p className="mt-3 rounded-lg border border-dashed border-tk-slate/25 bg-tk-linen/50 px-3 py-2 text-[12px] leading-relaxed text-tk-slate/75">
+          <p className="mt-3 rounded-lg border border-dashed border-line-strong bg-well px-3 py-2 text-[12px] leading-relaxed text-tk-slate">
             <span className="font-semibold text-tk-onyx">Preview.</span> Nothing
             below is polled yet — the numbers are illustrative, so the layout can
             be judged before the probes exist.
@@ -63,23 +63,23 @@ export function AppHealthPeek({ slug }: { slug: string }) {
           {app.surfaces.map((surface) => (
             <div
               key={surface.kind}
-              className="rounded-lg border border-tk-slate/12 px-2 py-1.5 text-center"
+              className="rounded-lg border border-line px-2 py-1.5 text-center"
             >
               <span
                 aria-hidden
                 className="mx-auto block size-1.5 rounded-full"
                 style={{ background: STATE_DOT[surface.state] }}
               />
-              <p className="mt-1 truncate text-[10px] font-semibold uppercase tracking-wide text-tk-slate/55">
+              <p className="mt-1 truncate text-[10px] font-semibold uppercase tracking-wide text-ink-3">
                 {surface.label}
               </p>
               <p
                 className={cn(
                   "truncate text-[11.5px] font-semibold",
                   surface.state === "down"
-                    ? "text-[#B4322A]"
+                    ? "text-bad"
                     : surface.state === "degraded"
-                      ? "text-[#8A5A05]"
+                      ? "text-warn"
                       : "text-tk-onyx"
                 )}
               >
@@ -94,8 +94,8 @@ export function AppHealthPeek({ slug }: { slug: string }) {
         <SurfaceSection key={surface.kind} surface={surface} />
       ))}
 
-      <section className="border-t border-tk-slate/10 px-6 py-4">
-        <h3 className="text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/55">
+      <section className="border-t border-line px-6 py-4">
+        <h3 className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">
           To wire it
         </h3>
         <pre className="mt-2 overflow-x-auto rounded-lg bg-tk-onyx px-3.5 py-3 font-mono text-[11px] leading-relaxed text-[#CFD8D4]">
@@ -111,9 +111,9 @@ npm run wire:monitor -- ${app.slug}-daily "Daily run" ${app.slug} 1440 180
 
 function SurfaceSection({ surface }: { surface: AppSurface }) {
   return (
-    <section className="border-t border-tk-slate/10 px-6 py-4">
+    <section className="border-t border-line px-6 py-4">
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/55">
+        <h3 className="flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">
           <span
             aria-hidden
             className="size-1.5 rounded-full"
@@ -121,7 +121,7 @@ function SurfaceSection({ surface }: { surface: AppSurface }) {
           />
           {surface.label}
         </h3>
-        <p className="font-mono text-[10.5px] text-tk-slate/40">{surface.provider}</p>
+        <p className="font-mono text-[10.5px] text-ink-3">{surface.provider}</p>
       </div>
 
       <span className="mt-2.5 flex h-7 items-end gap-[2px]" aria-hidden>
@@ -137,12 +137,12 @@ function SurfaceSection({ surface }: { surface: AppSurface }) {
           />
         ))}
       </span>
-      <p className="mt-1 font-mono text-[10.5px] text-tk-slate/40">{surface.barsLabel}</p>
+      <p className="mt-1 font-mono text-[10.5px] text-ink-3">{surface.barsLabel}</p>
 
       <dl className="mt-3 space-y-1.5">
         {surface.facts.map((fact) => (
           <div key={fact.label} className="flex items-baseline justify-between gap-4">
-            <dt className="shrink-0 text-[12px] text-tk-slate/60">{fact.label}</dt>
+            <dt className="shrink-0 text-[12px] text-ink-3">{fact.label}</dt>
             <dd className="min-w-0 truncate text-right font-mono text-[11.5px] text-tk-onyx">
               {fact.value}
             </dd>
@@ -150,7 +150,7 @@ function SurfaceSection({ surface }: { surface: AppSurface }) {
         ))}
       </dl>
 
-      <p className="mt-2.5 text-[12px] leading-relaxed text-tk-slate/70">{surface.note}</p>
+      <p className="mt-2.5 text-[12px] leading-relaxed text-ink-3">{surface.note}</p>
     </section>
   )
 }

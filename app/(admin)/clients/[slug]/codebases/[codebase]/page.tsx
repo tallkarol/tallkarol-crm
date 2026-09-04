@@ -43,7 +43,7 @@ export default async function CodebasePage({
       <div className="mt-3">
         <PageHeader title={title} />
       </div>
-      <p className="mt-1 font-mono text-xs text-tk-slate/60">
+      <p className="mt-1 font-mono text-xs text-ink-3">
         {client.slug} / {params.codebase}
       </p>
 
@@ -60,8 +60,8 @@ export default async function CodebasePage({
                 active
                   ? "rounded-full bg-tk-onyx px-3 py-1 text-xs font-semibold text-tk-linen"
                   : has
-                    ? "rounded-full border border-tk-slate/20 px-3 py-1 text-xs font-semibold text-tk-onyx hover:border-tk-teal"
-                    : "rounded-full border border-dashed border-tk-slate/20 px-3 py-1 text-xs text-tk-slate/40"
+                    ? "rounded-full border border-line px-3 py-1 text-xs font-semibold text-tk-onyx hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                    : "rounded-full border border-dashed border-line px-3 py-1 text-xs text-ink-3"
               }
             >
               {DOC_KIND_LABEL[k]}
@@ -83,44 +83,44 @@ export default async function CodebasePage({
                 base={`${ROUTES.client(client.slug)}/codebases/${params.codebase}?kind=${kind}`}
               />
             ) : (
-              <pre className="overflow-x-auto rounded-2xl border border-tk-slate/15 bg-white p-5 text-xs shadow-sm">
+              <pre className="overflow-x-auto rounded-2xl border border-line bg-card p-5 text-xs shadow-card">
                 {JSON.stringify(doc.data, null, 2)}
               </pre>
             )}
           </div>
           <aside className="flex flex-col gap-4">
-            <section className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
+            <section className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
               <h2 className="text-[13px] font-bold text-tk-onyx">This run</h2>
               <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-                <dt className="text-tk-slate/60">generated</dt>
+                <dt className="text-ink-3">generated</dt>
                 <dd className="text-tk-onyx">{doc.generatedAt.toISOString().replace("T", " ").slice(0, 16)} UTC</dd>
-                <dt className="text-tk-slate/60">commit</dt>
+                <dt className="text-ink-3">commit</dt>
                 <dd className="font-mono text-tk-onyx">{doc.commitHash ? doc.commitHash.slice(0, 10) : "—"}{doc.branch ? ` · ${doc.branch}` : ""}</dd>
-                <dt className="text-tk-slate/60">tool</dt>
+                <dt className="text-ink-3">tool</dt>
                 <dd className="text-tk-onyx">{doc.tool || "—"}</dd>
-                <dt className="text-tk-slate/60">scanned at</dt>
+                <dt className="text-ink-3">scanned at</dt>
                 <dd className="break-all font-mono text-tk-onyx">{doc.sourcePath || "—"}</dd>
-                <dt className="text-tk-slate/60">contract</dt>
+                <dt className="text-ink-3">contract</dt>
                 <dd className="text-tk-onyx">{doc.kind} v{doc.schemaVersion}</dd>
               </dl>
             </section>
-            <section className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
+            <section className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
               <h2 className="text-[13px] font-bold text-tk-onyx">History</h2>
-              <ul className="mt-2 divide-y divide-tk-slate/10 text-xs">
+              <ul className="mt-2 divide-y divide-line text-xs">
                 {history.map((h) => (
                   <li key={h.id} className="flex items-baseline justify-between gap-2 py-1.5 first:pt-0 last:pb-0">
                     <span className="text-tk-onyx">{h.generatedAt.toISOString().slice(0, 10)}</span>
-                    <span className="font-mono text-tk-slate/60">{h.commitHash ? h.commitHash.slice(0, 7) : "—"}</span>
-                    <span className="min-w-0 flex-1 truncate text-right text-tk-slate/60">{h.summary}</span>
+                    <span className="font-mono text-ink-3">{h.commitHash ? h.commitHash.slice(0, 7) : "—"}</span>
+                    <span className="min-w-0 flex-1 truncate text-right text-ink-3">{h.summary}</span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-2 text-[11px] text-tk-slate/50">A rerun on the same commit with nothing changed adds no row.</p>
+              <p className="mt-2 text-[11px] text-ink-3">A rerun on the same commit with nothing changed adds no row.</p>
             </section>
           </aside>
         </div>
       ) : (
-        <p className="mt-6 text-sm text-tk-slate/60">No {DOC_KIND_LABEL[kind as keyof typeof DOC_KIND_LABEL]} for this codebase yet.</p>
+        <p className="mt-6 text-sm text-ink-3">No {DOC_KIND_LABEL[kind as keyof typeof DOC_KIND_LABEL]} for this codebase yet.</p>
       )}
     </>
   )

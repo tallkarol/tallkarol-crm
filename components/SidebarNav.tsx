@@ -61,7 +61,7 @@ export type NavBadge = { count: number; tone?: UnreadTone }
 
 const BADGE_TONE: Record<UnreadTone, string> = {
   clear: "bg-rail-ink/30",
-  lead: "bg-tk-teal",
+  lead: "bg-accent",
   warn: "bg-[#8A5A05]",
   bad: "bg-tk-tomato",
 }

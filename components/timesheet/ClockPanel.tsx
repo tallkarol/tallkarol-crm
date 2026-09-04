@@ -86,9 +86,9 @@ export function ClockPanel({
           ))}
         </div>
       ) : (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-dashed border-tk-slate/25 bg-white px-5 py-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-dashed border-line-strong bg-card px-5 py-4">
           <p className="text-sm font-semibold text-tk-onyx">Not clocked in</p>
-          <p className="text-sm text-tk-slate/60">
+          <p className="text-sm text-ink-3">
             {today.hours > 0
               ? `${today.hours} hr approved today across ${today.entries} ${today.entries === 1 ? "entry" : "entries"}.`
               : "Nothing logged today yet."}
@@ -99,7 +99,7 @@ export function ClockPanel({
       {error ? (
         <p
           role="status"
-          className="rounded-xl border border-tk-slate/15 bg-white px-4 py-2.5 text-sm text-tk-slate"
+          className="rounded-xl border border-line bg-card px-4 py-2.5 text-sm text-tk-slate"
         >
           {error}
         </p>
@@ -107,7 +107,7 @@ export function ClockPanel({
 
       <div>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
             {running.length > 0 ? "Also clock in on" : "Clock in on"}
           </p>
           <input
@@ -115,12 +115,12 @@ export function ClockPanel({
             onChange={(event) => setNote(event.target.value)}
             placeholder="What are you working on? (optional)"
             aria-label="Session note"
-            className="w-full max-w-sm rounded-lg border border-tk-slate/20 bg-white px-3 py-1.5 text-sm text-tk-onyx outline-none placeholder:text-tk-slate/35 focus:border-tk-teal"
+            className="w-full max-w-sm rounded-lg border border-line bg-card px-3 py-1.5 text-sm text-tk-onyx outline-none placeholder:text-ink-3 focus:border-tk-teal"
           />
         </div>
 
         {shown.length === 0 ? (
-          <p className="mt-3 text-sm text-tk-slate/60">
+          <p className="mt-3 text-sm text-ink-3">
             No active retainers or open projects yet. Add one and it shows up here.
           </p>
         ) : (
@@ -142,7 +142,7 @@ export function ClockPanel({
                       "flex w-full items-center gap-2.5 rounded-xl border px-4 py-3 text-left transition-colors",
                       isCurrent
                         ? "border-tk-teal/40 bg-tk-teal/5"
-                        : "border-tk-slate/15 bg-white hover:border-tk-teal/50",
+                        : "border-line bg-card hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0",
                       busy && "opacity-60"
                     )}
                   >
@@ -155,7 +155,7 @@ export function ClockPanel({
                       <span className="block truncate text-sm font-semibold text-tk-onyx">
                         {target.clientName}
                       </span>
-                      <span className="block truncate text-xs text-tk-slate/60">
+                      <span className="block truncate text-xs text-ink-3">
                         {target.projectName ?? "Retainer · maintenance"}
                       </span>
                     </span>
@@ -164,7 +164,7 @@ export function ClockPanel({
                         Running
                       </span>
                     ) : (
-                      <Play className="size-3.5 shrink-0 text-tk-slate/30" />
+                      <Play className="size-3.5 shrink-0 text-ink-3" />
                     )}
                   </button>
                 </li>
@@ -189,10 +189,10 @@ function RunningBand({
 }) {
   const seconds = useElapsed(punch.startedAt, punch.minutes)
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl bg-tk-teal px-5 py-4 text-tk-linen shadow-sm">
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl bg-accent px-5 py-4 text-tk-linen shadow-card">
       <span
         aria-hidden
-        className="size-2.5 rounded-full bg-tk-linen ring-4 ring-tk-linen/25"
+        className="size-2.5 rounded-full bg-well ring-4 ring-tk-linen/25"
       />
       <p className="font-mono text-3xl font-bold tabular-nums tracking-tight">
         {clockLabel(seconds)}
@@ -212,7 +212,7 @@ function RunningBand({
         type="button"
         onClick={onStop}
         disabled={busy}
-        className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-tk-linen px-4 py-2 text-xs font-bold text-tk-teal disabled:opacity-60"
+        className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-well px-4 py-2 text-xs font-bold text-tk-teal disabled:opacity-60"
       >
         <Square className="size-3.5" />
         {busy ? "Stopping…" : "Clock out"}

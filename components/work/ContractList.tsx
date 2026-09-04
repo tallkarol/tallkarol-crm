@@ -20,16 +20,16 @@ export function ContractList({
   contracts: (Contract & { clientName?: string })[]
 }) {
   return (
-    <ul className="divide-y divide-tk-slate/10">
+    <ul className="divide-y divide-line">
       {contracts.map((contract) => (
         <li key={contract.id}>
           <Link
             href={ROUTES.contract(contract.slug)}
-            className="flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-tk-linen/60"
+            className="flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-well"
           >
             <div className="min-w-0">
               <p className="font-medium text-tk-onyx">{contract.title}</p>
-              <p className="mt-0.5 text-sm text-tk-slate/70">
+              <p className="mt-0.5 text-sm text-ink-3">
                 {[
                   contract.clientName,
                   contract.effectiveOn

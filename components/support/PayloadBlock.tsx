@@ -26,8 +26,8 @@ export function PayloadBlock({
   const long = lines > 14
 
   return (
-    <div className="overflow-hidden rounded-xl border border-tk-slate/20 bg-tk-onyx">
-      <div className="flex items-center gap-2 border-b border-white/10 bg-[#16221F] px-2.5 py-1.5">
+    <div className="overflow-hidden rounded-xl border border-line bg-tk-onyx">
+      <div className="flex items-center gap-2 border-b border-on-accent/10 bg-[#16221F] px-2.5 py-1.5">
         <span className="shrink-0 rounded border border-[#54C3AB]/35 px-1.5 font-mono text-[9.5px] uppercase tracking-wider text-[#54C3AB]">
           {lang}
         </span>
@@ -42,7 +42,7 @@ export function PayloadBlock({
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="shrink-0 rounded-md border border-white/15 px-2 py-0.5 font-mono text-[10.5px] text-tk-linen/65 transition-colors hover:border-[#54C3AB]/60 hover:text-[#54C3AB]"
+            className="shrink-0 rounded-md border border-on-accent/15 px-2 py-0.5 font-mono text-[10.5px] text-tk-linen/65 transition-colors hover:border-[#54C3AB]/60 hover:text-[#54C3AB]"
           >
             {open ? "collapse" : "expand"}
           </button>

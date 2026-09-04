@@ -123,7 +123,7 @@ export function TaskWeekView({
             {(byDay.get(day.iso) ?? []).map((event) => (
               <li
                 key={event.id}
-                className="rounded-lg border border-dashed border-tk-slate/25 bg-tk-linen px-2.5 py-1.5 text-[11.5px] leading-snug text-tk-slate"
+                className="rounded-lg border border-dashed border-line-strong bg-well px-2.5 py-1.5 text-[11.5px] leading-snug text-tk-slate"
               >
                 <b className="block text-xs font-semibold">
                   {event.allDay
@@ -165,7 +165,7 @@ export function TaskWeekView({
 
       <DragOverlay>
         {active ? (
-          <div className="w-44 rotate-2 rounded-xl border border-tk-slate/15 bg-white p-2.5 shadow-xl">
+          <div className="w-44 rotate-2 rounded-xl border border-line bg-card p-2.5 shadow-overlay">
             <p className="text-[13px] font-medium text-tk-onyx">{active.title}</p>
           </div>
         ) : null}
@@ -192,12 +192,12 @@ function Column({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex min-h-[220px] flex-col rounded-2xl border bg-[#FAF6EE] transition-colors",
+        "flex min-h-[220px] flex-col rounded-2xl border bg-well transition-colors",
         isOver
           ? "border-tk-teal bg-tk-teal/5"
           : today
             ? "border-tk-teal/40 bg-tk-teal/[0.04]"
-            : "border-tk-slate/15"
+            : "border-line"
       )}
     >
       <div className="flex items-baseline justify-between px-3 pb-1 pt-2.5">
@@ -209,7 +209,7 @@ function Column({
         >
           {title}
         </h3>
-        <span className="text-[11px] text-tk-slate/60">{sub}</span>
+        <span className="text-[11px] text-ink-3">{sub}</span>
       </div>
       <ul className="flex flex-1 flex-col gap-2 px-2.5 pb-3 pt-1">{children}</ul>
     </div>
@@ -235,7 +235,7 @@ function Card({
       {...listeners}
       {...attributes}
       className={cn(
-        "cursor-grab touch-none rounded-xl border border-tk-slate/15 bg-white p-2.5 shadow-sm active:cursor-grabbing",
+        "cursor-grab touch-none rounded-xl border border-line bg-card p-2.5 shadow-card active:cursor-grabbing",
         dragging && "opacity-35"
       )}
       style={{ borderLeftWidth: 3, borderLeftColor: color }}
@@ -250,7 +250,7 @@ function Card({
       </Link>
       <div className="mt-1 flex flex-wrap items-center gap-1.5">
         {task.priority === 1 ? (
-          <span aria-hidden className="size-[7px] rounded-full bg-[#B4322A]" />
+          <span aria-hidden className="size-[7px] rounded-full bg-bad" />
         ) : null}
         {task.clientName ? (
           <span
@@ -266,7 +266,7 @@ function Card({
           </span>
         ) : null}
         {task.items.total > 0 ? (
-          <span className="rounded bg-tk-linen px-1.5 font-mono text-[10px] text-tk-slate/70">
+          <span className="rounded bg-well px-1.5 font-mono text-[10px] text-ink-3">
             {task.items.done}/{task.items.total}
           </span>
         ) : null}

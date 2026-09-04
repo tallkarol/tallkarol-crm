@@ -62,7 +62,7 @@ const TYPE_LABEL: Record<string, string> = {
 
 function Card({ title, children, right }: { title: string; children: React.ReactNode; right?: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+    <section className="rounded-2xl border border-line bg-card shadow-card">
       <div className="flex items-center justify-between px-5 pb-1 pt-4">
         <h2 className="text-[13px] font-bold text-tk-onyx">{title}</h2>
         {right}
@@ -79,7 +79,7 @@ function Facts({ rows }: { rows: [string, React.ReactNode][] }) {
     <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-xs">
       {shown.map(([k, v]) => (
         <div key={k} className="contents">
-          <dt className="text-tk-slate/60">{k}</dt>
+          <dt className="text-ink-3">{k}</dt>
           <dd className="min-w-0 break-words text-tk-onyx">{v}</dd>
         </div>
       ))}
@@ -95,18 +95,18 @@ function DepTable({ deps }: { deps: Dep[] }) {
   return (
     <table className="w-full text-xs">
       <thead>
-        <tr className="text-left text-[10.5px] uppercase tracking-wide text-tk-slate/50">
+        <tr className="text-left text-[10.5px] uppercase tracking-wide text-ink-3">
           <th className="py-1 font-semibold">package</th>
           <th className="py-1 font-semibold">declared</th>
           <th className="py-1 font-semibold">installed</th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-tk-slate/[0.06]">
+      <tbody className="divide-y divide-line">
         {deps.map((d) => (
           <tr key={d.name}>
             <td className="py-1 pr-3 font-mono text-tk-onyx">{d.name}</td>
-            <td className="py-1 pr-3 font-mono text-tk-slate/70">{d.declared ?? "—"}</td>
-            <td className="py-1 font-mono text-tk-slate/70">{d.resolved ?? "—"}</td>
+            <td className="py-1 pr-3 font-mono text-ink-3">{d.declared ?? "—"}</td>
+            <td className="py-1 font-mono text-ink-3">{d.resolved ?? "—"}</td>
           </tr>
         ))}
       </tbody>
@@ -121,7 +121,7 @@ function ComponentCard({ c }: { c: Component }) {
     <Card
       title={`${c.name || c.slug}${c.version ? ` ${c.version}` : ""}`}
       right={
-        <span className="rounded-full bg-tk-linen px-2 py-0.5 text-[10.5px] font-semibold text-tk-slate/70">
+        <span className="rounded-full bg-well px-2 py-0.5 text-[10.5px] font-semibold text-ink-3">
           {TYPE_LABEL[c.type] ?? c.type} · <Mono>{c.path}</Mono>
         </span>
       }
@@ -131,9 +131,9 @@ function ComponentCard({ c }: { c: Component }) {
       {c.stack?.length ? (
         <div className="mb-3 flex flex-wrap gap-1.5">
           {c.stack.map((s) => (
-            <span key={s.package ?? s.name} className="rounded-md border border-tk-slate/15 px-2 py-0.5 text-[11px] text-tk-onyx" title={s.category}>
+            <span key={s.package ?? s.name} className="rounded-md border border-line px-2 py-0.5 text-[11px] text-tk-onyx" title={s.category}>
               {s.name}
-              {s.resolved || s.declared ? <span className="text-tk-slate/60"> {s.resolved ?? s.declared}</span> : null}
+              {s.resolved || s.declared ? <span className="text-ink-3"> {s.resolved ?? s.declared}</span> : null}
             </span>
           ))}
         </div>
@@ -162,14 +162,14 @@ function ComponentCard({ c }: { c: Component }) {
           {wp.themes?.length ? (
             <details className="text-xs" open={wp.themes.length <= 6}>
               <summary className="cursor-pointer font-semibold text-tk-onyx">{wp.themes.length} themes</summary>
-              <ul className="mt-1 divide-y divide-tk-slate/[0.06]">
+              <ul className="mt-1 divide-y divide-line">
                 {wp.themes.map((t) => (
                   <li key={t.dir} className="flex flex-wrap items-baseline gap-x-3 py-1">
                     <span className="text-tk-onyx">{t.name || t.dir}</span>
-                    <span className="font-mono text-tk-slate/60">{t.version}</span>
-                    {t.template ? <span className="text-tk-slate/60">child of {t.template}</span> : null}
-                    {t.requiresPhp ? <span className="text-tk-slate/50">PHP ≥{t.requiresPhp}</span> : null}
-                    <span className="ml-auto font-mono text-[10.5px] text-tk-slate/40">{t.dir}</span>
+                    <span className="font-mono text-ink-3">{t.version}</span>
+                    {t.template ? <span className="text-ink-3">child of {t.template}</span> : null}
+                    {t.requiresPhp ? <span className="text-ink-3">PHP ≥{t.requiresPhp}</span> : null}
+                    <span className="ml-auto font-mono text-[10.5px] text-ink-3">{t.dir}</span>
                   </li>
                 ))}
               </ul>
@@ -178,12 +178,12 @@ function ComponentCard({ c }: { c: Component }) {
           {wp.plugins?.length ? (
             <details className="text-xs">
               <summary className="cursor-pointer font-semibold text-tk-onyx">{wp.plugins.length} plugins</summary>
-              <ul className="mt-1 divide-y divide-tk-slate/[0.06]">
+              <ul className="mt-1 divide-y divide-line">
                 {wp.plugins.map((p) => (
                   <li key={p.dir} className="flex items-baseline gap-x-3 py-1">
                     <span className="text-tk-onyx">{p.name || p.dir}</span>
-                    <span className="font-mono text-tk-slate/60">{p.version}</span>
-                    <span className="ml-auto font-mono text-[10.5px] text-tk-slate/40">{p.dir}</span>
+                    <span className="font-mono text-ink-3">{p.version}</span>
+                    <span className="ml-auto font-mono text-[10.5px] text-ink-3">{p.dir}</span>
                   </li>
                 ))}
               </ul>
@@ -213,7 +213,7 @@ function ComponentCard({ c }: { c: Component }) {
           </div>
           {c.dependencies.devList?.length ? (
             <details className="mt-2">
-              <summary className="cursor-pointer text-tk-slate/70">dev dependencies</summary>
+              <summary className="cursor-pointer text-ink-3">dev dependencies</summary>
               <div className="mt-1 overflow-x-auto">
                 <DepTable deps={c.dependencies.devList} />
               </div>
@@ -229,7 +229,7 @@ function ComponentCard({ c }: { c: Component }) {
             {Object.entries(c.scripts).map(([k, v]) => (
               <div key={k} className="contents">
                 <dt className="font-mono text-tk-onyx">{k}</dt>
-                <dd className="min-w-0 truncate font-mono text-tk-slate/60" title={v}>{v}</dd>
+                <dd className="min-w-0 truncate font-mono text-ink-3" title={v}>{v}</dd>
               </div>
             ))}
           </dl>
@@ -241,13 +241,13 @@ function ComponentCard({ c }: { c: Component }) {
           <summary className="cursor-pointer font-semibold text-tk-onyx">
             {c.env.names.length} environment variables{c.env.integrations?.length ? ` · ${c.env.integrations.map((i) => i.name).join(", ")}` : ""}
           </summary>
-          <p className="mt-1 font-mono text-[11px] leading-5 text-tk-slate/70">{c.env.names.join("  ")}</p>
-          <p className="mt-1 text-[10.5px] text-tk-slate/50">names only, from {c.env.files?.join(", ")} — values are never read</p>
+          <p className="mt-1 font-mono text-[11px] leading-5 text-ink-3">{c.env.names.join("  ")}</p>
+          <p className="mt-1 text-[10.5px] text-ink-3">names only, from {c.env.files?.join(", ")} — values are never read</p>
         </details>
       ) : null}
 
       {c.sources?.length ? (
-        <p className="mt-3 text-[10.5px] text-tk-slate/45">read from <Mono>{c.sources.join("  ")}</Mono></p>
+        <p className="mt-3 text-[10.5px] text-ink-3">read from <Mono>{c.sources.join("  ")}</Mono></p>
       ) : null}
     </Card>
   )
@@ -274,7 +274,7 @@ export function SpecSheet({ data }: { data: Record<string, unknown> }) {
       ))}
       {spec.notes?.length ? (
         <Card title="Could not determine">
-          <ul className="list-disc pl-4 text-xs text-tk-slate/70">
+          <ul className="list-disc pl-4 text-xs text-ink-3">
             {spec.notes.map((n, i) => (
               <li key={i}>{n}</li>
             ))}

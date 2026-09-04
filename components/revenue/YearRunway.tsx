@@ -17,20 +17,20 @@ export function YearRunway({
   const gap = goalCents != null ? goalCents - landingCents : null
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-      <div className="flex flex-wrap items-end justify-between gap-2 border-b border-tk-slate/10 px-5 py-3.5">
+    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <div className="flex flex-wrap items-end justify-between gap-2 border-b border-line px-5 py-3.5">
         <div>
           <h2 className="text-sm font-semibold text-tk-onyx">{year} runway</h2>
-          <p className="mt-0.5 text-xs text-tk-slate/60">
+          <p className="mt-0.5 text-xs text-ink-3">
             Issued months plus booked retainers and dated deliverables
           </p>
         </div>
-        <p className="text-xs tabular-nums text-tk-slate/60">
+        <p className="text-xs tabular-nums text-ink-3">
           Landing {formatMoney(landingCents)}
           {goalCents != null ? ` of ${formatMoney(goalCents)}` : ""}
         </p>
       </div>
-      <ul className="divide-y divide-tk-slate/10 px-5">
+      <ul className="divide-y divide-line px-5">
         {months.map((month) => {
           const forecast = month.kind !== "actual"
           const width = Math.max((month.cents / max) * 100, month.cents > 0 ? 2 : 0)
@@ -42,7 +42,7 @@ export function YearRunway({
                 forecast && "opacity-60"
               )}
             >
-              <span className={cn("text-tk-slate/70", forecast && "italic")}>
+              <span className={cn("text-ink-3", forecast && "italic")}>
                 {month.label}
                 {month.kind === "remainder" ? (
                   <span className="ml-1 text-[10px] uppercase tracking-wide">
@@ -54,11 +54,11 @@ export function YearRunway({
                   </span>
                 ) : null}
               </span>
-              <span className="block h-1.5 overflow-hidden rounded-full bg-tk-linen">
+              <span className="block h-1.5 overflow-hidden rounded-full bg-well">
                 <span
                   className={cn(
                     "block h-full rounded-full",
-                    month.kind === "actual" ? "bg-tk-teal" : "bg-tk-teal/40"
+                    month.kind === "actual" ? "bg-accent-mark" : "bg-accent-mark/40"
                   )}
                   style={{ width: `${width}%` }}
                 />
@@ -78,7 +78,7 @@ export function YearRunway({
         </li>
       </ul>
       {gap != null ? (
-        <p className="border-t border-tk-slate/10 px-5 py-3 text-xs text-tk-slate/70">
+        <p className="border-t border-line px-5 py-3 text-xs text-ink-3">
           {gap > 0
             ? `${formatMoney(gap)} still to find above booked work if the year is going to hit ${formatMoney(goalCents!)}.`
             : `Booked work already clears the ${formatMoney(goalCents!)} goal by ${formatMoney(-gap)}.`}

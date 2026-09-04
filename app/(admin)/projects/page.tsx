@@ -112,7 +112,7 @@ export default async function ProjectsPage({
           return (
             <article
               key={project.id}
-              className="flex flex-col gap-3 rounded-2xl border border-tk-slate/15 bg-white p-5 pb-4 shadow-sm"
+              className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5 pb-4 shadow-card"
               style={{ borderLeftWidth: 3, borderLeftColor: color }}
             >
               <div className="flex flex-wrap items-center gap-2">
@@ -130,11 +130,11 @@ export default async function ProjectsPage({
                     no movement · {stale}d
                   </span>
                 ) : null}
-                <span className="ml-auto text-xs text-tk-slate/60">{project.client.name}</span>
+                <span className="ml-auto text-xs text-ink-3">{project.client.name}</span>
               </div>
 
               <div>
-                <div className="flex h-2 overflow-hidden rounded-full bg-tk-linen" role="img" aria-label="Fee progress">
+                <div className="flex h-2 overflow-hidden rounded-full bg-well" role="img" aria-label="Fee progress">
                   {totalKnown > 0 ? (
                     <>
                       <span className="block h-full" style={{ width: `${(paid / totalKnown) * 100}%`, background: "#006965" }} />
@@ -142,7 +142,7 @@ export default async function ProjectsPage({
                     </>
                   ) : null}
                 </div>
-                <p className="mt-1.5 text-[11px] tabular-nums text-tk-slate/70">
+                <p className="mt-1.5 text-[11px] tabular-nums text-ink-3">
                   {totalKnown > 0 ? (
                     <>
                       {formatMoney(paid)} paid
@@ -159,7 +159,7 @@ export default async function ProjectsPage({
                 <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
                   {deliverables.map((d, i) => (
                     <span key={d.id} className="flex items-center">
-                      {i > 0 ? <span className="mx-2 h-0.5 w-5 bg-tk-slate/[0.09]" aria-hidden /> : null}
+                      {i > 0 ? <span className="mx-2 h-0.5 w-5 bg-well" aria-hidden /> : null}
                       <Milestone d={d} baseHref={ROUTES.projects} />
                     </span>
                   ))}
@@ -169,26 +169,26 @@ export default async function ProjectsPage({
               {streams.length || effRate || hours > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
                   {streams.map((w) => (
-                    <span key={w.id} className="inline-flex items-center gap-1.5 rounded-full border border-tk-slate/15 bg-[#FAF6EE] px-2.5 py-0.5 text-[11px] font-semibold text-tk-slate tabular-nums">
+                    <span key={w.id} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-well px-2.5 py-0.5 text-[11px] font-semibold text-tk-slate tabular-nums">
                       <span className="size-1.5 rounded-full" style={{ background: color }} />
                       {w.title} · {w.stage}
                       <span className="text-[10px] font-bold text-tk-teal">{w.pass === 1 ? "1st" : w.pass === 2 ? "2nd" : `${w.pass}th`}</span>
                     </span>
                   ))}
                   {effRate ? (
-                    <span className="inline-flex items-center rounded-full border border-tk-slate/15 bg-[#FAF6EE] px-2.5 py-0.5 text-[11px] font-bold tabular-nums text-emerald-800">
+                    <span className="inline-flex items-center rounded-full border border-line bg-well px-2.5 py-0.5 text-[11px] font-bold tabular-nums text-emerald-800">
                       eff. {formatMoney(effRate)}/hr · {fmtHours(hours)} hr vs {formatMoney(billed)} billed
                     </span>
                   ) : project.status === "in_progress" ? (
-                    <span className="inline-flex items-center rounded-full border border-tk-slate/15 bg-[#FAF6EE] px-2.5 py-0.5 text-[11px] font-semibold text-tk-slate/60">
+                    <span className="inline-flex items-center rounded-full border border-line bg-well px-2.5 py-0.5 text-[11px] font-semibold text-ink-3">
                       eff. rate — log hours to unlock
                     </span>
                   ) : null}
                 </div>
               ) : null}
 
-              <div className="flex flex-wrap items-center gap-2 border-t border-dashed border-tk-slate/10 pt-3 text-[12.5px] text-tk-slate">
-                <span className="text-[10.5px] font-bold uppercase tracking-widest text-tk-slate/50">Next</span>
+              <div className="flex flex-wrap items-center gap-2 border-t border-dashed border-line pt-3 text-[12.5px] text-tk-slate">
+                <span className="text-[10.5px] font-bold uppercase tracking-widest text-ink-3">Next</span>
                 {nextTask ? (
                   <Link
                     href={`${ROUTES.projects}?peek=task:${nextTask.id}`}
@@ -199,11 +199,11 @@ export default async function ProjectsPage({
                     {nextTask.notes ? ` — ${nextTask.notes}` : ""}
                   </Link>
                 ) : (
-                  <span className="text-tk-slate/60">no open tasks</span>
+                  <span className="text-ink-3">no open tasks</span>
                 )}
                 {invoiceable ? (
                   <form action={draftDeliverableInvoice.bind(null, invoiceable.id)} className="ml-auto">
-                    <button className="rounded-full bg-tk-teal px-3 py-1 text-xs font-semibold text-tk-linen hover:bg-tk-teal/90">
+                    <button className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-tk-linen hover:bg-tk-teal/90">
                       Invoice {formatMoney(invoiceable.feeCents ?? 0)}
                     </button>
                   </form>
@@ -214,22 +214,22 @@ export default async function ProjectsPage({
         })}
       </div>
 
-      <ul className="mt-4 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white/60">
+      <ul className="mt-4 overflow-hidden rounded-2xl border border-line bg-well">
         {projects
           .filter((p) => p.status === "complete")
           .map((p) => {
             const total = p.deliverables.reduce((s, d) => s + (d.feeCents ?? 0), 0)
             return (
-              <li key={p.id} className="flex flex-wrap items-center gap-2.5 border-b border-tk-slate/10 px-5 py-3 text-sm last:border-0">
+              <li key={p.id} className="flex flex-wrap items-center gap-2.5 border-b border-line px-5 py-3 text-sm last:border-0">
                 <span className="size-2 rounded-full" style={{ background: clientColor(p.client.slug) }} />
                 <Link href={ROUTES.project(p.slug)} className="font-semibold text-tk-onyx hover:text-tk-teal">
                   {p.name}
                 </Link>
-                <span className="text-tk-slate/60">
+                <span className="text-ink-3">
                   {p.client.name}
                   {total ? ` · ${formatMoney(total)} · all paid` : ""}
                 </span>
-                <span className="ml-auto rounded-full bg-tk-slate/10 px-2 py-0.5 text-[11px] font-semibold text-tk-slate/70">complete</span>
+                <span className="ml-auto rounded-full bg-well px-2 py-0.5 text-[11px] font-semibold text-ink-3">complete</span>
               </li>
             )
           })}
@@ -246,10 +246,10 @@ function Milestone({ d, baseHref }: { d: Deliverable; baseHref: string }) {
       <span
         className={
           done
-            ? "grid size-5 place-items-center rounded-full bg-tk-teal text-[11px] font-bold text-tk-linen"
+            ? "grid size-5 place-items-center rounded-full bg-accent text-[11px] font-bold text-tk-linen"
             : ready
               ? "grid size-5 place-items-center rounded-full border-[1.5px] border-tk-teal bg-tk-teal/15 text-[11px] font-bold text-tk-teal"
-              : "grid size-5 place-items-center rounded-full border-[1.5px] border-dashed border-tk-slate/30 bg-tk-linen text-[11px] font-bold text-tk-slate/60"
+              : "grid size-5 place-items-center rounded-full border-[1.5px] border-dashed border-line-strong bg-well text-[11px] font-bold text-ink-3"
         }
       >
         {done ? "✓" : ready ? "!" : d.sort || "·"}
@@ -257,7 +257,7 @@ function Milestone({ d, baseHref }: { d: Deliverable; baseHref: string }) {
       <span className="text-xs">
         <span className="font-semibold text-tk-onyx">{d.label}</span>
         {d.dueOn ? (
-          <span className="text-tk-slate/60"> · {new Date(d.dueOn + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+          <span className="text-ink-3"> · {new Date(d.dueOn + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
         ) : null}
       </span>
     </Link>
@@ -266,10 +266,10 @@ function Milestone({ d, baseHref }: { d: Deliverable; baseHref: string }) {
 
 function Kpi({ label, value, sub, tone }: { label: string; value: string; sub: string; tone?: "good" | "bad" }) {
   return (
-    <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-tk-slate/60">{label}</p>
+    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
       <p className="mt-1.5 text-[23px] font-semibold leading-tight tracking-tight text-tk-onyx tabular-nums">{value}</p>
-      <p className={`mt-0.5 truncate text-xs ${tone === "bad" ? "font-semibold text-red-700" : tone === "good" ? "font-semibold text-emerald-800" : "text-tk-slate/60"}`}>
+      <p className={`mt-0.5 truncate text-xs ${tone === "bad" ? "font-semibold text-red-700" : tone === "good" ? "font-semibold text-emerald-800" : "text-ink-3"}`}>
         {sub}
       </p>
     </div>

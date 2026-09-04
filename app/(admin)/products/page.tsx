@@ -65,7 +65,7 @@ export default async function ProductsPage({
         <PeekRouter peek={searchParams.peek} closeHref={ROUTES.products} />
       ) : null}
 
-      <p className="mt-1 text-[11.5px] text-tk-slate/60">
+      <p className="mt-1 text-[11.5px] text-ink-3">
         {plural(catalog.length, "product")}
         {" · "}
         {openTasks.length === 0
@@ -128,24 +128,24 @@ export default async function ProductsPage({
                     {studio.name}
                   </h2>
                   {studio.kind !== "solo" ? (
-                    <span className="rounded-full bg-tk-slate/10 px-2 py-0.5 text-[11px] font-semibold text-tk-slate/70">
+                    <span className="rounded-full bg-well px-2 py-0.5 text-[11px] font-semibold text-ink-3">
                       {PRODUCT_STUDIO_KIND_LABEL[studio.kind]}
                     </span>
                   ) : null}
                 </div>
                 {studio.notes ? (
-                  <p className="mt-1 max-w-2xl text-sm text-tk-slate/60">
+                  <p className="mt-1 max-w-2xl text-sm text-ink-3">
                     {studio.notes}
                   </p>
                 ) : null}
               </div>
-              <p className="text-[11px] tabular-nums text-tk-slate/50">
+              <p className="text-[11px] tabular-nums text-ink-3">
                 {plural(studio.products.length, "product")}
               </p>
             </div>
 
             {studio.products.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-tk-slate/20 bg-white/70 px-5 py-6 text-sm text-tk-slate/60">
+              <p className="rounded-2xl border border-dashed border-line bg-well px-5 py-6 text-sm text-ink-3">
                 Nothing here yet.
               </p>
             ) : (
@@ -164,7 +164,7 @@ export default async function ProductsPage({
                   return (
                     <article
                       key={product.id}
-                      className="flex flex-col gap-3 rounded-2xl border border-tk-slate/15 bg-white p-5 pb-4 shadow-sm"
+                      className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5 pb-4 shadow-card"
                       style={{ borderLeftWidth: 3, borderLeftColor: color }}
                     >
                       <div className="flex flex-wrap items-center gap-2">
@@ -191,20 +191,20 @@ export default async function ProductsPage({
                           </span>
                         ) : null}
                         {product.linkCount > 0 ? (
-                          <span className="ml-auto text-[11px] tabular-nums text-tk-slate/55">
+                          <span className="ml-auto text-[11px] tabular-nums text-ink-3">
                             {plural(product.linkCount, "link")}
                           </span>
                         ) : null}
                       </div>
 
                       {blurb ? (
-                        <p className="line-clamp-2 text-sm text-tk-slate/70">
+                        <p className="line-clamp-2 text-sm text-ink-3">
                           {blurb}
                         </p>
                       ) : null}
 
-                      <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-dashed border-tk-slate/10 pt-3 text-[12.5px] text-tk-slate">
-                        <span className="text-[10.5px] font-bold uppercase tracking-widest text-tk-slate/50">
+                      <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-dashed border-line pt-3 text-[12.5px] text-tk-slate">
+                        <span className="text-[10.5px] font-bold uppercase tracking-widest text-ink-3">
                           Next
                         </span>
                         {next ? (
@@ -216,9 +216,9 @@ export default async function ProductsPage({
                             {next.title}
                           </Link>
                         ) : (
-                          <span className="text-tk-slate/55">no open tasks</span>
+                          <span className="text-ink-3">no open tasks</span>
                         )}
-                        <span className="ml-auto shrink-0 text-[11px] tabular-nums text-tk-slate/50">
+                        <span className="ml-auto shrink-0 text-[11px] tabular-nums text-ink-3">
                           {open.length === 0
                             ? "quiet"
                             : plural(open.length, "open task")}
@@ -251,8 +251,8 @@ function Kpi({
   tone?: "good" | "bad"
 }) {
   return (
-    <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-tk-slate/60">
+    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">
         {label}
       </p>
       <p className="mt-1.5 text-[23px] font-semibold leading-tight tracking-tight text-tk-onyx tabular-nums">
@@ -264,7 +264,7 @@ function Kpi({
             ? "font-semibold text-red-700"
             : tone === "good"
               ? "font-semibold text-emerald-800"
-              : "text-tk-slate/60"
+              : "text-ink-3"
         }`}
       >
         {sub}

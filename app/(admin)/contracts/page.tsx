@@ -17,9 +17,9 @@ export default async function ContractsPage() {
       <PageHeader title="Contracts" />
 
       {rows.length === 0 ? (
-        <p className="mt-8 text-sm text-tk-slate/70">No contracts yet.</p>
+        <p className="mt-8 text-sm text-ink-3">No contracts yet.</p>
       ) : (
-        <div className="mt-8 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+        <div className="mt-8 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
           <ContractList
             contracts={rows.map((row) => ({
               ...row,

@@ -36,7 +36,7 @@ export function RefreshInsights({
   return (
     <div className="flex flex-wrap items-center gap-3">
       {refreshedAt ? (
-        <p className="text-xs text-tk-slate/55">
+        <p className="text-xs text-ink-3">
           Fetched{" "}
           {new Date(refreshedAt).toLocaleString(undefined, {
             month: "short",
@@ -53,13 +53,13 @@ export function RefreshInsights({
         className={cn(
           "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50",
           primary
-            ? "bg-tk-teal text-tk-linen hover:bg-tk-teal/90"
-            : "border border-tk-slate/20 bg-white text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+            ? "bg-accent text-tk-linen hover:bg-tk-teal/90"
+            : "border border-line bg-card text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
         )}
       >
         {pending ? "Fetching…" : label}
       </button>
-      {error ? <p className="max-w-xs text-xs text-[#A62228]">{error}</p> : null}
+      {error ? <p className="max-w-xs text-xs text-bad">{error}</p> : null}
     </div>
   )
 }

@@ -124,7 +124,7 @@ export function TaskBoardView({
 
       <DragOverlay>
         {active ? (
-          <div className="w-52 rotate-2 rounded-xl border border-tk-slate/15 bg-white p-2.5 shadow-xl">
+          <div className="w-52 rotate-2 rounded-xl border border-line bg-card p-2.5 shadow-overlay">
             <p className="text-[13px] font-medium text-tk-onyx">{active.title}</p>
           </div>
         ) : null}
@@ -149,13 +149,13 @@ function Column({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex min-h-[140px] flex-col rounded-2xl border bg-[#FAF6EE] transition-colors",
-        isOver ? "border-tk-teal bg-tk-teal/5" : "border-tk-slate/15"
+        "flex min-h-[140px] flex-col rounded-2xl border bg-well transition-colors",
+        isOver ? "border-tk-teal bg-tk-teal/5" : "border-line"
       )}
     >
       <div className="flex items-baseline justify-between px-3 pb-1 pt-2.5">
         <h3 className="text-[13px] font-semibold text-tk-onyx">{label}</h3>
-        <span className="font-mono text-xs tabular-nums text-tk-slate/60">
+        <span className="font-mono text-xs tabular-nums text-ink-3">
           {count || ""}
         </span>
       </div>
@@ -185,7 +185,7 @@ function Card({
       {...listeners}
       {...attributes}
       className={cn(
-        "cursor-grab touch-none overflow-hidden rounded-xl border border-tk-slate/15 bg-white shadow-sm active:cursor-grabbing",
+        "cursor-grab touch-none overflow-hidden rounded-xl border border-line bg-card shadow-card active:cursor-grabbing",
         dragging && "opacity-35",
         task.status === "done" && "opacity-70"
       )}
@@ -199,7 +199,7 @@ function Card({
           className={cn(
             "block text-[13px] font-medium leading-snug hover:text-tk-teal",
             task.status === "done"
-              ? "text-tk-slate/60 line-through"
+              ? "text-ink-3 line-through"
               : "text-tk-onyx"
           )}
         >
@@ -211,7 +211,7 @@ function Card({
             <span
               aria-hidden
               title="High priority"
-              className="size-[7px] rounded-full bg-[#B4322A]"
+              className="size-[7px] rounded-full bg-bad"
             />
           ) : null}
           {showClient && task.clientName ? (
@@ -228,17 +228,17 @@ function Card({
             </span>
           ) : null}
           {task.productName && !showClient ? (
-            <span className="text-[11px] text-tk-slate/60">{task.productName}</span>
+            <span className="text-[11px] text-ink-3">{task.productName}</span>
           ) : task.projectName && !showClient ? (
-            <span className="text-[11px] text-tk-slate/60">{task.projectName}</span>
+            <span className="text-[11px] text-ink-3">{task.projectName}</span>
           ) : null}
           {task.items.total > 0 ? (
-            <span className="rounded bg-tk-linen px-1.5 font-mono text-[10px] text-tk-slate/70">
+            <span className="rounded bg-well px-1.5 font-mono text-[10px] text-ink-3">
               {task.items.done}/{task.items.total}
             </span>
           ) : null}
           {task.overdueDays != null ? (
-            <span className="rounded-full bg-[#B4322A]/10 px-1.5 py-px text-[10px] font-bold uppercase text-[#B4322A]">
+            <span className="rounded-full bg-bad-soft px-1.5 py-px text-[10px] font-bold uppercase text-bad">
               {task.overdueDays}d over
             </span>
           ) : null}
@@ -248,7 +248,7 @@ function Card({
             </span>
           ) : null}
           {task.cadence !== "none" ? (
-            <span className="rounded-full bg-tk-linen px-1.5 py-px text-[10px] font-semibold text-tk-slate">
+            <span className="rounded-full bg-well px-1.5 py-px text-[10px] font-semibold text-tk-slate">
               {CADENCE_LABEL[task.cadence]}
             </span>
           ) : null}

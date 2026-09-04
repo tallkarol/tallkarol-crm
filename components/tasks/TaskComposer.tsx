@@ -122,8 +122,8 @@ export function TaskComposer({
   return (
     <div
       className={cn(
-        "rounded-xl border bg-white shadow-sm transition-colors",
-        text ? "border-tk-teal/60" : "border-tk-slate/20"
+        "rounded-xl border bg-card shadow-card transition-colors",
+        text ? "border-tk-teal/60" : "border-line"
       )}
     >
       <div className="flex items-center gap-2 py-1 pl-3.5 pr-1">
@@ -143,13 +143,13 @@ export function TaskComposer({
           }}
           placeholder={placeholder}
           aria-label="Add a task"
-          className="flex-1 bg-transparent py-1.5 text-sm text-tk-onyx outline-none placeholder:text-tk-slate/40"
+          className="flex-1 bg-transparent py-1.5 text-sm text-tk-onyx outline-none placeholder:text-ink-3"
         />
         <button
           type="button"
           onClick={submit}
           disabled={!ready || busy}
-          className="inline-flex items-center gap-1 rounded-lg bg-tk-teal px-3 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-40"
+          className="inline-flex items-center gap-1 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-40"
         >
           <Plus className="size-3.5" />
           {busy ? "Adding…" : "Add"}
@@ -157,7 +157,7 @@ export function TaskComposer({
       </div>
 
       {text || !compact ? (
-        <div className="flex flex-wrap items-center gap-1.5 border-t border-tk-slate/10 px-3 py-2">
+        <div className="flex flex-wrap items-center gap-1.5 border-t border-line px-3 py-2">
           {effectiveClientName || effectiveProductName ? (
             <Chip
               tone={fromScope ? "scope" : "on"}
@@ -236,7 +236,7 @@ export function TaskComposer({
             )}
           </Dropdown>
 
-          <p className="ml-auto hidden font-mono text-[10px] text-tk-slate/45 sm:block">
+          <p className="ml-auto hidden font-mono text-[10px] text-ink-3 sm:block">
             @ target · ! when · * repeat · &gt; snooze
           </p>
         </div>
@@ -245,7 +245,7 @@ export function TaskComposer({
       {error ? (
         <p
           role="status"
-          className="border-t border-tk-slate/10 px-3 py-2 text-xs font-semibold text-red-700"
+          className="border-t border-line px-3 py-2 text-xs font-semibold text-red-700"
         >
           {error}
         </p>
@@ -273,8 +273,8 @@ function Chip({
         "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold",
         tone === "on" && "border-transparent bg-tk-teal/10 text-tk-teal",
         tone === "scope" && "border-dashed border-tk-teal/40 bg-tk-teal/5 text-tk-teal",
-        tone === "empty" && "border-dashed border-tk-slate/25 text-tk-slate/50",
-        tone === "warn" && "border-amber-300 bg-amber-50 text-amber-800"
+        tone === "empty" && "border-dashed border-line-strong text-ink-3",
+        tone === "warn" && "border-transparent bg-warn-soft text-warn"
       )}
     >
       {swatch ? (

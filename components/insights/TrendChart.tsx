@@ -92,14 +92,14 @@ export function TrendChart({
                 "rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors",
                 m === metric
                   ? "bg-tk-onyx text-tk-linen"
-                  : "text-tk-slate/70 hover:bg-tk-slate/10 hover:text-tk-onyx"
+                  : "text-ink-3 hover:bg-well hover:text-tk-onyx"
               )}
             >
               {METRIC_META[m].label}
             </button>
           ))}
         </div>
-        <div className="flex gap-4 text-[11px] font-medium text-tk-slate/70">
+        <div className="flex gap-4 text-[11px] font-medium text-ink-3">
           <span className="flex items-center gap-1.5">
             <i className="h-[3px] w-3.5 rounded-full" style={{ background: color }} />
             This period
@@ -196,7 +196,7 @@ export function TrendChart({
 
         {h != null && current[h] ? (
           <div
-            className="pointer-events-none absolute top-3 z-10 rounded-xl bg-tk-onyx px-3 py-2 text-xs text-tk-linen shadow-lg"
+            className="pointer-events-none absolute top-3 z-10 rounded-xl bg-tk-onyx px-3 py-2 text-xs text-tk-linen shadow-overlay"
             style={
               tooltipLeftPct > 0.62
                 ? { right: `${(1 - tooltipLeftPct) * 88 + 6}%` }

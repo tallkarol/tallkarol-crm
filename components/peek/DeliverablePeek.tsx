@@ -30,7 +30,7 @@ export async function DeliverablePeek({ id }: { id: string }) {
         <h2 className="text-lg font-semibold leading-snug text-tk-onyx">
           {deliverable.title || deliverable.label}
         </h2>
-        <p className="mt-1.5 text-sm text-tk-slate/70">
+        <p className="mt-1.5 text-sm text-ink-3">
           <EntityLink
             href={ROUTES.project(project.slug)}
             color={clientColor(project.client.slug)}
@@ -38,11 +38,11 @@ export async function DeliverablePeek({ id }: { id: string }) {
             {project.name}
           </EntityLink>{" "}
           · {project.client.name} ·{" "}
-          <span className="text-tk-slate/55">{PROJECT_STATUS_LABEL[project.status]}</span>
+          <span className="text-ink-3">{PROJECT_STATUS_LABEL[project.status]}</span>
         </p>
 
         <div className="mt-4">
-          <p className="text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/55">
+          <p className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">
             Where it stands — pending → done → invoiced → paid
           </p>
           <div className="mt-1.5">
@@ -71,7 +71,7 @@ export async function DeliverablePeek({ id }: { id: string }) {
                 className={
                   row.id === deliverable.id
                     ? "min-w-0 truncate font-semibold text-tk-onyx"
-                    : "min-w-0 truncate text-tk-slate/80"
+                    : "min-w-0 truncate text-tk-slate"
                 }
               >
                 {row.title || row.label}

@@ -11,20 +11,20 @@ export default function SettingsIntegrationsPage() {
 
       <Link
         href={ROUTES.settingsCalendar}
-        className="mt-8 block rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm transition-colors hover:border-tk-teal/40"
+        className="mt-8 block rounded-2xl border border-line bg-card px-5 py-4 shadow-card hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
       >
         <p className="text-sm font-semibold text-tk-onyx">Calendar</p>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           Cal.com bookings and Google calendars, merged into one view.
         </p>
       </Link>
 
       <Link
         href={ROUTES.settingsDevices}
-        className="mt-4 block rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm transition-colors hover:border-tk-teal/40"
+        className="mt-4 block rounded-2xl border border-line bg-card px-5 py-4 shadow-card hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
       >
         <p className="text-sm font-semibold text-tk-onyx">Devices</p>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           Bearer tokens for clocking in from a watch, a phone, or a shortcut —
           one per device, revocable on its own.
         </p>
@@ -32,10 +32,10 @@ export default function SettingsIntegrationsPage() {
 
       <Link
         href={ROUTES.insights}
-        className="mt-4 block rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm transition-colors hover:border-tk-teal/40"
+        className="mt-4 block rounded-2xl border border-line bg-card px-5 py-4 shadow-card hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
       >
         <p className="text-sm font-semibold text-tk-onyx">Insights hub</p>
-        <p className="mt-1 text-sm text-tk-slate/70">
+        <p className="mt-1 text-sm text-ink-3">
           GA4 and Search Console per client — trends, deltas, and snapshot
           reports. Source health lives on each property&rsquo;s Health tab.
         </p>

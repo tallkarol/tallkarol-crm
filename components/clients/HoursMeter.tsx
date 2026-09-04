@@ -14,12 +14,12 @@ export function HoursMeter({
   const hot = cap > 0 && logged / cap >= 0.85
   return (
     <div
-      className={cn("h-1.5 overflow-hidden rounded-full bg-tk-slate/10", className)}
+      className={cn("h-1.5 overflow-hidden rounded-full bg-well", className)}
       role="img"
       aria-label={`${logged} of ${cap} hours used this month`}
     >
       <div
-        className={cn("h-full rounded-full", hot ? "bg-[#8A5A05]" : "bg-tk-teal")}
+        className={cn("h-full rounded-full", hot ? "bg-warn" : "bg-accent")}
         style={{ width: `${pct}%` }}
       />
     </div>

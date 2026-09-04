@@ -17,10 +17,10 @@ export function QuarterGrid({ quarters }: { quarters: QuarterRow[] }) {
   const goal = quarters[0]?.goalCents ?? null
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-tk-slate/10 px-5 py-3.5">
+    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3.5">
         <h2 className="text-sm font-semibold text-tk-onyx">By quarter</h2>
-        <p className="text-xs tabular-nums text-tk-slate/60">
+        <p className="text-xs tabular-nums text-ink-3">
           {goal != null ? `${formatWholeMoney(goal)} goal each · ` : ""}dimmed is
           booked, not billed
         </p>
@@ -39,12 +39,12 @@ export function QuarterGrid({ quarters }: { quarters: QuarterRow[] }) {
             <div
               key={row.id}
               className={cn(
-                "border-l border-t border-tk-slate/10 px-4 py-3.5 first:border-l-0 sm:border-t-0",
+                "border-l border-t border-line px-4 py-3.5 first:border-l-0 sm:border-t-0",
                 row.state === "current" && "bg-tk-teal/[0.035]"
               )}
             >
               <div className="flex items-baseline justify-between gap-2">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-tk-slate/75">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-tk-slate">
                   {row.id}
                   {row.state === "current" ? (
                     <span className="ml-1 font-semibold text-tk-teal">· now</span>
@@ -64,7 +64,7 @@ export function QuarterGrid({ quarters }: { quarters: QuarterRow[] }) {
                 {formatWholeMoney(row.landingCents)}
               </p>
 
-              <div className="relative mt-2 h-2 overflow-hidden rounded-full bg-tk-linen">
+              <div className="relative mt-2 h-2 overflow-hidden rounded-full bg-well">
                 <span
                   className="absolute inset-y-0 left-0"
                   style={{ width: `${billedPct}%`, background: tone }}
@@ -81,7 +81,7 @@ export function QuarterGrid({ quarters }: { quarters: QuarterRow[] }) {
                 ) : null}
               </div>
 
-              <p className="mt-1.5 text-[11px] tabular-nums text-tk-slate/60">
+              <p className="mt-1.5 text-[11px] tabular-nums text-ink-3">
                 {row.state === "future"
                   ? `${row.monthsLabel} · all booked`
                   : row.bookedCents > 0
@@ -98,7 +98,7 @@ export function QuarterGrid({ quarters }: { quarters: QuarterRow[] }) {
       </div>
 
       {cleared.length > 0 ? (
-        <p className="border-t border-tk-slate/10 px-5 py-2.5 text-xs text-tk-slate/70">
+        <p className="border-t border-line px-5 py-2.5 text-xs text-ink-3">
           {cleared.length === 1
             ? `${cleared[0].id} is the only quarter this year to clear goal.`
             : `${cleared.map((row) => row.id).join(", ")} clear goal.`}

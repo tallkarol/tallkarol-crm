@@ -80,7 +80,7 @@ async function PunchesTab({
 
   return (
     <>
-      <p className="mt-4 max-w-2xl text-sm text-tk-slate/70">
+      <p className="mt-4 max-w-2xl text-sm text-ink-3">
         Clock-outs waiting to become billable time. Hours bill exactly as
         measured, to two decimals. A punch with no project needs a summary — the
         line has to explain itself on the invoice.
@@ -104,7 +104,7 @@ async function MeetingsTab({
 
   return (
     <>
-      <p className="mt-4 max-w-2xl text-sm text-tk-slate/70">
+      <p className="mt-4 max-w-2xl text-sm text-ink-3">
         Meetings from the last 60 days whose guests match a client domain, and
         that are not on the timesheet yet. Logging one writes a real time entry.
       </p>
@@ -135,15 +135,15 @@ function TabLink({
       className={cn(
         "inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
         active
-          ? "border-tk-teal bg-tk-teal text-tk-linen"
-          : "border-tk-slate/20 bg-white text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+          ? "border-tk-teal bg-accent text-tk-linen"
+          : "border-line bg-card text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
       )}
     >
       {children}
       <span
         className={cn(
           "rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none",
-          active ? "bg-tk-linen/25 text-tk-linen" : "bg-tk-linen text-tk-slate/70"
+          active ? "bg-well text-tk-linen" : "bg-well text-ink-3"
         )}
       >
         {count}

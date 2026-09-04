@@ -82,14 +82,14 @@ export function PlatformField({
         }}
         placeholder="Shopify, WordPress, internal app…"
         disabled={pending}
-        className="w-full rounded-lg border border-tk-slate/15 bg-white px-2 py-1 text-[13px] text-tk-onyx outline-none focus:border-tk-teal disabled:opacity-60"
+        className="w-full rounded-lg border border-line bg-card px-2 py-1 text-[13px] text-tk-onyx outline-none focus:border-tk-teal disabled:opacity-60"
       />
       <datalist id="tk-platforms">
         {known.map((p) => (
           <option key={p} value={p} />
         ))}
       </datalist>
-      {error ? <p className="mt-1 text-[11px] text-[#A62228]">{error}</p> : null}
+      {error ? <p className="mt-1 text-[11px] text-bad">{error}</p> : null}
     </div>
   )
 }
@@ -116,7 +116,7 @@ export function NoteComposer({ id }: { id: string }) {
   }
 
   return (
-    <div className="mt-4 border-t border-tk-slate/10 pt-3">
+    <div className="mt-4 border-t border-line pt-3">
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
@@ -125,7 +125,7 @@ export function NoteComposer({ id }: { id: string }) {
         }}
         rows={3}
         placeholder="Add a note — what you found, what you did…"
-        className="w-full resize-y rounded-xl border border-tk-slate/15 bg-white px-3 py-2 text-[13px] leading-relaxed text-tk-onyx outline-none placeholder:text-tk-slate/40 focus:border-tk-teal"
+        className="w-full resize-y rounded-xl border border-line bg-card px-3 py-2 text-[13px] leading-relaxed text-tk-onyx outline-none placeholder:text-ink-3 focus:border-tk-teal"
       />
       <div className="mt-1.5 flex items-center gap-3">
         <button
@@ -133,14 +133,14 @@ export function NoteComposer({ id }: { id: string }) {
           onClick={save}
           disabled={pending || !body.trim()}
           className={cn(
-            "rounded-lg bg-tk-teal px-3 py-1.5 text-xs font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90",
+            "rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90",
             (pending || !body.trim()) && "opacity-50"
           )}
         >
           {pending ? "Saving…" : "Add note"}
         </button>
-        <span className="text-[11px] text-tk-slate/45">⌘↵ to save</span>
-        {error ? <span className="text-[11px] text-[#A62228]">{error}</span> : null}
+        <span className="text-[11px] text-ink-3">⌘↵ to save</span>
+        {error ? <span className="text-[11px] text-bad">{error}</span> : null}
       </div>
     </div>
   )

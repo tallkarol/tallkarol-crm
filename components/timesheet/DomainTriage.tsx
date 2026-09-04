@@ -63,13 +63,13 @@ export function DomainTriage({
       <h2 className="text-sm font-semibold text-tk-onyx">
         Meeting time with no client
       </h2>
-      <p className="mt-1 max-w-2xl text-sm text-tk-slate/70">
+      <p className="mt-1 max-w-2xl text-sm text-ink-3">
         These domains show up on meetings but match no client. Assign one and its
         meetings become billable straight away.
       </p>
 
       {error ? (
-        <p className="mt-3 rounded-2xl border border-tk-slate/15 bg-white px-4 py-2.5 text-sm text-tk-slate shadow-sm">
+        <p className="mt-3 rounded-2xl border border-line bg-card px-4 py-2.5 text-sm text-tk-slate shadow-card">
           {error}
         </p>
       ) : null}
@@ -80,7 +80,7 @@ export function DomainTriage({
           return (
             <li
               key={row.domain}
-              className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm"
+              className="overflow-hidden rounded-2xl border border-line bg-card shadow-card"
             >
               <div className="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
                 <div className="min-w-0">
@@ -91,7 +91,7 @@ export function DomainTriage({
                     </Badge>
                   </div>
                   {row.people.length ? (
-                    <p className="mt-1 truncate text-sm text-tk-slate/70">
+                    <p className="mt-1 truncate text-sm text-ink-3">
                       {row.people.join(", ")}
                     </p>
                   ) : null}
@@ -110,7 +110,7 @@ export function DomainTriage({
                     onChange={(e) =>
                       setChoice((c) => ({ ...c, [row.domain]: e.target.value }))
                     }
-                    className="rounded-xl border border-tk-slate/20 bg-white px-3 py-1.5 text-xs text-tk-onyx outline-none focus:border-tk-teal"
+                    className="rounded-xl border border-line bg-card px-3 py-1.5 text-xs text-tk-onyx outline-none focus:border-tk-teal"
                   >
                     <option value="">Assign to…</option>
                     {clients.map((c) => (
@@ -123,7 +123,7 @@ export function DomainTriage({
                     type="button"
                     disabled={busy === row.domain}
                     onClick={() => assign(row.domain)}
-                    className="rounded-full bg-tk-teal px-3 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-50"
+                    className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-50"
                   >
                     {busy === row.domain ? "Saving…" : "Assign"}
                   </button>
@@ -131,7 +131,7 @@ export function DomainTriage({
                     type="button"
                     disabled={busy === row.domain}
                     onClick={() => reject(row.domain)}
-                    className="rounded-full border border-tk-slate/20 px-3 py-1.5 text-xs font-semibold text-tk-slate/70 hover:border-tk-slate/50 disabled:opacity-50"
+                    className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-ink-3 hover:border-line-strong disabled:opacity-50"
                   >
                     Not a client
                   </button>
@@ -139,17 +139,17 @@ export function DomainTriage({
               </div>
 
               {expanded ? (
-                <ul className="divide-y divide-tk-slate/10 border-t border-tk-slate/10 bg-tk-linen/30">
+                <ul className="divide-y divide-line border-t border-line bg-well">
                   {row.meetings.map((m) => (
                     <li key={m.id} className="px-5 py-2.5">
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <p className="text-sm text-tk-onyx">{m.title}</p>
-                        <p className="text-xs tabular-nums text-tk-slate/60">
+                        <p className="text-xs tabular-nums text-ink-3">
                           {when(m.startsAt)} · {m.hours.toFixed(2)} hr
                         </p>
                       </div>
                       {m.otherDomains.length ? (
-                        <p className="mt-0.5 text-xs text-tk-slate/55">
+                        <p className="mt-0.5 text-xs text-ink-3">
                           also in the room: {m.otherDomains.join(", ")}
                         </p>
                       ) : null}
@@ -163,7 +163,7 @@ export function DomainTriage({
       </ul>
 
       {Object.keys(resolved).length ? (
-        <p className="mt-3 text-xs text-tk-slate/60">
+        <p className="mt-3 text-xs text-ink-3">
           {Object.entries(resolved)
             .map(([d, to]) =>
               to === "ignored" ? `${d} → not a client` : `${d} → ${to}`

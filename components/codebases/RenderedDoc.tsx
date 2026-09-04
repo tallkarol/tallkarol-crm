@@ -17,7 +17,7 @@ export function RenderedDoc({ html, view, base }: { html: { handoff?: string; in
             className={
               v === view
                 ? "rounded-full bg-tk-onyx px-3 py-1 text-xs font-semibold text-tk-linen"
-                : "rounded-full border border-tk-slate/20 px-3 py-1 text-xs font-semibold text-tk-onyx hover:border-tk-teal"
+                : "rounded-full border border-line px-3 py-1 text-xs font-semibold text-tk-onyx hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             }
           >
             {v === "handoff" ? "Client handoff" : "Internal"}
@@ -29,10 +29,10 @@ export function RenderedDoc({ html, view, base }: { html: { handoff?: string; in
           title={`${view} report`}
           sandbox=""
           srcDoc={doc}
-          className="h-[calc(100vh-14rem)] w-full rounded-2xl border border-tk-slate/15 bg-white"
+          className="h-[calc(100vh-14rem)] w-full rounded-2xl border border-line bg-card"
         />
       ) : (
-        <p className="text-sm text-tk-slate/60">This run has no {view} version.</p>
+        <p className="text-sm text-ink-3">This run has no {view} version.</p>
       )}
     </div>
   )

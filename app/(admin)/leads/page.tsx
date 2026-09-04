@@ -16,7 +16,7 @@ export default async function LeadsPage() {
   const leads = rows.map(toLeadListItem)
 
   return (
-    <Suspense fallback={<p className="text-sm text-tk-slate/70">Loading leads…</p>}>
+    <Suspense fallback={<p className="text-sm text-ink-3">Loading leads…</p>}>
       <LeadsDashboard leads={leads} />
     </Suspense>
   )

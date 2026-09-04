@@ -18,15 +18,15 @@ export function Card({
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm",
+        "overflow-hidden rounded-2xl border border-line bg-card shadow-card",
         className
       )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-tk-slate/10 px-5 py-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3.5">
         <h2 className="text-sm font-semibold text-tk-onyx">{title}</h2>
         {right ??
           (note ? (
-            <p className="text-xs tabular-nums text-tk-slate/60">{note}</p>
+            <p className="text-xs tabular-nums text-ink-3">{note}</p>
           ) : null)}
       </div>
       {children}
@@ -42,11 +42,11 @@ export function Delta({
   suffix: string
 }) {
   if (pct == null) {
-    return <p className="mt-1 text-[11px] text-tk-slate/50">no prior window</p>
+    return <p className="mt-1 text-[11px] text-ink-3">no prior window</p>
   }
   if (pct === 0) {
     return (
-      <p className="mt-1 text-[11px] font-medium text-tk-slate/55">
+      <p className="mt-1 text-[11px] font-medium text-ink-3">
         — unchanged {suffix}
       </p>
     )
@@ -61,7 +61,7 @@ export function Delta({
       style={{ color: up ? CHART.good : CHART.bad }}
     >
       {up ? "▲" : "▼"} {text}{" "}
-      <span className="font-medium text-tk-slate/55">{suffix}</span>
+      <span className="font-medium text-ink-3">{suffix}</span>
     </p>
   )
 }
@@ -78,15 +78,15 @@ export function Kpi({
   sub?: string
 }) {
   return (
-    <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wider text-tk-slate/70">
+    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+      <p className="text-xs font-semibold uppercase tracking-wider text-ink-3">
         {label}
       </p>
       <p className="mt-2 text-2xl font-semibold tracking-tight text-tk-onyx tabular-nums">
         {value}
       </p>
       {delta}
-      {sub ? <p className="mt-1 text-xs text-tk-slate/60">{sub}</p> : null}
+      {sub ? <p className="mt-1 text-xs text-ink-3">{sub}</p> : null}
     </div>
   )
 }
@@ -99,7 +99,7 @@ export function ChartTip({
   rows: { color?: string; name: string; value: string }[]
 }) {
   return (
-    <div className="rounded-xl bg-tk-onyx px-3 py-2 text-xs text-tk-linen shadow-lg">
+    <div className="rounded-xl bg-tk-onyx px-3 py-2 text-xs text-tk-linen shadow-overlay">
       <p className="font-semibold">{label}</p>
       <div className="mt-1 space-y-0.5">
         {rows.map((row) => (

@@ -28,29 +28,29 @@ export function ClientTable({
   const billed = rows.reduce((sum, row) => sum + row.billedCents, 0)
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-      <div className="flex flex-wrap items-end justify-between gap-2 border-b border-tk-slate/10 px-5 py-3.5">
+    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <div className="flex flex-wrap items-end justify-between gap-2 border-b border-line px-5 py-3.5">
         <div>
           <h2 className="text-sm font-semibold text-tk-onyx">Per client</h2>
-          <p className="mt-0.5 text-xs text-tk-slate/60">
+          <p className="mt-0.5 text-xs text-ink-3">
             {periodLabel} · rate is billed hours only · bars are the last 12 months
           </p>
         </div>
-        <p className="text-xs tabular-nums text-tk-slate/60">
+        <p className="text-xs tabular-nums text-ink-3">
           {formatMoney(billed)}
           {blendedCents != null ? ` · ${formatMoney(blendedCents)}/hr blended` : ""}
         </p>
       </div>
 
       {rows.length === 0 ? (
-        <p className="px-5 py-8 text-sm text-tk-slate/70">
+        <p className="px-5 py-8 text-sm text-ink-3">
           No invoices in this window.
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[50rem] text-left text-sm">
             <thead>
-              <tr className="border-b border-tk-slate/10 text-[11px] font-semibold uppercase tracking-wider text-tk-slate/60">
+              <tr className="border-b border-line text-[11px] font-semibold uppercase tracking-wider text-ink-3">
                 <th className="px-5 py-2.5 font-semibold">Client</th>
                 <th className="px-3 py-2.5 text-right font-semibold">Billed</th>
                 <th className="px-3 py-2.5 text-right font-semibold">Hours</th>
@@ -70,7 +70,7 @@ export function ClientTable({
                 return (
                   <tr
                     key={row.slug}
-                    className="border-b border-tk-slate/10 last:border-0"
+                    className="border-b border-line last:border-0"
                   >
                     <td className="px-5 py-3">
                       <Link
@@ -93,7 +93,7 @@ export function ClientTable({
                     <td className="px-3 py-3 text-right tabular-nums font-semibold text-tk-onyx">
                       {formatMoney(row.billedCents)}
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-tk-slate/80">
+                    <td className="px-3 py-3 text-right tabular-nums text-tk-slate">
                       {row.invoiceHours > 0 ? fmtHours(row.invoiceHours) : "—"}
                     </td>
                     <td className="px-3 py-3 text-right tabular-nums text-tk-onyx">
@@ -103,7 +103,7 @@ export function ClientTable({
                     </td>
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="block h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-tk-linen">
+                        <span className="block h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-well">
                           <span
                             className="block h-full rounded-full"
                             style={{
@@ -112,21 +112,21 @@ export function ClientTable({
                             }}
                           />
                         </span>
-                        <span className="w-8 text-right text-xs tabular-nums text-tk-slate/70">
+                        <span className="w-8 text-right text-xs tabular-nums text-ink-3">
                           {Math.round(row.share * 100)}%
                         </span>
                       </div>
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-tk-slate/80">
+                    <td className="px-3 py-3 text-right tabular-nums text-tk-slate">
                       {row.quarterCents > 0 ? formatMoney(row.quarterCents) : "—"}
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-tk-slate/70">
+                    <td className="px-3 py-3 text-right tabular-nums text-ink-3">
                       {row.loggedHours > 0 ? fmtHours(row.loggedHours) : "—"}
                     </td>
                     <td className="px-3 py-3">
                       <MiniBars values={row.spark} label={`${row.name} last 12 months`} />
                     </td>
-                    <td className="px-5 py-3 text-xs text-tk-slate/60">
+                    <td className="px-5 py-3 text-xs text-ink-3">
                       {mixLabel(row)}
                     </td>
                   </tr>

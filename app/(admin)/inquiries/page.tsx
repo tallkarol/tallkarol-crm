@@ -53,8 +53,8 @@ export default async function InboxPage({
                   href={href}
                   className={
                     active
-                      ? "rounded-full bg-tk-teal px-3 py-1.5 text-xs font-semibold text-tk-linen"
-                      : "rounded-full border border-tk-slate/20 bg-white px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+                      ? "rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-tk-linen"
+                      : "rounded-full border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
                   }
                 >
                   {f.label}
@@ -65,18 +65,18 @@ export default async function InboxPage({
         }
       />
 
-      <div className="mt-8 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+      <div className="mt-8 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
         {rows.length === 0 ? (
-          <p className="px-6 py-12 text-center text-sm text-tk-slate/70">
+          <p className="px-6 py-12 text-center text-sm text-ink-3">
             No inquiries yet.
           </p>
         ) : (
-          <ul className="divide-y divide-tk-slate/10">
+          <ul className="divide-y divide-line">
             {rows.map((row) => (
               <li key={row.id}>
                 <Link
                   href={ROUTES.inquiry(row.id)}
-                  className="flex flex-col gap-2 px-5 py-4 transition-colors hover:bg-tk-linen/60 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-2 px-5 py-4 transition-colors hover:bg-well sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -84,14 +84,14 @@ export default async function InboxPage({
                         {row.name}
                       </span>
                       {row.company && (
-                        <span className="text-sm text-tk-slate/70">
+                        <span className="text-sm text-ink-3">
                           · {row.company}
                         </span>
                       )}
                       <StatusPill status={row.status} />
                       <SourceChip payload={row.payload} />
                     </div>
-                    <p className="mt-0.5 truncate text-sm text-tk-slate/70">
+                    <p className="mt-0.5 truncate text-sm text-ink-3">
                       {row.email}
                       {row.projectTypes.length > 0
                         ? ` · ${row.projectTypes.join(", ")}`
@@ -99,7 +99,7 @@ export default async function InboxPage({
                     </p>
                   </div>
                   <time
-                    className="shrink-0 text-xs text-tk-slate/70"
+                    className="shrink-0 text-xs text-ink-3"
                     dateTime={row.createdAt.toISOString()}
                   >
                     {row.createdAt.toLocaleString()}
@@ -118,7 +118,7 @@ function SourceChip({ payload }: { payload: unknown }) {
   const label = sourceLabel(readAttribution(payload))
   if (!label) return null
   return (
-    <span className="inline-flex rounded-full bg-tk-linen px-2 py-0.5 text-[11px] font-semibold text-tk-slate">
+    <span className="inline-flex rounded-full bg-well px-2 py-0.5 text-[11px] font-semibold text-tk-slate">
       {label}
     </span>
   )

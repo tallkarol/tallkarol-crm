@@ -64,27 +64,27 @@ const KIND_ICON: Record<WaitingKind, IconType> = {
 const TONE_DOT: Record<WaitingSeverity, string> = {
   hot: "bg-bad",
   warn: "bg-warn",
-  quiet: "border border-tk-slate/15 bg-white",
+  quiet: "border border-line bg-card",
 }
 const TONE_EDGE: Record<WaitingSeverity, string> = {
   hot: "border-l-bad",
   warn: "border-l-warn",
-  quiet: "border-l-tk-slate/15",
+  quiet: "border-l-line",
 }
 const TONE_CHIP: Record<WaitingSeverity, string> = {
   hot: "bg-bad-soft text-bad",
   warn: "bg-warn-soft text-warn",
-  quiet: "bg-tk-linen text-tk-slate",
+  quiet: "bg-well text-tk-slate",
 }
 
 const GHOST_BTN =
-  "inline-flex h-7 items-center gap-1 whitespace-nowrap rounded-md px-2 font-ui text-[11.5px] font-semibold text-tk-slate hover:bg-tk-linen hover:text-tk-onyx focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-tk-teal"
+  "inline-flex h-7 items-center gap-1 whitespace-nowrap rounded-md px-2 font-ui text-[11.5px] font-semibold text-tk-slate hover:bg-well transition-colors duration-[120ms] hover:text-tk-onyx focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-tk-teal"
 const ICON_BTN =
-  "rounded-md p-1.5 text-tk-slate/70 hover:bg-tk-linen hover:text-tk-onyx focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-tk-teal"
+  "rounded-md p-1.5 text-ink-3 hover:bg-well transition-colors duration-[120ms] hover:text-tk-onyx focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-tk-teal"
 const REPLY_INPUT =
-  "h-8 min-w-0 flex-1 rounded-lg border border-tk-slate/15 bg-tk-linen px-2.5 text-[12.5px] text-tk-onyx placeholder:text-tk-slate focus:border-tk-teal focus:bg-white focus:outline-none"
+  "h-8 min-w-0 flex-1 rounded-lg border border-line bg-well px-2.5 text-[12.5px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:bg-card focus:outline-none"
 const SEND_BTN =
-  "h-8 shrink-0 rounded-lg bg-tk-teal px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95"
+  "h-8 shrink-0 rounded-lg bg-accent px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95"
 
 export function WaitingStrip({ payload }: { payload: WaitingPayload | null }) {
   const router = useRouter()
@@ -117,9 +117,9 @@ export function WaitingStrip({ payload }: { payload: WaitingPayload | null }) {
   return (
     <section
       aria-labelledby={headingId}
-      className="mt-6 min-w-0 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-card"
+      className="mt-6 min-w-0 overflow-hidden rounded-2xl border border-line bg-card shadow-card"
     >
-      <div className="flex flex-wrap items-center gap-2.5 border-b border-tk-slate/10 px-[18px] py-3">
+      <div className="flex flex-wrap items-center gap-2.5 border-b border-line px-[18px] py-3">
         {total > 0 ? (
           <span
             aria-hidden
@@ -134,13 +134,13 @@ export function WaitingStrip({ payload }: { payload: WaitingPayload | null }) {
           Waiting on you
         </h2>
         {total > 0 ? (
-          <span className="grid h-5 min-w-5 place-items-center rounded-full border border-tk-slate/15 bg-tk-linen px-1.5 font-ui text-[11px] font-bold tabular-nums text-tk-slate">
+          <span className="grid h-5 min-w-5 place-items-center rounded-full border border-line bg-well px-1.5 font-ui text-[11px] font-bold tabular-nums text-tk-slate">
             {total}
           </span>
         ) : null}
 
         {payload ? (
-          <p className="ml-auto flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-tk-slate/70">
+          <p className="ml-auto flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-ink-3">
             {WAITING_KINDS.filter((kind) => payload.counts[kind] > 0).map((kind) => (
               <span key={kind} className="whitespace-nowrap">
                 {KIND_LABEL[kind]} <span className="font-semibold tabular-nums">{payload.counts[kind]}</span>
@@ -152,17 +152,17 @@ export function WaitingStrip({ payload }: { payload: WaitingPayload | null }) {
       </div>
 
       {error ? (
-        <p role="status" className="border-b border-tk-slate/10 bg-bad-soft px-[18px] py-2 text-[12px] text-bad">
+        <p role="status" className="border-b border-line bg-bad-soft px-[18px] py-2 text-[12px] text-bad">
           {error}
         </p>
       ) : null}
 
       {!payload ? (
-        <p className="px-[18px] py-4 text-[12.5px] text-tk-slate/70">
+        <p className="px-[18px] py-4 text-[12.5px] text-ink-3">
           The queue could not be read. The rest of the dashboard is unaffected.
         </p>
       ) : items.length === 0 ? (
-        <p className="flex items-center gap-2 px-[18px] py-4 text-[12.5px] text-tk-slate/70">
+        <p className="flex items-center gap-2 px-[18px] py-4 text-[12.5px] text-ink-3">
           <CheckCircle2 className="size-4 shrink-0" aria-hidden />
           {/* Ticking the last visible row empties the strip a beat before the
               refresh brings the overflow up, and "nothing is waiting" would be
@@ -205,7 +205,7 @@ function Card({
   return (
     <li
       className={cn(
-        "flex w-[290px] shrink-0 snap-start flex-col gap-1.5 rounded-xl border border-l-[3px] border-tk-slate/15 bg-white p-3 shadow-card",
+        "flex w-[290px] shrink-0 snap-start flex-col gap-1.5 rounded-xl border border-l-[3px] border-line bg-card p-3 shadow-card",
         TONE_EDGE[item.severity]
       )}
     >
@@ -220,12 +220,12 @@ function Card({
           style={item.color ? ({ "--c": item.color } as React.CSSProperties) : undefined}
           className={cn(
             "inline-flex h-5 items-center truncate rounded-md px-1.5",
-            item.client ? "tk-client-tint tk-client-ink" : "bg-tk-linen text-tk-onyx"
+            item.client ? "tk-client-tint tk-client-ink" : "bg-well text-tk-onyx"
           )}
         >
           {item.client || "House"}
         </span>
-        <span className="ml-auto shrink-0 tabular-nums text-tk-slate/70">{item.ageLabel}</span>
+        <span className="ml-auto shrink-0 tabular-nums text-ink-3">{item.ageLabel}</span>
       </div>
 
       <Link
@@ -236,7 +236,7 @@ function Card({
       </Link>
 
       {item.subtitle ? (
-        <p className="line-clamp-2 text-[11.5px] leading-snug text-tk-slate/70">{item.subtitle}</p>
+        <p className="line-clamp-2 text-[11.5px] leading-snug text-ink-3">{item.subtitle}</p>
       ) : null}
 
       {reply ? (

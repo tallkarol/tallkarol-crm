@@ -53,7 +53,7 @@ export function BrandMark({
           <span
             className={cn(
               "block font-ui text-[9.5px] font-bold uppercase tracking-[0.18em]",
-              rail ? "text-rail-ink/50" : "text-tk-slate/70"
+              rail ? "text-rail-ink/50" : "text-ink-3"
             )}
           >
             CRM

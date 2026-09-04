@@ -30,7 +30,7 @@ export default async function DeliveryPage({
   return (
     <>
       <PageHeader title="Delivery" />
-      <p className="mt-1 text-[11.5px] text-tk-slate/60">
+      <p className="mt-1 text-[11.5px] text-ink-3">
         {totals.needsYou > 0
           ? `${totals.needsYou} engagement${totals.needsYou === 1 ? "" : "s"} need${totals.needsYou === 1 ? "s" : ""} you`
           : "Nothing outstanding"}
@@ -38,7 +38,7 @@ export default async function DeliveryPage({
         {new Date().toLocaleDateString("en-US", { day: "numeric", month: "long" })}
       </p>
 
-      <Suspense fallback={<p className="mt-8 text-sm text-tk-slate/70">Loading…</p>}>
+      <Suspense fallback={<p className="mt-8 text-sm text-ink-3">Loading…</p>}>
         <DeliveryLedger rows={rows} totals={totals} clients={clients} />
       </Suspense>
 

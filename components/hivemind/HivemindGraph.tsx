@@ -453,7 +453,7 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search skills, agents, files…"
-            className="h-8 w-56 rounded-lg border border-tk-slate/15 bg-white px-3 text-[13px] text-tk-onyx placeholder:text-tk-slate/45 focus:border-tk-teal focus:outline-none focus:ring-2 focus:ring-tk-teal/25"
+            className="h-8 w-56 rounded-lg border border-line bg-card px-3 text-[13px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:outline-none focus:ring-2 focus:ring-tk-teal/25"
           />
         </label>
 
@@ -477,13 +477,13 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
                 className={cn(
                   "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] font-medium transition-colors",
                   on
-                    ? "border-tk-slate/20 bg-white text-tk-onyx"
-                    : "border-dashed border-tk-slate/20 bg-transparent text-tk-slate/45"
+                    ? "border-line bg-card text-tk-onyx"
+                    : "border-dashed border-line bg-transparent text-ink-3"
                 )}
               >
                 <Swatch kind={kind} muted={!on} />
                 {style.label}
-                <span className="tabular-nums text-tk-slate/45">{graph.counts[kind] ?? 0}</span>
+                <span className="tabular-nums text-ink-3">{graph.counts[kind] ?? 0}</span>
               </button>
             )
           })}
@@ -496,7 +496,7 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
               touchedRef.current = false
               fit()
             }}
-            className="rounded-lg border border-tk-slate/15 bg-white px-2.5 py-1 text-[11.5px] font-medium text-tk-slate hover:border-tk-slate/30"
+            className="rounded-lg border border-line bg-card px-2.5 py-1 text-[11.5px] font-medium text-tk-slate hover:border-line-strong"
           >
             Fit
           </button>
@@ -507,8 +507,8 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
             className={cn(
               "rounded-lg border px-2.5 py-1 text-[11.5px] font-medium transition-colors",
               showTable
-                ? "border-tk-teal bg-tk-teal text-white"
-                : "border-tk-slate/15 bg-white text-tk-slate hover:border-tk-slate/30"
+                ? "border-tk-teal bg-accent text-white"
+                : "border-line bg-card text-tk-slate hover:border-line-strong"
             )}
           >
             Table
@@ -518,7 +518,7 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
         {/* The map */}
-        <div className="relative overflow-hidden rounded-xl border border-tk-slate/12 bg-white shadow-card">
+        <div className="relative overflow-hidden rounded-xl border border-line bg-card shadow-card">
           <svg
             ref={svgRef}
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -645,21 +645,21 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
           </svg>
 
           {!settled ? (
-            <p className="pointer-events-none absolute bottom-2 left-3 font-mono text-[10.5px] text-tk-slate/45">
+            <p className="pointer-events-none absolute bottom-2 left-3 font-mono text-[10.5px] text-ink-3">
               settling…
             </p>
           ) : null}
-          <p className="pointer-events-none absolute bottom-2 right-3 font-mono text-[10.5px] text-tk-slate/40">
+          <p className="pointer-events-none absolute bottom-2 right-3 font-mono text-[10.5px] text-ink-3">
             scroll to zoom · drag to move
           </p>
         </div>
 
         {/* Inspector */}
-        <aside className="rounded-xl border border-tk-slate/12 bg-white p-4 shadow-card" aria-live="polite">
+        <aside className="rounded-xl border border-line bg-card p-4 shadow-card" aria-live="polite">
           {selectedNode ? (
             <div className="flex flex-col gap-3">
               <div>
-                <p className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-[0.12em] text-tk-slate/55">
+                <p className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-3">
                   <Swatch kind={selectedNode.kind} />
                   {KIND_STYLE[selectedNode.kind].label}
                 </p>
@@ -668,26 +668,26 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
                 </h3>
               </div>
               {selectedNode.blurb ? (
-                <p className="text-[12.5px] leading-relaxed text-tk-slate/80">{selectedNode.blurb}</p>
+                <p className="text-[12.5px] leading-relaxed text-tk-slate">{selectedNode.blurb}</p>
               ) : null}
               {selectedNode.meta && Object.keys(selectedNode.meta).length ? (
-                <dl className="flex flex-col gap-1.5 border-t border-tk-slate/10 pt-3">
+                <dl className="flex flex-col gap-1.5 border-t border-line pt-3">
                   {Object.entries(selectedNode.meta).map(([key, value]) => (
                     <div key={key}>
-                      <dt className="text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/50">{key}</dt>
-                      <dd className="text-[12px] text-tk-slate/85">{value}</dd>
+                      <dt className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">{key}</dt>
+                      <dd className="text-[12px] text-tk-slate">{value}</dd>
                     </div>
                   ))}
                 </dl>
               ) : null}
               {selectedNode.source ? (
-                <p className="break-all border-t border-tk-slate/10 pt-3 font-mono text-[11px] text-tk-slate/60">
+                <p className="break-all border-t border-line pt-3 font-mono text-[11px] text-ink-3">
                   {selectedNode.source}
                 </p>
               ) : null}
               {connections.length ? (
-                <div className="border-t border-tk-slate/10 pt-3">
-                  <p className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/50">
+                <div className="border-t border-line pt-3">
+                  <p className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">
                     {connections.length} connection{connections.length === 1 ? "" : "s"}
                   </p>
                   <ul className="flex flex-col gap-0.5">
@@ -696,11 +696,11 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
                         <button
                           type="button"
                           onClick={() => setSelected(node.id)}
-                          className="flex w-full items-center gap-1.5 rounded px-1 py-0.5 text-left text-[12px] text-tk-slate/85 hover:bg-tk-linen"
+                          className="flex w-full items-center gap-1.5 rounded px-1 py-0.5 text-left text-[12px] text-tk-slate hover:bg-well transition-colors duration-[120ms]"
                         >
                           <Swatch kind={node.kind} />
                           <span className="truncate">{node.label}</span>
-                          <span className="ml-auto shrink-0 font-mono text-[10px] text-tk-slate/45">
+                          <span className="ml-auto shrink-0 font-mono text-[10px] text-ink-3">
                             {out ? rel : `${rel} by`}
                           </span>
                         </button>
@@ -712,17 +712,17 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              <p className="text-[12.5px] leading-relaxed text-tk-slate/70">
+              <p className="text-[12.5px] leading-relaxed text-ink-3">
                 Pick a node to read what it is, where it lives in the repo, and what it
                 talks to. Hover to light up its neighbours.
               </p>
-              <div className="border-t border-tk-slate/10 pt-3">
-                <p className="mb-2 text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/50">
+              <div className="border-t border-line pt-3">
+                <p className="mb-2 text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">
                   Legend
                 </p>
                 <ul className="flex flex-col gap-1.5">
                   {LEGEND.map((group) => (
-                    <li key={group.label} className="flex items-center gap-2 text-[12px] text-tk-slate/80">
+                    <li key={group.label} className="flex items-center gap-2 text-[12px] text-tk-slate">
                       <span className="flex items-center gap-1">
                         {group.kinds.map((k) => (
                           <Swatch key={k} kind={k} />
@@ -733,11 +733,11 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
                   ))}
                 </ul>
               </div>
-              <div className="border-t border-tk-slate/10 pt-3">
-                <p className="mb-2 text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/50">
+              <div className="border-t border-line pt-3">
+                <p className="mb-2 text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">
                   Edges
                 </p>
-                <ul className="flex flex-col gap-1 font-mono text-[11px] text-tk-slate/70">
+                <ul className="flex flex-col gap-1 font-mono text-[11px] text-ink-3">
                   <li>─── contains</li>
                   <li>- - - loads</li>
                   <li>· · · fires</li>
@@ -751,27 +751,27 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
       {/* The table view — the relief the light-mode contrast WARN obligates,
           and the linear read for anyone not driving a force graph by pointer. */}
       {showTable ? (
-        <div className="overflow-x-auto rounded-xl border border-tk-slate/12 bg-white shadow-card">
+        <div className="overflow-x-auto rounded-xl border border-line bg-card shadow-card">
           <table className="w-full min-w-[640px] text-left text-[12.5px]">
             <caption className="sr-only">Every node in the hive mind map</caption>
             <thead>
-              <tr className="border-b border-tk-slate/12 text-[10.5px] uppercase tracking-wide text-tk-slate/55">
+              <tr className="border-b border-line text-[10.5px] uppercase tracking-wide text-ink-3">
                 <th scope="col" className="px-3 py-2 font-semibold">Kind</th>
                 <th scope="col" className="px-3 py-2 font-semibold">Name</th>
                 <th scope="col" className="px-3 py-2 font-semibold">What it is</th>
                 <th scope="col" className="px-3 py-2 font-semibold">Source</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-tk-slate/8">
+            <tbody className="divide-y divide-line">
               {ordered
                 .filter((n) => !matches || matches.has(n.id))
                 .map((node) => (
                   <tr
                     key={node.id}
-                    className={cn("align-top", selected === node.id && "bg-tk-linen")}
+                    className={cn("align-top", selected === node.id && "bg-well")}
                   >
                     <td className="whitespace-nowrap px-3 py-2">
-                      <span className="flex items-center gap-1.5 text-tk-slate/75">
+                      <span className="flex items-center gap-1.5 text-tk-slate">
                         <Swatch kind={node.kind} />
                         {KIND_STYLE[node.kind].label}
                       </span>
@@ -785,8 +785,8 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
                         {node.label}
                       </button>
                     </td>
-                    <td className="max-w-[46ch] px-3 py-2 text-tk-slate/75">{node.blurb}</td>
-                    <td className="px-3 py-2 font-mono text-[11px] text-tk-slate/55">{node.source}</td>
+                    <td className="max-w-[46ch] px-3 py-2 text-tk-slate">{node.blurb}</td>
+                    <td className="px-3 py-2 font-mono text-[11px] text-ink-3">{node.source}</td>
                   </tr>
                 ))}
             </tbody>

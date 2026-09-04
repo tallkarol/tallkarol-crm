@@ -44,14 +44,14 @@ export function ClientRail({
             className={cn(
               "flex items-center gap-2.5 rounded-xl border px-3.5 py-2 transition-colors",
               active
-                ? "border-tk-teal bg-tk-teal text-tk-linen"
-                : "border-tk-slate/20 bg-white text-tk-onyx hover:border-tk-teal"
+                ? "border-tk-teal bg-accent text-tk-linen"
+                : "border-line bg-card text-tk-onyx hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             )}
           >
             <span
               className={cn(
                 "h-2 w-2 rounded-[3px]",
-                active ? "bg-tk-linen" : "bg-tk-slate/25"
+                active ? "bg-well" : "bg-tk-slate/25"
               )}
             />
             <span className="leading-tight">
@@ -59,7 +59,7 @@ export function ClientRail({
               <span
                 className={cn(
                   "block text-[10.5px]",
-                  active ? "text-tk-linen/70" : "text-tk-slate/55"
+                  active ? "text-tk-linen/70" : "text-ink-3"
                 )}
               >
                 {domain(site.origin) || site.slug}
@@ -70,7 +70,7 @@ export function ClientRail({
         )
       })}
       {showAdd ? (
-        <p className="rounded-xl border border-dashed border-tk-slate/25 px-3 py-2 text-xs font-semibold text-tk-slate/55">
+        <p className="rounded-xl border border-dashed border-line-strong px-3 py-2 text-xs font-semibold text-ink-3">
           ＋ npm run site:add
         </p>
       ) : null}

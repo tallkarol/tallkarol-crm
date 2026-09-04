@@ -95,7 +95,7 @@ function LinkifiedText({ text }: { text: string }) {
   const parts = parseRichText(text)
   if (!parts.length) return null
   return (
-    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-tk-slate/80">
+    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-tk-slate">
       {parts.map((part, i) =>
         part.type === "link" ? (
           <ExternalA
@@ -127,9 +127,9 @@ function Fact({
 }) {
   return (
     <div className="flex gap-3">
-      <Icon className="mt-0.5 size-4 shrink-0 text-tk-slate/35" aria-hidden />
+      <Icon className="mt-0.5 size-4 shrink-0 text-ink-3" aria-hidden />
       <div className="min-w-0 flex-1">
-        <p className="text-[10.5px] font-semibold uppercase tracking-wide text-tk-slate/45">
+        <p className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">
           {label}
         </p>
         <div className="mt-0.5 text-sm text-tk-onyx">{children}</div>
@@ -140,8 +140,8 @@ function Fact({
 
 const pill =
   "inline-flex items-center justify-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition-colors"
-const pillPrimary = `${pill} bg-tk-teal text-tk-linen hover:bg-tk-teal/90`
-const pillGhost = `${pill} border border-tk-slate/20 text-tk-slate hover:border-tk-teal hover:text-tk-teal`
+const pillPrimary = `${pill} bg-accent text-tk-linen hover:bg-tk-teal/90`
+const pillGhost = `${pill} border border-line text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal`
 
 export function EventModal({
   event,
@@ -202,7 +202,7 @@ export function EventModal({
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-8">
       <button
         type="button"
-        className="absolute inset-0 bg-tk-onyx/30 backdrop-blur-[2px] motion-safe:animate-[tk-fade-in_.18s_ease-out]"
+        className="absolute inset-0 bg-scrim backdrop-blur-[2px] motion-safe:animate-[tk-fade-in_.18s_ease-out]"
         aria-label="Close event"
         onClick={onClose}
       />
@@ -210,7 +210,7 @@ export function EventModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="event-modal-title"
-        className="relative flex max-h-[min(40rem,90dvh)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-2xl motion-safe:animate-[tk-modal-in_.22s_ease-out]"
+        className="relative flex max-h-[min(40rem,90dvh)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-overlay motion-safe:animate-[tk-modal-in_.22s_ease-out]"
       >
         <div className="h-1 shrink-0" style={{ background: color }} />
 
@@ -218,7 +218,7 @@ export function EventModal({
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               {event.source ? (
-                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-tk-slate/50">
+                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-3">
                   <span
                     className="size-1.5 rounded-full"
                     style={{ background: color }}
@@ -227,7 +227,7 @@ export function EventModal({
                 </p>
               ) : null}
               {event.cancelled ? (
-                <span className="rounded-full bg-[#A62228]/10 px-2 py-0.5 text-[11px] font-semibold text-[#A62228]">
+                <span className="rounded-full bg-bad-soft px-2 py-0.5 text-[11px] font-semibold text-bad">
                   Cancelled
                 </span>
               ) : null}
@@ -243,16 +243,16 @@ export function EventModal({
                 {amount}
               </p>
             ) : null}
-            <p className="mt-1.5 text-sm text-tk-slate/65">
+            <p className="mt-1.5 text-sm text-ink-3">
               {when.date}
-              <span className="text-tk-slate/35"> · </span>
+              <span className="text-ink-3"> · </span>
               {when.time}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-tk-slate/45 transition-colors hover:bg-tk-linen hover:text-tk-onyx"
+            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-ink-3 transition-colors hover:bg-well transition-colors duration-[120ms] hover:text-tk-onyx"
             aria-label="Close event"
           >
             <X className="size-4" aria-hidden />
@@ -260,7 +260,7 @@ export function EventModal({
         </header>
 
         {hasBody ? (
-          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto border-t border-tk-slate/10 px-6 py-5">
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto border-t border-line px-6 py-5">
             {event.location ? (
               <Fact icon={MapPin} label="Where">
                 {locationHref ? (
@@ -282,9 +282,9 @@ export function EventModal({
                   {attendees.map((person, i) => {
                     const label = person.name || person.email
                     const chip = (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-tk-linen px-2 py-1 pr-2.5">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-well px-2 py-1 pr-2.5">
                         <span
-                          className="grid size-5 place-items-center rounded-full bg-tk-teal text-[9px] font-bold text-tk-linen"
+                          className="grid size-5 place-items-center rounded-full bg-accent text-[9px] font-bold text-tk-linen"
                           aria-hidden
                         >
                           {initials(person.name, person.email)}
@@ -328,7 +328,7 @@ export function EventModal({
             ) : null}
 
             {notes ? (
-              <div className="rounded-xl bg-tk-linen/70 px-4 py-3">
+              <div className="rounded-xl bg-well px-4 py-3">
                 <LinkifiedText text={notes} />
               </div>
             ) : null}
@@ -351,7 +351,7 @@ export function EventModal({
         ) : null}
 
         {join || event.url || event.href ? (
-          <footer className="flex shrink-0 flex-wrap items-center gap-2 border-t border-tk-slate/10 bg-tk-linen/50 px-6 py-3.5">
+          <footer className="flex shrink-0 flex-wrap items-center gap-2 border-t border-line bg-well px-6 py-3.5">
             {join ? (
               <ExternalA href={join.href} className={pillPrimary}>
                 {join.label}

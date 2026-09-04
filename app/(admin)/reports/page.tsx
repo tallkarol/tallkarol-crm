@@ -42,24 +42,24 @@ export default async function ReportsPage() {
       {archives.length > 0 ? (
         <section className="mt-8">
           <h2 className="text-sm font-semibold text-tk-onyx">Generated snapshots</h2>
-          <p className="mt-0.5 text-xs text-tk-slate/60">
+          <p className="mt-0.5 text-xs text-ink-3">
             Frozen months from the Insights hub — view renders the client-safe
             report, PDF is the browser&rsquo;s Save as PDF.
           </p>
-          <ul className="mt-3 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+          <ul className="mt-3 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
             {archives.map((row) => {
               const payload = row.payload as ArchivePayload
               const filed = row.report?.status === "filed"
               return (
                 <li
                   key={row.id}
-                  className="flex flex-wrap items-center justify-between gap-3 border-b border-tk-slate/10 px-5 py-3.5 last:border-0"
+                  className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3.5 last:border-0"
                 >
                   <div className="min-w-0">
                     <p className="font-medium text-tk-onyx">
                       {row.site.name} — {row.label || row.period}
                     </p>
-                    <p className="mt-0.5 text-sm text-tk-slate/70">
+                    <p className="mt-0.5 text-sm text-ink-3">
                       Monthly snapshot
                       {payload?.partial ? " · to date" : ""}
                     </p>
@@ -68,13 +68,13 @@ export default async function ReportsPage() {
                     <Badge tone={filed ? "muted" : "teal"}>{filed ? "Sent" : "Ready"}</Badge>
                     <Link
                       href={`/insights/${row.site.slug}/reports`}
-                      className="rounded-md border border-tk-slate/20 bg-white px-2 py-1 text-[10.5px] font-semibold text-tk-slate transition-colors hover:border-tk-teal hover:text-tk-teal"
+                      className="rounded-md border border-line bg-card px-2 py-1 text-[10.5px] font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
                     >
                       In hub
                     </Link>
                     <Link
                       href={`/insights-report/${row.site.slug}?period=${row.period}`}
-                      className="rounded-md bg-tk-teal px-2.5 py-1 text-[10.5px] font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90"
+                      className="rounded-md bg-accent px-2.5 py-1 text-[10.5px] font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90"
                     >
                       View / PDF
                     </Link>
@@ -89,9 +89,9 @@ export default async function ReportsPage() {
       <section className="mt-8">
         <h2 className="text-sm font-semibold text-tk-onyx">Tracked reports</h2>
         {manual.length === 0 ? (
-          <p className="mt-3 text-sm text-tk-slate/70">No reports yet.</p>
+          <p className="mt-3 text-sm text-ink-3">No reports yet.</p>
         ) : (
-          <ul className="mt-3 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+          <ul className="mt-3 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
             {manual.map((report) => {
               const parent = report.retainer
                 ? {
@@ -112,11 +112,11 @@ export default async function ReportsPage() {
               return (
                 <li
                   key={report.id}
-                  className="flex items-center justify-between gap-4 border-b border-tk-slate/10 px-5 py-3.5 last:border-0"
+                  className="flex items-center justify-between gap-4 border-b border-line px-5 py-3.5 last:border-0"
                 >
                   <div className="min-w-0">
                     <p className="font-medium text-tk-onyx">{report.title}</p>
-                    <p className="mt-0.5 text-sm text-tk-slate/70">
+                    <p className="mt-0.5 text-sm text-ink-3">
                       {parent ? (
                         <Link
                           href={parent.href}
@@ -140,7 +140,7 @@ export default async function ReportsPage() {
                         href={ROUTES.reportDoc(report.slug)}
                         target="_blank"
                         rel="noreferrer"
-                        className="rounded-md bg-tk-teal px-2.5 py-1 text-[10.5px] font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90"
+                        className="rounded-md bg-accent px-2.5 py-1 text-[10.5px] font-semibold text-tk-linen transition-colors hover:bg-tk-teal/90"
                       >
                         View
                       </a>

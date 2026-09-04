@@ -50,7 +50,7 @@ export function TemplatePreviewModal({
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-8">
       <button
         type="button"
-        className="absolute inset-0 bg-tk-onyx/45"
+        className="absolute inset-0 bg-scrim"
         aria-label="Close preview"
         onClick={onClose}
       />
@@ -58,11 +58,11 @@ export function TemplatePreviewModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="template-preview-title"
-        className="relative flex max-h-[min(44rem,90dvh)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+        className="relative flex max-h-[min(44rem,90dvh)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-card shadow-overlay"
       >
-        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-tk-slate/10 px-5 py-4">
+        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-line px-5 py-4">
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-tk-slate/70">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">
               {isSheet ? "One-sheet preview" : "Email preview"}
             </p>
             <h2
@@ -71,23 +71,23 @@ export function TemplatePreviewModal({
             >
               {template.title}
             </h2>
-            <p className="mt-1 text-sm text-tk-slate/70">
+            <p className="mt-1 text-sm text-ink-3">
               Personalized for {lead.name}. Nothing has been sent.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-tk-onyx hover:bg-tk-linen"
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-tk-onyx hover:bg-well transition-colors duration-[120ms]"
             aria-label="Close preview"
           >
             <X className="size-5" aria-hidden />
           </button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto bg-tk-linen/80 px-5 py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-well px-5 py-5">
           {isSheet ? (
-            <article className="mx-auto max-w-lg rounded-sm bg-white px-8 py-10 shadow-sm ring-1 ring-tk-slate/10">
+            <article className="mx-auto max-w-lg rounded-sm bg-card px-8 py-10 shadow-card ring-1 ring-line">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tk-teal">
                 Tall Karol
               </p>
@@ -99,18 +99,18 @@ export function TemplatePreviewModal({
               </div>
             </article>
           ) : (
-            <article className="rounded-xl bg-white shadow-sm ring-1 ring-tk-slate/10">
-              <dl className="divide-y divide-tk-slate/10 border-b border-tk-slate/10 px-5 py-3 text-sm">
+            <article className="rounded-xl bg-card shadow-card ring-1 ring-line">
+              <dl className="divide-y divide-line border-b border-line px-5 py-3 text-sm">
                 <div className="flex gap-3 py-1.5">
-                  <dt className="w-16 shrink-0 text-tk-slate/70">From</dt>
+                  <dt className="w-16 shrink-0 text-ink-3">From</dt>
                   <dd className="text-tk-onyx">Karol at Tall Karol</dd>
                 </div>
                 <div className="flex gap-3 py-1.5">
-                  <dt className="w-16 shrink-0 text-tk-slate/70">To</dt>
+                  <dt className="w-16 shrink-0 text-ink-3">To</dt>
                   <dd className="break-all text-tk-onyx">{lead.email}</dd>
                 </div>
                 <div className="flex gap-3 py-1.5">
-                  <dt className="w-16 shrink-0 text-tk-slate/70">Subject</dt>
+                  <dt className="w-16 shrink-0 text-ink-3">Subject</dt>
                   <dd className="font-medium text-tk-onyx">{rendered.subject}</dd>
                 </div>
               </dl>
@@ -121,11 +121,11 @@ export function TemplatePreviewModal({
           )}
         </div>
 
-        <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-tk-slate/10 bg-white px-5 py-4">
+        <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-line bg-card px-5 py-4">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-tk-slate/20 px-4 py-2 text-sm font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+            className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
           >
             Back
           </button>
@@ -133,7 +133,7 @@ export function TemplatePreviewModal({
             type="button"
             disabled={sending}
             onClick={onSend}
-            className="rounded-full bg-tk-teal px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90 disabled:opacity-50"
+            className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90 disabled:opacity-50"
           >
             {sending ? "Sending…" : `Send to ${lead.email}`}
           </button>
@@ -164,19 +164,19 @@ export function TemplateCard({
   return (
     <article
       className={cn(
-        "flex h-full flex-col rounded-xl border border-tk-slate/15 bg-white px-3 py-3"
+        "flex h-full flex-col rounded-xl border border-line bg-card px-3 py-3"
       )}
     >
       <p className="text-sm font-semibold text-tk-onyx">{template.title}</p>
-      <p className="mt-1 text-xs text-tk-slate/70">{template.blurb}</p>
+      <p className="mt-1 text-xs text-ink-3">{template.blurb}</p>
       <p className="mt-3 text-xs font-medium text-tk-onyx">{rendered.subject}</p>
-      <p className="mt-1 line-clamp-3 flex-1 text-xs leading-relaxed text-tk-slate/70">
+      <p className="mt-1 line-clamp-3 flex-1 text-xs leading-relaxed text-ink-3">
         {excerpt}
       </p>
       <button
         type="button"
         onClick={onPreview}
-        className="mt-3 self-start rounded-full border border-tk-slate/20 px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal"
+        className="mt-3 self-start rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
       >
         Preview
       </button>

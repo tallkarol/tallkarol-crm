@@ -26,7 +26,7 @@ const PILL: Record<PillTone, string> = {
   bad: "bg-bad/10 text-bad",
   warn: "bg-warn/10 text-warn",
   ok: "bg-ok/10 text-ok",
-  neutral: "border border-tk-slate/15 bg-white text-tk-slate",
+  neutral: "border border-line bg-card text-tk-slate",
 }
 
 function openBoard() {
@@ -75,7 +75,7 @@ export function HomeHeader({
        entrance animation would otherwise promote them over the header. */
     <div className="tk-rise relative z-10 flex flex-wrap items-end justify-between gap-x-6 gap-y-4" style={{ "--i": 0 } as React.CSSProperties}>
       <div className="min-w-0">
-        <p className="font-ui text-[11px] font-bold uppercase tracking-[0.14em] text-tk-slate/70">
+        <p className="font-ui text-[11px] font-bold uppercase tracking-[0.14em] text-ink-3">
           {date}
           {now ? (
             <>

@@ -93,36 +93,36 @@ export function MeetingInbox({ proposals }: { proposals: MeetingProposal[] }) {
       </div>
 
       {error ? (
-        <p className="mt-3 rounded-2xl border border-tk-slate/15 bg-white px-4 py-2.5 text-sm text-tk-slate shadow-sm">
+        <p className="mt-3 rounded-2xl border border-line bg-card px-4 py-2.5 text-sm text-tk-slate shadow-card">
           {error}
         </p>
       ) : null}
 
       {open.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-tk-slate/20 bg-white/80 px-6 py-10 text-center shadow-sm">
+        <div className="mt-6 rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
           <p className="text-sm font-semibold text-tk-onyx">Nothing waiting</p>
-          <p className="mt-1 text-sm text-tk-slate/70">
+          <p className="mt-1 text-sm text-ink-3">
             Every matched meeting is either logged or waved off.
           </p>
         </div>
       ) : (
         grouped.map(([day, items]) => (
           <section key={day} className="mt-6">
-            <h2 className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+            <h2 className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
               {dayLabel(items[0].startsAt)}
             </h2>
-            <ul className="mt-2 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+            <ul className="mt-2 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
               {items.map((p) => (
                 <li
                   key={p.eventId}
-                  className="flex flex-wrap items-start justify-between gap-3 border-b border-tk-slate/10 px-5 py-3.5 last:border-0"
+                  className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 py-3.5 last:border-0"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-medium text-tk-onyx">{p.title}</p>
                       <Badge tone="teal">{p.clientName}</Badge>
                     </div>
-                    <p className="mt-0.5 text-sm text-tk-slate/70">
+                    <p className="mt-0.5 text-sm text-ink-3">
                       {localParts(p.startsAt).clock}–{localParts(p.endsAt).clock} ·{" "}
                       {p.hours.toFixed(2)} hr · matched on {p.matchedDomain}
                     </p>
@@ -132,7 +132,7 @@ export function MeetingInbox({ proposals }: { proposals: MeetingProposal[] }) {
                       type="button"
                       disabled={busy === p.eventId}
                       onClick={() => accept(p)}
-                      className="rounded-full bg-tk-teal px-3 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-50"
+                      className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-50"
                     >
                       {busy === p.eventId ? "Logging…" : "Log it"}
                     </button>
@@ -140,7 +140,7 @@ export function MeetingInbox({ proposals }: { proposals: MeetingProposal[] }) {
                       type="button"
                       disabled={busy === p.eventId}
                       onClick={() => skip(p)}
-                      className="rounded-full border border-tk-slate/20 px-3 py-1.5 text-xs font-semibold text-tk-slate/70 hover:border-tk-slate/50 disabled:opacity-50"
+                      className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-ink-3 hover:border-line-strong disabled:opacity-50"
                     >
                       Not billable
                     </button>
@@ -158,8 +158,8 @@ export function MeetingInbox({ proposals }: { proposals: MeetingProposal[] }) {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-3 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-tk-slate/60">
+    <div className="rounded-2xl border border-line bg-card px-5 py-3 shadow-card">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
         {label}
       </p>
       <p className="mt-1 text-xl font-semibold tabular-nums text-tk-onyx">

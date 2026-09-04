@@ -297,7 +297,7 @@ export function TicketQueue({
 
   return (
     <div data-menu-boundary className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-tk-slate/10 bg-white px-3 py-2">
+      <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-line bg-card px-3 py-2">
         <Dropdown
           open={menu === "view"}
           onOpen={() => setMenu("view")}
@@ -329,8 +329,8 @@ export function TicketQueue({
           ))}
         </Dropdown>
 
-        <label className="flex min-w-[160px] flex-1 items-center gap-2 rounded-lg border border-tk-slate/15 bg-tk-linen/60 px-2.5 py-1.5">
-          <span aria-hidden className="text-xs text-tk-slate/40">
+        <label className="flex min-w-[160px] flex-1 items-center gap-2 rounded-lg border border-line bg-well px-2.5 py-1.5">
+          <span aria-hidden className="text-xs text-ink-3">
             ⌕
           </span>
           <input
@@ -340,9 +340,9 @@ export function TicketQueue({
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search title, client, tag, payload…"
             aria-label="Search tickets"
-            className="min-w-0 flex-1 bg-transparent text-[13px] text-tk-onyx outline-none placeholder:text-tk-slate/40"
+            className="min-w-0 flex-1 bg-transparent text-[13px] text-tk-onyx outline-none placeholder:text-ink-3"
           />
-          <kbd className="rounded border border-tk-slate/20 px-1.5 font-mono text-[10px] text-tk-slate/45">
+          <kbd className="rounded border border-line px-1.5 font-mono text-[10px] text-ink-3">
             /
           </kbd>
         </label>
@@ -420,7 +420,7 @@ export function TicketQueue({
           ))}
         </Dropdown>
 
-        <span aria-hidden className="mx-0.5 h-5 w-px bg-tk-slate/12" />
+        <span aria-hidden className="mx-0.5 h-5 w-px bg-well" />
 
         <Dropdown
           open={menu === "more"}
@@ -465,7 +465,7 @@ export function TicketQueue({
       </div>
 
       {hasFilters ? (
-        <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-tk-slate/10 bg-tk-linen/50 px-3 py-1.5">
+        <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-line bg-well px-3 py-1.5">
           {view !== "all" ? <FilterPill label={viewLabel} onRemove={() => setView("all")} /> : null}
           {clients.map((slug) => (
             <FilterPill
@@ -493,15 +493,15 @@ export function TicketQueue({
           >
             Clear all
           </button>
-          <span className="ml-auto font-mono text-[11px] tabular-nums text-tk-slate/55">
+          <span className="ml-auto font-mono text-[11px] tabular-nums text-ink-3">
             {visible.length} of {rows.length} tickets
           </span>
         </div>
       ) : null}
 
-      <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto bg-tk-linen/25">
+      <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto bg-well">
         {visible.length === 0 ? (
-          <p className="px-5 py-12 text-center text-sm text-tk-slate/55">
+          <p className="px-5 py-12 text-center text-sm text-ink-3">
             No tickets match.{" "}
             <button
               type="button"
@@ -517,7 +517,7 @@ export function TicketQueue({
             <div key={run.key}>
               {run.label && runs.length > 1 ? (
                 run.sticky ? (
-                  <div className="sticky top-0 z-[1] flex items-center gap-2 border-b border-tk-slate/10 bg-tk-linen/90 px-4 py-1.5 text-[10.5px] font-semibold uppercase tracking-widest text-tk-slate/60 backdrop-blur">
+                  <div className="sticky top-0 z-[1] flex items-center gap-2 border-b border-line bg-well px-4 py-1.5 text-[10.5px] font-semibold uppercase tracking-widest text-ink-3 backdrop-blur">
                     {run.color ? (
                       <span
                         className="size-2 rounded-full"
@@ -526,7 +526,7 @@ export function TicketQueue({
                       />
                     ) : null}
                     {run.label}
-                    <span className="ml-auto font-mono tabular-nums text-tk-slate/40">
+                    <span className="ml-auto font-mono tabular-nums text-ink-3">
                       {run.rows.length}
                     </span>
                   </div>
@@ -536,13 +536,13 @@ export function TicketQueue({
                      section you could collapse. */
                   <div
                     className={cn(
-                      "flex items-center gap-2 px-4 py-[3px] font-mono text-[9.5px] uppercase tracking-[0.14em] text-tk-slate/45",
-                      i > 0 && "border-t border-tk-slate/[0.09]",
-                      run.tint ? "bg-[#FAF7F0]" : "bg-white"
+                      "flex items-center gap-2 px-4 py-[3px] font-mono text-[9.5px] uppercase tracking-[0.14em] text-ink-3",
+                      i > 0 && "border-t border-line",
+                      run.tint ? "bg-well" : "bg-card"
                     )}
                   >
                     {run.label}
-                    <span className="ml-auto tabular-nums text-tk-slate/30">{run.rows.length}</span>
+                    <span className="ml-auto tabular-nums text-ink-3">{run.rows.length}</span>
                   </div>
                 )
               ) : null}
@@ -588,16 +588,16 @@ function Row({
       data-slug={row.slug}
       aria-current={open ? "page" : undefined}
       className={cn(
-        "flex border-b border-tk-slate/[0.07] transition-colors",
-        tint ? "bg-[#FAF7F0]" : "bg-white",
-        open ? "!bg-tk-teal/[0.07]" : "hover:!bg-[#F7FAF9]",
+        "flex border-b border-line transition-colors",
+        tint ? "bg-well" : "bg-card",
+        open ? "!bg-tk-teal/[0.07]" : "hover:!bg-well",
         cursored && !open && "ring-1 ring-inset ring-tk-teal/30"
       )}
     >
       <span aria-hidden className="w-[3px] shrink-0" style={{ background: row.color }} />
       <span className={cn("min-w-0 flex-1", tight ? "px-3.5 py-1.5" : "px-3.5 py-2.5")}>
         <span className="flex items-baseline gap-2">
-          <span className="shrink-0 font-mono text-[11px] tabular-nums text-tk-slate/45">
+          <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-3">
             {row.number}
           </span>
           <span
@@ -611,8 +611,8 @@ function Row({
           </span>
         </span>
         {tight ? null : (
-          <span className="mt-0.5 flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-[11.5px] text-tk-slate/60">
-            <span className="flex shrink-0 items-center gap-1.5 font-semibold text-tk-slate/80">
+          <span className="mt-0.5 flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-[11.5px] text-ink-3">
+            <span className="flex shrink-0 items-center gap-1.5 font-semibold text-tk-slate">
               <span
                 className="size-[7px] rounded-full"
                 style={{ background: row.color }}
@@ -622,14 +622,14 @@ function Row({
             </span>
             {row.platform ? (
               <>
-                <span className="shrink-0 text-tk-slate/25">·</span>
+                <span className="shrink-0 text-ink-3">·</span>
                 <span className="shrink-0">{row.platform}</span>
               </>
             ) : null}
-            <span className="shrink-0 text-tk-slate/25">·</span>
+            <span className="shrink-0 text-ink-3">·</span>
             <span className="shrink-0">{row.source}</span>
             {row.payloadCount ? (
-              <span className="shrink-0 rounded bg-tk-linen px-1.5 font-mono text-[10px] text-tk-slate/70">
+              <span className="shrink-0 rounded bg-well px-1.5 font-mono text-[10px] text-ink-3">
                 {"{ } "}
                 {row.payloadCount}
               </span>
@@ -637,7 +637,7 @@ function Row({
             {row.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="shrink-0 rounded bg-tk-linen px-1.5 font-mono text-[10px] text-tk-slate/60"
+                className="shrink-0 rounded bg-well px-1.5 font-mono text-[10px] text-ink-3"
               >
                 {tag}
               </span>
@@ -647,7 +647,7 @@ function Row({
       </span>
       <span className="flex shrink-0 items-center gap-2 px-3 py-2">
         {tight && row.platform ? (
-          <span className="hidden rounded bg-tk-linen px-1.5 font-mono text-[10px] text-tk-slate/60 sm:inline">
+          <span className="hidden rounded bg-well px-1.5 font-mono text-[10px] text-ink-3 sm:inline">
             {row.platform}
           </span>
         ) : null}
@@ -670,7 +670,7 @@ function Row({
         <span
           className={cn(
             "w-8 text-right font-mono text-[11px] tabular-nums",
-            row.late ? "font-semibold text-[#B4322A]" : "text-tk-slate/45"
+            row.late ? "font-semibold text-bad" : "text-ink-3"
           )}
           title={row.dueLabel || undefined}
         >
@@ -691,7 +691,7 @@ function FilterPill({
   onRemove: () => void
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-tk-slate/15 bg-white py-0.5 pl-2 pr-1 text-[11.5px] text-tk-slate">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card py-0.5 pl-2 pr-1 text-[11.5px] text-tk-slate">
       {color ? (
         <span className="size-[7px] rounded-full" style={{ background: color }} aria-hidden />
       ) : null}
@@ -700,7 +700,7 @@ function FilterPill({
         type="button"
         onClick={onRemove}
         aria-label={`Remove ${label} filter`}
-        className="rounded px-1 leading-none text-tk-slate/45 hover:bg-tk-linen hover:text-[#B4322A]"
+        className="rounded px-1 leading-none text-ink-3 hover:bg-well transition-colors duration-[120ms] hover:text-bad"
       >
         ✕
       </button>

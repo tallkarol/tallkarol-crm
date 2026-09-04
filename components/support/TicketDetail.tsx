@@ -108,8 +108,8 @@ export function TicketDetail({
         />
       ) : null}
 
-      <div className="shrink-0 border-b border-tk-slate/10 px-5 pt-4">
-        <div className="flex items-center gap-2 text-[11.5px] text-tk-slate/60">
+      <div className="shrink-0 border-b border-line px-5 pt-4">
+        <div className="flex items-center gap-2 text-[11.5px] text-ink-3">
           <span className="size-2 shrink-0 rounded-full" style={{ background: color }} aria-hidden />
           {ticket.client ? (
             <Link
@@ -123,7 +123,7 @@ export function TicketDetail({
           )}
           {ticket.platform ? (
             <>
-              <span className="text-tk-slate/25">·</span>
+              <span className="text-ink-3">·</span>
               <span>{ticket.platform}</span>
             </>
           ) : null}
@@ -131,7 +131,7 @@ export function TicketDetail({
             href={closeHref}
             scroll={false}
             aria-label="Close ticket"
-            className="ml-auto flex size-6 items-center justify-center rounded-lg text-tk-slate/45 transition-colors hover:bg-tk-linen hover:text-tk-onyx"
+            className="ml-auto flex size-6 items-center justify-center rounded-lg text-ink-3 transition-colors hover:bg-well transition-colors duration-[120ms] hover:text-tk-onyx"
           >
             ✕
           </Link>
@@ -140,9 +140,9 @@ export function TicketDetail({
         <h2 className="mt-2 text-[19px] font-semibold leading-snug tracking-tight text-tk-onyx">
           {ticket.title || "Untitled ticket"}
         </h2>
-        <p className="mt-1 font-mono text-[11.5px] text-tk-slate/50">
+        <p className="mt-1 font-mono text-[11.5px] text-ink-3">
           {ticketNumber(ticket)} · via {ticket.source} ·{" "}
-          <span className={cn(late && "font-semibold text-[#B4322A]")}>
+          <span className={cn(late && "font-semibold text-bad")}>
             {ageLabel(ticketOpenedAt(ticket))} old
           </span>
         </p>
@@ -154,7 +154,7 @@ export function TicketDetail({
                 "rounded-full px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wide",
                 ticket.kind === "request"
                   ? "bg-tk-teal/10 text-tk-teal"
-                  : "bg-tk-slate/[0.07] text-tk-slate/70"
+                  : "bg-well text-ink-3"
               )}
             >
               {ticket.kind}
@@ -179,7 +179,7 @@ export function TicketDetail({
           {ticket.tags.map((tag) => (
             <span
               key={tag}
-              className="rounded bg-tk-linen px-1.5 py-0.5 font-mono text-[10px] text-tk-slate/65"
+              className="rounded bg-well px-1.5 py-0.5 font-mono text-[10px] text-ink-3"
             >
               {tag}
             </span>
@@ -220,7 +220,7 @@ export function TicketDetail({
               </Fact>
               <Fact label="Due">
                 {ticket.dueOn ? (
-                  <span className={cn(late && "font-semibold text-[#B4322A]")}>
+                  <span className={cn(late && "font-semibold text-bad")}>
                     {formatDay(ticket.dueOn)}
                   </span>
                 ) : (
@@ -231,15 +231,15 @@ export function TicketDetail({
                 {ticket.firstResponseAt ? (
                   formatStamp(ticket.firstResponseAt)
                 ) : (
-                  <span className={cn(late && "font-semibold text-[#B4322A]")}>none yet</span>
+                  <span className={cn(late && "font-semibold text-bad")}>none yet</span>
                 )}
               </Fact>
               <Fact label="Source">{ticket.source}</Fact>
             </dl>
 
             {triggeredBy.length ? (
-              <div className="mt-4 rounded-xl border border-tk-slate/15 bg-tk-linen/40 p-3">
-                <p className="font-mono text-[10px] uppercase tracking-wider text-tk-slate/45">
+              <div className="mt-4 rounded-xl border border-line bg-well p-3">
+                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">
                   Raised by
                 </p>
                 {triggeredBy.map((run) => (
@@ -252,11 +252,11 @@ export function TicketDetail({
                     </Link>{" "}
                     · {run.status}
                     {run.phase ? ` in ${run.phase}` : ""} ·{" "}
-                    <span className="font-mono text-[11px] text-tk-slate/60">
+                    <span className="font-mono text-[11px] text-ink-3">
                       {formatStamp(run.startedAt)}
                     </span>
                     {run.jobsTotal ? (
-                      <span className="font-mono text-[11px] text-tk-slate/60">
+                      <span className="font-mono text-[11px] text-ink-3">
                         {" "}
                         · {run.jobsFailed}/{run.jobsTotal} jobs failed
                       </span>
@@ -273,8 +273,8 @@ export function TicketDetail({
             ) : null}
 
             {ticket.resolution ? (
-              <div className="mt-4 rounded-xl border border-[#26684A]/25 bg-[#26684A]/[0.06] p-3">
-                <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#26684A]">
+              <div className="mt-4 rounded-xl border border-transparent bg-good-soft p-3">
+                <p className="text-[10.5px] font-semibold uppercase tracking-wider text-good">
                   Resolution
                 </p>
                 <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed text-tk-slate">
@@ -309,7 +309,7 @@ export function TicketDetail({
             </div>
             {attachments.length ? (
               <div className="mb-3">
-                <p className="font-mono text-[10px] uppercase tracking-wider text-tk-slate/45">
+                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">
                   Attachments
                 </p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -319,11 +319,11 @@ export function TicketDetail({
                       href={`/support/attachments/${file.id}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-2 rounded-lg border border-tk-slate/15 bg-white px-2.5 py-1.5 text-[12px] text-tk-slate transition-colors hover:border-tk-teal hover:text-tk-teal"
+                      className="inline-flex items-center gap-2 rounded-lg border border-line bg-card px-2.5 py-1.5 text-[12px] text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal"
                     >
                       <span aria-hidden>{file.mime.startsWith("image/") ? "▣" : "▤"}</span>
                       <span className="max-w-[14rem] truncate font-medium">{file.name}</span>
-                      <span className="font-mono text-[10.5px] text-tk-slate/45">
+                      <span className="font-mono text-[10.5px] text-ink-3">
                         {Math.max(1, Math.round(file.bytes / 1024))}KB
                       </span>
                     </a>
@@ -346,9 +346,9 @@ export function TicketDetail({
                 ))}
               </div>
             ) : attachments.length ? null : (
-              <p className="py-8 text-center text-sm text-tk-slate/50">
+              <p className="py-8 text-center text-sm text-ink-3">
                 No payloads on this ticket. Anything posted to{" "}
-                <code className="rounded bg-tk-linen px-1 py-0.5 text-[11px]">
+                <code className="rounded bg-well px-1 py-0.5 text-[11px]">
                   /api/support/ingest
                 </code>{" "}
                 lands here.
@@ -373,8 +373,8 @@ export function TicketDetail({
               <table className="w-full border-collapse text-[12.5px]">
                 <tbody>
                   {Object.entries(env).map(([k, v]) => (
-                    <tr key={k} className="border-b border-tk-slate/[0.08]">
-                      <td className="w-2/5 py-1.5 pr-3 align-top font-mono text-[11px] text-tk-slate/50">
+                    <tr key={k} className="border-b border-line">
+                      <td className="w-2/5 py-1.5 pr-3 align-top font-mono text-[11px] text-ink-3">
                         {k}
                       </td>
                       <td className="break-words py-1.5 align-top font-mono text-[11.5px] text-tk-onyx">
@@ -385,9 +385,9 @@ export function TicketDetail({
                 </tbody>
               </table>
             ) : (
-              <p className="py-8 text-center text-sm text-tk-slate/50">
+              <p className="py-8 text-center text-sm text-ink-3">
                 Nothing recorded. Apps posting to the ingest endpoint can send an{" "}
-                <code className="rounded bg-tk-linen px-1 py-0.5 text-[11px]">env</code> object.
+                <code className="rounded bg-well px-1 py-0.5 text-[11px]">env</code> object.
               </p>
             )}
           </>
@@ -403,15 +403,15 @@ export function TicketDetail({
                     key={r.id}
                     href={query ? `/support/${ticketSlug(r)}?${query}` : `/support/${ticketSlug(r)}`}
                     scroll={false}
-                    className="flex items-center gap-2.5 border-b border-tk-slate/[0.08] py-2.5 hover:bg-tk-linen/40"
+                    className="flex items-center gap-2.5 border-b border-line py-2.5 hover:bg-well"
                   >
-                    <span className="shrink-0 font-mono text-[10.5px] text-tk-slate/45">
+                    <span className="shrink-0 font-mono text-[10.5px] text-ink-3">
                       {ticketNumber(r)}
                     </span>
                     <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-tk-onyx">
                       {r.title || "Untitled"}
                     </span>
-                    <span className="shrink-0 font-mono text-[10.5px] text-tk-slate/45">
+                    <span className="shrink-0 font-mono text-[10.5px] text-ink-3">
                       {STATE_LABEL[rState]} · {ageLabel(ticketOpenedAt(r))}
                     </span>
                   </Link>
@@ -419,7 +419,7 @@ export function TicketDetail({
               })}
             </div>
           ) : (
-            <p className="py-8 text-center text-sm text-tk-slate/50">
+            <p className="py-8 text-center text-sm text-ink-3">
               Nothing else open for this client.
             </p>
           )
@@ -450,11 +450,11 @@ function Tab({
         "border-b-2 px-2.5 py-1.5 text-[12.5px] font-semibold transition-colors",
         active
           ? "border-tk-teal text-tk-onyx"
-          : "border-transparent text-tk-slate/55 hover:text-tk-onyx"
+          : "border-transparent text-ink-3 hover:text-tk-onyx"
       )}
     >
       {label}
-      <span className="ml-1 font-mono text-[10px] text-tk-slate/40">{count}</span>
+      <span className="ml-1 font-mono text-[10px] text-ink-3">{count}</span>
     </Link>
   )
 }
@@ -462,7 +462,7 @@ function Tab({
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="font-mono text-[10px] uppercase tracking-wider text-tk-slate/45">{label}</dt>
+      <dt className="font-mono text-[10px] uppercase tracking-wider text-ink-3">{label}</dt>
       <dd className="mt-0.5 text-[13px] text-tk-onyx">{children}</dd>
     </div>
   )
@@ -484,7 +484,7 @@ function Message({ message, accent }: { message: TicketMessage; accent: string }
   return (
     <div
       className={cn(
-        "border-t border-tk-slate/[0.08] py-3 first:border-t-0",
+        "border-t border-line py-3 first:border-t-0",
         mine && "-mx-5 bg-tk-teal/[0.04] px-5"
       )}
     >
@@ -497,7 +497,7 @@ function Message({ message, accent }: { message: TicketMessage; accent: string }
           {initials}
         </span>
         <b className="text-[12.5px] font-semibold text-tk-onyx">{who}</b>
-        <span className="ml-auto shrink-0 font-mono text-[10.5px] text-tk-slate/45">
+        <span className="ml-auto shrink-0 font-mono text-[10.5px] text-ink-3">
           {formatStamp(message.sentAt)}
         </span>
         <CopyButton text={message.body} label="copy" />

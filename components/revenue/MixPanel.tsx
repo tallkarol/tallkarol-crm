@@ -14,7 +14,7 @@ function Donut({
 }) {
   if (slices.length === 0 || total <= 0) {
     return (
-      <p className="px-5 py-8 text-sm text-tk-slate/70">Nothing in this window.</p>
+      <p className="px-5 py-8 text-sm text-ink-3">Nothing in this window.</p>
     )
   }
 
@@ -59,7 +59,7 @@ function Donut({
           />
         </PieChart>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-tk-slate/50">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">
           Total
         </p>
         <p className="text-sm font-semibold tabular-nums text-tk-onyx">
@@ -79,8 +79,8 @@ export function MixPanel({
 }) {
   const total = slices.reduce((sum, slice) => sum + slice.cents, 0)
   return (
-    <section className="overflow-hidden rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
-      <div className="border-b border-tk-slate/10 px-5 py-3.5">
+    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <div className="border-b border-line px-5 py-3.5">
         <h2 className="text-sm font-semibold text-tk-onyx">{title}</h2>
       </div>
       <div className="grid items-center gap-4 px-5 py-4 sm:grid-cols-[auto_1fr]">
@@ -98,11 +98,11 @@ export function MixPanel({
                     />
                     {slice.label}
                   </span>
-                  <span className="tabular-nums text-tk-slate/70">
+                  <span className="tabular-nums text-ink-3">
                     {share}% · {formatMoney(slice.cents)}
                   </span>
                 </div>
-                <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-tk-linen">
+                <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-well">
                   <span
                     className="block h-full rounded-full"
                     style={{

@@ -29,10 +29,10 @@ export const KIND_LABEL: Record<InboxKind, string> = {
 
 export const KIND_TONE: Record<InboxKind, string> = {
   lead: "bg-tk-teal/10 text-tk-teal",
-  ticket: "bg-[#8A5A05]/12 text-[#8A5A05]",
-  message: "bg-[#8A5A05]/12 text-[#8A5A05]",
-  mail: "bg-tk-slate/[0.08] text-tk-slate/70",
-  event: "bg-[#26684A]/10 text-[#26684A]",
+  ticket: "bg-warn-soft text-warn",
+  message: "bg-warn-soft text-warn",
+  mail: "bg-well text-ink-3",
+  event: "bg-good-soft text-good",
 }
 
 export type InboxItemState = "unread" | "read" | "snoozed" | "archived"

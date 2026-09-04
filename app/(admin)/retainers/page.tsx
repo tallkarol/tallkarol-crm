@@ -122,7 +122,7 @@ export default async function RetainersPage({
               {monthLabel(g.month)} — {g.retainerName} · {fmtHours(g.hours)} hr logged, never invoiced
               {g.valueCents ? ` (${formatMoney(g.valueCents)})` : ""}
               <form action={writeOffGap.bind(null, g.retainerId, g.month)}>
-                <button className="rounded-full border border-tk-slate/20 bg-white px-2.5 py-0.5 text-[11px] font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal">
+                <button className="rounded-full border border-line bg-card px-2.5 py-0.5 text-[11px] font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal">
                   Write off
                 </button>
               </form>
@@ -171,7 +171,7 @@ export default async function RetainersPage({
           return (
             <article
               key={r.id}
-              className="flex flex-col gap-3 rounded-2xl border border-tk-slate/15 bg-white p-5 pb-4 shadow-sm"
+              className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5 pb-4 shadow-card"
               style={{ borderLeftWidth: 3, borderLeftColor: color }}
             >
               <div className="flex flex-wrap items-baseline gap-2">
@@ -180,32 +180,32 @@ export default async function RetainersPage({
                   {r.name}
                 </Link>
                 {rate ? (
-                  <span className="rounded-full bg-tk-linen px-2 py-0.5 text-[11px] font-semibold tabular-nums text-tk-slate">
+                  <span className="rounded-full bg-well px-2 py-0.5 text-[11px] font-semibold tabular-nums text-tk-slate">
                     {r.rateCents ? formatMoney(rate) : `${formatMoney(rate)} eff.`}/hr
                   </span>
                 ) : null}
                 {r.endsOn ? (
-                  <span className="rounded-full bg-tk-slate/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-tk-slate/70">
+                  <span className="rounded-full bg-well px-2 py-0.5 text-[11px] font-semibold tabular-nums text-ink-3">
                     ends {monthLabel(r.endsOn.slice(0, 7))}
                     {left != null ? ` · ${left} mo left` : ""}
                   </span>
                 ) : null}
-                <span className="ml-auto text-xs tabular-nums text-tk-slate/60">{r.hoursPerMonth} hrs/mo</span>
+                <span className="ml-auto text-xs tabular-nums text-ink-3">{r.hoursPerMonth} hrs/mo</span>
               </div>
 
               <div>
                 <div className="flex items-baseline justify-between text-xs">
-                  <span className="font-semibold uppercase tracking-wide text-tk-slate/60">{meterLabel}</span>
+                  <span className="font-semibold uppercase tracking-wide text-ink-3">{meterLabel}</span>
                   <span className="font-semibold tabular-nums text-tk-slate">
                     {fmtHours(meterHours)} / {r.hoursPerMonth} hrs · {Math.round(pct)}%
                   </span>
                 </div>
-                <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-tk-linen">
+                <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-well">
                   <span className="block h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
                 </span>
                 {p ? (
                   <div className="mt-1 flex justify-between text-[11px] tabular-nums">
-                    <span className="text-tk-slate/60">day {p.day} of {p.days}</span>
+                    <span className="text-ink-3">day {p.day} of {p.days}</span>
                     <span className={over ? "font-semibold text-red-700" : "font-semibold text-emerald-800"}>
                       {over
                         ? `over cap — projected ${fmtHours(p.projected)} hr`
@@ -217,7 +217,7 @@ export default async function RetainersPage({
 
               <div>
                 <MiniBars values={bars} accrued={accruedThis} label={`${r.name} monthly billings`} />
-                <p className="mt-1 text-[11px] tabular-nums text-tk-slate/60">
+                <p className="mt-1 text-[11px] tabular-nums text-ink-3">
                   12 mo{accruedThis ? ` · ${formatMoney(accruedThis)} accrued (dashed = unbilled)` : ""}
                   {mappedExpense > 0
                     ? ` · YTD mapped expenses ${formatMoney(mappedExpense)}`
@@ -225,7 +225,7 @@ export default async function RetainersPage({
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 border-t border-dashed border-tk-slate/10 pt-3 text-xs">
+              <div className="flex flex-wrap items-center gap-2 border-t border-dashed border-line pt-3 text-xs">
                 {taskCount ? (
                   <span className="rounded-full bg-amber-700/10 px-2 py-0.5 font-semibold text-amber-800">
                     {plural(taskCount, "open task")}
@@ -248,15 +248,15 @@ export default async function RetainersPage({
                 ))}
                 <span className="ml-auto flex gap-1.5">
                   {siteSlug ? (
-                    <Link href={`/insights/${siteSlug}`} className="rounded-full border border-tk-slate/20 px-2.5 py-1 font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal">
+                    <Link href={`/insights/${siteSlug}`} className="rounded-full border border-line px-2.5 py-1 font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal">
                       Insights
                     </Link>
                   ) : null}
-                  <Link href={ROUTES.timesheetFor(r.client.slug, thisMonth)} className="rounded-full border border-tk-slate/20 px-2.5 py-1 font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal">
+                  <Link href={ROUTES.timesheetFor(r.client.slug, thisMonth)} className="rounded-full border border-line px-2.5 py-1 font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal">
                     Timesheet
                   </Link>
                   <form action={draftRetainerInvoice.bind(null, r.id)}>
-                    <button className="rounded-full bg-tk-teal px-2.5 py-1 font-semibold text-tk-linen hover:bg-tk-teal/90">
+                    <button className="rounded-full bg-accent px-2.5 py-1 font-semibold text-tk-linen hover:bg-tk-teal/90">
                       Draft {now.toLocaleDateString("en-US", { month: "short" })} invoice
                     </button>
                   </form>
@@ -268,16 +268,16 @@ export default async function RetainersPage({
       </div>
 
       {retainers.length > active.length ? (
-        <ul className="mt-4 overflow-hidden rounded-2xl border border-tk-slate/15 bg-white/60">
+        <ul className="mt-4 overflow-hidden rounded-2xl border border-line bg-well">
           {retainers
             .filter((r) => r.status !== "active")
             .map((r) => (
-              <li key={r.id} className="flex items-center gap-2.5 border-b border-tk-slate/10 px-5 py-3 text-sm last:border-0">
+              <li key={r.id} className="flex items-center gap-2.5 border-b border-line px-5 py-3 text-sm last:border-0">
                 <span className="size-2 rounded-full" style={{ background: clientColor(r.client.slug) }} />
                 <Link href={ROUTES.retainer(r.slug)} className="font-semibold text-tk-onyx hover:text-tk-teal">
                   {r.name}
                 </Link>
-                <span className="ml-auto rounded-full bg-tk-slate/10 px-2 py-0.5 text-[11px] font-semibold text-tk-slate/70">
+                <span className="ml-auto rounded-full bg-well px-2 py-0.5 text-[11px] font-semibold text-ink-3">
                   {r.status}
                 </span>
               </li>
@@ -300,10 +300,10 @@ function Kpi({
   tone?: "good" | "bad"
 }) {
   return (
-    <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-tk-slate/60">{label}</p>
+    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
       <p className="mt-1.5 text-[23px] font-semibold leading-tight tracking-tight text-tk-onyx tabular-nums">{value}</p>
-      <p className={`mt-0.5 truncate text-xs ${tone === "bad" ? "font-semibold text-red-700" : tone === "good" ? "font-semibold text-emerald-800" : "text-tk-slate/60"}`}>
+      <p className={`mt-0.5 truncate text-xs ${tone === "bad" ? "font-semibold text-red-700" : tone === "good" ? "font-semibold text-emerald-800" : "text-ink-3"}`}>
         {sub}
       </p>
     </div>

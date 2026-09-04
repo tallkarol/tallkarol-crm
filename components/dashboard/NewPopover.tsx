@@ -91,7 +91,7 @@ export function NewPopover({ clients }: { clients: NewClient[] }) {
                   "inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 font-ui text-xs font-semibold transition-colors",
                   kind === id
                     ? "bg-accent/10 text-tk-teal"
-                    : "text-tk-slate hover:bg-tk-linen hover:text-tk-onyx"
+                    : "text-tk-slate hover:bg-well transition-colors duration-[120ms] hover:text-tk-onyx"
                 )}
               >
                 <Icon className="size-3.5" aria-hidden />
@@ -149,14 +149,14 @@ export function NewPopover({ clients }: { clients: NewClient[] }) {
                 </p>
               ) : null}
               <div className="flex items-center gap-1.5">
-                <span className="text-[11.5px] text-tk-slate/70">
+                <span className="text-[11.5px] text-ink-3">
                   {dueOn ? "Lands in Needs attention" : "No date — lands under Tasks"}
                 </span>
                 <span className="flex-1" />
                 <button
                   type="button"
                   onClick={close}
-                  className="h-8 rounded-lg px-3 font-ui text-xs font-semibold text-tk-slate hover:bg-tk-linen hover:text-tk-onyx"
+                  className="h-8 rounded-lg px-3 font-ui text-xs font-semibold text-tk-slate hover:bg-well transition-colors duration-[120ms] hover:text-tk-onyx"
                 >
                   Cancel
                 </button>
@@ -164,7 +164,7 @@ export function NewPopover({ clients }: { clients: NewClient[] }) {
                   type="button"
                   disabled={pending || !title.trim()}
                   onClick={() => submit(close)}
-                  className="h-8 whitespace-nowrap rounded-lg bg-tk-teal px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95 disabled:opacity-60"
+                  className="h-8 whitespace-nowrap rounded-lg bg-accent px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95 disabled:opacity-60"
                 >
                   Add task
                 </button>
@@ -172,13 +172,13 @@ export function NewPopover({ clients }: { clients: NewClient[] }) {
             </>
           ) : (
             <div className="grid gap-2.5">
-              <p className="text-[12.5px] text-tk-slate/70">
+              <p className="text-[12.5px] text-ink-3">
                 {current.label}s are made on their own page, with everything they need.
               </p>
               <Link
                 href={"href" in current ? current.href : ROUTES.home}
                 onClick={close}
-                className="inline-flex h-8 items-center justify-center gap-1.5 self-start rounded-lg bg-tk-teal px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95"
+                className="inline-flex h-8 items-center justify-center gap-1.5 self-start rounded-lg bg-accent px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95"
               >
                 <current.Icon className="size-3.5" aria-hidden />
                 New {current.label.toLowerCase()} →

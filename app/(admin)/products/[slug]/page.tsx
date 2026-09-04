@@ -79,7 +79,7 @@ export default async function ProductDetailPage({
               {product.name}
             </h1>
           </div>
-          <p className="mt-1 text-sm text-tk-slate/70">
+          <p className="mt-1 text-sm text-ink-3">
             {studioCaption(studio)}
             {product.tagline ? ` · ${product.tagline}` : ""}
             {product.clientName ? ` · ${product.clientName}` : ""}
@@ -94,7 +94,7 @@ export default async function ProductDetailPage({
             {index > 0 ? (
               <span
                 aria-hidden
-                className="mx-0.5 hidden h-4 w-px bg-tk-slate/15 sm:block"
+                className="mx-0.5 hidden h-4 w-px bg-well sm:block"
               />
             ) : null}
             {group.products.map((item) => {
@@ -106,8 +106,8 @@ export default async function ProductDetailPage({
                   aria-current={on ? "page" : undefined}
                   className={
                     on
-                      ? "flex items-center gap-2 rounded-xl border border-tk-teal bg-tk-teal px-3 py-1.5 text-sm font-semibold text-tk-linen"
-                      : "flex items-center gap-2 rounded-xl border border-tk-slate/20 bg-white px-3 py-1.5 text-sm font-semibold text-tk-onyx hover:border-tk-teal"
+                      ? "flex items-center gap-2 rounded-xl border border-tk-teal bg-accent px-3 py-1.5 text-sm font-semibold text-tk-linen"
+                      : "flex items-center gap-2 rounded-xl border border-line bg-card px-3 py-1.5 text-sm font-semibold text-tk-onyx hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                   }
                 >
                   <span
@@ -150,10 +150,10 @@ export default async function ProductDetailPage({
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
-        <section className="rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+        <section className="rounded-2xl border border-line bg-card shadow-card">
           <div className="flex items-center justify-between px-5 pb-1 pt-4">
             <h2 className="text-[13px] font-bold text-tk-onyx">Open tasks</h2>
-            <span className="text-[11px] tabular-nums text-tk-slate/60">
+            <span className="text-[11px] tabular-nums text-ink-3">
               {open.length}
             </span>
           </div>
@@ -174,7 +174,7 @@ export default async function ProductDetailPage({
           </div>
 
           {open.length === 0 ? (
-            <p className="px-5 pb-4 text-sm text-tk-slate/60">
+            <p className="px-5 pb-4 text-sm text-ink-3">
               Nothing open. Anything typed above lands on {product.name}.
             </p>
           ) : (
@@ -190,23 +190,23 @@ export default async function ProductDetailPage({
         </section>
 
         <div className="flex min-w-0 flex-col gap-4">
-          <section className="rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
+          <section className="rounded-2xl border border-line bg-card shadow-card">
             <div className="flex items-center justify-between px-5 pb-1 pt-4">
               <h2 className="text-[13px] font-bold text-tk-onyx">Links</h2>
-              <span className="text-[11px] text-tk-slate/60">
+              <span className="text-[11px] text-ink-3">
                 staging · live · repo
               </span>
             </div>
             <ul className="px-1 pb-1">
               {links.length === 0 ? (
-                <li className="px-4 py-2 text-sm text-tk-slate/60">
+                <li className="px-4 py-2 text-sm text-ink-3">
                   Nothing yet — add the staging links below.
                 </li>
               ) : (
                 links.map((link, i) => (
                   <li
                     key={`${link.url}-${i}`}
-                    className="flex items-center gap-2 border-b border-tk-slate/[0.06] px-4 py-2 text-sm last:border-0"
+                    className="flex items-center gap-2 border-b border-line px-4 py-2 text-sm last:border-0"
                   >
                     <a
                       href={link.url}
@@ -221,7 +221,7 @@ export default async function ProductDetailPage({
                       <input type="hidden" name="index" value={i} />
                       <button
                         aria-label={`Remove ${link.label}`}
-                        className="px-1 text-xs font-semibold text-tk-slate/40 hover:text-red-700"
+                        className="px-1 text-xs font-semibold text-ink-3 hover:text-red-700"
                       >
                         ✕
                       </button>
@@ -232,26 +232,26 @@ export default async function ProductDetailPage({
             </ul>
             <form
               action={addProductLink}
-              className="flex gap-2 border-t border-tk-slate/[0.06] px-4 py-3"
+              className="flex gap-2 border-t border-line px-4 py-3"
             >
               <input type="hidden" name="productId" value={product.id} />
               <input
                 name="label"
                 placeholder="Label"
-                className="w-24 rounded-lg border border-tk-slate/20 bg-tk-linen px-2.5 py-1.5 text-xs outline-none focus:border-tk-teal"
+                className="w-24 rounded-lg border border-line bg-well px-2.5 py-1.5 text-xs outline-none focus:border-tk-teal"
               />
               <input
                 name="url"
                 placeholder="https://…"
-                className="min-w-0 flex-1 rounded-lg border border-tk-slate/20 bg-tk-linen px-2.5 py-1.5 text-xs outline-none focus:border-tk-teal"
+                className="min-w-0 flex-1 rounded-lg border border-line bg-well px-2.5 py-1.5 text-xs outline-none focus:border-tk-teal"
               />
-              <button className="rounded-full border border-tk-slate/20 px-3 py-1 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal">
+              <button className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal">
                 Add
               </button>
             </form>
           </section>
 
-          <section className="rounded-2xl border border-tk-slate/15 bg-white p-5 shadow-sm">
+          <section className="rounded-2xl border border-line bg-card p-5 shadow-card">
             <h2 className="text-[13px] font-bold text-tk-onyx">Notes</h2>
             <form action={setProductNotes} className="mt-2">
               <input type="hidden" name="productId" value={product.id} />
@@ -259,9 +259,9 @@ export default async function ProductDetailPage({
                 name="notes"
                 defaultValue={row.notes}
                 rows={5}
-                className="w-full resize-y rounded-lg border border-tk-slate/20 bg-tk-linen px-3 py-2 text-sm text-tk-slate outline-none focus:border-tk-teal"
+                className="w-full resize-y rounded-lg border border-line bg-well px-3 py-2 text-sm text-tk-slate outline-none focus:border-tk-teal"
               />
-              <button className="mt-2 rounded-full border border-tk-slate/20 px-3 py-1 text-xs font-semibold text-tk-slate hover:border-tk-teal hover:text-tk-teal">
+              <button className="mt-2 rounded-full border border-line px-3 py-1 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal">
                 Save notes
               </button>
             </form>
@@ -284,8 +284,8 @@ function Stat({
   tone?: "bad"
 }) {
   return (
-    <div className="rounded-2xl border border-tk-slate/15 bg-white px-5 py-4 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-tk-slate/60">
+    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">
         {label}
       </p>
       <p className="mt-1.5 text-[23px] font-semibold leading-tight tracking-tight text-tk-onyx tabular-nums">
@@ -293,7 +293,7 @@ function Stat({
       </p>
       <p
         className={`mt-0.5 truncate text-xs ${
-          tone === "bad" ? "font-semibold text-red-700" : "text-tk-slate/60"
+          tone === "bad" ? "font-semibold text-red-700" : "text-ink-3"
         }`}
       >
         {sub}
