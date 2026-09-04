@@ -9,11 +9,12 @@ import type { CodebaseDoc } from "@/db/schema"
  * the history a rerun leaves behind.
  */
 
-export const DOC_KINDS = ["spec", "structure", "db", "features", "permissions"] as const
+export const DOC_KINDS = ["spec", "launch-audit", "structure", "db", "features", "permissions"] as const
 export type DocKind = (typeof DOC_KINDS)[number]
 
 export const DOC_KIND_LABEL: Record<DocKind, string> = {
   spec: "Spec sheet",
+  "launch-audit": "Launch audit",
   structure: "Folder structure",
   db: "Database",
   features: "Features",
