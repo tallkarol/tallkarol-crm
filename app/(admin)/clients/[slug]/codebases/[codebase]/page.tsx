@@ -5,6 +5,7 @@ import { db } from "@/db"
 import { clients } from "@/db/schema"
 import { PageHeader } from "@/components/PageHeader"
 import { SpecSheet } from "@/components/codebases/SpecSheet"
+import { RenderedDoc } from "@/components/codebases/RenderedDoc"
 import { DOC_KIND_LABEL, DOC_KINDS, docHistory, latestDoc, latestDocsFor } from "@/lib/codebase-docs"
 import { ROUTES } from "@/lib/nav"
 
@@ -19,7 +20,7 @@ export default async function CodebasePage({
   searchParams,
 }: {
   params: { slug: string; codebase: string }
-  searchParams: { kind?: string }
+  searchParams: { kind?: string; view?: string }
 }) {
   const client = await db.query.clients.findFirst({ where: eq(clients.slug, params.slug) })
   if (!client) notFound()
@@ -75,6 +76,12 @@ export default async function CodebasePage({
           <div className="min-w-0">
             {kind === "spec" ? (
               <SpecSheet data={doc.data as Record<string, unknown>} />
+            ) : kind === "launch-audit" && (doc.data as { html?: { handoff?: string; internal?: string } }).html ? (
+              <RenderedDoc
+                html={(doc.data as { html: { handoff?: string; internal?: string } }).html}
+                view={searchParams.view === "internal" ? "internal" : "handoff"}
+                base={`${ROUTES.client(client.slug)}/codebases/${params.codebase}?kind=${kind}`}
+              />
             ) : (
               <pre className="overflow-x-auto rounded-2xl border border-tk-slate/15 bg-white p-5 text-xs shadow-sm">
                 {JSON.stringify(doc.data, null, 2)}
