@@ -8,7 +8,7 @@ export default async function LoginPage() {
   if (user) redirect("/")
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="tk-light flex min-h-screen items-center justify-center px-4">
       <Suspense fallback={<div className="text-sm text-tk-slate/70">Loading…</div>}>
         <LoginForm />
       </Suspense>

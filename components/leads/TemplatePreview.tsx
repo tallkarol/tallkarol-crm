@@ -87,7 +87,7 @@ export function TemplatePreviewModal({
 
         <div className="min-h-0 flex-1 overflow-y-auto bg-well px-5 py-5">
           {isSheet ? (
-            <article className="mx-auto max-w-lg rounded-sm bg-card px-8 py-10 shadow-card ring-1 ring-line">
+            <article className="tk-light mx-auto max-w-lg rounded-sm bg-card px-8 py-10 shadow-card ring-1 ring-line">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tk-teal">
                 Tall Karol
               </p>
@@ -99,7 +99,7 @@ export function TemplatePreviewModal({
               </div>
             </article>
           ) : (
-            <article className="rounded-xl bg-card shadow-card ring-1 ring-line">
+            <article className="tk-light rounded-xl bg-card shadow-card ring-1 ring-line">
               <dl className="divide-y divide-line border-b border-line px-5 py-3 text-sm">
                 <div className="flex gap-3 py-1.5">
                   <dt className="w-16 shrink-0 text-ink-3">From</dt>

@@ -1,9 +1,12 @@
 import Link from "next/link"
 import { db } from "@/db"
 import type { Client, GscFinding, Site } from "@/db/schema"
-import { Card } from "@/components/insights/Card"
+import { PortalPanel as Card } from "@/components/portal/panel-shell"
 import { BarList, MeterList } from "@/components/insights/BarList"
-import { Delta, KpiTile, PositionKpiDelta } from "@/components/insights/KpiTile"
+/* Delta and PositionKpiDelta paint their own colour from CHART and carry no
+   surface, so they are shared. The TILE carries a surface and is forked. */
+import { Delta, PositionKpiDelta } from "@/components/insights/KpiTile"
+import { PortalKpiTile as KpiTile } from "@/components/portal/kpi-tile"
 import { PrintTrend } from "@/components/insights/PrintTrend"
 import { SearchTable } from "@/components/insights/SearchTable"
 import { scopeAdsSnapshot } from "@/lib/insights/ads-split"

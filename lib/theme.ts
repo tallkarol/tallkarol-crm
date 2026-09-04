@@ -19,7 +19,7 @@ export function isTheme(value: unknown): value is Theme {
   return typeof value === "string" && (THEMES as readonly string[]).includes(value)
 }
 
-/** Applies a choice to the document — what the toggle and the boot script both do. */
+/** Applies a choice to the document — what the toggle does optimistically. */
 export function applyTheme(theme: Theme) {
   if (typeof document === "undefined") return
   const root = document.documentElement
@@ -27,12 +27,10 @@ export function applyTheme(theme: Theme) {
   else root.dataset.theme = theme
 }
 
-/**
- * The boot script the layout inlines. Reads the cookie the server already
- * decided on (passed in), so the browser and the server HTML agree.
- */
-export function themeBootScript(theme: Theme) {
-  return theme === "system"
-    ? "delete document.documentElement.dataset.theme"
-    : `document.documentElement.dataset.theme=${JSON.stringify(theme)}`
-}
+/*
+  There is deliberately no themeBootScript any more. The admin root layout
+  stamps data-theme on <html> server-side from the cookie, so the first bytes
+  already carry the choice: no flash, correct with JS disabled, and correct in
+  view-source and screenshots. applyTheme stays because ThemeToggle is
+  optimistic — it repaints immediately and the cookie catches up next request.
+*/

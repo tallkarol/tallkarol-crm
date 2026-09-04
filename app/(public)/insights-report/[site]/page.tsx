@@ -97,7 +97,7 @@ export default async function InsightsReportPage({
   const p = data.previous
 
   return (
-    <div className="mx-auto max-w-[820px] px-6 py-8 print:max-w-none print:px-0 print:py-0">
+    <div className="tk-light mx-auto max-w-[820px] px-6 py-8 print:max-w-none print:px-0 print:py-0">
       <style>{`@page { margin: 14mm 12mm; } @media print { body { background: #fff; } }`}</style>
 
       {hideAmounts ? (

@@ -2,7 +2,7 @@ import Link from "next/link"
 import { desc, inArray } from "drizzle-orm"
 import { db } from "@/db"
 import { invoices as invoicesTable, snapshotArchive, supportTickets, type Client } from "@/db/schema"
-import { submitPortalTicket } from "@/app/portal/actions"
+import { submitPortalTicket } from "@/app/(public)/portal/actions"
 import { formatDay, formatMoney, plural } from "@/lib/work"
 
 /* Everything in this file is CLIENT-SAFE: no rates, margins, internal notes,

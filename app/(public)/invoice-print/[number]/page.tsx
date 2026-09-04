@@ -75,7 +75,7 @@ export default async function InvoicePrintPage({
   const fillerRows = Math.max(0, 7 - bodyLines.length)
 
   return (
-    <div className="mx-auto max-w-[52rem] bg-white px-10 py-8 font-['Inter',system-ui,sans-serif] text-[13px] leading-relaxed text-[#1F2C2B] print:max-w-none print:px-2 print:py-0">
+    <div className="tk-light mx-auto max-w-[52rem] bg-white px-10 py-8 font-['Inter',system-ui,sans-serif] text-[13px] leading-relaxed text-[#1F2C2B] print:max-w-none print:px-2 print:py-0">
       <style>{`body { background: #fff; } @page { margin: 16mm 14mm; } @media print { body { background: #fff; } }`}</style>
       {hideAmounts ? (
         <p className="mb-4 rounded-lg bg-[#B45309]/10 px-3 py-2 text-xs font-semibold text-[#92400E] print:hidden">

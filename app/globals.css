@@ -658,3 +658,61 @@ html[data-embed="settings"] main > div {
 html[data-embed="settings"] main h1 {
   font-size: 1.25rem;
 }
+
+/* Paper is white, always. Chrome omits background graphics by default, so a
+   dark-themed page prints its LIGHT-mode ink or nothing at all: Cmd-P on any
+   admin route in dark used to put --ink #F1EADC on white paper at 1.20:1.
+   Re-stamping the light token set inside @media print is one rule and it
+   covers all 34 admin routes, rather than an inline <style> per printable
+   page. The two inline blocks on the frozen print routes become redundant but
+   harmless — they are client artifacts and not worth touching. */
+@media print {
+  :root {
+    color-scheme: light;
+    --canvas-rgb: 255 255 255;
+    --card-rgb: 255 255 255;
+    --well-rgb: 247 243 234;
+    --line-rgb: 31 44 43;
+    --ink-rgb: 15 22 21;
+    --ink-2-rgb: 77 88 87;
+    --ink-3-rgb: 98 107 106;
+    --accent-rgb: 0 105 101;
+    --accent-ink-rgb: 0 105 101;
+    --accent-mark-rgb: 0 105 101;
+    --bad-rgb: 166 34 40;
+    --warn-rgb: 138 90 5;
+    --ok-rgb: 0 105 101;
+    --good-rgb: 27 107 58;
+    /* One step heavier than screen: a hairline at 0.12 does not survive toner. */
+    --line: rgb(var(--line-rgb) / 0.22);
+    --line-strong: rgb(var(--line-rgb) / 0.35);
+    --lift: 0%;
+    --lift-mark: 0%;
+    --shade: 16%;
+    --shadow-card: none;
+    --shadow-hover: none;
+    --shadow-overlay: none;
+    --chart-teal: #009688;
+    --chart-amber: #b07818;
+    --chart-ink: #1f3a5f;
+    --chart-host: #6b4f8a;
+    --chart-cash: #4c74c9;
+    --chart-prev: #6c7975;
+    --chart-axis: #6c7975;
+    --chart-grid: rgb(var(--line-rgb) / 0.2);
+    --chart-axis-line: rgb(var(--line-rgb) / 0.3);
+    --chart-halo: #ffffff;
+    --chart-wash: 0.1;
+    --chart-wash-area: 0.12;
+    --chart-wash-strong: 0.34;
+    --chart-tint: 0.09;
+    --chart-bar-2: 0.25;
+    --chart-bar-3: 0.4;
+  }
+  body {
+    background: #fff;
+  }
+  [data-chrome] {
+    display: none !important;
+  }
+}

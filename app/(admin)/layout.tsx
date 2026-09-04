@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation"
+import { RootHtml, rootMetadata, rootViewport } from "@/lib/root-html"
+import "../globals.css"
 import { AppShell } from "@/components/AppShell"
 import { FloatingClock } from "@/components/timesheet/FloatingClock"
 import { getSessionUser } from "@/lib/auth"
@@ -8,11 +10,13 @@ import { COLOR_GLOBAL } from "@/lib/client-colors"
 import { hydrateClientColors } from "@/lib/client-colors-store"
 import { HIDE_MONEY_GLOBAL } from "@/lib/money-privacy"
 import { readHideMoneyCookie } from "@/lib/money-privacy-server"
-import { themeBootScript } from "@/lib/theme"
 import { readThemeCookie } from "@/lib/theme-server"
 import { loadUnread } from "@/lib/unread-data"
 import { worstTone } from "@/lib/unread"
 import { runningPunches } from "@/lib/punches"
+
+export const metadata = rootMetadata
+export const viewport = rootViewport
 
 export default async function AdminLayout({
   children,
@@ -25,8 +29,10 @@ export default async function AdminLayout({
   // Demo mode — see `lib/money-privacy.ts`. Read here for the script tag and
   // the shell's switch; server components read the same cookie themselves.
   const hideMoney = readHideMoneyCookie()
-  // Appearance — see `lib/theme.ts`. The root layout stamps light; this
-  // overrides it with the user's choice before first paint.
+  // Appearance — see `lib/theme.ts`. Stamped on <html> by the server below,
+  // so there is no boot script and no flash: the bytes that leave the server
+  // already carry the user's choice. "system" stamps nothing and lets the
+  // prefers-color-scheme block in globals.css decide.
   const theme = readThemeCookie()
 
   // One read behind every badge and behind the dashboard's Unread card, so a
@@ -50,7 +56,7 @@ export default async function AdminLayout({
   }
 
   return (
-    <>
+    <RootHtml theme={theme === "system" ? undefined : theme}>
       {/*
         The same map for the browser bundle. A script tag rather than a context
         because `clientColor()` is a plain function called in 73 places, a third
@@ -82,7 +88,6 @@ export default async function AdminLayout({
         flag is remembered per browsing context, so client-side navigation
         inside that web view keeps it without carrying the query string.
       */}
-      <script dangerouslySetInnerHTML={{ __html: themeBootScript(theme) }} />
       <script
         dangerouslySetInnerHTML={{
           __html:
@@ -100,6 +105,6 @@ export default async function AdminLayout({
     </AppShell>
     {/* Outside the shell so no overflow or transform on an ancestor can trap it. */}
     <FloatingClock initial={running} />
-    </>
+    </RootHtml>
   )
 }

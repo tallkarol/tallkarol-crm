@@ -1,7 +1,27 @@
 import type { Metadata, Viewport } from "next"
 import { Inter, Inter_Tight, Plus_Jakarta_Sans } from "next/font/google"
 import { PwaRegister } from "@/components/PwaRegister"
-import "./globals.css"
+
+/**
+ * The one <html>/<body>, shared by the two root layouts.
+ *
+ * There are two roots on purpose. The light-only routes used to be protected
+ * only by app/layout.tsx hardcoding data-theme="light" — but App Router never
+ * re-renders a root layout on soft navigation and nothing removes the
+ * attribute, so a <Link> from a dark CRM into /invoice-print carried the dark
+ * stamp with it. Six call sites do exactly that. Next forces a full document
+ * load between root layouts, which makes the leak unrepresentable rather than
+ * merely unlikely.
+ *
+ * `theme` undefined stamps NOTHING, which is what "system" means: no
+ * attribute, so the @media (prefers-color-scheme: dark) block in globals.css
+ * decides with no JS in the loop. The bytes that leave the server already say
+ * `dark`, so view-source, screenshots and script-blocked browsers agree with
+ * the screen, and color-scheme governs the browser's own root canvas,
+ * overscroll rubber-band and form controls on the FIRST paint. That last part
+ * is why the route split is the primary mechanism and .tk-light is only the
+ * fallback: a class on a subtree cannot reach the root canvas.
+ */
 
 /* The site's own faces: Inter Tight for headings and big numbers, Plus
    Jakarta Sans for UI labels, Inter for running text. */
@@ -23,7 +43,7 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
 })
 
-export const metadata: Metadata = {
+export const rootMetadata: Metadata = {
   title: {
     default: "Tall Karol CRM",
     template: "%s · Tall Karol CRM",
@@ -46,24 +66,28 @@ export const metadata: Metadata = {
   },
 }
 
-export const viewport: Viewport = {
+/* Fixed in BOTH roots on purpose. A { media } pair would key off
+   prefers-color-scheme rather than the tk_theme cookie, so a user who chose
+   light on a dark OS would get a dark title bar. */
+export const rootViewport: Viewport = {
   themeColor: "#006965",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
 }
 
-export default function RootLayout({
+export function RootHtml({
+  theme,
   children,
 }: {
+  /** "light" | "dark", or undefined for system (stamps no attribute). */
+  theme?: "light" | "dark"
   children: React.ReactNode
 }) {
   return (
-    /* Light by default so the portal and login never go dark; the admin
-       layout's boot script overrides this with the signed-in user's choice. */
     <html
       lang="en"
-      data-theme="light"
+      {...(theme ? { "data-theme": theme } : {})}
       className={`${inter.variable} ${interTight.variable} ${jakarta.variable}`}
     >
       <body className="min-h-screen font-sans">

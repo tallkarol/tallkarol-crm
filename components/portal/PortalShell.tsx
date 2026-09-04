@@ -1,6 +1,6 @@
 import type { Client } from "@/db/schema"
 import { PortalTabs } from "@/components/portal/PortalTabs"
-import { exitPortalPreview } from "@/app/portal/actions"
+import { exitPortalPreview } from "@/app/(public)/portal/actions"
 
 /** The one surface clients ever see — TALLKAROL branded, nothing internal. */
 export function PortalShell({
@@ -17,7 +17,7 @@ export function PortalShell({
   const context = clients.map((c) => c.name).join(" · ")
   const initial = (displayName[0] ?? "?").toUpperCase()
   return (
-    <div className="min-h-screen bg-tk-linen">
+    <div className="tk-light min-h-screen bg-canvas">
       {preview ? (
         <div className="flex flex-wrap items-center justify-center gap-3 bg-[#B45309]/90 px-4 py-1.5 text-center text-xs font-semibold text-white">
           Previewing the client portal as {context || "—"} — clients see exactly this
