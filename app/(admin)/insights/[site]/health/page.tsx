@@ -29,7 +29,7 @@ function Checklist({ items }: { items: { title: string; body: string }[] }) {
 function Setup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <details className="group rounded-2xl border border-line bg-card shadow-card">
-      <summary className="cursor-pointer list-none px-5 py-3.5 text-[13px] font-bold text-tk-onyx marker:content-none">
+      <summary className="transition-colors duration-[120ms] hover:text-accent-ink cursor-pointer list-none px-5 py-3.5 text-[13px] font-bold text-tk-onyx marker:content-none">
         <span className="mr-2 inline-block text-ink-3 transition-transform group-open:rotate-90">
           ▸
         </span>

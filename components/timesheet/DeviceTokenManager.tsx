@@ -167,7 +167,7 @@ export function DeviceTokenManager({
                     type="button"
                     disabled={busy}
                     onClick={() => revoke(row.id, row.name)}
-                    className="ml-auto rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink-3 hover:border-red-400 hover:text-red-700 disabled:opacity-50"
+                    className="ml-auto rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink-3 hover:border-bad hover:text-bad disabled:opacity-50"
                   >
                     Revoke
                   </button>

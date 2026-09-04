@@ -166,7 +166,7 @@ export function AppShell({
 
         <main
           id="main"
-          className="relative min-w-0 flex-1 overflow-x-hidden overflow-y-auto"
+          className="tk-main-scroll relative min-w-0 flex-1 overflow-x-hidden overflow-y-auto"
         >
           {/* Full-bleed canvas — pages cap their own prose/form widths. */}
           <div className="w-full px-5 py-8 sm:px-8">

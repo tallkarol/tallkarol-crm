@@ -416,7 +416,7 @@ function AddBlock({
 
   return (
     <details className="rounded-xl border border-dashed border-line-strong bg-tk-white/60 p-4">
-      <summary className="cursor-pointer font-['Inter_Tight',sans-serif] text-[13px] font-semibold text-tk-onyx">
+      <summary className="transition-colors duration-[120ms] hover:text-accent-ink cursor-pointer font-['Inter_Tight',sans-serif] text-[13px] font-semibold text-tk-onyx">
         Add a block
       </summary>
 

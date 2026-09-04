@@ -427,7 +427,7 @@ export function Timesheet({
       </div>
 
       {readOnly ? (
-        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-transparent bg-warn-soft px-4 py-3 text-sm text-warn">
           <Lock className="size-4 shrink-0" />
           <p>
             <strong className="font-semibold">
@@ -455,7 +455,7 @@ export function Timesheet({
           </button>
         </div>
       ) : lock.locked ? (
-        <p className="mt-4 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-900">
+        <p className="mt-4 rounded-xl border border-transparent bg-warn-soft px-4 py-2.5 text-sm font-semibold text-warn">
           Unlocked. Changes here move a billed total.
         </p>
       ) : null}
@@ -605,7 +605,7 @@ export function Timesheet({
                     <tr className="border-b border-line last:border-0">
                       <td className="px-1 py-0.5">
                         {readOnly ? (
-                          <span className="flex size-7 items-center justify-center text-tk-slate/20">
+                          <span className="flex size-7 items-center justify-center text-ink-3 opacity-40" aria-disabled="true">
                             <Lock className="size-3" />
                           </span>
                         ) : row.id || hasWork(row) ? (
@@ -618,7 +618,7 @@ export function Timesheet({
                             <Trash2 className="size-3.5" />
                           </button>
                         ) : (
-                          <span className="flex size-7 items-center justify-center text-tk-slate/20">
+                          <span className="flex size-7 items-center justify-center text-ink-3 opacity-40" aria-disabled="true">
                             <Plus className="size-3.5" />
                           </span>
                         )}

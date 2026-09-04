@@ -142,7 +142,7 @@ console.log("literal hex ratchet")
       const was = base.counts[f] ?? 0
       if (n > was) {
         regressed++
-        warn(`${f}: ${was} -> ${n} literal hexes`)
+        fail(`${f}: ${was} -> ${n} literal hexes — tokens exist: text-bad / text-warn / text-good / bg-well / border-line`)
       }
     }
     if (!regressed) console.log(`  ok    ${total} hits, none above baseline (was ${base.total})`)
@@ -162,14 +162,14 @@ console.log("deliberately-unmapped families")
     const m = readFileSync(f, "utf8").match(UNMAPPED_FAMILY)
     if (m) {
       hits += m.length
-      warn(`${f}: ${Array.from(new Set(m)).join(" ")}`)
+      fail(`${f}: ${Array.from(new Set(m)).join(" ")} — a per-site decision; mapping these turns a pale rim into a heavy stroke in light`)
     }
   }
   if (!hits) console.log("  ok    none")
 }
 
 console.log("")
-if (advisories) console.log(`${advisories} advisory finding(s) — not fatal yet; prebuild wires in at Stage 8`)
+if (advisories) console.log(`${advisories} advisory finding(s)`)
 if (failures) {
   console.log(`${failures} check(s) FAILED`)
   process.exit(1)

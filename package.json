@@ -55,10 +55,12 @@
     "hivemind:scan": "tsx scripts/hivemind-scan.ts",
     "check:slink": "tsx scripts/check-slink.ts",
     "check:chat": "tsx scripts/check-chat.ts",
+    "check:chat:db": "tsx --env-file-if-exists=.env.local scripts/check-chat-db.ts",
     "chat:worker": "tsx --env-file-if-exists=.env.local scripts/chat-worker.ts",
     "check:theme": "tsx scripts/check-theme.ts",
     "check:theme:update": "tsx scripts/check-theme.ts --update",
-    "check:slink:db": "tsx scripts/check-slink-db.ts"
+    "check:slink:db": "tsx scripts/check-slink-db.ts",
+    "prebuild": "npm run check:theme"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

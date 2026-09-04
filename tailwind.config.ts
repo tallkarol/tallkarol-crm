@@ -292,13 +292,6 @@ const config: Config = {
         "line-strong": "var(--line-strong)",
       },
 
-      placeholderColor: {
-        /* Currently UNREACHABLE dead config: it serves the bare
-           `placeholder-tk-slate` syntax, and all 21 placeholder sites use the
-           `placeholder:text-*` VARIANT, which reads textColor. Kept until
-           Stage 4 lands placeholder:text-ink-3, then deleted. */
-        "tk-slate": rgb("ink-3"),
-      },
 
       boxShadow: {
         card: "var(--shadow-card)",

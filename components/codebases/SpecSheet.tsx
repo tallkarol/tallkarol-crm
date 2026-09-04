@@ -161,7 +161,7 @@ function ComponentCard({ c }: { c: Component }) {
           />
           {wp.themes?.length ? (
             <details className="text-xs" open={wp.themes.length <= 6}>
-              <summary className="cursor-pointer font-semibold text-tk-onyx">{wp.themes.length} themes</summary>
+              <summary className="transition-colors duration-[120ms] hover:text-accent-ink cursor-pointer font-semibold text-tk-onyx">{wp.themes.length} themes</summary>
               <ul className="mt-1 divide-y divide-line">
                 {wp.themes.map((t) => (
                   <li key={t.dir} className="flex flex-wrap items-baseline gap-x-3 py-1">
@@ -177,7 +177,7 @@ function ComponentCard({ c }: { c: Component }) {
           ) : null}
           {wp.plugins?.length ? (
             <details className="text-xs">
-              <summary className="cursor-pointer font-semibold text-tk-onyx">{wp.plugins.length} plugins</summary>
+              <summary className="transition-colors duration-[120ms] hover:text-accent-ink cursor-pointer font-semibold text-tk-onyx">{wp.plugins.length} plugins</summary>
               <ul className="mt-1 divide-y divide-line">
                 {wp.plugins.map((p) => (
                   <li key={p.dir} className="flex items-baseline gap-x-3 py-1">
@@ -205,7 +205,7 @@ function ComponentCard({ c }: { c: Component }) {
 
       {c.dependencies?.prod?.length ? (
         <details className="mt-3 text-xs" open={c.dependencies.prod.length <= 12}>
-          <summary className="cursor-pointer font-semibold text-tk-onyx">
+          <summary className="transition-colors duration-[120ms] hover:text-accent-ink cursor-pointer font-semibold text-tk-onyx">
             {c.dependencies.prod.length} dependencies{c.dependencies.dev ? ` · ${c.dependencies.dev} dev` : ""}
           </summary>
           <div className="mt-1 overflow-x-auto">
@@ -213,7 +213,7 @@ function ComponentCard({ c }: { c: Component }) {
           </div>
           {c.dependencies.devList?.length ? (
             <details className="mt-2">
-              <summary className="cursor-pointer text-ink-3">dev dependencies</summary>
+              <summary className="transition-colors duration-[120ms] hover:text-accent-ink cursor-pointer text-ink-3">dev dependencies</summary>
               <div className="mt-1 overflow-x-auto">
                 <DepTable deps={c.dependencies.devList} />
               </div>
@@ -224,7 +224,7 @@ function ComponentCard({ c }: { c: Component }) {
 
       {c.scripts && Object.keys(c.scripts).length ? (
         <details className="mt-3 text-xs">
-          <summary className="cursor-pointer font-semibold text-tk-onyx">{Object.keys(c.scripts).length} scripts</summary>
+          <summary className="transition-colors duration-[120ms] hover:text-accent-ink cursor-pointer font-semibold text-tk-onyx">{Object.keys(c.scripts).length} scripts</summary>
           <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
             {Object.entries(c.scripts).map(([k, v]) => (
               <div key={k} className="contents">
@@ -238,7 +238,7 @@ function ComponentCard({ c }: { c: Component }) {
 
       {c.env?.names?.length ? (
         <details className="mt-3 text-xs">
-          <summary className="cursor-pointer font-semibold text-tk-onyx">
+          <summary className="transition-colors duration-[120ms] hover:text-accent-ink cursor-pointer font-semibold text-tk-onyx">
             {c.env.names.length} environment variables{c.env.integrations?.length ? ` · ${c.env.integrations.map((i) => i.name).join(", ")}` : ""}
           </summary>
           <p className="mt-1 font-mono text-[11px] leading-5 text-ink-3">{c.env.names.join("  ")}</p>

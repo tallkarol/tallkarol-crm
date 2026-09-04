@@ -60,7 +60,7 @@ export function ItemStateCircle({
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tk-teal/40 focus-visible:ring-offset-2",
         state === "done" && "border-tk-teal bg-accent-mark",
         state === "doing" && "border-tk-teal bg-card ring-4 ring-tk-teal/10",
-        state === "waiting" && "border-amber-500 bg-card ring-4 ring-amber-500/10",
+        state === "waiting" && "border-warn bg-card ring-4 ring-warn/10",
         state === "todo" && "border-line-strong bg-card hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:ring-4 hover:ring-tk-teal/10",
         disabled && "cursor-not-allowed opacity-40",
         pending && "opacity-70"

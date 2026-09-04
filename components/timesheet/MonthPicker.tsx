@@ -159,7 +159,7 @@ function Stepper({
     return (
       <span
         aria-hidden
-        className="flex size-8 items-center justify-center rounded-lg text-tk-slate/20"
+        className="flex size-8 items-center justify-center rounded-lg text-ink-3 opacity-40" aria-disabled="true"
       >
         {children}
       </span>

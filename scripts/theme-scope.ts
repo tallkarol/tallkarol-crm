@@ -13,11 +13,14 @@ export const SWEEP_EXT = /\.tsx?$/
 
 /** Light-only and pixel-stable by decree. Never swept, never linted. */
 export const FROZEN_DIRS = [
-  "app/portal/",
+  // These live under the (public) route group, which is a SECOND ROOT LAYOUT
+  // and not just a folder: Next forces a full document load when a navigation
+  // crosses between roots, which is what makes a dark theme unable to leak
+  // into a client's printed invoice. Keep these paths in step with that move —
+  // when they were still at app/portal/ etc. the guard silently stopped
+  // skipping them and started reporting their deliberate literals as debt.
+  "app/(public)/",
   "components/portal/",
-  "app/invoice-print/",
-  "app/insights-report/",
-  "app/login/",
 ] as const
 
 /**
@@ -97,8 +100,10 @@ export const ALLOWED_LITERAL_FILES = [
   "components/portal/PortalShell.tsx",
   "components/portal/panels.tsx",
   "components/portal/insights-panels.tsx",
-  "app/invoice-print/[number]/page.tsx",
-  "app/insights-report/[site]/page.tsx",
+  "components/portal/panel-shell.tsx",
+  "components/portal/kpi-tile.tsx",
+  "app/(public)/invoice-print/[number]/page.tsx",
+  "app/(public)/insights-report/[site]/page.tsx",
 ] as const
 
 export function isFrozen(rel: string): boolean {

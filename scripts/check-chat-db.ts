@@ -14,7 +14,20 @@ import {
   threadDetail,
 } from "@/lib/chat/turns"
 
-/** Temporary. Exercises the chat spine end to end, then deletes its thread. */
+/**
+ * The chat spine, against a real database.
+ *
+ *   npm run check:chat:db
+ *
+ * Routing, claiming, both kinds of tool, pricing, approval and the escalation
+ * chain — the parts that only fail once Postgres is involved, which no amount
+ * of typechecking catches.
+ *
+ * It WRITES: one throwaway thread, deleted on the way out along with
+ * everything that cascades from it. Nothing else in the schema is touched, and
+ * the one write tool it exercises is rejected rather than confirmed, so no
+ * time entry or task is ever created.
+ */
 
 let failures = 0
 function check(label: string, ok: boolean, detail = "") {
