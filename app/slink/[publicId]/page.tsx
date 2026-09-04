@@ -301,7 +301,7 @@ function Locked({
  <ResendForm publicId={publicId} label="Email me a link" />
  </div>
  <p className="mt-4 border-t border-line pt-3 text-[12px] text-ink-3">
- Not your address?{""}
+ Not your address?{" "}
  <Link href={`/slink/${publicId}/request`} className="font-semibold text-tk-teal">
  Ask for access
  </Link>
