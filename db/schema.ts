@@ -2774,3 +2774,254 @@ export const sessionMessages = pgTable(
 )
 
 export type SessionMessage = typeof sessionMessages.$inferSelect
+
+/* ------------------------------------------------------------------ slink */
+
+/**
+ * slink — a durable, modular page shared with named people.
+ *
+ * There is no password anywhere. Access is a magic link per email address, so
+ * nothing has to travel a second channel and every open is attributable to one
+ * person. Three clocks, deliberately separate:
+ *
+ *   slink_tokens.expires_at    15 min, single use — getting in once
+ *   slink_sessions.expires_at  30 days max — staying in
+ *   slink_recipients.expires_at  null = never — whether that email may get in at all
+ *
+ * A session may never outlive its grant. Letting a grant lapse revokes a
+ * person, never the page: the slink, its blocks and its history stay put and
+ * re-sharing is one button.
+ */
+export const slinks = pgTable(
+  "slinks",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    /** The URL handle. Short, unguessable, never sequential. */
+    publicId: text("public_id").notNull().unique(),
+    title: text("title").notNull(),
+    /** Shown above the blocks, before anything else. */
+    intro: text("intro").notNull().default(""),
+    clientId: uuid("client_id").references(() => clients.id, { onDelete: "set null" }),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    /** active | archived — archived is a 404 to recipients, still readable here. */
+    status: text("status").notNull().default("active"),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byClient: index("slinks_client_idx").on(table.clientId),
+    byStatus: index("slinks_status_idx").on(table.status, table.updatedAt),
+  })
+)
+
+/** One row per person. This is the unit of access, and the thing that expires. */
+export const slinkRecipients = pgTable(
+  "slink_recipients",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slinkId: uuid("slink_id")
+      .notNull()
+      .references(() => slinks.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    name: text("name").notNull().default(""),
+    /** null = indefinite. The per-person toggle writes exactly this. */
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    invitedBy: uuid("invited_by").references(() => users.id, { onDelete: "set null" }),
+    invitedAt: timestamp("invited_at", { withTimezone: true }).notNull().defaultNow(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
+    viewCount: integer("view_count").notNull().default(0),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    /** One grant per address per slink; re-sharing updates the row it already has. */
+    key: uniqueIndex("slink_recipients_key").on(table.slinkId, table.email),
+    bySlink: index("slink_recipients_slink_idx").on(table.slinkId),
+  })
+)
+
+/** Single-use magic links, the same contract as `magic_links`. */
+export const slinkTokens = pgTable(
+  "slink_tokens",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    recipientId: uuid("recipient_id")
+      .notNull()
+      .references(() => slinkRecipients.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byRecipient: index("slink_tokens_recipient_idx").on(table.recipientId),
+  })
+)
+
+/** The cookie session a used token buys. Capped at 30 days and by the grant. */
+export const slinkSessions = pgTable(
+  "slink_sessions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    recipientId: uuid("recipient_id")
+      .notNull()
+      .references(() => slinkRecipients.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byRecipient: index("slink_sessions_recipient_idx").on(table.recipientId),
+  })
+)
+
+/**
+ * Ordered content. Static kinds carry their own payload; live kinds carry a
+ * pointer and are read fresh on every view, so what was sent stays current.
+ *
+ * kind: text | table | fields | file | link       (static)
+ *     | credential | punchlist | reports | dashboard  (live)
+ */
+export const slinkBlocks = pgTable(
+  "slink_blocks",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slinkId: uuid("slink_id")
+      .notNull()
+      .references(() => slinks.id, { onDelete: "cascade" }),
+    position: integer("position").notNull().default(0),
+    kind: text("kind").notNull(),
+    title: text("title").notNull().default(""),
+    note: text("note").notNull().default(""),
+    /** Non-sensitive shape: column headers, row values, link targets. */
+    data: jsonb("data").notNull().default({}),
+    /** AES-256-GCM, the vault's key. Only the sensitive half lives here. */
+    secretBlob: text("secret_blob").notNull().default(""),
+    /** For live blocks: vault | punchlist | report | client. */
+    sourceKind: text("source_kind").notNull().default(""),
+    sourceId: uuid("source_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    bySlink: index("slink_blocks_slink_idx").on(table.slinkId, table.position),
+  })
+)
+
+/** Bytes in Postgres with a `storage_key` seam, exactly like ticket_attachments. */
+export const slinkFiles = pgTable(
+  "slink_files",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slinkId: uuid("slink_id")
+      .notNull()
+      .references(() => slinks.id, { onDelete: "cascade" }),
+    blockId: uuid("block_id").references(() => slinkBlocks.id, { onDelete: "cascade" }),
+    name: text("name").notNull().default(""),
+    mime: text("mime").notNull().default("application/octet-stream"),
+    bytes: integer("bytes").notNull().default(0),
+    data: customType<{ data: Buffer; driverData: Buffer }>({
+      dataType: () => "bytea",
+    })("data"),
+    storageKey: text("storage_key").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    bySlink: index("slink_files_slink_idx").on(table.slinkId),
+  })
+)
+
+/** "Someone else needs this." Never auto-granted — a queue for Karol. */
+export const slinkAccessRequests = pgTable(
+  "slink_access_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slinkId: uuid("slink_id")
+      .notNull()
+      .references(() => slinks.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    name: text("name").notNull().default(""),
+    reason: text("reason").notNull().default(""),
+    /** Which recipient asked on their behalf, when it came from inside. */
+    requestedBy: uuid("requested_by").references(() => slinkRecipients.id, {
+      onDelete: "set null",
+    }),
+    /** pending | granted | denied */
+    status: text("status").notNull().default("pending"),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    decidedBy: uuid("decided_by").references(() => users.id, { onDelete: "set null" }),
+    ip: text("ip").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    bySlink: index("slink_access_requests_slink_idx").on(table.slinkId, table.status),
+  })
+)
+
+/**
+ * The audit trail. Every open, every credential reveal, every download.
+ * kind: created | invited | link_sent | opened | viewed | revealed
+ *     | downloaded | access_requested | access_granted | access_denied
+ *     | expired | revoked | archived
+ */
+export const slinkEvents = pgTable(
+  "slink_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slinkId: uuid("slink_id")
+      .notNull()
+      .references(() => slinks.id, { onDelete: "cascade" }),
+    recipientId: uuid("recipient_id").references(() => slinkRecipients.id, {
+      onDelete: "set null",
+    }),
+    kind: text("kind").notNull(),
+    detail: text("detail").notNull().default(""),
+    ip: text("ip").notNull().default(""),
+    userAgent: text("user_agent").notNull().default(""),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    bySlink: index("slink_events_slink_idx").on(table.slinkId, table.at),
+  })
+)
+
+export const slinksRelations = relations(slinks, ({ one, many }) => ({
+  client: one(clients, { fields: [slinks.clientId], references: [clients.id] }),
+  author: one(users, { fields: [slinks.createdBy], references: [users.id] }),
+  recipients: many(slinkRecipients),
+  blocks: many(slinkBlocks),
+  files: many(slinkFiles),
+  requests: many(slinkAccessRequests),
+  events: many(slinkEvents),
+}))
+
+export const slinkRecipientsRelations = relations(slinkRecipients, ({ one, many }) => ({
+  slink: one(slinks, { fields: [slinkRecipients.slinkId], references: [slinks.id] }),
+  tokens: many(slinkTokens),
+  sessions: many(slinkSessions),
+}))
+
+export const slinkBlocksRelations = relations(slinkBlocks, ({ one, many }) => ({
+  slink: one(slinks, { fields: [slinkBlocks.slinkId], references: [slinks.id] }),
+  files: many(slinkFiles),
+}))
+
+export const slinkFilesRelations = relations(slinkFiles, ({ one }) => ({
+  slink: one(slinks, { fields: [slinkFiles.slinkId], references: [slinks.id] }),
+  block: one(slinkBlocks, { fields: [slinkFiles.blockId], references: [slinkBlocks.id] }),
+}))
+
+export const slinkEventsRelations = relations(slinkEvents, ({ one }) => ({
+  slink: one(slinks, { fields: [slinkEvents.slinkId], references: [slinks.id] }),
+  recipient: one(slinkRecipients, {
+    fields: [slinkEvents.recipientId],
+    references: [slinkRecipients.id],
+  }),
+}))
+
+export type Slink = typeof slinks.$inferSelect
+export type SlinkRecipient = typeof slinkRecipients.$inferSelect
+export type SlinkBlock = typeof slinkBlocks.$inferSelect
+export type SlinkEvent = typeof slinkEvents.$inferSelect
+export type SlinkAccessRequest = typeof slinkAccessRequests.$inferSelect

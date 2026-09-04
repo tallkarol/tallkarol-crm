@@ -19,7 +19,7 @@ export function PortalShell({
   return (
     <div className="min-h-screen bg-tk-linen">
       {preview ? (
-        <div className="flex flex-wrap items-center justify-center gap-3 bg-amber-700/90 px-4 py-1.5 text-center text-xs font-semibold text-white">
+        <div className="flex flex-wrap items-center justify-center gap-3 bg-[#B45309]/90 px-4 py-1.5 text-center text-xs font-semibold text-white">
           Previewing the client portal as {context || "—"} — clients see exactly this
           <form action={exitPortalPreview}>
             <button className="rounded-full border border-white/50 px-2.5 py-0.5 text-[11px] font-semibold hover:bg-white/10">

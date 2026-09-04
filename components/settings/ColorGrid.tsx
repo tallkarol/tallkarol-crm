@@ -71,7 +71,7 @@ function ColorRow({
           control people already know from every other Mac app. */}
       <label className="relative shrink-0 cursor-pointer">
         <span
-          className="block h-8 w-8 rounded-lg ring-1 ring-inset ring-black/10"
+          className="block h-8 w-8 rounded-lg ring-1 ring-inset ring-line"
           style={{ background: isHexColor(value) ? value : fallback }}
         />
         <input

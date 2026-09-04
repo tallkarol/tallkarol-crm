@@ -115,7 +115,7 @@ export function Unread({ summary }: { summary: UnreadSummary }) {
             <div
               role="table"
               aria-label="Unread by kind"
-              className="overflow-hidden rounded-lg border border-line/5 text-[12.5px]"
+              className="overflow-hidden rounded-lg border border-line text-[12.5px]"
             >
               <div
                 role="row"
@@ -133,8 +133,8 @@ export function Unread({ summary }: { summary: UnreadSummary }) {
                   href={row.href}
                   aria-label={`${row.label}: ${row.count} unread, ${row.state}${row.oldest ? `, oldest ${row.oldest}` : ""}`}
                   className={cn(
-                    "grid min-h-8 grid-cols-[0.9fr_0.7fr_1.6fr_0.8fr] border-t border-line/5 text-tk-slate transition-colors hover:brightness-[0.97]",
-                    i % 2 === 1 && "bg-line/[0.03]",
+                    "grid min-h-8 grid-cols-[0.9fr_0.7fr_1.6fr_0.8fr] border-t border-line text-tk-slate transition-colors hover:brightness-[0.97]",
+                    i % 2 === 1 && "bg-well",
                     row.count > 0 ? ROW_TONE[row.tone] : ""
                   )}
                 >
@@ -179,7 +179,7 @@ function Cell({
     <span
       role={head ? "columnheader" : "cell"}
       className={cn(
-        "grid h-full place-items-center truncate border-l border-line/5 px-1 text-center first:border-l-0",
+        "grid h-full place-items-center truncate border-l border-line px-1 text-center first:border-l-0",
         !head && "self-stretch",
         className
       )}

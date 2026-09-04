@@ -321,7 +321,7 @@ export default async function RetainerDetailPage({
                           {formatMoney(i.amountCents)}
                         </span>
                       </span>
-                      <span className="mt-1 size-2.5 rounded-full border-2 border-white shadow-[0_0_0_1.5px_#009688]" style={{ background: "#009688" }} />
+                      <span className="mt-1 size-2.5 rounded-full border-2 border-card shadow-[0_0_0_1.5px_#009688]" style={{ background: "#009688" }} />
                       <span className="text-[13px] leading-relaxed text-tk-slate">{i.description}</span>
                     </li>
                   ))}

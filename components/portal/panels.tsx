@@ -213,17 +213,17 @@ export async function PortalTickets({ clients }: { clients: Client[] }) {
                   </span>
                 </span>
                 {isOpen && /urgent|high/i.test(t.priority) ? (
-                  <span className="rounded-full bg-red-700/10 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+                  <span className="rounded-full bg-[#B91C1C]/10 px-2 py-0.5 text-[11px] font-semibold text-[#B91C1C]">
                     {t.priority.toLowerCase()}
                   </span>
                 ) : null}
                 <span
                   className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                     !isOpen
-                      ? "bg-emerald-800/10 text-emerald-800"
+                      ? "bg-[#065F46]/10 text-[#065F46]"
                       : /progress/i.test(t.state || t.status)
                         ? "bg-tk-teal/10 text-tk-teal"
-                        : "bg-amber-700/10 text-amber-800"
+                        : "bg-[#B45309]/10 text-[#92400E]"
                   }`}
                 >
                   {!isOpen
@@ -317,7 +317,7 @@ export async function PortalInvoices({ clients }: { clients: Client[] }) {
               <span className="font-bold tabular-nums text-tk-onyx">{formatMoney(i.amountCents, i.currency)}</span>
               <span
                 className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                  i.status === "paid" ? "bg-emerald-800/10 text-emerald-800" : "bg-amber-700/10 text-amber-800"
+                  i.status === "paid" ? "bg-[#065F46]/10 text-[#065F46]" : "bg-[#B45309]/10 text-[#92400E]"
                 }`}
               >
                 {i.status === "paid" ? "paid" : "due"}

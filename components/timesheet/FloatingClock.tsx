@@ -224,7 +224,7 @@ export function FloatingClock({ initial }: { initial: PunchView[] }) {
       >
         <GripVertical className="size-3.5" aria-hidden />
       </button>
-      <div className="flex min-w-0 flex-col divide-y divide-tk-linen/20">
+      <div className="flex min-w-0 flex-col divide-y divide-[#F1EADC]/20">
         {error ? (
           <p role="status" className="px-3 py-1.5 text-[11px] font-medium text-tk-linen/85">
             {error}

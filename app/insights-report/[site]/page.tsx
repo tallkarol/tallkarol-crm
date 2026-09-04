@@ -101,7 +101,7 @@ export default async function InsightsReportPage({
       <style>{`@page { margin: 14mm 12mm; } @media print { body { background: #fff; } }`}</style>
 
       {hideAmounts ? (
-        <p className="mb-4 rounded-lg bg-amber-700/10 px-3 py-2 text-xs font-semibold text-amber-800 print:hidden">
+        <p className="mb-4 rounded-lg bg-[#B45309]/10 px-3 py-2 text-xs font-semibold text-[#92400E] print:hidden">
           Amounts hidden — turn off demo mode before saving as PDF.
         </p>
       ) : null}

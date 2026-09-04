@@ -158,8 +158,8 @@ function FindingList({ findings }: { findings: GscFinding[] }) {
             <span
               className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                 f.severity === 1
-                  ? "bg-red-700/10 text-red-700"
-                  : "bg-amber-700/10 text-amber-800"
+                  ? "bg-[#B91C1C]/10 text-[#B91C1C]"
+                  : "bg-[#B45309]/10 text-[#92400E]"
               }`}
             >
               {SEVERITY_LABEL[f.severity] ?? "Finding"}

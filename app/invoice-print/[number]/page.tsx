@@ -78,7 +78,7 @@ export default async function InvoicePrintPage({
     <div className="mx-auto max-w-[52rem] bg-white px-10 py-8 font-['Inter',system-ui,sans-serif] text-[13px] leading-relaxed text-[#1F2C2B] print:max-w-none print:px-2 print:py-0">
       <style>{`body { background: #fff; } @page { margin: 16mm 14mm; } @media print { body { background: #fff; } }`}</style>
       {hideAmounts ? (
-        <p className="mb-4 rounded-lg bg-amber-700/10 px-3 py-2 text-xs font-semibold text-amber-800 print:hidden">
+        <p className="mb-4 rounded-lg bg-[#B45309]/10 px-3 py-2 text-xs font-semibold text-[#92400E] print:hidden">
           Amounts hidden — turn off demo mode before saving as PDF.
         </p>
       ) : null}
@@ -91,7 +91,7 @@ export default async function InvoicePrintPage({
         </Link>
         <div className="flex items-center gap-2">
           {invoice.status === "draft" ? (
-            <span className="rounded-full bg-amber-700/10 px-3 py-1 text-xs font-semibold text-amber-800">
+            <span className="rounded-full bg-[#B45309]/10 px-3 py-1 text-xs font-semibold text-[#92400E]">
               DRAFT — mark sent after it goes out
             </span>
           ) : null}
