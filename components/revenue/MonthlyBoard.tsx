@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { RevenueChart } from "@/components/dashboard/RevenueChart"
-import { chartColor } from "@/lib/client-colors"
+import { chartColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import {
   formatWholeMoney,
@@ -28,7 +28,7 @@ function Key({ color, opacity, label }: { color: string; opacity?: number; label
     <span className="inline-flex items-center gap-1.5">
       <span
         className="inline-block size-2.5 rounded-[3px]"
-        style={{ background: color, opacity }}
+        style={{ background: markColor(color), opacity }}
       />
       {label}
     </span>

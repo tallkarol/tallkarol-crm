@@ -14,6 +14,7 @@ import {
 } from "@dnd-kit/core"
 import { cn } from "@/lib/cn"
 import { reorderAttentionTasks, setTaskDone } from "@/lib/task-actions"
+import { markColor } from "@/lib/client-colors"
 
 export type AttentionTone = "bad" | "warn" | "ok" | "neutral"
 
@@ -64,16 +65,27 @@ const LAYOUT_KEY = "dashboard-needs-attention-layout"
 /**
  * Card view is colour-coded by client: a solid top edge in the client colour,
  * and the same colour washed to a tint for the paper and border, so a glance
- * across the board groups cards by who they belong to. Colours are six-digit
- * hex everywhere (`isHexColor` guards the overrides), so an alpha suffix is
- * safe.
+ * across the board groups cards by who they belong to.
+ *
+ * This used to append an alpha suffix to the hex (`${color}40`), which worked
+ * only while every colour was a six-digit literal. It is composed now, for two
+ * reasons. The precondition is gone: the no-client fallback is a token, not a
+ * hex, and `rgb(var(--ink-3-rgb))40` is invalid CSS that a browser drops
+ * silently — every no-client card would have lost its border AND its wash in
+ * both themes with nothing to show for it. And the top edge needs the mark
+ * lift, or sondry #1F3A4D reads 1.40:1 on the dark card.
+ *
+ * borderTopColor comes AFTER borderColor: the shorthand clobbers it otherwise,
+ * which is how the solid top edge this comment promises had already stopped
+ * rendering.
  */
-function clientTint(color: string) {
+function clientTint(color: string): React.CSSProperties {
   return {
-    borderTopColor: color,
-    borderColor: `${color}40`,
-    backgroundColor: `${color}14`,
-  }
+    "--c": color,
+    borderColor: "color-mix(in srgb, var(--c) 25%, transparent)",
+    borderTopColor: "color-mix(in oklab, var(--c), white var(--lift-mark))",
+    backgroundColor: "color-mix(in srgb, var(--c) 8%, transparent)",
+  } as React.CSSProperties
 }
 
 /**
@@ -444,7 +456,7 @@ function ClientChip({ name, color }: { name: string; color: string }) {
       className="tk-client-tint tk-client-ink inline-flex h-[18px] max-w-[180px] items-center gap-1 rounded-md px-1.5 font-ui text-[10px] font-bold"
       style={{ "--c": color } as React.CSSProperties}
     >
-      <span aria-hidden className="size-1.5 shrink-0 rounded-full" style={{ background: color }} />
+      <span aria-hidden className="size-1.5 shrink-0 rounded-full" style={{ background: markColor(color) }} />
       <span className="truncate">{name}</span>
     </span>
   )

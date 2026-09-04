@@ -194,8 +194,8 @@ export function MenuOption({
       {swatch ? (
         <span
           aria-hidden
-          className="size-2 shrink-0 rounded-full"
-          style={{ backgroundColor: swatch }}
+          className="tk-client-mark size-2 shrink-0 rounded-full"
+          style={{ "--c": swatch } as React.CSSProperties}
         />
       ) : null}
       <span className="min-w-0 flex-1 truncate">{label}</span>

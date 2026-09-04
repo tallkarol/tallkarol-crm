@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Search } from "lucide-react"
 import { ToolButton } from "@/components/dashboard/ToolButton"
 import { cn } from "@/lib/cn"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 
 /** One row the palette can jump to. `slug` colours the chip when it is a client's thing. */
 export type PaletteEntry = {
@@ -192,7 +192,7 @@ function PaletteDialog({
                     <span
                       aria-hidden
                       className="size-2 shrink-0 rounded-full"
-                      style={{ background: clientColor(entry.slug) }}
+                      style={{ background: markColor(clientColor(entry.slug)) }}
                     />
                   ) : null}
                   <span className="truncate font-medium">{entry.label}</span>

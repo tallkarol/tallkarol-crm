@@ -1,6 +1,6 @@
 import Link from "next/link"
 import type { Monitor, MonitorRun } from "@/db/schema"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { ageLabel } from "@/lib/support"
 
@@ -23,7 +23,7 @@ export function MonitorRow({
 
   return (
     <div className="flex border-b border-line last:border-0">
-      <span aria-hidden className="w-[3px] shrink-0" style={{ background: color }} />
+      <span aria-hidden className="w-[3px] shrink-0" style={{ background: markColor(color) }} />
       <div className="min-w-0 flex-1 px-3.5 py-2.5">
         <p className="truncate text-[13.5px] font-semibold text-tk-onyx">{monitor.name}</p>
         <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11.5px] text-ink-3">

@@ -8,7 +8,7 @@ import {
   StatePicker,
 } from "@/components/support/TicketControls"
 import type { SupportTicket, TicketMessage, TicketPayload } from "@/db/schema"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { highlightPayload } from "@/lib/payload-highlight"
 import { ROUTES } from "@/lib/nav"
@@ -110,7 +110,7 @@ export function TicketDetail({
 
       <div className="shrink-0 border-b border-line px-5 pt-4">
         <div className="flex items-center gap-2 text-[11.5px] text-ink-3">
-          <span className="size-2 shrink-0 rounded-full" style={{ background: color }} aria-hidden />
+          <span className="size-2 shrink-0 rounded-full" style={{ background: markColor(color) }} aria-hidden />
           {ticket.client ? (
             <Link
               href={ROUTES.client(ticket.client.slug)}
@@ -491,7 +491,7 @@ function Message({ message, accent }: { message: TicketMessage; accent: string }
       <div className="flex items-center gap-2">
         <span
           className="flex size-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
-          style={{ background: color }}
+          style={{ background: markColor(color) }}
           aria-hidden
         >
           {initials}

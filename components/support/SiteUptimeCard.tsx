@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { ageLabel } from "@/lib/support"
 import {
@@ -40,7 +40,7 @@ export function SiteUptimeCard({
       scroll={false}
       className="group flex overflow-hidden rounded-xl border border-line bg-card shadow-card transition-colors hover:border-line-strong"
     >
-      <span aria-hidden className="w-[3px] shrink-0" style={{ background: color }} />
+      <span aria-hidden className="w-[3px] shrink-0" style={{ background: markColor(color) }} />
       <div className="min-w-0 flex-1 px-3 py-2">
         <p className="flex items-center justify-between gap-2">
           <span className="truncate text-[10px] font-semibold uppercase tracking-wide text-ink-3">

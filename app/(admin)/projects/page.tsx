@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { PeekRouter } from "@/components/peek/PeekRouter"
 import { db } from "@/db"
 import type { Deliverable } from "@/db/schema"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { daysSince, fmtHours } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
 import { formatMoney } from "@/lib/work"
@@ -113,10 +113,10 @@ export default async function ProjectsPage({
             <article
               key={project.id}
               className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5 pb-4 shadow-card"
-              style={{ borderLeftWidth: 3, borderLeftColor: color }}
+              style={{ borderLeftWidth: 3, borderLeftColor: markColor(color) }}
             >
               <div className="flex flex-wrap items-center gap-2">
-                <span className="size-2 rounded-full" style={{ background: color }} />
+                <span className="size-2 rounded-full" style={{ background: markColor(color) }} />
                 <Link href={ROUTES.project(project.slug)} className="font-['Inter_Tight',sans-serif] text-base font-bold text-tk-onyx hover:text-tk-teal">
                   {project.name}
                 </Link>
@@ -170,7 +170,7 @@ export default async function ProjectsPage({
                 <div className="flex flex-wrap gap-1.5">
                   {streams.map((w) => (
                     <span key={w.id} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-well px-2.5 py-0.5 text-[11px] font-semibold text-tk-slate tabular-nums">
-                      <span className="size-1.5 rounded-full" style={{ background: color }} />
+                      <span className="size-1.5 rounded-full" style={{ background: markColor(color) }} />
                       {w.title} · {w.stage}
                       <span className="text-[10px] font-bold text-tk-teal">{w.pass === 1 ? "1st" : w.pass === 2 ? "2nd" : `${w.pass}th`}</span>
                     </span>
@@ -221,7 +221,7 @@ export default async function ProjectsPage({
             const total = p.deliverables.reduce((s, d) => s + (d.feeCents ?? 0), 0)
             return (
               <li key={p.id} className="flex flex-wrap items-center gap-2.5 border-b border-line px-5 py-3 text-sm last:border-0">
-                <span className="size-2 rounded-full" style={{ background: clientColor(p.client.slug) }} />
+                <span className="size-2 rounded-full" style={{ background: markColor(clientColor(p.client.slug)) }} />
                 <Link href={ROUTES.project(p.slug)} className="font-semibold text-tk-onyx hover:text-tk-teal">
                   {p.name}
                 </Link>

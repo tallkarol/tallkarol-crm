@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react"
 import { sourceLabel } from "@/lib/punch-source"
 import { Play, Square } from "lucide-react"
 import { clockLabel, useElapsed } from "@/components/timesheet/useElapsed"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { startPunch, stopPunch } from "@/lib/punch-actions"
 import { announcePunchChange } from "@/lib/punch-signal"
@@ -149,7 +149,7 @@ export function ClockPanel({
                     <span
                       aria-hidden
                       className="size-2.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: clientColor(target.clientSlug) }}
+                      style={{ backgroundColor: markColor(clientColor(target.clientSlug)) }}
                     />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold text-tk-onyx">

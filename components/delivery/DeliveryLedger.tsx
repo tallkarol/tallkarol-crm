@@ -10,6 +10,7 @@ import type { DeliveryRow, DeliveryTotals } from "@/lib/delivery"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { PROJECT_STATUS_LABEL, RETAINER_STATUS_LABEL, formatMoney } from "@/lib/work"
+import { markColor } from "@/lib/client-colors"
 
 /* ------------------------------------------------------------------ lenses */
 
@@ -129,7 +130,7 @@ function Row({ row, openHref }: { row: DeliveryRow; openHref: string }) {
 
   return (
     <li className="flex min-h-[46px] items-center gap-2.5 border-b border-line pr-3 last:border-b-0 hover:bg-well">
-      <span aria-hidden className="w-[3px] self-stretch" style={{ background: row.color }} />
+      <span aria-hidden className="w-[3px] self-stretch" style={{ background: markColor(row.color) }} />
 
       <Link
         href={openHref}

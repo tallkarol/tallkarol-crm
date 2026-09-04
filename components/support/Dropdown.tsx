@@ -253,7 +253,11 @@ export function MenuOption({
         </span>
       )}
       {color ? (
-        <span className="size-2 shrink-0 rounded-full" style={{ background: color }} aria-hidden />
+        <span
+          className="tk-client-mark size-2 shrink-0 rounded-full"
+          style={{ "--c": color } as React.CSSProperties}
+          aria-hidden
+        />
       ) : null}
       <span className="min-w-0 flex-1 truncate">{children}</span>
       {count != null ? (

@@ -14,7 +14,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { updateTask } from "@/lib/task-actions"
 import { isoDay, type HubTask } from "@/lib/task-view"
@@ -238,7 +238,7 @@ function Card({
         "cursor-grab touch-none rounded-xl border border-line bg-card p-2.5 shadow-card active:cursor-grabbing",
         dragging && "opacity-35"
       )}
-      style={{ borderLeftWidth: 3, borderLeftColor: color }}
+      style={{ borderLeftWidth: 3, borderLeftColor: markColor(color) }}
     >
       <Link
         href={`${peekBase}${join}peek=task:${task.id}`}
@@ -260,7 +260,7 @@ function Card({
             <span
               aria-hidden
               className="size-1.5 rounded-full"
-              style={{ backgroundColor: color }}
+              style={{ backgroundColor: markColor(color) }}
             />
             {task.clientName}
           </span>

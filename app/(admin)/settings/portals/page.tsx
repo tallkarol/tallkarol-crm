@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/PageHeader"
 import { db } from "@/db"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { formatDay } from "@/lib/work"
 import { addPortalGrant, previewPortal, removePortalGrant } from "./actions"
 
@@ -30,7 +30,7 @@ export default async function ClientPortalsPage() {
             <section
               key={client.id}
               className="rounded-2xl border border-line bg-card p-5 shadow-card"
-              style={{ borderLeftWidth: 3, borderLeftColor: clientColor(client.slug) }}
+              style={{ borderLeftWidth: 3, borderLeftColor: markColor(clientColor(client.slug)) }}
             >
               <div className="flex flex-wrap items-center gap-2.5">
                 <span className="size-2 rounded-full" style={{ background: clientColor(client.slug) }} />

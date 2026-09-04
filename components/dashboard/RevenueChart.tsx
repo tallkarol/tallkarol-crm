@@ -68,8 +68,8 @@ export function RevenueChart({
                       <p key={String(p.dataKey)} className="flex items-center justify-between gap-4">
                         <span className="flex items-center gap-1.5">
                           <span
-                            className="inline-block size-2 rounded-[3px]"
-                            style={{ background: p.color }}
+                            className="tk-client-mark-onyx inline-block size-2 rounded-[3px]"
+                            style={{ "--c": chartColor(String(p.dataKey)) } as React.CSSProperties}
                           />
                           {series.find((s) => s.slug === String(p.dataKey))?.name ?? String(p.dataKey)}
                         </span>

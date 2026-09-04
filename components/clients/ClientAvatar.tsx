@@ -1,4 +1,4 @@
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 
 export function clientInitials(name: string) {
@@ -28,7 +28,7 @@ export function ClientAvatar({
         size === "lg" && "h-12 w-12 rounded-2xl text-sm",
         muted && "bg-line-strong text-ink-3"
       )}
-      style={muted ? undefined : { backgroundColor: clientColor(slug) }}
+      style={muted ? undefined : { backgroundColor: markColor(clientColor(slug)) }}
     >
       {clientInitials(name)}
     </span>

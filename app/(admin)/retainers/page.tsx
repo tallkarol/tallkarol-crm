@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { MiniBars } from "@/components/engagements/MiniBars"
 import { PeekRouter } from "@/components/peek/PeekRouter"
 import { db } from "@/db"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import {
   billingGaps,
   fmtHours,
@@ -172,10 +172,10 @@ export default async function RetainersPage({
             <article
               key={r.id}
               className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5 pb-4 shadow-card"
-              style={{ borderLeftWidth: 3, borderLeftColor: color }}
+              style={{ borderLeftWidth: 3, borderLeftColor: markColor(color) }}
             >
               <div className="flex flex-wrap items-baseline gap-2">
-                <span className="size-2 self-center rounded-full" style={{ background: color }} />
+                <span className="size-2 self-center rounded-full" style={{ background: markColor(color) }} />
                 <Link href={ROUTES.retainer(r.slug)} className="font-['Inter_Tight',sans-serif] text-base font-bold text-tk-onyx hover:text-tk-teal">
                   {r.name}
                 </Link>
@@ -201,7 +201,7 @@ export default async function RetainersPage({
                   </span>
                 </div>
                 <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-well">
-                  <span className="block h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
+                  <span className="block h-full rounded-full" style={{ width: `${pct}%`, background: markColor(color) }} />
                 </span>
                 {p ? (
                   <div className="mt-1 flex justify-between text-[11px] tabular-nums">
@@ -273,7 +273,7 @@ export default async function RetainersPage({
             .filter((r) => r.status !== "active")
             .map((r) => (
               <li key={r.id} className="flex items-center gap-2.5 border-b border-line px-5 py-3 text-sm last:border-0">
-                <span className="size-2 rounded-full" style={{ background: clientColor(r.client.slug) }} />
+                <span className="size-2 rounded-full" style={{ background: markColor(clientColor(r.client.slug)) }} />
                 <Link href={ROUTES.retainer(r.slug)} className="font-semibold text-tk-onyx hover:text-tk-teal">
                   {r.name}
                 </Link>

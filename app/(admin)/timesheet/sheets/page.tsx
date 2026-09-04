@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Badge } from "@/components/work/Badge"
 import { SheetFilters } from "@/components/timesheet/SheetFilters"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import {
@@ -193,7 +193,7 @@ function SheetGroup({ group, rows }: { group: Group; rows: SheetSummary[] }) {
                     <span
                       aria-hidden
                       className="size-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: clientColor(row.clientSlug) }}
+                      style={{ backgroundColor: markColor(clientColor(row.clientSlug)) }}
                     />
                     {row.clientName}
                   </Link>

@@ -118,19 +118,39 @@ export function Forecast({ months }: { months: ForecastMonth[] }) {
                   )}
                 </p>
               </div>
+              {/*
+                The one all-pairs surface in the app: adjacent segments of
+                different client hues touch with no separator. Three things
+                make that legible. The segments take the MARK lift, not the
+                ink lift — mark is the only channel that clears 3:1 on the
+                well track, and lifting to 52% to match the legend would halve
+                pairwise separation again (min oklab dE 0.0316 -> 0.0223). A
+                1px gap means touching segments never rely on hue alone. And
+                role="img" with a per-client label is the relief the palette
+                needs: at any lift, six of fourteen client colours are not
+                reliably distinguishable from their nearest neighbour.
+
+                flex-basis must be `1 1` and not `0 0`: with gap-px, `0 0`
+                overflows the track by (n-1)px and overflow-hidden clips the
+                last client off the end.
+              */}
               <div
-                aria-hidden
-                className="flex h-2 overflow-hidden rounded-full border border-line bg-well"
+                role="img"
+                aria-label={visible.map((l) => l.name).join(", ")}
+                className="flex h-2 gap-px overflow-hidden rounded-full border border-line bg-well"
               >
                 {sum > 0
                   ? visible.map((line, i) => (
                       <span
                         key={line.id}
-                        className="block h-full transition-[flex-basis] duration-700 ease-out"
-                        style={{
-                          flex: `0 0 ${(weights[i] / sum) * 100}%`,
-                          background: clientColor(line.slug),
-                        }}
+                        title={line.name}
+                        className="tk-client-mark block h-full transition-[flex-basis] duration-700 ease-out"
+                        style={
+                          {
+                            flex: `1 1 ${(weights[i] / sum) * 100}%`,
+                            "--c": clientColor(line.slug),
+                          } as React.CSSProperties
+                        }
                       />
                     ))
                   : null}

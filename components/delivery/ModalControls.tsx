@@ -105,7 +105,7 @@ export function DeliverableInvoiceButton({ deliverableId }: { deliverableId: str
         "inline-flex h-[21px] shrink-0 items-center rounded-full px-2 text-[10.5px] font-semibold",
         error
           ? "bg-card text-bad ring-1 ring-transparent"
-          : "bg-warn text-white hover:brightness-110",
+          : "bg-warn text-canvas hover:brightness-110",
         pending && "opacity-60"
       )}
     >

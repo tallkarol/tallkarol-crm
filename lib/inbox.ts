@@ -28,7 +28,7 @@ export const KIND_LABEL: Record<InboxKind, string> = {
 }
 
 export const KIND_TONE: Record<InboxKind, string> = {
-  lead: "bg-tk-teal/10 text-tk-teal",
+  lead: "bg-accent-soft text-accent-ink",
   ticket: "bg-warn-soft text-warn",
   message: "bg-warn-soft text-warn",
   mail: "bg-well text-ink-3",

@@ -13,6 +13,7 @@ import {
 import Link from "next/link"
 import { cn } from "@/lib/cn"
 import { parseRichText, presentCalendarCopy, safeHref } from "@/lib/linkify"
+import { markColor } from "@/lib/client-colors"
 
 export type EventModalItem = {
   title: string
@@ -212,7 +213,7 @@ export function EventModal({
         aria-labelledby="event-modal-title"
         className="relative flex max-h-[min(40rem,90dvh)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-overlay motion-safe:animate-[tk-modal-in_.22s_ease-out]"
       >
-        <div className="h-1 shrink-0" style={{ background: color }} />
+        <div className="h-1 shrink-0" style={{ background: markColor(color) }} />
 
         <header className="flex shrink-0 items-start justify-between gap-3 px-6 pb-4 pt-4">
           <div className="min-w-0">
@@ -221,7 +222,7 @@ export function EventModal({
                 <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-3">
                   <span
                     className="size-1.5 rounded-full"
-                    style={{ background: color }}
+                    style={{ background: markColor(color) }}
                   />
                   {event.source}
                 </p>

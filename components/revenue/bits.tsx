@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { CHART } from "@/lib/insights/chart"
 import { cn } from "@/lib/cn"
+import { markColor } from "@/lib/client-colors"
 
 export function Card({
   title,
@@ -96,7 +97,10 @@ export function ChartTip({
   rows,
 }: {
   label: string
-  rows: { color?: string; name: string; value: string }[]
+  /* `lift` is opt-in because this tooltip is shared: RateChart, BilledChart
+     and CashChart pass CHART.teal / CHART.amber, which already have per-theme
+     dark variants and must not be lifted again. Only a CLIENT hue sets it. */
+  rows: { color?: string; name: string; value: string; lift?: boolean }[]
 }) {
   return (
     <div className="rounded-xl bg-tk-onyx px-3 py-2 text-xs text-tk-linen shadow-overlay">
@@ -111,7 +115,7 @@ export function ChartTip({
               {row.color ? (
                 <span
                   className="inline-block size-2 rounded-[3px]"
-                  style={{ background: row.color }}
+                  style={{ background: row.lift ? markColor(row.color) : row.color }}
                 />
               ) : null}
               {row.name}

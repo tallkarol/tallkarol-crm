@@ -400,8 +400,8 @@ export function TaskFilterBar({
               {pill.swatch ? (
                 <span
                   aria-hidden
-                  className="size-1.5 rounded-full"
-                  style={{ backgroundColor: pill.swatch }}
+                  className="tk-client-mark size-1.5 rounded-full"
+                  style={{ "--c": pill.swatch } as React.CSSProperties}
                 />
               ) : null}
               <b className="font-semibold">{pill.label}</b>

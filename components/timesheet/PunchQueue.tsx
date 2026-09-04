@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react"
 import { AlertTriangle } from "lucide-react"
 import { Badge } from "@/components/work/Badge"
 import { sourceLabel } from "@/lib/punch-source"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { FLAG_LABEL, approvalBlocker } from "@/lib/punch"
 import { approvePunchEntry, dropPunch, editPunch } from "@/lib/punch-actions"
@@ -198,7 +198,7 @@ export function PunchQueue({
                     <span
                       aria-hidden
                       className="mt-1.5 size-2.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: clientColor(punch.clientSlug) }}
+                      style={{ backgroundColor: markColor(clientColor(punch.clientSlug)) }}
                     />
 
                     <div className="min-w-0 flex-1">

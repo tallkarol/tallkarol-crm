@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { setTaskDone } from "@/lib/task-actions"
 import {
@@ -59,7 +59,7 @@ export function TaskRows({
                 <span
                   aria-hidden
                   className="size-1.5 rounded-full"
-                  style={{ backgroundColor: clientColor(group.color) }}
+                  style={{ backgroundColor: markColor(clientColor(group.color)) }}
                 />
               ) : null}
               {group.title}
@@ -157,7 +157,7 @@ function Row({
         row.first && "border-t border-line first:border-t-0"
       )}
     >
-      <span aria-hidden style={{ backgroundColor: color }} />
+      <span aria-hidden style={{ backgroundColor: markColor(color) }} />
 
       <span className="flex items-start pl-3 pt-[11px]">
         <button
@@ -204,7 +204,7 @@ function Row({
               <span
                 aria-hidden
                 className="size-1.5 rounded-full"
-                style={{ backgroundColor: color }}
+                style={{ backgroundColor: markColor(color) }}
               />
               {houseName}
             </span>

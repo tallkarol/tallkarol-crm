@@ -27,6 +27,7 @@ import {
   type InboxLens,
 } from "@/lib/inbox"
 import { ROUTES } from "@/lib/nav"
+import { markColor } from "@/lib/client-colors"
 
 type Result = { ok: boolean; error?: string }
 
@@ -219,7 +220,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
                     <span
                       aria-hidden
                       className="size-[7px] shrink-0 rounded-full"
-                      style={{ background: c.color }}
+                      style={{ background: markColor(c.color) }}
                     />
                     <span className="truncate">{c.name}</span>
                   </button>
@@ -353,7 +354,7 @@ function Workspace({
             type="button"
             disabled={busy}
             onClick={() => onRun(() => mailToTicketAction(item.id))}
-            className="inline-flex h-[26px] items-center rounded-full bg-warn px-3 text-[11.5px] font-semibold text-white hover:brightness-110 disabled:opacity-50"
+            className="inline-flex h-[26px] items-center rounded-full bg-warn px-3 text-[11.5px] font-semibold text-canvas hover:brightness-110 disabled:opacity-50"
           >
             Make ticket
           </button>

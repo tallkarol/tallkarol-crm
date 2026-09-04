@@ -15,7 +15,7 @@ import {
 } from "@dnd-kit/core"
 import { setWorkstreamStageAction } from "@/app/(admin)/delivery/actions"
 import { AddWorkstream } from "@/components/delivery/ModalControls"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { WORKSTREAM_STAGES, ordinal } from "@/lib/pipeline"
 import type { WorkstreamStage } from "@/db/schema"
@@ -77,7 +77,7 @@ export function WorkstreamLane({ lane }: { lane: LaneData }) {
   return (
     <section className="rounded-2xl border border-line bg-well p-3.5">
       <div className="flex flex-wrap items-center gap-2.5 px-1 pb-1">
-        <span className="size-2 rounded-full" style={{ background: color }} />
+        <span className="size-2 rounded-full" style={{ background: markColor(color) }} />
         <h3 className="text-sm font-semibold text-tk-onyx">{lane.projectName}</h3>
         <span className="text-xs text-ink-3">{lane.meta}</span>
         <span className="ml-auto">
@@ -117,7 +117,7 @@ export function WorkstreamLane({ lane }: { lane: LaneData }) {
           {active ? (
             <div
               className="w-56 rotate-2 rounded-xl border border-line bg-card p-3 shadow-overlay"
-              style={{ borderLeftWidth: 3, borderLeftColor: color }}
+              style={{ borderLeftWidth: 3, borderLeftColor: markColor(color) }}
             >
               <p className="text-[13px] font-semibold text-tk-onyx">{active.title}</p>
               <span className="mt-1.5 inline-flex rounded-full bg-tk-teal/10 px-2 py-0.5 text-[11px] font-semibold text-tk-teal">
@@ -183,7 +183,7 @@ function Card({
         "cursor-grab touch-none rounded-xl border border-line bg-card p-3 shadow-card active:cursor-grabbing",
         dragging && "opacity-35"
       )}
-      style={{ borderLeftWidth: 3, borderLeftColor: edge }}
+      style={{ borderLeftWidth: 3, borderLeftColor: markColor(edge) }}
     >
       {children}
     </li>

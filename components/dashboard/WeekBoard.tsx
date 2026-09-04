@@ -1,4 +1,5 @@
 "use client"
+import { markColor } from "@/lib/client-colors"
 
 import Link from "next/link"
 import {
@@ -569,7 +570,7 @@ export function WeekBoard({
                         const dragging = drag?.id === meeting.id
                         const style: CSSProperties = {
                           "--c": meeting.color,
-                          borderLeftColor: meeting.color,
+                          borderLeftColor: markColor(meeting.color),
                         } as CSSProperties
                         if (dragging && drag) {
                           style.transform = `translate(${drag.dx}px, ${drag.dy}px)`

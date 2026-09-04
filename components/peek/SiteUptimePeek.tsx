@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm"
 import { GonePeek, PeekSection } from "@/components/peek/bits"
 import { db } from "@/db"
 import { sites } from "@/db/schema"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { ageLabel } from "@/lib/support"
 import {
@@ -46,7 +46,7 @@ export async function SiteUptimePeek({ slug }: { slug: string }) {
     <>
       <div className="px-6 pb-5 pt-4">
         <h2 className="flex items-center gap-2 text-lg font-semibold leading-snug text-tk-onyx">
-          <span aria-hidden className="size-2.5 rounded-[3px]" style={{ background: color }} />
+          <span aria-hidden className="size-2.5 rounded-[3px]" style={{ background: markColor(color) }} />
           {site.name}
         </h2>
         <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-sm text-ink-3">

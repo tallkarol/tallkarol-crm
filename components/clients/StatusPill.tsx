@@ -23,7 +23,7 @@ export function StatusPill({
         tone === "good" && "bg-good-soft text-good",
         tone === "warn" && "bg-warn-soft text-warn",
         tone === "crit" && "bg-bad-soft text-bad",
-        tone === "teal" && "bg-tk-teal/10 text-tk-teal",
+        tone === "teal" && "bg-accent-soft text-accent-ink",
         tone === "neutral" && "bg-well text-tk-slate",
         tone === "muted" && "bg-well text-ink-3"
       )}

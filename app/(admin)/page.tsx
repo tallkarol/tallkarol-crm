@@ -223,7 +223,7 @@ export default async function DashboardPage({
     return {
       id: t.id,
       href: peekHref("/", "task", t.id),
-      color: t.client ? clientColor(t.client.slug) : "#71807D",
+      color: t.client ? clientColor(t.client.slug) : "rgb(var(--ink-3-rgb))",
       title: t.title,
       meta: t.client?.name,
       detail:
@@ -320,7 +320,7 @@ export default async function DashboardPage({
       items: stalled.map((t) => ({
         id: t.id,
         href: peekHref("/", "task", t.id),
-        color: t.clientSlug ? clientColor(t.clientSlug) : "#71807D",
+        color: t.clientSlug ? clientColor(t.clientSlug) : "rgb(var(--ink-3-rgb))",
         title: t.title,
         meta: t.clientName ?? undefined,
         detail: `no movement for ${t.days} days`,

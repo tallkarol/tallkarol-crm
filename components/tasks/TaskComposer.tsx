@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, X } from "lucide-react"
 import { Dropdown, MenuOption } from "@/components/ui/Dropdown"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { createTask } from "@/lib/task-actions"
 import { parseTaskInput, type ParseTarget } from "@/lib/task-parse"
@@ -281,7 +281,7 @@ function Chip({
         <span
           aria-hidden
           className="size-2 shrink-0 rounded-full"
-          style={{ backgroundColor: swatch }}
+          style={{ backgroundColor: markColor(swatch) }}
         />
       ) : null}
       {label}

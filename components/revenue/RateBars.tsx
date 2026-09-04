@@ -1,4 +1,4 @@
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { fmtHours } from "@/lib/engagements"
 import type { ClientRow } from "@/lib/revenue"
 import { formatMoney } from "@/lib/work"
@@ -39,7 +39,7 @@ export function RateBars({ rows }: { rows: ClientRow[] }) {
                     className="h-[13px] rounded-r"
                     style={{
                       width: `${Math.max((rate / max) * 100, 4)}%`,
-                      background: color,
+                      background: markColor(color),
                     }}
                   />
                 </div>

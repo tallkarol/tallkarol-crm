@@ -86,7 +86,7 @@ export function PickButtons({
                 size === "md" ? "px-3 py-1.5 text-xs" : "px-2 py-1 text-[11px]",
                 isActive
                   ? opt.tone === "danger"
-                    ? "bg-bad text-white"
+                    ? "bg-bad text-canvas"
                     : opt.tone === "neutral"
                       ? "bg-tk-onyx text-tk-linen"
                       : "bg-accent text-tk-linen"

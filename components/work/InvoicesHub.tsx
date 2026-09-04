@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Badge } from "@/components/work/Badge"
 import { invoiceTone } from "@/components/work/InvoiceList"
 import type { InvoiceStatus } from "@/db/schema"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import {
@@ -69,14 +69,14 @@ function InvoiceRow({ invoice }: { invoice: InvoiceHubRow }) {
         href={`${ROUTES.invoices}?peek=invoice:${encodeURIComponent(invoice.number)}`}
         scroll={false}
         className="flex items-center justify-between gap-4 border-l-[3px] px-5 py-3 hover:bg-well"
-        style={{ borderLeftColor: color }}
+        style={{ borderLeftColor: markColor(color) }}
       >
         <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="font-semibold text-tk-onyx">{invoice.number}</span>
             <span
-              className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
-              style={{ backgroundColor: `${color}17`, color }}
+              className="tk-client-tint tk-client-ink rounded-full px-2 py-0.5 text-[11px] font-semibold"
+              style={{ "--c": color } as React.CSSProperties}
             >
               {invoice.clientName}
             </span>
@@ -184,7 +184,7 @@ export function InvoicesHub({ invoices }: { invoices: InvoiceHubRow[] }) {
                 )}
                 style={
                   active
-                    ? { backgroundColor: color, borderColor: color }
+                    ? { backgroundColor: markColor(color), borderColor: markColor(color) }
                     : undefined
                 }
               >

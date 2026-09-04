@@ -11,6 +11,7 @@ import {
 } from "@/lib/calendar-actions"
 import type { CalendarSourceKind } from "@/db/schema"
 import { cn } from "@/lib/cn"
+import { markColor } from "@/lib/client-colors"
 
 const field =
   "mt-1 w-full rounded-xl border border-line bg-card px-3 py-2 text-sm text-tk-onyx outline-none focus:border-tk-teal"
@@ -96,7 +97,7 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
                     <div className="flex flex-wrap items-center gap-2">
                       <span
                         className="h-2.5 w-2.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: source.color }}
+                        style={{ backgroundColor: markColor(source.color) }}
                       />
                       <p className="font-medium text-tk-onyx">{source.label}</p>
                       <Badge tone="neutral">

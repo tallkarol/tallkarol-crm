@@ -42,7 +42,7 @@ export function matchesStateFilter(rowState: TicketState, filter: StateFilter) {
 
 export function stateTone(state: TicketState) {
   if (state === "closed") return "bg-good-soft text-good"
-  if (state === "progress") return "bg-tk-teal/10 text-tk-teal"
+  if (state === "progress") return "bg-accent-soft text-accent-ink"
   if (state === "waiting") return "bg-well text-ink-3"
   return "bg-warn-soft text-warn"
 }

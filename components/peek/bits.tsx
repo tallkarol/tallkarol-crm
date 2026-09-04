@@ -40,7 +40,11 @@ export function EntityLink({
       className="inline-flex items-center gap-1.5 font-semibold text-tk-teal hover:underline"
     >
       {color ? (
-        <span className="size-2 rounded-full" style={{ background: color }} aria-hidden />
+        <span
+          className="tk-client-mark size-2 rounded-full"
+          style={{ "--c": color } as React.CSSProperties}
+          aria-hidden
+        />
       ) : null}
       {children}
     </Link>

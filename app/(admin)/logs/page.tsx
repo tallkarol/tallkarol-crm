@@ -3,7 +3,7 @@ import Link from "next/link"
 import { PageHeader } from "@/components/PageHeader"
 import { db } from "@/db"
 import { appEvents } from "@/db/schema"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { formatStamp } from "@/lib/support"
@@ -143,7 +143,7 @@ export default async function LogsPage({
                       <span className="flex shrink-0 items-center gap-1.5 text-[11.5px] font-semibold text-ink-3">
                         <span
                           className="size-[7px] rounded-full"
-                          style={{ background: clientColor(event.client.slug) }}
+                          style={{ background: markColor(clientColor(event.client.slug)) }}
                           aria-hidden
                         />
                         {event.client.name}

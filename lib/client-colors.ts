@@ -93,3 +93,29 @@ export function chartColor(slug: string) {
   if (stored) return stored
   return CHART_COLORS[slug] ?? clientColor(slug)
 }
+
+/**
+ * A client colour used as a MARK — a dot, a 3px left edge, a stripe, a bar
+ * fill. The stored hexes were picked for white paper: raw, sondry #1F3A4D is
+ * 1.40:1 on the dark card and 1.26:1 on the dark WELL, which is the binding
+ * surface because every meter track is a well. --lift-mark (32% in dark, 0% in
+ * light) takes the worst of them to 3.08:1 and leaves light untouched.
+ *
+ * Marks get a SMALLER lift than text on purpose: a mark owes 3:1, not 4.5:1,
+ * and every extra point of lift costs pairwise separation. Across the 14 client
+ * hues the minimum oklab dE is 0.0464 raw, 0.0316 at this lift, and 0.0223 at
+ * the ink lift — which is why the ink channel is a separate one.
+ *
+ * Prefer the `tk-client-mark` / `tk-client-edge` classes where the element has
+ * a className to hand; this is for the sites that set the colour inline and
+ * would otherwise need the class threaded through a style prop.
+ */
+export function markColor(color: string) {
+  return `color-mix(in oklab, ${color}, white var(--lift-mark))`
+}
+
+/** A client colour used as TEXT. Shaded in light, lifted in dark — see
+ *  `.tk-client-ink` in globals.css, which this mirrors for inline callers. */
+export function inkColor(color: string) {
+  return `color-mix(in oklab, color-mix(in oklab, ${color}, black var(--shade)), white var(--lift))`
+}

@@ -14,7 +14,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { setTaskStage } from "@/lib/task-actions"
 import type { HubTask } from "@/lib/task-view"
@@ -189,7 +189,7 @@ function Card({
         dragging && "opacity-35",
         task.status === "done" && "opacity-70"
       )}
-      style={{ borderLeftWidth: 3, borderLeftColor: color }}
+      style={{ borderLeftWidth: 3, borderLeftColor: markColor(color) }}
     >
       <div className="p-2.5">
         <Link
@@ -222,7 +222,7 @@ function Card({
               <span
                 aria-hidden
                 className="size-1.5 rounded-full"
-                style={{ backgroundColor: color }}
+                style={{ backgroundColor: markColor(color) }}
               />
               {task.clientName}
             </span>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Clock, Play, Square } from "lucide-react"
 import { FieldLabel, INPUT_CLASS, ToolButton } from "@/components/dashboard/ToolButton"
 import { cn } from "@/lib/cn"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { startPunch, stopPunch } from "@/lib/punch-actions"
 import { announcePunchChange } from "@/lib/punch-signal"
 import type { PunchView } from "@/lib/punches"
@@ -78,7 +78,7 @@ export function ClockPopover({
                 <span
                   aria-hidden
                   className="size-2 rounded-full"
-                  style={{ background: clientColor(live.clientSlug) }}
+                  style={{ background: markColor(clientColor(live.clientSlug)) }}
                 />
                 {live.clientName}
                 {live.projectName ? (

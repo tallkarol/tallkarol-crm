@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { Lock, Plus, Trash2 } from "lucide-react"
 import { MonthPicker } from "@/components/timesheet/MonthPicker"
 import { cn } from "@/lib/cn"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { ROUTES } from "@/lib/nav"
 import type { SheetState } from "@/lib/sheets"
 import {
@@ -399,7 +399,7 @@ export function Timesheet({
           <span
             aria-hidden
             className="size-2.5 shrink-0 rounded-full"
-            style={{ backgroundColor: clientColor(client.slug) }}
+            style={{ backgroundColor: markColor(clientColor(client.slug)) }}
           />
           <select
             id="sheet-client"

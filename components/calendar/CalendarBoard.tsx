@@ -8,6 +8,7 @@ import { Badge } from "@/components/work/Badge"
 import type { CalendarItem, CalendarLane, CalendarSnapshot } from "@/lib/calendar-types"
 import { syncCalendars } from "@/lib/calendar-actions"
 import { cn } from "@/lib/cn"
+import { inkColor } from "@/lib/client-colors"
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
@@ -321,9 +322,13 @@ export function CalendarBoard({
                           item.cancelled && "line-through opacity-50"
                         )}
                         style={{
-                          backgroundColor: `${lane?.color ?? "#006965"}14`,
-                          color: lane?.color ?? "#006965",
-                        }}
+                          // A lane hue as text on its own tint: raw, gdi is
+                          // 2.49:1 there in dark. Shaded in light, lifted in
+                          // dark, the same two channels every client colour uses.
+                          "--c": lane?.color ?? "#006965",
+                          backgroundColor: "color-mix(in srgb, var(--c) 8%, transparent)",
+                          color: inkColor(lane?.color ?? "#006965"),
+                        } as React.CSSProperties}
                         title={item.title}
                       >
                         {!item.allDay ? (

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import {
   BAR_TONE,
@@ -24,14 +24,14 @@ export function AppHealthCard({ app, peekHref }: { app: AppHealth; peekHref: str
       scroll={false}
       className="group flex overflow-hidden rounded-2xl border border-line bg-card shadow-card transition-colors hover:border-line-strong"
     >
-      <span aria-hidden className="w-[3px] shrink-0" style={{ background: color }} />
+      <span aria-hidden className="w-[3px] shrink-0" style={{ background: markColor(color) }} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-3 border-b border-line px-3 py-1.5">
           <p className="flex min-w-0 items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-ink-3">
             <span
               aria-hidden
               className="h-2 w-2 shrink-0 rounded-[3px]"
-              style={{ background: color }}
+              style={{ background: markColor(color) }}
             />
             <span className="truncate">{app.name}</span>
           </p>

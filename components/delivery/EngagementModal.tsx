@@ -21,7 +21,7 @@ import {
   type InvoiceFacts,
   type TicketFacts,
 } from "@/lib/attention"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { hoursByMonth, monthsLeft, retainerRateCents, ym } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
 import { ticketPriority, ticketState } from "@/lib/support"
@@ -89,7 +89,7 @@ function Header({
   return (
     <div className="px-4 pb-3 pt-3.5">
       <div className="flex items-start gap-2.5 pr-9">
-        <span className="mt-1.5 size-2.5 shrink-0 rounded-full" style={{ background: color }} />
+        <span className="mt-1.5 size-2.5 shrink-0 rounded-full" style={{ background: markColor(color) }} />
         <div className="min-w-0">
           <p className="text-[10.5px] font-bold uppercase tracking-[0.07em] text-ink-3">
             {crumb}

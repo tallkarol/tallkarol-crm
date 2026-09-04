@@ -5,7 +5,7 @@ import { StatusSelect } from "../StatusSelect"
 import { TaskComposer } from "@/components/tasks/TaskComposer"
 import { TaskRows } from "@/components/tasks/TaskRows"
 import { db } from "@/db"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { daysSince, readLinks } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
 import { studiosWithProducts } from "@/lib/products"
@@ -73,7 +73,7 @@ export default async function ProductDetailPage({
           <div className="flex flex-wrap items-center gap-2.5">
             <span
               className="size-2.5 rounded-full"
-              style={{ background: color }}
+              style={{ background: markColor(color) }}
             />
             <h1 className="text-2xl font-semibold tracking-tight text-tk-onyx">
               {product.name}

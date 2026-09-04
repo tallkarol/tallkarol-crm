@@ -4,7 +4,7 @@ import { PeekRouter } from "@/components/peek/PeekRouter"
 import { LedgerFilters } from "@/components/timesheet/LedgerFilters"
 import { db } from "@/db"
 import { clients, timeEntrySessions } from "@/db/schema"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { ROUTES } from "@/lib/nav"
 import { ledgerEntries } from "@/lib/sheets"
 import { formatSheetHours } from "@/lib/timesheet"
@@ -135,7 +135,7 @@ export default async function LedgerPage({
                         <span
                           aria-hidden
                           className="size-2 shrink-0 rounded-full"
-                          style={{ backgroundColor: clientColor(row.clientSlug) }}
+                          style={{ backgroundColor: markColor(clientColor(row.clientSlug)) }}
                         />
                         {row.clientName}
                       </span>

@@ -32,7 +32,7 @@ export function StatusBoard({ rows }: { rows: RosterRow[] }) {
             className={cn(
               "px-3.5 py-3",
               column.status === "active_retainer"
-                ? "bg-good"
+                ? "bg-good text-canvas"
                 : "bg-card"
             )}
           >
@@ -41,7 +41,7 @@ export function StatusBoard({ rows }: { rows: RosterRow[] }) {
                 className={cn(
                   "text-[10.5px] font-bold uppercase leading-tight tracking-[0.1em]",
                   column.status === "active_retainer"
-                    ? "text-tk-linen/80"
+                    ? "text-canvas opacity-80"
                     : "text-ink-3"
                 )}
               >
@@ -51,7 +51,7 @@ export function StatusBoard({ rows }: { rows: RosterRow[] }) {
                 className={cn(
                   "font-mono text-[10.5px] tabular-nums",
                   column.status === "active_retainer"
-                    ? "text-tk-linen/60"
+                    ? "text-canvas opacity-60"
                     : "text-ink-3"
                 )}
               >
@@ -69,19 +69,19 @@ export function StatusBoard({ rows }: { rows: RosterRow[] }) {
                       aria-hidden="true"
                       className={cn(
                         "mt-[7px] h-1 w-1 shrink-0 rounded-full",
-                        column.status === "active_retainer" && "bg-well"
+                        column.status === "active_retainer" ? "bg-canvas" : "tk-client-mark"
                       )}
                       style={
                         column.status === "active_retainer"
                           ? undefined
-                          : { background: row.color }
+                          : ({ "--c": row.color } as React.CSSProperties)
                       }
                     />
                     <span
                       className={cn(
                         "truncate text-[13px] font-semibold",
                         column.status === "active_retainer"
-                          ? "text-tk-linen group-hover:underline"
+                          ? "text-canvas group-hover:underline"
                           : "text-tk-onyx group-hover:text-tk-teal"
                       )}
                     >

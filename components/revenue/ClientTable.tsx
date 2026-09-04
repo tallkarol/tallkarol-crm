@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { MiniBars } from "@/components/engagements/MiniBars"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { fmtHours } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
 import type { ClientRow } from "@/lib/revenue"
@@ -80,7 +80,7 @@ export function ClientTable({
                       >
                         <span
                           className="size-2 shrink-0 rounded-full"
-                          style={{ background: color }}
+                          style={{ background: markColor(color) }}
                         />
                         {row.name}
                       </Link>
@@ -108,7 +108,7 @@ export function ClientTable({
                             className="block h-full rounded-full"
                             style={{
                               width: `${Math.max(row.share * 100, 1)}%`,
-                              background: color,
+                              background: markColor(color),
                             }}
                           />
                         </span>

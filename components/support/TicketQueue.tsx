@@ -12,6 +12,7 @@ import {
 } from "@/components/support/Dropdown"
 import type { QueueRow } from "@/components/support/types"
 import { cn } from "@/lib/cn"
+import { markColor } from "@/lib/client-colors"
 import {
   PRIORITY_RANK,
   SORT_LABEL,
@@ -521,7 +522,7 @@ export function TicketQueue({
                     {run.color ? (
                       <span
                         className="size-2 rounded-full"
-                        style={{ background: run.color }}
+                        style={{ background: markColor(run.color) }}
                         aria-hidden
                       />
                     ) : null}
@@ -594,7 +595,7 @@ function Row({
         cursored && !open && "ring-1 ring-inset ring-tk-teal/30"
       )}
     >
-      <span aria-hidden className="w-[3px] shrink-0" style={{ background: row.color }} />
+      <span aria-hidden className="w-[3px] shrink-0" style={{ background: markColor(row.color) }} />
       <span className={cn("min-w-0 flex-1", tight ? "px-3.5 py-1.5" : "px-3.5 py-2.5")}>
         <span className="flex items-baseline gap-2">
           <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-3">
@@ -615,7 +616,7 @@ function Row({
             <span className="flex shrink-0 items-center gap-1.5 font-semibold text-tk-slate">
               <span
                 className="size-[7px] rounded-full"
-                style={{ background: row.color }}
+                style={{ background: markColor(row.color) }}
                 aria-hidden
               />
               {row.clientName}
@@ -693,7 +694,7 @@ function FilterPill({
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card py-0.5 pl-2 pr-1 text-[11.5px] text-tk-slate">
       {color ? (
-        <span className="size-[7px] rounded-full" style={{ background: color }} aria-hidden />
+        <span className="size-[7px] rounded-full" style={{ background: markColor(color) }} aria-hidden />
       ) : null}
       <b className="font-semibold">{label}</b>
       <button

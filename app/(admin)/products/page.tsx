@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { PageHeader } from "@/components/PageHeader"
 import { PeekRouter } from "@/components/peek/PeekRouter"
-import { clientColor } from "@/lib/client-colors"
+import { clientColor, markColor } from "@/lib/client-colors"
 import { daysSince } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
 import {
@@ -165,12 +165,12 @@ export default async function ProductsPage({
                     <article
                       key={product.id}
                       className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5 pb-4 shadow-card"
-                      style={{ borderLeftWidth: 3, borderLeftColor: color }}
+                      style={{ borderLeftWidth: 3, borderLeftColor: markColor(color) }}
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         <span
                           className="size-2 rounded-full"
-                          style={{ background: color }}
+                          style={{ background: markColor(color) }}
                         />
                         <Link
                           href={ROUTES.productPage(product.slug)}
