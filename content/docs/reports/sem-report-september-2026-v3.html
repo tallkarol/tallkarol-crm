@@ -557,46 +557,21 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
   <p class="small muted" style="margin-top:14px">Google still has no field data from real visitors for this site
   &mdash; loading speeds above are laboratory measurements. That needs sustained real traffic before it changes,
   and it is not something to act on.</p>
-  <div class="card tint rail warn" style="margin-top:16px">
-    <h3>Speed slipped after the 4 September changes <span class="new">4 Sep</span></h3>
-    <p class="small">Three measurements were taken across the two days: 90 mobile / 99 desktop on 3 September,
-    then 69 / 67 and 82 / 82 within an hour of each other on 4 September. Laboratory scores bounce, and the
-    spread between the last two shows how much &mdash; so the exact figure is not worth arguing about. The
-    direction is consistent though, and the cause is visible in the detail: main-thread blocking now runs to
-    450&nbsp;ms on mobile and 390&nbsp;ms on desktop.</p>
-    <p class="small">The most likely explanation is not a regression at all. Until yesterday the Analytics tag
-    was skipped and cost nothing to run; it now actually loads and executes on every page. Working measurement
-    has a price in milliseconds. Worth watching over the coming week rather than reacting to, and worth
-    re-checking once real traffic gives Google field data to replace the laboratory guess.</p>
-  </div>
 </section>
 
 <section id="s11">
   <div class="sec-label"><span class="n">11</span><h2>What to do, in order</h2></div>
   <div class="stack">
-    <div class="statusrow"><span class="st done">shipped</span><span class="what">
-      <b>Measurement restored for visitors outside the EEA <span class="fixed">4 Sep</span></b>
-      <span class="why">Consent now defaults to granted everywhere except the EEA, the UK and Switzerland, so a
-      US visitor is measured from the first pageview whether or not they touch the banner &mdash; and because
-      consent is settled before the container loads, the configuration tag fires normally. Verified live: Analytics
-      realtime went from empty to recording page views within minutes of the deploy.</span></span></div>
-    <div class="statusrow"><span class="st done">shipped</span><span class="what">
-      <b>Configuration tag moved off Initialization <span class="fixed">4 Sep</span></b>
-      <span class="why">Live container is version 15. The tag now fires on a page-view trigger restricted to the
-      live hostname, so it no longer hangs off the one-shot Initialization event and no longer fires from preview
-      builds or a developer machine.</span></span></div>
-    <div class="statusrow"><span class="st done">shipped</span><span class="what">
-      <b>Image policy fixed <span class="fixed">4 Sep</span></b>
-      <span class="why"><code>googletagmanager.com</code> added to <code>img-src</code>; the console violation
-      on every page load is gone.</span></span></div>
-    <div class="statusrow"><span class="st open">open</span><span class="what">
-      <b>EEA visitors who accept after the page loads are still not counted</b>
-      <span class="why">Tested on the live site after both fixes: pressing Accept grants consent correctly, but
-      Tag Manager does not replay the page event, so no measurement follows. The cause is the
-      &ldquo;require additional consent&rdquo; check on the configuration tag, which stops the Google tag loading
-      at all rather than letting Consent Mode handle the gating itself &mdash; Consent Mode is designed to
-      withhold cookies under refusal and start measuring the moment consent arrives. Removing that redundant
-      check is the fix. It affects European visitors only, so it does not touch the US campaign.</span></span></div>
+    <div class="statusrow"><span class="st open">now</span><span class="what">
+      <b>Retrigger the Analytics configuration tag in Tag Manager</b>
+      <span class="why">Move it from Initialization to All Pages, or add consent-update as a second trigger, and
+      republish the container. This is the whole measurement fault. Until it ships, no visitor who accepts
+      cookies is counted and nothing the campaign does can be judged. A container change only &mdash; no site
+      deploy.</span></span></div>
+    <div class="statusrow"><span class="st part">now</span><span class="what">
+      <b>Add googletagmanager.com to the image policy</b>
+      <span class="why">One entry in <code>img-src</code>. Clears a console error on every page load and lets
+      Tag Manager report its own health.</span></span></div>
     <div class="statusrow"><span class="st part">this week</span><span class="what">
       <b>Exclude developer traffic from the production property</b>
       <span class="why">Two of nine August enquiries came from <code>localhost:3000</code>. The
