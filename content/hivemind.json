@@ -1,5 +1,5 @@
 {
-  "scannedAt": "2026-09-03T16:59:17.519Z",
+  "scannedAt": "2026-09-04T00:17:25.207Z",
   "plugin": {
     "name": "daedalus-hive-mind",
     "version": "0.10.0",
@@ -12,7 +12,7 @@
     "skill": 18,
     "reference": 6,
     "script": 25,
-    "command": 12,
+    "command": 13,
     "routine": 7,
     "pipeline": 1
   },
@@ -658,6 +658,17 @@
       "source": "commands/invoice.md",
       "meta": {
         "arguments": "<client> [YYYY-MM] — e.g. \"gdi\", \"gdi 2026-08\". Month defaults to the current one; period starts after the last recorded invoice."
+      }
+    },
+    {
+      "id": "command:leftoff",
+      "label": "/leftoff",
+      "kind": "command",
+      "lane": "lane:planning",
+      "blurb": "The where-I-left-off board — leave a post-it on this chat, read what's waiting on you, or search everything you've ever said",
+      "source": "commands/leftoff.md",
+      "meta": {
+        "arguments": "<text> | list | search <words> | history [--since 7d] | dismiss <ref> | pin <ref> | agent <type> — e.g. \"waiting on Ola's copy\", \"list\", \"search elementor nav\""
       }
     },
     {
@@ -1349,6 +1360,11 @@
     {
       "source": "command:invoice",
       "target": "agent:purser",
+      "rel": "loads"
+    },
+    {
+      "source": "command:leftoff",
+      "target": "skill:leftoff",
       "rel": "loads"
     },
     {

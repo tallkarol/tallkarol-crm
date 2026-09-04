@@ -10,6 +10,7 @@ import {
   type AttentionMore,
 } from "@/components/dashboard/NeedsAttention"
 import { Unread } from "@/components/dashboard/Unread"
+import { WaitingStrip } from "@/components/dashboard/WaitingStrip"
 import { WeekBoard } from "@/components/dashboard/WeekBoard"
 import type { PaletteEntry } from "@/components/dashboard/CommandPalette"
 import { PeekRouter, peekHref } from "@/components/peek/PeekRouter"
@@ -28,6 +29,7 @@ import { ensureRenewalTasks } from "@/lib/renewals"
 import { workspaceTimezone } from "@/lib/timezone"
 import { loadUnread } from "@/lib/unread-data"
 import type { UnreadTone } from "@/lib/unread"
+import { loadWaiting } from "@/lib/waiting-data"
 import { reopenDueRecurring, waitingTooLong } from "@/lib/tasks"
 import { formatDay, formatMoney } from "@/lib/work"
 
@@ -92,6 +94,7 @@ export default async function DashboardPage({
     meetings,
     unread,
     leftoff,
+    waitingQueue,
     clients,
     running,
     timezone,
@@ -107,6 +110,9 @@ export default async function DashboardPage({
     // Cached per request — the shell already loaded this for the badges.
     loadUnread(),
     loadLeftOff().catch(() => null),
+    // The strip is the first thing read on this page, so it must never be the
+    // reason the page does not render — same treatment as the board above it.
+    loadWaiting().catch(() => null),
     db.query.clients.findMany({ orderBy: (c, { asc }) => [asc(c.name)] }),
     sessionUser ? runningPunches(sessionUser.id) : Promise.resolve([]),
     workspaceTimezone(),
@@ -467,6 +473,7 @@ export default async function DashboardPage({
       {searchParams.peek ? (
         <PeekRouter peek={searchParams.peek} closeHref="/" />
       ) : null}
+      <WaitingStrip payload={waitingQueue} />
       <LeftOffBoard payload={leftoff} />
 
       <div className="mt-6 grid min-w-0 gap-3.5 xl:grid-cols-[minmax(0,8fr)_minmax(300px,4fr)]">

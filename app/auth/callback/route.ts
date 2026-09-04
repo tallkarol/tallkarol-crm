@@ -47,7 +47,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/login?error=invalid", appUrl))
     }
 
-    const res = NextResponse.redirect(new URL("/", appUrl))
+    // Customers have no CRM to land on: the admin layout bounces any
+    // non-admin to /login, so sending everyone to "/" made a successful
+    // portal sign-in end back on the login form, looking like a failure.
+    const home = result.user.role === "admin" ? "/" : "/portal"
+
+    const res = NextResponse.redirect(new URL(home, appUrl))
     res.cookies.set(
       SESSION_COOKIE,
       result.sessionToken,

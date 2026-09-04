@@ -40,3 +40,5 @@ service-account*.json
 gcp-*.json
 /.next-build/
 /.next-smoke/
+/.next-review/
+/.next-wait/

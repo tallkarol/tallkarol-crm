@@ -174,7 +174,13 @@ export type AgentEvent = { id: string; type: string; op: "start" | "stop" | "cle
 const MIN = 60_000
 const HOUR = 60 * MIN
 
-export function deriveState(n: NoteFacts, now: Date): NoteState {
+/**
+ * A `Pick`, not the whole `NoteFacts`, for the same reason `resumeCommand`
+ * below takes one: `lib/waiting-data.ts` selects three columns off
+ * `session_notes` and must not have to fake the other fifteen to ask what band
+ * a row is in. Every existing caller still satisfies it.
+ */
+export function deriveState(n: Pick<NoteFacts, "surface" | "state" | "eventAt">, now: Date): NoteState {
   const stored = (STORED_STATES as readonly string[]).includes(n.state)
     ? (n.state as StoredState)
     : "waiting"
