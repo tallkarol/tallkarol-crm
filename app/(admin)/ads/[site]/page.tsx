@@ -20,6 +20,7 @@ import { getInsightsContext } from "@/lib/insights/queries"
 import { TABLE_WINDOW_DAYS } from "@/lib/insights/types"
 import type { TrendMetric } from "@/lib/insights/chart"
 import { ROUTES } from "@/lib/nav"
+import { Card as TkCard } from "@/components/ui/Card"
 
 export async function generateMetadata({ params }: { params: { site: string } }) {
   const ctx = await getInsightsContext(params.site)
@@ -64,7 +65,7 @@ export default async function PaidAdsPage({
 
   if (!hasAds) {
     return (
-      <div className="rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
+      <TkCard surface="well" className="border-dashed px-6 py-10 text-center">
         <p className="text-sm font-semibold text-tk-onyx">Ads did not load on the last fetch</p>
         <p className="mt-1 text-sm text-ink-3">
           {ads?.error || "Refresh the snapshot, or check the Health tab on Analytics."}
@@ -75,7 +76,7 @@ export default async function PaidAdsPage({
         >
           Health →
         </Link>
-      </div>
+      </TkCard>
     )
   }
 

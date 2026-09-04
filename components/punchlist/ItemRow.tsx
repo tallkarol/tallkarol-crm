@@ -299,7 +299,7 @@ export function ItemRow({
                       rows={8}
                       spellCheck={false}
                       placeholder={'{ "kind": "browser", "url": "https://…", "steps": ["…"], "expect": "…" }'}
-                      className="w-full rounded-lg border border-line bg-well px-3 py-2 font-mono text-[12px] text-tk-onyx outline-none focus:border-tk-teal"
+                      className="w-full rounded-lg border border-line bg-well px-3 py-2 font-mono text-[12px] text-tk-onyx focus:border-tk-teal"
                     />
                     <div className="mt-1.5 flex items-center gap-2">
                       <button

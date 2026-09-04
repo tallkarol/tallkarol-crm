@@ -10,6 +10,7 @@ import { ROUTES } from "@/lib/nav"
 import { filterVaultEntries, groupVaultEntries } from "@/lib/vault"
 import { listVaultEntries } from "@/lib/vault-data"
 import { plural } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Vault" }
 export const dynamic = "force-dynamic"
@@ -68,7 +69,7 @@ export default async function VaultPage({
           name="q"
           defaultValue={q}
           placeholder="Search title, user, URL, note…"
-          className="min-w-[16rem] flex-1 rounded-lg border border-line bg-card px-3 py-2 text-sm outline-none focus:border-tk-teal"
+          className="min-w-[16rem] flex-1 rounded-lg border border-line bg-card px-3 py-2 text-sm focus:border-tk-teal"
         />
         <button
           type="submit"
@@ -146,7 +147,7 @@ export default async function VaultPage({
                   {plural(group.entries.length, "entry")}
                 </p>
               </div>
-              <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+              <Card className="overflow-hidden">
                 <ul className="divide-y divide-line">
                   {group.entries.map((entry) => (
                     <VaultRow
@@ -159,7 +160,7 @@ export default async function VaultPage({
                     />
                   ))}
                 </ul>
-              </div>
+              </Card>
             </section>
           ))}
         </div>

@@ -7,6 +7,7 @@ import { TaskDetailBody } from "@/components/tasks/TaskDetail"
 import { db } from "@/db"
 import { tasks } from "@/db/schema"
 import { ROUTES } from "@/lib/nav"
+import { Card } from "@/components/ui/Card"
 
 export const dynamic = "force-dynamic"
 
@@ -40,9 +41,9 @@ export default async function TaskPage({ params }: { params: { id: string } }) {
           </Link>
         }
       />
-      <div className="mt-6 max-w-2xl overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <Card className="mt-6 max-w-2xl overflow-hidden">
         <TaskDetailBody id={params.id} />
-      </div>
+      </Card>
     </>
   )
 }

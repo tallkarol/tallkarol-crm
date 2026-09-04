@@ -10,6 +10,7 @@ import { isHouseSite } from "@/lib/insights/crm"
 import { monthLabel, todayKey } from "@/lib/insights/derive"
 import { getInsightsContext } from "@/lib/insights/queries"
 import type { ArchivePayload } from "@/lib/insights/types"
+import { Card as TkCard } from "@/components/ui/Card"
 
 export const metadata = { title: "Reports · Insights" }
 export const dynamic = "force-dynamic"
@@ -45,23 +46,20 @@ export default async function InsightsReportsPage({
     <div className="grid gap-3 xl:grid-cols-12">
       <div className="xl:col-span-7">
         {archives.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
+          <TkCard surface="well" className="border-dashed px-6 py-10 text-center">
             <p className="text-sm font-semibold text-tk-onyx">No frozen snapshots yet</p>
             <p className="mx-auto mt-1 max-w-sm text-sm text-ink-3">
               The first refresh after a month ends freezes it automatically, or
               generate one now from the panel on the right.
             </p>
-          </div>
+          </TkCard>
         ) : (
           <div className="space-y-2.5">
             {archives.map((row) => {
               const payload = row.payload as ArchivePayload
               const filed = row.report?.status === "filed"
               return (
-                <div
-                  key={row.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-card px-5 py-3.5 shadow-card"
-                >
+                <TkCard className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5" key={row.id}>
                   <div>
                     <p className="text-sm font-semibold text-tk-onyx">
                       {row.label || row.period} — monthly snapshot
@@ -95,7 +93,7 @@ export default async function InsightsReportsPage({
                     </a>
                     <MarkFiled archiveId={row.id} filed={filed} />
                   </div>
-                </div>
+                </TkCard>
               )
             })}
             <p className="px-1 text-[11px] text-ink-3">

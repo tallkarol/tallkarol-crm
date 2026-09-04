@@ -1,6 +1,7 @@
 import { CHART } from "@/lib/insights/chart"
 import { cn } from "@/lib/cn"
 import { formatWholeMoney, type QuarterRow } from "@/lib/revenue"
+import { Card } from "@/components/ui/Card"
 
 /** Two thirds of goal is the line between a soft quarter and a bad one. */
 function toneFor(row: QuarterRow) {
@@ -17,7 +18,7 @@ export function QuarterGrid({ quarters }: { quarters: QuarterRow[] }) {
   const goal = quarters[0]?.goalCents ?? null
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3.5">
         <h2 className="text-sm font-semibold text-tk-onyx">By quarter</h2>
         <p className="text-xs tabular-nums text-ink-3">
@@ -104,6 +105,6 @@ export function QuarterGrid({ quarters }: { quarters: QuarterRow[] }) {
             : `${cleared.map((row) => row.id).join(", ")} clear goal.`}
         </p>
       ) : null}
-    </section>
+    </Card>
   )
 }

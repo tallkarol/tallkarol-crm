@@ -3,6 +3,7 @@ import { Check } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { clearedLabel, type UnreadSummary, type UnreadTone } from "@/lib/unread"
+import { Card } from "@/components/ui/Card"
 
 /**
  * "Did something arrive that I haven't seen?" — answered as a small table:
@@ -73,7 +74,7 @@ export function Unread({ summary }: { summary: UnreadSummary }) {
   const cleared = clearedLabel(summary.clearedAt)
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="overflow-hidden">
       <div className="flex items-center gap-2.5 border-b border-line px-[18px] py-3">
         <h2 className="font-ui text-[13.5px] font-bold tracking-tight text-tk-onyx">Unread</h2>
         <span
@@ -162,7 +163,7 @@ export function Unread({ summary }: { summary: UnreadSummary }) {
           </>
         )}
       </div>
-    </section>
+    </Card>
   )
 }
 

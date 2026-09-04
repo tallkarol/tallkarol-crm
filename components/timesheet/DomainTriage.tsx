@@ -110,7 +110,7 @@ export function DomainTriage({
                     onChange={(e) =>
                       setChoice((c) => ({ ...c, [row.domain]: e.target.value }))
                     }
-                    className="rounded-xl border border-line bg-card px-3 py-1.5 text-xs text-tk-onyx outline-none focus:border-tk-teal"
+                    className="rounded-xl border border-line bg-card px-3 py-1.5 text-xs text-tk-onyx focus:border-tk-teal"
                   >
                     <option value="">Assign to…</option>
                     {clients.map((c) => (

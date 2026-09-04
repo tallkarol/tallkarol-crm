@@ -10,6 +10,7 @@ import type { RosterRow } from "@/lib/client-hub"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { CLIENT_STATUS_LABEL, CLIENT_STATUSES, formatMoney } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 const FILTERS = [
   { id: "all", label: "All" },
@@ -77,7 +78,7 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
             id="roster-status"
             value={status}
             onChange={(e) => setStatus(e.target.value as ClientStatus | "all")}
-            className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-sm text-tk-onyx focus:border-tk-teal focus:outline-none"
+            className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-sm text-tk-onyx focus:border-tk-teal"
           >
             <option value="all">All statuses</option>
             {CLIENT_STATUSES.map((id) => (
@@ -92,12 +93,12 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Find a client…"
             aria-label="Find a client"
-            className="w-52 rounded-lg border border-line bg-card px-3 py-1.5 text-sm text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:outline-none"
+            className="w-52 rounded-lg border border-line bg-card px-3 py-1.5 text-sm text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal"
           />
         </div>
       </div>
 
-      <div className="mt-3 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <Card className="mt-3 overflow-hidden">
         <div
           aria-hidden="true"
           className="hidden grid-cols-[minmax(200px,1.5fr)_130px_64px_minmax(110px,1fr)_100px_16px] items-center gap-4 border-b border-line px-5 py-2.5 text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-3 md:grid"
@@ -219,7 +220,7 @@ export function ClientRoster({ rows }: { rows: RosterRow[] }) {
         <p className="border-t border-line bg-well px-5 py-2.5 text-xs text-ink-3">
           Hours meters reset on the 1st · outstanding = sent, not yet paid
         </p>
-      </div>
+      </Card>
     </>
   )
 }

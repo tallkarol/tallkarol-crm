@@ -128,29 +128,29 @@ export default async function InvoiceDetailPage({
           <form action={updateInvoiceDetails.bind(null, invoice.id)} className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <label className="block text-sm">
               <span className="text-xs font-medium text-ink-3">Invoice #</span>
-              <input name="number" defaultValue={invoice.number} required className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2 text-sm tabular-nums outline-none focus:border-tk-teal" />
+              <input name="number" defaultValue={invoice.number} required className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2 text-sm tabular-nums focus:border-tk-teal" />
             </label>
             <label className="block text-sm">
               <span className="text-xs font-medium text-ink-3">Date</span>
-              <input name="issuedOn" type="date" defaultValue={invoice.issuedOn} required className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2 text-sm outline-none focus:border-tk-teal" />
+              <input name="issuedOn" type="date" defaultValue={invoice.issuedOn} required className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2 text-sm focus:border-tk-teal" />
             </label>
             <label className="block text-sm">
               <span className="text-xs font-medium text-ink-3">Amount ($)</span>
-              <MoneyInput name="amount" inputMode="decimal" defaultValue={(invoice.amountCents / 100).toFixed(2)} required className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2 text-sm tabular-nums outline-none focus:border-tk-teal" />
+              <MoneyInput name="amount" inputMode="decimal" defaultValue={(invoice.amountCents / 100).toFixed(2)} required className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2 text-sm tabular-nums focus:border-tk-teal" />
             </label>
             <label className="block text-sm">
               <span className="text-xs font-medium text-ink-3">Hours</span>
-              <input name="hours" inputMode="decimal" defaultValue={invoice.hours ?? ""} placeholder="—" className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2 text-sm tabular-nums outline-none focus:border-tk-teal" />
+              <input name="hours" inputMode="decimal" defaultValue={invoice.hours ?? ""} placeholder="—" className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2 text-sm tabular-nums focus:border-tk-teal" />
             </label>
             <label className="block text-sm sm:col-span-2 lg:col-span-4">
               <span className="text-xs font-medium text-ink-3">Bill to (one line — the client profile supplies the full block)</span>
-              <input name="billTo" defaultValue={invoice.billTo} className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2 text-sm outline-none focus:border-tk-teal" />
+              <input name="billTo" defaultValue={invoice.billTo} className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2 text-sm focus:border-tk-teal" />
             </label>
             <label className="block text-sm sm:col-span-2 lg:col-span-4">
               <span className="text-xs font-medium text-ink-3">
                 Description — first line is the headline; “- bullet (20%)” lines become table rows with the % in its own column
               </span>
-              <textarea name="description" rows={6} defaultValue={invoice.description} className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2 font-mono text-[13px] leading-relaxed outline-none focus:border-tk-teal" />
+              <textarea name="description" rows={6} defaultValue={invoice.description} className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2 font-mono text-[13px] leading-relaxed focus:border-tk-teal" />
             </label>
             <div>
               <button className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-tk-linen hover:bg-tk-teal/90">

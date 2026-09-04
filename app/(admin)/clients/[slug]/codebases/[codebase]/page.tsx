@@ -8,6 +8,7 @@ import { SpecSheet } from "@/components/codebases/SpecSheet"
 import { RenderedDoc } from "@/components/codebases/RenderedDoc"
 import { DOC_KIND_LABEL, DOC_KINDS, docHistory, latestDoc, latestDocsFor } from "@/lib/codebase-docs"
 import { ROUTES } from "@/lib/nav"
+import { Card } from "@/components/ui/Card"
 
 export const dynamic = "force-dynamic"
 
@@ -89,7 +90,7 @@ export default async function CodebasePage({
             )}
           </div>
           <aside className="flex flex-col gap-4">
-            <section className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+            <Card className="px-5 py-4">
               <h2 className="text-[13px] font-bold text-tk-onyx">This run</h2>
               <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
                 <dt className="text-ink-3">generated</dt>
@@ -103,8 +104,8 @@ export default async function CodebasePage({
                 <dt className="text-ink-3">contract</dt>
                 <dd className="text-tk-onyx">{doc.kind} v{doc.schemaVersion}</dd>
               </dl>
-            </section>
-            <section className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+            </Card>
+            <Card className="px-5 py-4">
               <h2 className="text-[13px] font-bold text-tk-onyx">History</h2>
               <ul className="mt-2 divide-y divide-line text-xs">
                 {history.map((h) => (
@@ -116,7 +117,7 @@ export default async function CodebasePage({
                 ))}
               </ul>
               <p className="mt-2 text-[11px] text-ink-3">A rerun on the same commit with nothing changed adds no row.</p>
-            </section>
+            </Card>
           </aside>
         </div>
       ) : (

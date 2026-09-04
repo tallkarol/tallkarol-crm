@@ -3,6 +3,7 @@ import { clientColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { formatMoney } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 export type MonthInvoiceLine = {
   number: string
@@ -46,7 +47,7 @@ export function MonthBilled({
     : null
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="overflow-hidden">
       <div className="flex items-center justify-between gap-3 border-b border-line px-[18px] py-3">
         <h2 className="font-ui text-[13.5px] font-bold tracking-tight text-tk-onyx">
           Billed · {monthLabel}
@@ -155,7 +156,7 @@ export function MonthBilled({
           ) : null}
         </div>
       </div>
-    </section>
+    </Card>
   )
 }
 

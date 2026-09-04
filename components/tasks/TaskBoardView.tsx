@@ -19,6 +19,7 @@ import { cn } from "@/lib/cn"
 import { setTaskStage } from "@/lib/task-actions"
 import type { HubTask } from "@/lib/task-view"
 import { CADENCE_LABEL } from "@/lib/work"
+import { Card as TkCard } from "@/components/ui/Card"
 
 const STAGES = [
   { id: "queue", label: "Queue" },
@@ -124,9 +125,9 @@ export function TaskBoardView({
 
       <DragOverlay>
         {active ? (
-          <div className="w-52 rotate-2 rounded-xl border border-line bg-card p-2.5 shadow-overlay">
+          <TkCard radius="xl" elevation="none" className="w-52 rotate-2 p-2.5 shadow-overlay">
             <p className="text-[13px] font-medium text-tk-onyx">{active.title}</p>
-          </div>
+          </TkCard>
         ) : null}
       </DragOverlay>
     </DndContext>

@@ -18,6 +18,7 @@ import {
   type Simulation,
 } from "d3-force"
 import { cn } from "@/lib/cn"
+import { Card } from "@/components/ui/Card"
 import {
   FILTERABLE,
   KIND_STYLE,
@@ -453,7 +454,7 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search skills, agents, files…"
-            className="h-8 w-56 rounded-lg border border-line bg-card px-3 text-[13px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:outline-none focus:ring-2 focus:ring-tk-teal/25"
+            className="h-8 w-56 rounded-lg border border-line bg-card px-3 text-[13px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:ring-2 focus:ring-tk-teal/25"
           />
         </label>
 
@@ -518,7 +519,7 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
         {/* The map */}
-        <div className="relative overflow-hidden rounded-xl border border-line bg-card shadow-card">
+        <Card radius="xl" className="relative overflow-hidden">
           <svg
             ref={svgRef}
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -652,7 +653,7 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
           <p className="pointer-events-none absolute bottom-2 right-3 font-mono text-[10.5px] text-ink-3">
             scroll to zoom · drag to move
           </p>
-        </div>
+        </Card>
 
         {/* Inspector */}
         <aside className="rounded-xl border border-line bg-card p-4 shadow-card" aria-live="polite">
@@ -751,7 +752,7 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
       {/* The table view — the relief the light-mode contrast WARN obligates,
           and the linear read for anyone not driving a force graph by pointer. */}
       {showTable ? (
-        <div className="overflow-x-auto rounded-xl border border-line bg-card shadow-card">
+        <Card radius="xl" className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-[12.5px]">
             <caption className="sr-only">Every node in the hive mind map</caption>
             <thead>
@@ -791,7 +792,7 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
                 ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       ) : null}
     </div>
   )

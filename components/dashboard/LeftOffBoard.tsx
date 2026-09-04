@@ -24,6 +24,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { type LeftOffClient, type LeftOffNoteView, type LeftOffPayload, type NoteState } from "@/lib/leftoff"
+import { Card as TkCard } from "@/components/ui/Card"
 import {
   convertLeftOffAction,
   dismissLeftOffAction,
@@ -160,7 +161,7 @@ const ICON_BTN =
 const GHOST_BTN =
   "h-7 whitespace-nowrap rounded-md px-2 font-ui text-[11.5px] font-semibold text-tk-slate hover:bg-well transition-colors duration-[120ms] hover:text-tk-onyx focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-tk-teal"
 const REPLY_INPUT =
-  "h-8 min-w-0 flex-1 rounded-lg border border-line bg-well px-2.5 text-[12.5px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:bg-card focus:outline-none"
+  "h-8 min-w-0 flex-1 rounded-lg border border-line bg-well px-2.5 text-[12.5px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:bg-card"
 const SEND_BTN = "h-8 shrink-0 rounded-lg bg-accent px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95"
 
 export function LeftOffBoard({ payload }: { payload: LeftOffPayload | null }) {
@@ -301,16 +302,12 @@ export function LeftOffBoard({ payload }: { payload: LeftOffPayload | null }) {
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Filter by title, project, client…"
                 aria-label="Filter the board"
-                className="h-8 w-full rounded-lg border border-line bg-well py-0 pl-8 pr-2.5 text-[12.5px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:bg-card focus:outline-none"
+                className="h-8 w-full rounded-lg border border-line bg-well py-0 pl-8 pr-2.5 text-[12.5px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:bg-card"
               />
             </label>
 
             {clients.list.length > 0 ? (
-              <div
-                role="group"
-                aria-label="Filter by client"
-                className="flex items-center gap-0.5 rounded-lg border border-line bg-well p-0.5"
-              >
+              <TkCard surface="well" radius="lg" elevation="none" className="flex items-center gap-0.5 p-0.5" role="group" aria-label="Filter by client">
                 <ClientFilterButton active={clientFilter === "all"} onClick={() => setClientFilter("all")}>
                   All
                 </ClientFilterButton>
@@ -329,7 +326,7 @@ export function LeftOffBoard({ payload }: { payload: LeftOffPayload | null }) {
                     {c.name}
                   </ClientFilterButton>
                 ))}
-              </div>
+              </TkCard>
             ) : null}
 
             <button
@@ -376,10 +373,7 @@ export function LeftOffBoard({ payload }: { payload: LeftOffPayload | null }) {
               </p>
               <div className="flex flex-1 flex-wrap items-center gap-2">
                 {payload.browser.windows.map((w, i) => (
-                  <div
-                    key={i}
-                    className="flex flex-wrap items-center gap-1.5 rounded-lg border border-line bg-well px-2.5 py-1.5"
-                  >
+                  <TkCard surface="well" radius="lg" elevation="none" className="flex flex-wrap items-center gap-1.5 px-2.5 py-1.5" key={i}>
                     <span className="mr-0.5 font-ui text-[10px] font-bold uppercase tracking-[0.06em] text-ink-3">
                       {w.title || `Window ${i + 1}`}
                     </span>
@@ -398,7 +392,7 @@ export function LeftOffBoard({ payload }: { payload: LeftOffPayload | null }) {
                     {w.tabs.length > 4 ? (
                       <span className="text-[11px] text-ink-3">+{w.tabs.length - 4}</span>
                     ) : null}
-                  </div>
+                  </TkCard>
                 ))}
               </div>
             </>

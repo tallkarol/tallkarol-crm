@@ -12,9 +12,10 @@ import {
 import type { CalendarSourceKind } from "@/db/schema"
 import { cn } from "@/lib/cn"
 import { markColor } from "@/lib/client-colors"
+import { Card } from "@/components/ui/Card"
 
 const field =
-  "mt-1 w-full rounded-xl border border-line bg-card px-3 py-2 text-sm text-tk-onyx outline-none focus:border-tk-teal"
+  "mt-1 w-full rounded-xl border border-line bg-card px-3 py-2 text-sm text-tk-onyx focus:border-tk-teal"
 const label =
   "text-[11px] font-semibold uppercase tracking-wide text-ink-3"
 
@@ -63,7 +64,7 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
         />
       </div>
 
-      <section className="mt-6 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <Card className="mt-6 overflow-hidden">
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3">
           <h2 className="text-sm font-semibold text-tk-onyx">Connected</h2>
           <button
@@ -170,7 +171,7 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
             ))}
           </ul>
         )}
-      </section>
+      </Card>
 
       {notice ? (
         <p className="mt-3 rounded-2xl border border-line bg-card px-4 py-2.5 text-sm text-tk-slate shadow-card">
@@ -178,7 +179,7 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
         </p>
       ) : null}
 
-      <section className="mt-6 rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+      <Card className="mt-6 px-5 py-4">
         <h2 className="text-sm font-semibold text-tk-onyx">Connect a calendar</h2>
 
         <div className="mt-3 flex flex-wrap gap-2">
@@ -249,7 +250,7 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
             events</em> if it should also be the destination calendar.
           </p>
         ) : null}
-      </section>
+      </Card>
     </>
   )
 }
@@ -266,7 +267,7 @@ function ConfigRow({
   missingText: string
 }) {
   return (
-    <div className="rounded-2xl border border-line bg-card px-5 py-3 shadow-card">
+    <Card className="px-5 py-3">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
           {title}
@@ -274,6 +275,6 @@ function ConfigRow({
         <Badge tone={ok ? "teal" : "muted"}>{ok ? "Ready" : "Missing"}</Badge>
       </div>
       <p className="mt-2 text-sm text-tk-onyx">{ok ? okText : missingText}</p>
-    </div>
+    </Card>
   )
 }

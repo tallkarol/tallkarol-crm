@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { cn } from "@/lib/cn"
+import { Card } from "@/components/ui/Card"
 
 /**
  * One 40px icon button in the homepage toolbar. Given `children` it owns an
@@ -93,15 +94,9 @@ export function ToolButton({
         ) : null}
       </button>
       {children && open ? (
-        <div
-          id={id}
-          role="dialog"
-          aria-label={label}
-          style={{ width }}
-          className="absolute right-0 top-[calc(100%+8px)] z-[65] max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-card p-4 text-tk-onyx shadow-hover motion-safe:animate-[tk-rise_.18s_ease_both]"
-        >
+        <Card elevation="none" className="absolute right-0 top-[calc(100%+8px)] z-[65] max-w-[calc(100vw-2rem)] p-4 text-tk-onyx shadow-hover motion-safe:animate-[tk-rise_.18s_ease_both]" id={id} role="dialog" aria-label={label} style={{ width }}>
           {children(close)}
-        </div>
+        </Card>
       ) : null}
     </div>
   )
@@ -117,4 +112,4 @@ export function FieldLabel({ children }: { children: ReactNode }) {
 }
 
 export const INPUT_CLASS =
-  "h-[34px] w-full rounded-lg border border-line bg-well px-2.5 text-[13px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:bg-card focus:outline-none"
+  "h-[34px] w-full rounded-lg border border-line bg-well px-2.5 text-[13px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:bg-card"

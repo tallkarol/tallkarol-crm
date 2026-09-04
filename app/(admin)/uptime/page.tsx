@@ -10,6 +10,7 @@ import { loadMonitorBoard } from "@/lib/monitors"
 import { ROUTES } from "@/lib/nav"
 import { ticketNumber, ticketSlug } from "@/lib/support"
 import { loadSiteUptimeBoard, type SiteUptime } from "@/lib/uptimerobot"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Uptime" }
 export const dynamic = "force-dynamic"
@@ -69,7 +70,7 @@ export default async function UptimePage({
           Sites
         </h2>
         {sites.rows.length === 0 ? (
-          <div className="mt-2 max-w-2xl rounded-2xl border border-dashed border-line bg-well p-6 text-sm text-tk-slate">
+          <Card surface="well" elevation="none" className="mt-2 max-w-2xl border-dashed p-6 text-sm text-tk-slate">
             <p className="font-semibold text-tk-onyx">No site monitors wired</p>
             <p className="mt-1.5 text-ink-3">
               {sites.configured
@@ -80,7 +81,7 @@ export default async function UptimePage({
               <code>{`npm run site:discover
 npm run site:set -- <slug> uptimeMonitorId <id>`}</code>
             </pre>
-          </div>
+          </Card>
         ) : (
           <>
             <p className="mt-1.5 font-mono text-[11.5px] text-ink-3">
@@ -105,7 +106,7 @@ npm run site:set -- <slug> uptimeMonitorId <id>`}</code>
           Jobs
         </h2>
         {board.length === 0 ? (
-          <div className="mt-2 max-w-2xl rounded-2xl border border-dashed border-line bg-well p-6 text-sm text-tk-slate">
+          <Card surface="well" elevation="none" className="mt-2 max-w-2xl border-dashed p-6 text-sm text-tk-slate">
             <p className="font-semibold text-tk-onyx">No jobs yet</p>
             <p className="mt-1.5 text-ink-3">
               A job monitor is a scheduled run you expect to see. Wire the app, then add the job:
@@ -120,14 +121,14 @@ npm run wire:monitor -- artist-house-daily-ingest "Daily ingest" \\
               <code className="rounded bg-well px-1 py-0.5 text-xs">/api/events/run</code>. A
               window that closes with no run raises a ticket on its own.
             </p>
-          </div>
+          </Card>
         ) : (
           <>
             <p className="mt-1.5 font-mono text-[11.5px] text-ink-3">
               {board.length} {board.length === 1 ? "job" : "jobs"}
               {failing ? ` · ${failing} failing` : " · all healthy"}
             </p>
-            <div className="mt-3 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+            <Card className="mt-3 overflow-hidden">
               {board.map(({ monitor, runs }) => {
                 const ticket = monitor.openTicketId ? ticketById.get(monitor.openTicketId) : null
                 return (
@@ -146,7 +147,7 @@ npm run wire:monitor -- artist-house-daily-ingest "Daily ingest" \\
                   />
                 )
               })}
-            </div>
+            </Card>
             <p className="mt-3 text-xs text-ink-3">
               Each monitor sets how often a missed window is looked for, so detection
             follows the engagement rather than one global setting. The sweeper runs on

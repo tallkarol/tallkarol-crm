@@ -13,6 +13,7 @@ import {
 } from "@/lib/sheets"
 import { monthLong } from "@/lib/timesheet"
 import { formatMoney } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Sheets" }
 export const dynamic = "force-dynamic"
@@ -113,13 +114,13 @@ export default async function SheetsPage({
       />
 
       {visible.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
+        <Card surface="well" className="mt-6 border-dashed px-6 py-10 text-center">
           <p className="text-sm font-semibold text-tk-onyx">No sheets here</p>
           <p className="mt-1 text-sm text-ink-3">
             A sheet appears once its month has hours on it. Widen the year or
             client filter to see more.
           </p>
-        </div>
+        </Card>
       ) : (
         <div className="mt-5 flex flex-col gap-5">
           {GROUPS.map((group) => {
@@ -151,7 +152,7 @@ function SheetGroup({ group, rows }: { group: Group; rows: SheetSummary[] }) {
   const value = rows.reduce((sum, row) => sum + (row.valueCents ?? 0), 0)
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="overflow-hidden">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-line bg-well px-5 py-3">
         <div>
           <h2 className="text-sm font-semibold text-tk-onyx">{group.title}</h2>
@@ -235,7 +236,7 @@ function SheetGroup({ group, rows }: { group: Group; rows: SheetSummary[] }) {
           </tbody>
         </table>
       </div>
-    </section>
+    </Card>
   )
 }
 

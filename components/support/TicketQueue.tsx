@@ -341,7 +341,7 @@ export function TicketQueue({
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search title, client, tag, payload…"
             aria-label="Search tickets"
-            className="min-w-0 flex-1 bg-transparent text-[13px] text-tk-onyx outline-none placeholder:text-ink-3"
+            className="min-w-0 flex-1 bg-transparent text-[13px] text-tk-onyx placeholder:text-ink-3"
           />
           <kbd className="rounded border border-line px-1.5 font-mono text-[10px] text-ink-3">
             /

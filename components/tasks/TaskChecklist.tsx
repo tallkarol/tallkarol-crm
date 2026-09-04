@@ -142,7 +142,7 @@ export function TaskChecklist({
           onBlur={add}
           placeholder="Add an item…"
           aria-label="Add a checklist item"
-          className="min-w-0 flex-1 bg-transparent py-1 text-[12.5px] text-tk-onyx outline-none placeholder:text-ink-3"
+          className="min-w-0 flex-1 bg-transparent py-1 text-[12.5px] text-tk-onyx placeholder:text-ink-3"
         />
         {draft ? (
           <button

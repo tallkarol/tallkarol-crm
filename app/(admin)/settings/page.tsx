@@ -2,6 +2,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { MoneyInput } from "@/components/ui/MoneyInput"
 import { getGoals } from "@/lib/goals"
 import { saveGoals } from "./actions"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Settings" }
 export const dynamic = "force-dynamic"
@@ -13,7 +14,7 @@ export default async function SettingsPage() {
     <>
       <PageHeader title="Settings" />
 
-      <section className="mt-8 max-w-xl rounded-2xl border border-line bg-card p-5 shadow-card">
+      <Card className="mt-8 max-w-xl p-5">
         <h2 className="text-sm font-semibold text-tk-onyx">Revenue goals</h2>
         <p className="mt-1 text-sm text-ink-3">
           Targets for invoiced revenue. The dashboard shows progress against
@@ -27,7 +28,7 @@ export default async function SettingsPage() {
               inputMode="decimal"
               placeholder="6,000"
               defaultValue={goals.monthlyCents != null ? (goals.monthlyCents / 100).toLocaleString("en-US") : ""}
-              className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal"
+              className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal"
             />
           </label>
           <label className="block text-sm">
@@ -37,7 +38,7 @@ export default async function SettingsPage() {
               inputMode="decimal"
               placeholder="72,000"
               defaultValue={goals.annualCents != null ? (goals.annualCents / 100).toLocaleString("en-US") : ""}
-              className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal"
+              className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal"
             />
           </label>
           <div className="flex items-end">
@@ -49,7 +50,7 @@ export default async function SettingsPage() {
             </button>
           </div>
         </form>
-      </section>
+      </Card>
     </>
   )
 }

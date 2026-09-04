@@ -3,6 +3,7 @@ import type { RosterRow } from "@/lib/client-hub"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { CLIENT_STATUS_LABEL, CLIENT_STATUSES } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 /**
  * Status as lanes, not alarms. Occupied statuses only, names as a tight list.
@@ -24,7 +25,7 @@ export function StatusBoard({ rows }: { rows: RosterRow[] }) {
   if (lanes.length === 0) return null
 
   return (
-    <div className="mt-5 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="mt-5 overflow-hidden">
       <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-px bg-line">
         {lanes.map((column) => (
           <section
@@ -94,6 +95,6 @@ export function StatusBoard({ rows }: { rows: RosterRow[] }) {
           </section>
         ))}
       </div>
-    </div>
+    </Card>
   )
 }

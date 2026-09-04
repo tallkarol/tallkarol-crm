@@ -9,6 +9,7 @@ import { SearchTable } from "@/components/insights/SearchTable"
 import { deltaPct, deriveWindow, fmtInt, parseRange } from "@/lib/insights/derive"
 import { getInsightsContext } from "@/lib/insights/queries"
 import { TABLE_WINDOW_DAYS } from "@/lib/insights/types"
+import { Card as TkCard } from "@/components/ui/Card"
 
 export const metadata = { title: "Search · Insights" }
 export const dynamic = "force-dynamic"
@@ -27,13 +28,13 @@ export default async function InsightsSearchPage({
 
   if (!snapshot.gsc.ok) {
     return (
-      <div className="rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
+      <TkCard surface="well" className="border-dashed px-6 py-10 text-center">
         <p className="text-sm font-semibold text-tk-onyx">Search Console is not connected</p>
         <p className="mx-auto mt-1 max-w-md text-sm text-ink-3">
           {snapshot.gsc.error || "Grant the service account on this property, then refresh."}{" "}
           The Health tab has the exact steps.
         </p>
-      </div>
+      </TkCard>
     )
   }
 

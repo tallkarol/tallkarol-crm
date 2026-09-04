@@ -61,7 +61,7 @@ export function AddWorkstream({ projectId }: { projectId: string }) {
         }}
         placeholder="Workstream title…"
         aria-label="New workstream title"
-        className="w-40 rounded-md border border-line bg-card px-2 py-1 text-[11.5px] outline-none focus:border-tk-teal"
+        className="w-40 rounded-md border border-line bg-card px-2 py-1 text-[11.5px] focus:border-tk-teal"
       />
       <button
         type="button"

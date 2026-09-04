@@ -18,6 +18,7 @@ import { ROUTES } from "@/lib/nav"
 import { ensureRenewalTasks } from "@/lib/renewals"
 import { formatMoney, plural } from "@/lib/work"
 import { draftRetainerInvoice, getWriteoffs, writeOffGap } from "./actions"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Retainers" }
 export const dynamic = "force-dynamic"
@@ -169,11 +170,7 @@ export default async function RetainersPage({
           const siteSlug = siteByClient.get(r.clientId)
 
           return (
-            <article
-              key={r.id}
-              className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5 pb-4 shadow-card"
-              style={{ borderLeftWidth: 3, borderLeftColor: markColor(color) }}
-            >
+            <Card className="flex flex-col gap-3 p-5 pb-4" key={r.id} style={{ borderLeftWidth: 3, borderLeftColor: markColor(color) }}>
               <div className="flex flex-wrap items-baseline gap-2">
                 <span className="size-2 self-center rounded-full" style={{ background: markColor(color) }} />
                 <Link href={ROUTES.retainer(r.slug)} className="font-['Inter_Tight',sans-serif] text-base font-bold text-tk-onyx hover:text-tk-teal">
@@ -262,7 +259,7 @@ export default async function RetainersPage({
                   </form>
                 </span>
               </div>
-            </article>
+            </Card>
           )
         })}
       </div>
@@ -300,12 +297,12 @@ function Kpi({
   tone?: "good" | "bad"
 }) {
   return (
-    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+    <Card className="px-5 py-4">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
       <p className="mt-1.5 text-[23px] font-semibold leading-tight tracking-tight text-tk-onyx tabular-nums">{value}</p>
       <p className={`mt-0.5 truncate text-xs ${tone === "bad" ? "font-semibold text-red-700" : tone === "good" ? "font-semibold text-emerald-800" : "text-ink-3"}`}>
         {sub}
       </p>
-    </div>
+    </Card>
   )
 }

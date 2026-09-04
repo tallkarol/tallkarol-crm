@@ -445,6 +445,25 @@ body {
   height: 100%;
 }
 
+/* ONE focus indicator, for everything.
+
+   The mockup ships this rule and the port dropped it, which left focus as a
+   per-call-site decision across 182 form controls: 158 fell back to the OS
+   ring (unthemed, and blue on a teal CRM), and 24 set outline-none and
+   substituted a 1px border-colour change — a weak indicator on an element that
+   already has a 1px border. Nine buttons used outline-tk-teal and were the
+   only ones that looked deliberate.
+
+   A global rule fixes all of them at once and covers every button, link,
+   summary and [tabindex] besides, which no component primitive would reach.
+   :focus-visible and not :focus, so a mouse click on a card does not ring it.
+   No border-radius here — modern engines follow the element's own radius, and
+   forcing 6px would square off the corner of a rounded-2xl target. */
+:focus-visible {
+  outline: 2px solid rgb(var(--accent-ink-rgb));
+  outline-offset: 2px;
+}
+
 /* The browser's own chrome. Zero of these were declared, so checkboxes, date
    pickers and the colour input rendered system-blue on a teal CRM and text
    selection used the OS default over a linen page. Chrome ignores

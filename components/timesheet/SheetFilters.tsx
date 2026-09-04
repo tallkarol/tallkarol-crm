@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
+import { Card } from "@/components/ui/Card"
 
 /**
  * A year switcher and a client select — not nine pills. Pills are for the two
@@ -47,11 +48,7 @@ export function SheetFilters({
 
   return (
     <div className="mt-5 flex flex-wrap items-center gap-2">
-      <div
-        role="group"
-        aria-label="Year"
-        className="flex overflow-hidden rounded-lg border border-line bg-card"
-      >
+      <Card radius="lg" elevation="none" className="flex overflow-hidden" role="group" aria-label="Year">
         {options.slice(0, 4).map((option) => (
           <Link
             key={option}
@@ -79,13 +76,13 @@ export function SheetFilters({
         >
           All
         </Link>
-      </div>
+      </Card>
 
       <select
         value={clientSlug}
         onChange={(event) => router.push(href({ client: event.target.value }))}
         aria-label="Client"
-        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
+        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate focus:border-tk-teal"
       >
         <option value="">All clients</option>
         {clients.map((client) => (

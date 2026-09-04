@@ -273,7 +273,7 @@ function Field({
 }
 
 const fieldClass =
-  "mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal"
+  "mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal"
 
 function chipClass(done: boolean) {
   return cn(

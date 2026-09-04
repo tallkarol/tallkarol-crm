@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { getCalendarSnapshot } from "@/lib/calendar"
 import { ROUTES } from "@/lib/nav"
 import { currentMonth, isMonthKey, monthLong, shiftMonth } from "@/lib/timesheet"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Calendar" }
 export const dynamic = "force-dynamic"
@@ -33,7 +34,7 @@ export default async function CalendarPage({
       />
 
       {snapshot.sources.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+        <Card className="mt-6 px-5 py-4">
           <p className="text-sm font-semibold text-tk-onyx">
             No calendars connected
           </p>
@@ -47,7 +48,7 @@ export default async function CalendarPage({
             </Link>
             . Invoices, contracts, and logged time show up below either way.
           </p>
-        </div>
+        </Card>
       ) : null}
 
       <CalendarBoard

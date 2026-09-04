@@ -15,6 +15,7 @@ import {
 } from "@/lib/forecast"
 import { ROUTES } from "@/lib/nav"
 import { formatMoney } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 function formatHours(value: number) {
   return value.toLocaleString("en-US", { maximumFractionDigits: 1 })
@@ -75,7 +76,7 @@ export function Forecast({ months }: { months: ForecastMonth[] }) {
   const thisMonth = monthKey(new Date())
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-[18px] py-3">
         <h2 className="font-ui text-[13.5px] font-bold tracking-tight text-tk-onyx">Forecast</h2>
         <label className="min-w-0">
@@ -83,7 +84,7 @@ export function Forecast({ months }: { months: ForecastMonth[] }) {
           <select
             value={view}
             onChange={(e) => setView(e.target.value as ForecastView)}
-            className="max-w-full rounded-lg border border-line bg-well px-2 py-1 font-ui text-[11.5px] font-semibold text-tk-slate outline-none focus:border-tk-teal"
+            className="max-w-full rounded-lg border border-line bg-well px-2 py-1 font-ui text-[11.5px] font-semibold text-tk-slate focus:border-tk-teal"
           >
             {FORECAST_VIEWS.map((option) => (
               <option key={option.id} value={option.id}>
@@ -198,6 +199,6 @@ export function Forecast({ months }: { months: ForecastMonth[] }) {
           )
         })}
       </div>
-    </section>
+    </Card>
   )
 }

@@ -143,7 +143,7 @@ export function TaskComposer({
           }}
           placeholder={placeholder}
           aria-label="Add a task"
-          className="flex-1 bg-transparent py-1.5 text-sm text-tk-onyx outline-none placeholder:text-ink-3"
+          className="flex-1 bg-transparent py-1.5 text-sm text-tk-onyx placeholder:text-ink-3"
         />
         <button
           type="button"

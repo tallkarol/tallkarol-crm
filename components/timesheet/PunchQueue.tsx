@@ -9,6 +9,7 @@ import { cn } from "@/lib/cn"
 import { FLAG_LABEL, approvalBlocker } from "@/lib/punch"
 import { approvePunchEntry, dropPunch, editPunch } from "@/lib/punch-actions"
 import type { PunchView } from "@/lib/punches"
+import { Card } from "@/components/ui/Card"
 
 type ProjectOption = { id: string; name: string; clientId: string }
 
@@ -147,14 +148,14 @@ export function PunchQueue({
 
   if (open.length === 0) {
     return (
-      <div className="mt-6 rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
+      <Card surface="well" className="mt-6 border-dashed px-6 py-10 text-center">
         <p className="text-sm font-semibold text-tk-onyx">Nothing waiting</p>
         <p className="mt-1 text-sm text-ink-3">
           {approvedCount > 0
             ? `${approvedCount} ${approvedCount === 1 ? "punch is" : "punches are"} on the timesheet.`
             : "Every punch has been approved or waved off."}
         </p>
-      </div>
+      </Card>
     )
   }
 
@@ -241,7 +242,7 @@ export function PunchQueue({
                           }
                           aria-label={`Summary for the ${punch.clientName} punch`}
                           className={cn(
-                            "min-w-[16rem] flex-1 rounded-lg border bg-card px-3 py-1.5 text-sm text-tk-onyx outline-none placeholder:text-ink-3 focus:border-tk-teal",
+                            "min-w-[16rem] flex-1 rounded-lg border bg-card px-3 py-1.5 text-sm text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal",
                             !draft.projectId && !draft.summary.trim()
                               ? "border-warn"
                               : "border-line"
@@ -256,7 +257,7 @@ export function PunchQueue({
                               })
                             }
                             aria-label={`Project for the ${punch.clientName} punch`}
-                            className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-xs text-tk-slate outline-none focus:border-tk-teal"
+                            className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-xs text-tk-slate focus:border-tk-teal"
                           >
                             <option value="">— retainer</option>
                             {clientProjects.map((project) => (
@@ -273,7 +274,7 @@ export function PunchQueue({
                           }
                           inputMode="decimal"
                           aria-label={`Hours for the ${punch.clientName} punch`}
-                          className="w-20 rounded-lg border border-line bg-card px-2.5 py-1.5 text-right text-sm tabular-nums text-tk-onyx outline-none focus:border-tk-teal"
+                          className="w-20 rounded-lg border border-line bg-card px-2.5 py-1.5 text-right text-sm tabular-nums text-tk-onyx focus:border-tk-teal"
                         />
                       </div>
 
@@ -347,7 +348,7 @@ function EndTimeFix({
         type="datetime-local"
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-xs text-tk-onyx outline-none focus:border-tk-teal"
+        className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-xs text-tk-onyx focus:border-tk-teal"
       />
       <button
         type="button"

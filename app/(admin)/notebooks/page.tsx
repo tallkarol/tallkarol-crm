@@ -7,6 +7,7 @@ import { ROUTES } from "@/lib/nav"
 import { unlinkedSharedPages } from "@/lib/notion"
 import { ago } from "./format"
 import { linkNotebook, scanAllNotebooks, syncAllNotebooks } from "./actions"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Notebooks" }
 export const dynamic = "force-dynamic"
@@ -102,7 +103,7 @@ export default async function NotebooksPage() {
       ) : null}
 
       {links.length === 0 && discovered.matched.length === 0 ? (
-        <div className="mt-8 max-w-2xl rounded-2xl border border-dashed border-line bg-well p-6 text-sm text-tk-slate">
+        <Card surface="well" elevation="none" className="mt-8 max-w-2xl border-dashed p-6 text-sm text-tk-slate">
           <p className="font-semibold text-tk-onyx">No notebooks linked yet</p>
           <p className="mt-1.5 text-ink-3">
             Share a client&apos;s Notion notebook with the integration and it
@@ -111,7 +112,7 @@ export default async function NotebooksPage() {
               npm run notion:link -- &lt;clientSlug&gt; &lt;pageId&gt;
             </code>
           </p>
-        </div>
+        </Card>
       ) : (
         <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {links.map((link) => {
@@ -130,10 +131,7 @@ export default async function NotebooksPage() {
               link.lastSyncedAt &&
               Date.now() - link.lastSyncedAt.getTime() < FRESH_MS
             return (
-              <div
-                key={link.id}
-                className="flex flex-col rounded-2xl border border-line bg-card p-5 shadow-card"
-              >
+              <Card className="flex flex-col p-5" key={link.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <Link
@@ -189,7 +187,7 @@ export default async function NotebooksPage() {
                     Open →
                   </Link>
                 </div>
-              </div>
+              </Card>
             )
           })}
 

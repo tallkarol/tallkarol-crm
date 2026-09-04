@@ -7,6 +7,7 @@ import { db } from "@/db"
 import { inquiries } from "@/db/schema"
 import { readAttribution } from "@/lib/attribution"
 import { ROUTES } from "@/lib/nav"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Inquiry" }
 
@@ -60,30 +61,30 @@ export default async function InquiryDetailPage({
         </a>
       </div>
 
-      <section className="mt-8 rounded-2xl border border-line bg-card p-5 shadow-card">
+      <Card className="mt-8 p-5">
         <h2 className="text-sm font-semibold text-tk-onyx">Status</h2>
         <div className="mt-3">
           <StatusButtons inquiryId={row.id} current={row.status} />
         </div>
-      </section>
+      </Card>
 
       {attribution && <AttributionCard attribution={attribution} />}
 
       {row.projectTypes.length > 0 && (
-        <section className="mt-4 rounded-2xl border border-line bg-card p-5 shadow-card">
+        <Card className="mt-4 p-5">
           <h2 className="text-sm font-semibold text-tk-onyx">Project types</h2>
           <p className="mt-2 text-sm text-tk-slate">
             {row.projectTypes.join(", ")}
           </p>
-        </section>
+        </Card>
       )}
 
-      <section className="mt-4 rounded-2xl border border-line bg-card p-5 shadow-card">
+      <Card className="mt-4 p-5">
         <h2 className="text-sm font-semibold text-tk-onyx">Full payload</h2>
         <pre className="mt-3 overflow-x-auto whitespace-pre-wrap rounded-lg bg-well p-4 font-mono text-xs leading-relaxed text-tk-slate">
           {payloadText}
         </pre>
-      </section>
+      </Card>
     </>
   )
 }

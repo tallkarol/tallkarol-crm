@@ -4,6 +4,7 @@ import { useState, useTransition } from "react"
 import Link from "next/link"
 import { createCalendarEvent } from "@/lib/calendar-actions"
 import { ROUTES } from "@/lib/nav"
+import { Card } from "@/components/ui/Card"
 
 function pad(n: number) {
   return String(n).padStart(2, "0")
@@ -19,7 +20,7 @@ function defaultSlot(day: string | null, hourOffset: number) {
 }
 
 const field =
-  "mt-1 w-full rounded-xl border border-line bg-card px-3 py-2 text-sm text-tk-onyx outline-none focus:border-tk-teal"
+  "mt-1 w-full rounded-xl border border-line bg-card px-3 py-2 text-sm text-tk-onyx focus:border-tk-teal"
 const label =
   "text-[11px] font-semibold uppercase tracking-wide text-ink-3"
 
@@ -43,7 +44,7 @@ export function NewEventForm({
 
   if (!canWrite) {
     return (
-      <div className="mt-4 rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+      <Card className="mt-4 px-5 py-4">
         <p className="text-sm font-semibold text-tk-onyx">
           No destination calendar
         </p>
@@ -58,7 +59,7 @@ export function NewEventForm({
           </Link>
           .
         </p>
-      </div>
+      </Card>
     )
   }
 

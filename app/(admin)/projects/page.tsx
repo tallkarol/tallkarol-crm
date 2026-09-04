@@ -8,6 +8,7 @@ import { daysSince, fmtHours } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
 import { formatMoney } from "@/lib/work"
 import { draftDeliverableInvoice } from "./actions"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Projects" }
 export const dynamic = "force-dynamic"
@@ -110,11 +111,7 @@ export default async function ProjectsPage({
           const invoiceable = deliverables.find((d) => d.status === "done" && d.feeCents)
 
           return (
-            <article
-              key={project.id}
-              className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5 pb-4 shadow-card"
-              style={{ borderLeftWidth: 3, borderLeftColor: markColor(color) }}
-            >
+            <Card className="flex flex-col gap-3 p-5 pb-4" key={project.id} style={{ borderLeftWidth: 3, borderLeftColor: markColor(color) }}>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="size-2 rounded-full" style={{ background: markColor(color) }} />
                 <Link href={ROUTES.project(project.slug)} className="font-['Inter_Tight',sans-serif] text-base font-bold text-tk-onyx hover:text-tk-teal">
@@ -209,7 +206,7 @@ export default async function ProjectsPage({
                   </form>
                 ) : null}
               </div>
-            </article>
+            </Card>
           )
         })}
       </div>
@@ -266,12 +263,12 @@ function Milestone({ d, baseHref }: { d: Deliverable; baseHref: string }) {
 
 function Kpi({ label, value, sub, tone }: { label: string; value: string; sub: string; tone?: "good" | "bad" }) {
   return (
-    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+    <Card className="px-5 py-4">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
       <p className="mt-1.5 text-[23px] font-semibold leading-tight tracking-tight text-tk-onyx tabular-nums">{value}</p>
       <p className={`mt-0.5 truncate text-xs ${tone === "bad" ? "font-semibold text-red-700" : tone === "good" ? "font-semibold text-emerald-800" : "text-ink-3"}`}>
         {sub}
       </p>
-    </div>
+    </Card>
   )
 }

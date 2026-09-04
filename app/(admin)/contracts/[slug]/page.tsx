@@ -9,6 +9,7 @@ import { db } from "@/db"
 import { contracts } from "@/db/schema"
 import { hasTerms, readTerms } from "@/lib/contract"
 import { ROUTES } from "@/lib/nav"
+import { Card } from "@/components/ui/Card"
 import {
   CONTRACT_STATUS_LABEL,
   formatDay,
@@ -94,44 +95,44 @@ export default async function ContractDetailPage({
 
       <dl className="mt-6 grid gap-3 sm:grid-cols-2">
         {contract.counterparty ? (
-          <div className="rounded-2xl border border-line bg-card px-5 py-3 shadow-card">
+          <Card className="px-5 py-3">
             <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
               Counterparty
             </dt>
             <dd className="mt-1 text-sm font-medium text-tk-onyx">
               {contract.counterparty}
             </dd>
-          </div>
+          </Card>
         ) : null}
         {contract.governingLaw ? (
-          <div className="rounded-2xl border border-line bg-card px-5 py-3 shadow-card">
+          <Card className="px-5 py-3">
             <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
               Governing law
             </dt>
             <dd className="mt-1 text-sm font-medium text-tk-onyx">
               {contract.governingLaw}
             </dd>
-          </div>
+          </Card>
         ) : null}
         {contract.venue ? (
-          <div className="rounded-2xl border border-line bg-card px-5 py-3 shadow-card">
+          <Card className="px-5 py-3">
             <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
               Venue
             </dt>
             <dd className="mt-1 text-sm font-medium text-tk-onyx">
               {contract.venue}
             </dd>
-          </div>
+          </Card>
         ) : null}
         {contract.extraRateCents != null ? (
-          <div className="rounded-2xl border border-line bg-card px-5 py-3 shadow-card">
+          <Card className="px-5 py-3">
             <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
               Extra work
             </dt>
             <dd className="mt-1 text-sm font-medium text-tk-onyx">
               {formatMoney(contract.extraRateCents)}/hr
             </dd>
-          </div>
+          </Card>
         ) : null}
       </dl>
 

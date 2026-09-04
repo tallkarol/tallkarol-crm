@@ -14,6 +14,7 @@ import { clientColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { saveView } from "@/lib/task-actions"
 import { GROUPS, SORTS, STATES, type TaskCriteria, type ViewRow } from "@/lib/task-view"
+import { Card } from "@/components/ui/Card"
 
 export type BarState = {
   view: string
@@ -193,7 +194,7 @@ export function TaskFilterBar({
   // and have to escape it. The pill strip rounds its own bottom corners, and
   // z-20 lifts the open menus above the composer and rows below.
   return (
-    <div className="relative z-20 mt-5 rounded-2xl border border-line bg-card shadow-card">
+    <Card className="relative z-20 mt-5">
       <div className="flex flex-wrap items-center gap-1.5 px-2.5 py-2">
         <Dropdown
           label={current?.name ?? "All tasks"}
@@ -248,7 +249,7 @@ export function TaskFilterBar({
             }}
             placeholder="Search tasks, notes, client…"
             aria-label="Search tasks"
-            className="min-w-0 flex-1 bg-transparent text-xs text-tk-onyx outline-none placeholder:text-ink-3"
+            className="min-w-0 flex-1 bg-transparent text-xs text-tk-onyx placeholder:text-ink-3"
           />
           <kbd className="shrink-0 rounded border border-line px-1 font-mono text-[10px] text-ink-3">
             /
@@ -355,11 +356,7 @@ export function TaskFilterBar({
           )}
         </Dropdown>
 
-        <div
-          role="group"
-          aria-label="Layout"
-          className="ml-auto flex rounded-lg border border-line bg-well p-0.5"
-        >
+        <Card surface="well" radius="lg" elevation="none" className="ml-auto flex p-0.5" role="group" aria-label="Layout">
           {(
             [
               { id: "list", label: "List", Icon: Rows3 },
@@ -387,7 +384,7 @@ export function TaskFilterBar({
               </button>
             )
           })}
-        </div>
+        </Card>
       </div>
 
       {pills.length > 0 ? (
@@ -440,6 +437,6 @@ export function TaskFilterBar({
           </span>
         </div>
       ) : null}
-    </div>
+    </Card>
   )
 }

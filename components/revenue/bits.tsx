@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { CHART } from "@/lib/insights/chart"
 import { cn } from "@/lib/cn"
 import { markColor } from "@/lib/client-colors"
+import { Card as TkCard } from "@/components/ui/Card"
 
 export function Card({
   title,
@@ -79,7 +80,7 @@ export function Kpi({
   sub?: string
 }) {
   return (
-    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+    <TkCard className="px-5 py-4">
       <p className="text-xs font-semibold uppercase tracking-wider text-ink-3">
         {label}
       </p>
@@ -88,7 +89,7 @@ export function Kpi({
       </p>
       {delta}
       {sub ? <p className="mt-1 text-xs text-ink-3">{sub}</p> : null}
-    </div>
+    </TkCard>
   )
 }
 

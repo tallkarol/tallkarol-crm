@@ -6,6 +6,7 @@ import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { monthLong, monthsOfYear, yearOf } from "@/lib/timesheet"
+import { Card } from "@/components/ui/Card"
 
 /**
  * Two clicks to any month, instead of twelve taps on an arrow. Months with no
@@ -76,11 +77,7 @@ export function MonthPicker({
       </Stepper>
 
       {open ? (
-        <div
-          role="dialog"
-          aria-label="Pick a month"
-          className="absolute right-0 top-full z-20 mt-2 w-64 rounded-xl border border-line bg-card p-3 shadow-overlay"
-        >
+        <Card radius="xl" elevation="none" className="absolute right-0 top-full z-20 mt-2 w-64 p-3 shadow-overlay" role="dialog" aria-label="Pick a month">
           <div className="flex items-center justify-between gap-2">
             <button
               type="button"
@@ -94,7 +91,7 @@ export function MonthPicker({
               value={year}
               onChange={(event) => setYear(Number(event.target.value))}
               aria-label="Year"
-              className="rounded-md border border-line px-2 py-1 text-xs font-semibold text-tk-onyx outline-none focus:border-tk-teal"
+              className="rounded-md border border-line px-2 py-1 text-xs font-semibold text-tk-onyx focus:border-tk-teal"
             >
               {years.map((option) => (
                 <option key={option} value={option}>
@@ -140,7 +137,7 @@ export function MonthPicker({
           <p className="mt-2 text-[11px] text-ink-3">
             Dimmed months have no entries.
           </p>
-        </div>
+        </Card>
       ) : null}
     </div>
   )

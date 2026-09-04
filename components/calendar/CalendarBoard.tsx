@@ -9,6 +9,7 @@ import type { CalendarItem, CalendarLane, CalendarSnapshot } from "@/lib/calenda
 import { syncCalendars } from "@/lib/calendar-actions"
 import { cn } from "@/lib/cn"
 import { inkColor } from "@/lib/client-colors"
+import { Card } from "@/components/ui/Card"
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
@@ -271,7 +272,7 @@ export function CalendarBoard({
         </div>
       ) : null}
 
-      <div className="mt-5 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <Card className="mt-5 overflow-hidden">
         <div className="grid grid-cols-7 border-b border-line">
           {WEEKDAYS.map((label) => (
             <div
@@ -354,9 +355,9 @@ export function CalendarBoard({
             )
           })}
         </div>
-      </div>
+      </Card>
 
-      <section className="mt-6 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <Card className="mt-6 overflow-hidden">
         <div className="border-b border-line px-5 py-3">
           <h2 className="text-sm font-semibold text-tk-onyx">
             {agendaDay
@@ -417,7 +418,7 @@ export function CalendarBoard({
             })}
           </ul>
         )}
-      </section>
+      </Card>
       {openEvent ? (
         <EventModal
           event={toModalItem(openEvent, laneById.get(openEvent.laneId))}

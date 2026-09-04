@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import type { AttentionItem, TimesheetDashboard } from "@/lib/timesheet-dashboard"
 import { formatMoney } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 /**
  * The landing view. Live engagements, what is leaking, and where the year went
@@ -128,12 +129,12 @@ function Tiles({ data }: { data: TimesheetDashboard }) {
 function Engagements({ data }: { data: TimesheetDashboard }) {
   if (data.engagements.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-line bg-well px-6 py-8 text-center">
+      <Card surface="well" elevation="none" className="border-dashed px-6 py-8 text-center">
         <p className="text-sm font-semibold text-tk-onyx">No live retainers</p>
         <p className="mt-1 text-sm text-ink-3">
           Retainers marked active show their month against their cap here.
         </p>
-      </div>
+      </Card>
     )
   }
 
@@ -207,7 +208,7 @@ const SEVERITY_COLOR: Record<AttentionItem["severity"], string> = {
 
 function Attention({ items }: { items: AttentionItem[] }) {
   return (
-    <section className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+    <Card className="px-5 py-4">
       <h2 className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
         Needs attention
       </h2>
@@ -242,14 +243,14 @@ function Attention({ items }: { items: AttentionItem[] }) {
           ))}
         </ul>
       )}
-    </section>
+    </Card>
   )
 }
 
 function MonthBars({ data }: { data: TimesheetDashboard }) {
   const max = Math.max(1, ...data.series.map((row) => row.hours))
   return (
-    <section className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+    <Card className="px-5 py-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
           Hours · last 12 months
@@ -295,7 +296,7 @@ function MonthBars({ data }: { data: TimesheetDashboard }) {
           </li>
         ))}
       </ol>
-    </section>
+    </Card>
   )
 }
 

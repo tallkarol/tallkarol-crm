@@ -2,6 +2,7 @@ import { clientColor, markColor } from "@/lib/client-colors"
 import { fmtHours } from "@/lib/engagements"
 import type { ClientRow } from "@/lib/revenue"
 import { formatMoney } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 export function RateBars({ rows }: { rows: ClientRow[] }) {
   const ranked = rows
@@ -10,7 +11,7 @@ export function RateBars({ rows }: { rows: ClientRow[] }) {
   const max = Math.max(...ranked.map((row) => row.hourlyCents ?? 0), 1)
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="overflow-hidden">
       <div className="border-b border-line px-5 py-3.5">
         <h2 className="text-sm font-semibold text-tk-onyx">Per hour</h2>
         <p className="mt-0.5 text-xs text-ink-3">
@@ -56,6 +57,6 @@ export function RateBars({ rows }: { rows: ClientRow[] }) {
           })}
         </ul>
       )}
-    </section>
+    </Card>
   )
 }

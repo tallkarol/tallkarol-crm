@@ -5,6 +5,7 @@ import { fmtHours } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
 import type { ClientRow } from "@/lib/revenue"
 import { formatMoney } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 function mixLabel(row: ClientRow) {
   const parts: string[] = []
@@ -28,7 +29,7 @@ export function ClientTable({
   const billed = rows.reduce((sum, row) => sum + row.billedCents, 0)
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="overflow-hidden">
       <div className="flex flex-wrap items-end justify-between gap-2 border-b border-line px-5 py-3.5">
         <div>
           <h2 className="text-sm font-semibold text-tk-onyx">Per client</h2>
@@ -136,6 +137,6 @@ export function ClientTable({
           </table>
         </div>
       )}
-    </section>
+    </Card>
   )
 }

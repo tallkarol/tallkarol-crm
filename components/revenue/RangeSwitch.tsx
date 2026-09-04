@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { cn } from "@/lib/cn"
+import { Card } from "@/components/ui/Card"
 import {
   REVENUE_RANGES,
   rangeHref,
@@ -8,7 +9,7 @@ import {
 
 export function RangeSwitch({ range }: { range: RevenueRange }) {
   return (
-    <div className="flex rounded-lg border border-line bg-card p-0.5">
+    <Card radius="lg" elevation="none" className="flex p-0.5">
       {REVENUE_RANGES.map((option) => (
         <Link
           key={option.id}
@@ -24,6 +25,6 @@ export function RangeSwitch({ range }: { range: RevenueRange }) {
           {option.label}
         </Link>
       ))}
-    </div>
+    </Card>
   )
 }

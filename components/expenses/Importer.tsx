@@ -19,6 +19,7 @@ import {
   type StagedRow,
 } from "@/lib/import-parse"
 import { formatMoney } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 type ReviewRow = StagedRow & {
   include: boolean
@@ -127,7 +128,7 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
   const skipped = rows.length - selected.length
 
   return (
-    <section className="mt-6 rounded-2xl border border-line bg-card p-5 shadow-card">
+    <Card className="mt-6 p-5">
       <div className="flex flex-wrap items-center gap-3">
         <div>
           <h2 className="text-sm font-semibold text-tk-onyx">Import statements</h2>
@@ -181,7 +182,7 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
             onChange={(e) => setPasteText(e.target.value)}
             rows={4}
             placeholder={"Aug 12 Adobe receipt $54.99\n8/3 Railway 20.00\nGoDaddy renewal 12/1/2026 $149.17"}
-            className="w-full rounded-lg border border-line bg-well px-3 py-2 font-mono text-[13px] outline-none focus:border-tk-teal"
+            className="w-full rounded-lg border border-line bg-well px-3 py-2 font-mono text-[13px] focus:border-tk-teal"
           />
           <div>
             <button
@@ -266,7 +267,7 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
                       <input
                         value={r.vendor}
                         onChange={(e) => patch(r.key, { vendor: e.target.value })}
-                        className="w-full rounded border border-transparent bg-transparent px-1.5 py-1 font-medium text-tk-onyx outline-none hover:border-line-strong focus:border-tk-teal"
+                        className="w-full rounded border border-transparent bg-transparent px-1.5 py-1 font-medium text-tk-onyx hover:border-line-strong focus:border-tk-teal"
                       />
                     </td>
                     <td className="max-w-0 truncate px-2 py-1.5 text-xs text-ink-3" title={r.description}>
@@ -284,7 +285,7 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
                       <select
                         value={r.category}
                         onChange={(e) => patch(r.key, { category: e.target.value })}
-                        className="w-full rounded border border-transparent bg-transparent px-1 py-1 text-xs outline-none hover:border-line-strong focus:border-tk-teal"
+                        className="w-full rounded border border-transparent bg-transparent px-1 py-1 text-xs hover:border-line-strong focus:border-tk-teal"
                       >
                         {EXPENSE_CATEGORIES.map((c) => (
                           <option key={c} value={c}>
@@ -297,7 +298,7 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
                       <select
                         value={r.clientId ?? ""}
                         onChange={(e) => patch(r.key, { clientId: e.target.value || null })}
-                        className="w-full rounded border border-transparent bg-transparent px-1 py-1 text-xs outline-none hover:border-line-strong focus:border-tk-teal"
+                        className="w-full rounded border border-transparent bg-transparent px-1 py-1 text-xs hover:border-line-strong focus:border-tk-teal"
                         style={r.clientId ? { color: clientColor(clients.find((c) => c.id === r.clientId)?.slug ?? "") } : undefined}
                       >
                         <option value="">overhead</option>
@@ -315,6 +316,6 @@ export function Importer({ clients }: { clients: { id: string; name: string; slu
           </div>
         </div>
       ) : null}
-    </section>
+    </Card>
   )
 }

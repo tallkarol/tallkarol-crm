@@ -6,6 +6,7 @@ import { clientColor } from "@/lib/client-colors"
 import { EXPENSE_CATEGORIES as CATEGORIES } from "@/lib/expense-categories"
 import { formatDay, formatMoney, plural } from "@/lib/work"
 import { addExpense, deleteExpense, mapExpenseClient } from "./actions"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Expenses" }
 export const dynamic = "force-dynamic"
@@ -59,24 +60,24 @@ export default async function ExpensesPage() {
 
       <Importer clients={clients.map((c) => ({ id: c.id, name: c.name, slug: c.slug }))} />
 
-      <section className="mt-6 rounded-2xl border border-line bg-card p-5 shadow-card">
+      <Card className="mt-6 p-5">
         <h2 className="text-sm font-semibold text-tk-onyx">Add an expense</h2>
         <form action={addExpense} className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
           <label className="block text-sm">
             <span className="text-xs font-medium text-ink-3">Date</span>
-            <input name="occurredOn" type="date" required className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal" />
+            <input name="occurredOn" type="date" required className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal" />
           </label>
           <label className="block text-sm">
             <span className="text-xs font-medium text-ink-3">Vendor</span>
-            <input name="vendor" required placeholder="Railway, Adobe…" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal" />
+            <input name="vendor" required placeholder="Railway, Adobe…" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal" />
           </label>
           <label className="block text-sm">
             <span className="text-xs font-medium text-ink-3">Amount</span>
-            <input name="amount" required inputMode="decimal" placeholder="20.00" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal" />
+            <input name="amount" required inputMode="decimal" placeholder="20.00" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal" />
           </label>
           <label className="block text-sm">
             <span className="text-xs font-medium text-ink-3">Category</span>
-            <select name="category" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal">
+            <select name="category" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal">
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
@@ -84,7 +85,7 @@ export default async function ExpensesPage() {
           </label>
           <label className="block text-sm">
             <span className="text-xs font-medium text-ink-3">Client (optional)</span>
-            <select name="clientId" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal">
+            <select name="clientId" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal">
               <option value="">— overhead</option>
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
@@ -98,17 +99,17 @@ export default async function ExpensesPage() {
           </div>
           <label className="block text-sm sm:col-span-2 lg:col-span-6">
             <span className="text-xs font-medium text-ink-3">Note (optional)</span>
-            <input name="description" placeholder="What was it for?" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal" />
+            <input name="description" placeholder="What was it for?" className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal" />
           </label>
         </form>
-      </section>
+      </Card>
 
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-ink-3">
           No expenses yet. Drop a statement in the importer above, or add one by hand.
         </p>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+        <Card className="mt-6 overflow-hidden">
           <ul className="divide-y divide-line">
             {rows.map((e) => (
               <li key={e.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
@@ -135,7 +136,7 @@ export default async function ExpensesPage() {
                   <select
                     name="clientId"
                     defaultValue={e.clientId ?? ""}
-                    className="rounded-lg border border-line bg-card px-2 py-1 text-xs outline-none focus:border-tk-teal"
+                    className="rounded-lg border border-line bg-card px-2 py-1 text-xs focus:border-tk-teal"
                   >
                     <option value="">overhead</option>
                     {clients.map((c) => (
@@ -155,7 +156,7 @@ export default async function ExpensesPage() {
               </li>
             ))}
           </ul>
-        </div>
+        </Card>
       )}
     </>
   )
@@ -163,10 +164,10 @@ export default async function ExpensesPage() {
 
 function SummaryCard({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+    <Card className="px-5 py-4">
       <p className="text-xs font-semibold uppercase tracking-wider text-ink-3">{label}</p>
       <p className="mt-2 text-2xl font-semibold tracking-tight text-tk-onyx tabular-nums">{value}</p>
       <p className="mt-1 truncate text-xs text-ink-3">{sub}</p>
-    </div>
+    </Card>
   )
 }

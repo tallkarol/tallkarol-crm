@@ -3,6 +3,7 @@ import { CopyButton } from "@/components/slink/CopyButton"
 import { RevealButton } from "@/components/slink/RevealButton"
 import { BLOCK_LABEL, readFields, readLink, readTable, safeHref, toCsv, type BlockKind } from "@/lib/slink"
 import type { CredentialView, PunchlistView, ReportView } from "@/lib/slink-live"
+import { Card } from "@/components/ui/Card"
 
 /**
  * How a slink renders to the person it was shared with.
@@ -108,16 +109,13 @@ export function FieldsBlock({ data }: { data: unknown }) {
   return (
     <dl className="grid gap-2">
       {fields.map((f, i) => (
-        <div
-          key={i}
-          className="grid grid-cols-[minmax(96px,140px)_1fr_auto] items-center gap-3 rounded-lg border border-line bg-well px-3 py-2"
-        >
+        <Card surface="well" radius="lg" elevation="none" className="grid grid-cols-[minmax(96px,140px)_1fr_auto] items-center gap-3 px-3 py-2" key={i}>
           <dt className="font-['Inter_Tight',sans-serif] text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-3">
             {f.label}
           </dt>
           <dd className="break-all font-mono text-[12.5px] text-tk-onyx">{f.value}</dd>
           <CopyButton value={f.value} label="Copy" />
-        </div>
+        </Card>
       ))}
     </dl>
   )
@@ -200,25 +198,22 @@ export function CredentialBlock({
       </div>
 
       {rows.map((r) => (
-        <div
-          key={r.label}
-          className="grid grid-cols-[minmax(90px,120px)_1fr_auto] items-center gap-3 rounded-lg border border-line bg-well px-3 py-2"
-        >
+        <Card surface="well" radius="lg" elevation="none" className="grid grid-cols-[minmax(90px,120px)_1fr_auto] items-center gap-3 px-3 py-2" key={r.label}>
           <span className="font-['Inter_Tight',sans-serif] text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-3">
             {r.label}
           </span>
           <span className="break-all font-mono text-[12.5px] text-tk-onyx">{r.value}</span>
           <CopyButton value={r.value} label="Copy" />
-        </div>
+        </Card>
       ))}
 
       {cred.hasSecret ? (
-        <div className="grid grid-cols-[minmax(90px,120px)_1fr_auto] items-center gap-3 rounded-lg border border-line bg-well px-3 py-2">
+        <Card surface="well" radius="lg" elevation="none" className="grid grid-cols-[minmax(90px,120px)_1fr_auto] items-center gap-3 px-3 py-2">
           <span className="font-['Inter_Tight',sans-serif] text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-3">
             Secret
           </span>
           <RevealButton blockId={blockId} publicId={publicId} />
-        </div>
+        </Card>
       ) : null}
 
       <p className="relative z-20 text-[11.5px] text-ink-3">Revealing is recorded against {viewerEmail}.</p>

@@ -21,6 +21,7 @@ import {
 } from "@/lib/experiments/types"
 import { fmtDayYear, fmtInt, todayKey } from "@/lib/insights/derive"
 import { getInsightsContext } from "@/lib/insights/queries"
+import { Card as TkCard } from "@/components/ui/Card"
 
 export const metadata = { title: "Experiments · Insights" }
 export const dynamic = "force-dynamic"
@@ -277,7 +278,7 @@ export default async function InsightsExperimentsPage({
 
   if (!all.length) {
     return (
-      <div className="rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
+      <TkCard surface="well" className="border-dashed px-6 py-10 text-center">
         <p className="text-sm font-semibold text-tk-onyx">No experiments yet</p>
         <p className="mx-auto mt-1 max-w-md text-sm text-ink-3">
           An experiment is a change you made on purpose, with readings taken at
@@ -287,7 +288,7 @@ export default async function InsightsExperimentsPage({
           </code>
           .
         </p>
-      </div>
+      </TkCard>
     )
   }
 

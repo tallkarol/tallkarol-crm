@@ -49,11 +49,25 @@ const ELEVATION: Record<Elevation, string> = {
  * The hover recipe from the mockup: motion is the affordance, not the shadow.
  * A black shadow cannot lift a card off #0F1615, so what moves is the border
  * weight, the 1px linen top edge inside --shadow-hover, and 2px of travel.
+ *
+ * One class per array entry so the Tailwind content scanner sees each one
+ * plainly — these classes exist ONLY in this file now, so if the scanner
+ * missed them every card in the app would render unstyled with no build error.
+ * Verified against the emitted stylesheet rather than assumed.
+ *
+ * `transition` rather than an arbitrary property list: Tailwind's own
+ * `transition` already covers transform, box-shadow and border-color, which is
+ * exactly the set that moves here.
  */
-const INTERACTIVE =
-  "transition-[transform,box-shadow,border-color] duration-150 " +
-  "hover:-translate-y-0.5 hover:border-line-strong hover:shadow-hover " +
-  "motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+const INTERACTIVE = [
+  "transition",
+  "duration-150",
+  "hover:-translate-y-0.5",
+  "hover:border-line-strong",
+  "hover:shadow-hover",
+  "motion-reduce:transition-none",
+  "motion-reduce:hover:translate-y-0",
+].join(" ")
 
 export function Card<T extends ElementType = "div">({
   as,

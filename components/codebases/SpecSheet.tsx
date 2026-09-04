@@ -1,3 +1,4 @@
+import { Card as TkCard } from "@/components/ui/Card"
 /**
  * Renders a `spec` document (schemaVersion 1) from the daedalus-hive-mind
  * spec-sheet tool. Defensive by design: every field is optional, unknown
@@ -62,13 +63,13 @@ const TYPE_LABEL: Record<string, string> = {
 
 function Card({ title, children, right }: { title: string; children: React.ReactNode; right?: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-line bg-card shadow-card">
+    <TkCard>
       <div className="flex items-center justify-between px-5 pb-1 pt-4">
         <h2 className="text-[13px] font-bold text-tk-onyx">{title}</h2>
         {right}
       </div>
       <div className="px-5 pb-4">{children}</div>
-    </section>
+    </TkCard>
   )
 }
 

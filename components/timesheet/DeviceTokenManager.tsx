@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react"
 import { Check, Copy, Plus } from "lucide-react"
 import { createDeviceToken, killDeviceToken, saveWorkspaceTimezone } from "@/lib/punch-actions"
+import { Card } from "@/components/ui/Card"
 
 export type DeviceRow = {
   id: string
@@ -70,7 +71,7 @@ export function DeviceTokenManager({
 
   return (
     <div className="mt-6 flex flex-col gap-6">
-      <section className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+      <Card className="px-5 py-4">
         <h2 className="text-sm font-semibold text-tk-onyx">Add a device</h2>
         <p className="mt-1 text-sm text-ink-3">
           Name it after the thing holding it, so revoking the right one later is
@@ -85,7 +86,7 @@ export function DeviceTokenManager({
             }}
             placeholder="Karol's Apple Watch"
             aria-label="Device name"
-            className="w-64 rounded-lg border border-line bg-card px-3 py-1.5 text-sm text-tk-onyx outline-none placeholder:text-ink-3 focus:border-tk-teal"
+            className="w-64 rounded-lg border border-line bg-card px-3 py-1.5 text-sm text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal"
           />
           <button
             type="button"
@@ -128,9 +129,9 @@ export function DeviceTokenManager({
             {error}
           </p>
         ) : null}
-      </section>
+      </Card>
 
-      <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <Card className="overflow-hidden">
         <h2 className="border-b border-line px-5 py-3 text-sm font-semibold text-tk-onyx">
           Devices
         </h2>
@@ -176,9 +177,9 @@ export function DeviceTokenManager({
             ))}
           </ul>
         )}
-      </section>
+      </Card>
 
-      <section className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+      <Card className="px-5 py-4">
         <h2 className="text-sm font-semibold text-tk-onyx">Workspace timezone</h2>
         <p className="mt-1 text-sm text-ink-3">
           Punches are stored as real timestamps. This is the zone they turn into
@@ -193,7 +194,7 @@ export function DeviceTokenManager({
             }}
             aria-label="Timezone"
             placeholder="America/New_York"
-            className="w-56 rounded-lg border border-line bg-card px-3 py-1.5 text-sm text-tk-onyx outline-none focus:border-tk-teal"
+            className="w-56 rounded-lg border border-line bg-card px-3 py-1.5 text-sm text-tk-onyx focus:border-tk-teal"
           />
           <button
             type="button"
@@ -211,9 +212,9 @@ export function DeviceTokenManager({
             {zoneSaved ? "Saved" : "Save"}
           </button>
         </div>
-      </section>
+      </Card>
 
-      <section className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+      <Card className="px-5 py-4">
         <h2 className="text-sm font-semibold text-tk-onyx">Clock API</h2>
         <p className="mt-1 text-sm text-ink-3">
           Every route takes{" "}
@@ -235,7 +236,7 @@ POST ${appUrl}/api/time/punches/:id/approve`}
           duplicate. Send <code className="font-mono">at</code> as an ISO
           timestamp (within 24 hours) to sync a punch that happened offline.
         </p>
-      </section>
+      </Card>
     </div>
   )
 }

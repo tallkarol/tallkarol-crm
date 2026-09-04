@@ -20,6 +20,7 @@ import { taskTargets, tasksFor } from "@/lib/tasks"
 import { formatDay, formatMoney } from "@/lib/work"
 import { draftRetainerInvoice } from "../actions"
 import { CHART } from "@/lib/insights/chart"
+import { Card } from "@/components/ui/Card"
 
 export const dynamic = "force-dynamic"
 
@@ -151,7 +152,7 @@ export default async function RetainerDetailPage({
       />
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+        <Card className="px-5 py-4">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">
             {now.toLocaleDateString("en-US", { month: "long" })} logged
           </p>
@@ -168,7 +169,7 @@ export default async function RetainerDetailPage({
           ) : (
             <p className="mt-0.5 text-xs text-ink-3">no timesheet entries this month</p>
           )}
-        </div>
+        </Card>
         <Stat
           label="Accrued value"
           value={accruedCents != null ? formatMoney(accruedCents) : "—"}
@@ -192,7 +193,7 @@ export default async function RetainerDetailPage({
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
         <div className="flex min-w-0 flex-col gap-4">
-          <section className="rounded-2xl border border-line bg-card shadow-card">
+          <Card>
             <div className="flex items-center justify-between px-5 pb-1 pt-4">
               <h2 className="text-[13px] font-bold text-tk-onyx">Hours vs capacity</h2>
               <span className="text-[11px] tabular-nums text-ink-3">timesheet · cap {retainer.hoursPerMonth} hrs</span>
@@ -232,9 +233,9 @@ export default async function RetainerDetailPage({
                 })}
               </svg>
             </div>
-          </section>
+          </Card>
 
-          <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+          <Card className="overflow-hidden">
             <div className="flex items-center justify-between px-5 pb-1 pt-4">
               <h2 className="text-[13px] font-bold text-tk-onyx">Month ledger</h2>
               <span className="text-[11px] text-ink-3">logged → invoiced, one row per month</span>
@@ -298,10 +299,10 @@ export default async function RetainerDetailPage({
                 })}
               </tbody>
             </table>
-          </section>
+          </Card>
 
           {mine.some((i) => i.description) ? (
-            <section className="rounded-2xl border border-line bg-card shadow-card">
+            <Card>
               <div className="flex items-center justify-between px-5 pb-1 pt-4">
                 <h2 className="text-[13px] font-bold text-tk-onyx">Month in review</h2>
                 <span className="text-[11px] text-ink-3">from invoice journals — zero extra data entry</span>
@@ -327,12 +328,12 @@ export default async function RetainerDetailPage({
                     </li>
                   ))}
               </ul>
-            </section>
+            </Card>
           ) : null}
         </div>
 
         <div className="flex min-w-0 flex-col gap-4">
-          <section className="rounded-2xl border border-line bg-card shadow-card">
+          <Card>
             <div className="flex items-center justify-between px-5 pb-1 pt-4">
               <h2 className="text-[13px] font-bold text-tk-onyx">Recent time entries</h2>
               <span className="text-[11px] tabular-nums text-ink-3">{entriesThisMonth} this month</span>
@@ -356,9 +357,9 @@ export default async function RetainerDetailPage({
                 ))}
               </ul>
             )}
-          </section>
+          </Card>
 
-          <section className="rounded-2xl border border-line bg-card p-5 shadow-card">
+          <Card className="p-5">
             <h2 className="text-[13px] font-bold text-tk-onyx">Actions</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               <form action={draftRetainerInvoice.bind(null, retainer.id)}>
@@ -373,13 +374,13 @@ export default async function RetainerDetailPage({
                 Client
               </Link>
             </div>
-          </section>
+          </Card>
 
           {retainer.notes ? (
-            <section className="rounded-2xl border border-line bg-card p-5 shadow-card">
+            <Card className="p-5">
               <h2 className="text-[13px] font-bold text-tk-onyx">Notes</h2>
               <p className="mt-2 text-sm leading-relaxed text-tk-slate">{retainer.notes}</p>
-            </section>
+            </Card>
           ) : null}
         </div>
       </div>
@@ -389,11 +390,11 @@ export default async function RetainerDetailPage({
 
 function Stat({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+    <Card className="px-5 py-4">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
       <p className="mt-1.5 text-[23px] font-semibold leading-tight tracking-tight text-tk-onyx tabular-nums">{value}</p>
       <p className="mt-0.5 truncate text-xs text-ink-3">{sub}</p>
-    </div>
+    </Card>
   )
 }
 

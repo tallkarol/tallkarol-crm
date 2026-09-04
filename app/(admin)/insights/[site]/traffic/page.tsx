@@ -6,6 +6,7 @@ import { EmptySnapshot } from "@/components/insights/EmptySnapshot"
 import { fmtInt } from "@/lib/insights/derive"
 import { getInsightsContext } from "@/lib/insights/queries"
 import { TABLE_WINDOW_DAYS } from "@/lib/insights/types"
+import { Card as TkCard } from "@/components/ui/Card"
 
 export const metadata = { title: "Traffic · Insights" }
 export const dynamic = "force-dynamic"
@@ -22,14 +23,14 @@ export default async function InsightsTrafficPage({
 
   if (!snapshot.ga4.ok) {
     return (
-      <div className="rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
+      <TkCard surface="well" className="border-dashed px-6 py-10 text-center">
         <p className="text-sm font-semibold text-tk-onyx">GA4 is not connected</p>
         <p className="mx-auto mt-1 max-w-md text-sm text-ink-3">
           {snapshot.ga4.error ||
             "Add a GA4 property id to this site and grant the service account, then refresh."}{" "}
           The Health tab has the exact steps.
         </p>
-      </div>
+      </TkCard>
     )
   }
 

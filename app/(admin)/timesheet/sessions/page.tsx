@@ -17,6 +17,7 @@ import {
 } from "@/lib/leftoff-history"
 import { ROUTES } from "@/lib/nav"
 import { workspaceTimezone } from "@/lib/timezone"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Sessions" }
 export const dynamic = "force-dynamic"
@@ -207,7 +208,7 @@ export default async function SessionsPage({
       ) : null}
 
       {q ? (
-        <section className="mt-5 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+        <Card className="mt-5 overflow-hidden">
           <ul className="divide-y divide-line">
             {results.map((row) => (
               <Row key={row.sessionRef} row={row} href={peekHref(row.sessionRef)}>
@@ -240,9 +241,9 @@ export default async function SessionsPage({
               </Row>
             ))}
           </ul>
-        </section>
+        </Card>
       ) : days.length ? (
-        <section className="mt-5 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+        <Card className="mt-5 overflow-hidden">
           {days.map((day) => (
             <div key={day.day}>
               <p className="flex items-baseline gap-2 border-y border-line bg-well px-5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-ink-3 first:border-t-0">
@@ -268,7 +269,7 @@ export default async function SessionsPage({
               </ul>
             </div>
           ))}
-        </section>
+        </Card>
       ) : null}
     </>
   )
@@ -276,10 +277,10 @@ export default async function SessionsPage({
 
 function Empty({ title, line }: { title: string; line: string }) {
   return (
-    <div className="mt-6 rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
+    <Card surface="well" className="mt-6 border-dashed px-6 py-10 text-center">
       <p className="text-sm font-semibold text-tk-onyx">{title}</p>
       <p className="mt-1 text-sm text-ink-3">{line}</p>
-    </div>
+    </Card>
   )
 }
 

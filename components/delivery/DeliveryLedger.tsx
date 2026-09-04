@@ -11,6 +11,7 @@ import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { PROJECT_STATUS_LABEL, RETAINER_STATUS_LABEL, formatMoney } from "@/lib/work"
 import { markColor } from "@/lib/client-colors"
+import { Card } from "@/components/ui/Card"
 
 /* ------------------------------------------------------------------ lenses */
 
@@ -135,7 +136,7 @@ function Row({ row, openHref }: { row: DeliveryRow; openHref: string }) {
       <Link
         href={openHref}
         scroll={false}
-        className="flex min-w-[220px] shrink-0 items-baseline gap-2 py-2 pl-2.5 outline-none focus-visible:underline"
+        className="flex min-w-[220px] shrink-0 items-baseline gap-2 py-2 pl-2.5 focus-visible:underline"
       >
         <span className="text-[10.5px] font-bold uppercase tracking-[0.05em] text-ink-3">
           {row.clientName}
@@ -314,10 +315,7 @@ export function DeliveryLedger({
         />
       </div>
 
-      <div
-        data-menu-boundary
-        className="mt-3.5 flex h-11 items-center gap-2 rounded-2xl border border-line bg-card px-2.5"
-      >
+      <Card elevation="none" className="mt-3.5 flex h-11 items-center gap-2 px-2.5" data-menu-boundary>
         <Dropdown label={activeLens.label} on={lens !== "all"} title={activeLens.question}>
           {(close) => (
             <>
@@ -386,7 +384,7 @@ export function DeliveryLedger({
             ? `${rows.length} engagement${rows.length === 1 ? "" : "s"}`
             : `${visible.length} of ${rows.length}`}
         </p>
-      </div>
+      </Card>
 
       {banded.length === 0 ? (
         <p className="mt-10 text-center text-sm text-ink-3">

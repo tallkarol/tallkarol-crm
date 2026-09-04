@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn"
+import { Card } from "@/components/ui/Card"
 
 export type BurndownMonth = {
   key: string
@@ -29,7 +30,7 @@ export function Burndown({ months, cap }: { months: BurndownMonth[]; cap: number
 
   return (
     <div>
-      <div className="relative flex h-[104px] items-end gap-2 rounded-xl border border-line bg-card px-3 pb-0 pt-3.5">
+      <Card radius="xl" elevation="none" className="relative flex h-[104px] items-end gap-2 px-3 pb-0 pt-3.5">
         {cap > 0 ? (
           <>
             <span
@@ -59,7 +60,7 @@ export function Burndown({ months, cap }: { months: BurndownMonth[]; cap: number
             <span className="font-mono text-[9px] uppercase text-ink-3">{m.label}</span>
           </div>
         ))}
-      </div>
+      </Card>
       {anyBilled ? (
         <p className="mt-1.5 text-[10.5px] text-ink-3">
           Paler bars are reconstructed from that month&rsquo;s invoice — they predate the timesheet.

@@ -3,6 +3,7 @@ import { fmtHours } from "@/lib/engagements"
 import type { RevenueKpis } from "@/lib/revenue"
 import { formatMoney } from "@/lib/work"
 import { CHART } from "@/lib/insights/chart"
+import { Card } from "@/components/ui/Card"
 
 function Cell({
   label,
@@ -57,7 +58,7 @@ export function HealthStrip({
       : null
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3.5">
         <h2 className="text-sm font-semibold text-tk-onyx">Is the money real?</h2>
         <p className="text-xs text-ink-3">
@@ -101,6 +102,6 @@ export function HealthStrip({
           }`}
         />
       </div>
-    </section>
+    </Card>
   )
 }

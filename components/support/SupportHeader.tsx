@@ -6,6 +6,7 @@ import {
   refreshTickets,
 } from "@/app/(admin)/support/actions"
 import type { SmartsheetConfig } from "@/lib/smartsheet"
+import { Card } from "@/components/ui/Card"
 
 type ClientOption = { id: string; name: string; slug: string }
 
@@ -87,7 +88,7 @@ export function SupportHeader({
       />
 
       {showConnect ? (
-        <section className="mt-6 max-w-2xl rounded-2xl border border-line bg-card p-6 shadow-card">
+        <Card className="mt-6 max-w-2xl p-6">
           <h2 className="text-sm font-semibold text-tk-onyx">Connect Smartsheet</h2>
           <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-tk-slate">
             <li className={tokenPresent ? "line-through opacity-50" : ""}>
@@ -110,7 +111,7 @@ export function SupportHeader({
                 name="sheetId"
                 placeholder="4583173393803140"
                 inputMode="numeric"
-                className="mt-1 w-56 rounded-lg border border-line bg-well px-3 py-2 text-sm tabular-nums outline-none focus:border-tk-teal"
+                className="mt-1 w-56 rounded-lg border border-line bg-well px-3 py-2 text-sm tabular-nums focus:border-tk-teal"
               />
             </label>
             <label className="block text-sm">
@@ -118,7 +119,7 @@ export function SupportHeader({
               <select
                 name="clientId"
                 defaultValue={zemvelo?.id ?? ""}
-                className="mt-1 rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal"
+                className="mt-1 rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal"
               >
                 <option value="">— no client</option>
                 {clients.map((c) => (
@@ -144,7 +145,7 @@ export function SupportHeader({
             Smartsheet is one source, not the only one — sites and apps can post tickets
             straight to the ingest endpoint below.
           </p>
-        </section>
+        </Card>
       ) : null}
 
       <details className="group mt-3">
@@ -152,7 +153,7 @@ export function SupportHeader({
           <span className="transition-transform group-open:rotate-90">›</span>
           Send tickets from a site or app
         </summary>
-        <div className="mt-2 max-w-3xl rounded-xl border border-line bg-card p-4">
+        <Card radius="xl" elevation="none" className="mt-2 max-w-3xl p-4">
           <p className="text-[13px] text-tk-slate">
             Any site or app you maintain can open a ticket — an error handler, a “report a
             problem” form, or a scheduled audit. Payloads arrive as labelled code blocks.
@@ -166,7 +167,7 @@ export function SupportHeader({
               secret: SUPPORT_INGEST_SECRET (falls back to INGEST_SECRET)
             </span>
           </div>
-        </div>
+        </Card>
       </details>
     </>
   )

@@ -3,6 +3,7 @@
 import { useRef } from "react"
 import { addVaultEntry } from "@/app/(admin)/vault/actions"
 import { VAULT_KIND_LABEL, VAULT_KINDS } from "@/lib/vault"
+import { Card } from "@/components/ui/Card"
 
 type ClientOption = { id: string; name: string }
 
@@ -10,7 +11,7 @@ export function VaultComposer({ clients }: { clients: ClientOption[] }) {
   const form = useRef<HTMLFormElement>(null)
 
   return (
-    <section className="mt-6 rounded-2xl border border-line bg-card p-5 shadow-card">
+    <Card className="mt-6 p-5">
       <h2 className="text-sm font-semibold text-tk-onyx">Save a credential</h2>
       <form
         ref={form}
@@ -93,9 +94,9 @@ export function VaultComposer({ clients }: { clients: ClientOption[] }) {
           />
         </label>
       </form>
-    </section>
+    </Card>
   )
 }
 
 const fieldClass =
-  "mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal"
+  "mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal"

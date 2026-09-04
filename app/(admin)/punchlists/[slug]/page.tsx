@@ -8,6 +8,7 @@ import { ROUTES } from "@/lib/nav"
 import type { StateFilter } from "@/lib/punchlist"
 import { setListStatusAction } from "@/lib/punchlist-actions"
 import { loadPunchlist } from "@/lib/punchlists"
+import { Card } from "@/components/ui/Card"
 
 export const dynamic = "force-dynamic"
 
@@ -55,9 +56,9 @@ export default async function PunchlistPage({
 
       {searchParams.peek ? <PeekRouter peek={searchParams.peek} closeHref={closeHref} /> : null}
 
-      <div className="mt-4 max-w-4xl overflow-hidden rounded-2xl border border-line bg-card shadow-[0_1px_3px_rgba(15,22,21,.06)]">
+      <Card elevation="none" className="mt-4 max-w-4xl overflow-hidden shadow-[0_1px_3px_rgba(15,22,21,.06)]">
         <PunchlistBody list={list} filter={filter} base={base} />
-      </div>
+      </Card>
     </>
   )
 }

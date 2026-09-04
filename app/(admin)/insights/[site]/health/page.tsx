@@ -7,6 +7,7 @@ import { IndexHealth } from "@/components/insights/IndexHealth"
 import { readServiceAccount } from "@/lib/google-auth"
 import { getInsightsContext } from "@/lib/insights/queries"
 import { latestScan, maintenancePackage, openFindings } from "@/lib/insights/gsc-queries"
+import { Card as TkCard } from "@/components/ui/Card"
 
 export const metadata = { title: "Health · Insights" }
 export const dynamic = "force-dynamic"
@@ -71,10 +72,7 @@ export default async function InsightsHealthPage({
       {snapshot ? (
         <div className="mt-4 grid gap-3 lg:grid-cols-2">
           {snapshot.health.map((h) => (
-            <div
-              key={h.id}
-              className="rounded-2xl border border-line bg-card px-5 py-3 shadow-card"
-            >
+            <TkCard className="px-5 py-3" key={h.id}>
               <div className="flex items-center justify-between gap-3">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                   {h.label}
@@ -84,7 +82,7 @@ export default async function InsightsHealthPage({
                 </Badge>
               </div>
               <p className="mt-2 text-sm text-tk-onyx">{h.detail}</p>
-            </div>
+            </TkCard>
           ))}
         </div>
       ) : (

@@ -8,6 +8,7 @@ import { clientColor, markColor } from "@/lib/client-colors"
 import { ROUTES } from "@/lib/nav"
 import { ledgerEntries } from "@/lib/sheets"
 import { formatSheetHours } from "@/lib/timesheet"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Ledger" }
 export const dynamic = "force-dynamic"
@@ -92,14 +93,14 @@ export default async function LedgerPage({
       />
 
       {visible.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
+        <Card surface="well" className="mt-6 border-dashed px-6 py-10 text-center">
           <p className="text-sm font-semibold text-tk-onyx">Nothing matches</p>
           <p className="mt-1 text-sm text-ink-3">
             Try a shorter search, a wider date range, or clear the client filter.
           </p>
-        </div>
+        </Card>
       ) : (
-        <section className="mt-5 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+        <Card className="mt-5 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px] border-collapse text-sm">
               <thead>
@@ -190,7 +191,7 @@ export default async function LedgerPage({
               </tbody>
             </table>
           </div>
-        </section>
+        </Card>
       )}
 
       {truncated ? (

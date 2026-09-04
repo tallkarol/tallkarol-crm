@@ -43,7 +43,7 @@ export function NotesCard({
         aria-label="Client notes"
         rows={5}
         placeholder="How they like to work, who approves, what never to do…"
-        className="w-full resize-y border-0 bg-transparent p-0 text-[13px] leading-relaxed text-tk-slate placeholder:text-ink-3 focus:outline-none"
+        className="w-full resize-y border-0 bg-transparent p-0 text-[13px] leading-relaxed text-tk-slate placeholder:text-ink-3"
       />
       <p className="mt-1 text-[11px] text-ink-3">
         {state === "saving"

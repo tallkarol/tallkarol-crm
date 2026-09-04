@@ -9,6 +9,7 @@ import { clientColor, markColor } from "@/lib/client-colors"
 import { startPunch, stopPunch } from "@/lib/punch-actions"
 import { announcePunchChange } from "@/lib/punch-signal"
 import type { PunchView } from "@/lib/punches"
+import { Card } from "@/components/ui/Card"
 
 export type ClockClient = { id: string; name: string; slug: string }
 
@@ -73,7 +74,7 @@ export function ClockPopover({
           </div>
 
           {live ? (
-            <div className="rounded-xl border border-line bg-well px-3 py-2.5">
+            <Card surface="well" radius="xl" elevation="none" className="px-3 py-2.5">
               <p className="flex items-center gap-2 text-sm font-semibold text-tk-onyx">
                 <span
                   aria-hidden
@@ -88,7 +89,7 @@ export function ClockPopover({
               {live.note ? (
                 <p className="mt-0.5 text-xs text-ink-3">{live.note}</p>
               ) : null}
-            </div>
+            </Card>
           ) : (
             <>
               <label className="grid gap-1.5">

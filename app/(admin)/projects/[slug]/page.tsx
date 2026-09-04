@@ -14,6 +14,7 @@ import { punchlistsFor } from "@/lib/punchlists"
 import { tasksFor, taskTargets } from "@/lib/tasks"
 import { formatDay, formatMoney, plural } from "@/lib/work"
 import { addProjectLink, draftDeliverableInvoice, removeProjectLink } from "../actions"
+import { Card } from "@/components/ui/Card"
 
 export const dynamic = "force-dynamic"
 
@@ -137,7 +138,7 @@ export default async function ProjectDetailPage({
           value={formatMoney(collected)}
           sub={totalKnown ? `${Math.round((collected / totalKnown) * 100)}% of known fee` : "nothing billed yet"}
         />
-        <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+        <Card className="px-5 py-4">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">Invoiceable now</p>
           <p className="mt-1.5 text-[23px] font-semibold leading-tight tracking-tight text-tk-onyx tabular-nums">
             {formatMoney(invoiceableCents)}
@@ -145,7 +146,7 @@ export default async function ProjectDetailPage({
           <p className={`mt-0.5 truncate text-xs ${invoiceableCents ? "font-semibold text-emerald-800" : "text-ink-3"}`}>
             {invoiceableCents ? `▲ ${invoiceable.map((d) => d.label).join(", ")} done` : "nothing ready to bill"}
           </p>
-        </div>
+        </Card>
         <Stat
           label={nextDue ? "Next due" : "Status"}
           value={
@@ -165,7 +166,7 @@ export default async function ProjectDetailPage({
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
         <div className="flex min-w-0 flex-col gap-4">
-          <section className="rounded-2xl border border-line bg-card shadow-card">
+          <Card>
             <div className="flex items-center justify-between px-5 pb-1 pt-4">
               <h2 className="text-[13px] font-bold text-tk-onyx">Deliverables</h2>
               <span className="text-[11px] tabular-nums text-ink-3">
@@ -226,9 +227,9 @@ export default async function ProjectDetailPage({
                 )
               })}
             </ul>
-          </section>
+          </Card>
 
-          <section className="rounded-2xl border border-line bg-card shadow-card">
+          <Card>
             <div className="flex items-center justify-between px-5 pb-1 pt-4">
               <h2 className="text-[13px] font-bold text-tk-onyx">Economics</h2>
               <span className="text-[11px] text-ink-3">
@@ -256,11 +257,11 @@ export default async function ProjectDetailPage({
                 sub={`rate hits ${formatMoney(RATE_TARGET_CENTS)} target here`}
               />
             </div>
-          </section>
+          </Card>
         </div>
 
         <div className="flex min-w-0 flex-col gap-4">
-          <section className="rounded-2xl border border-line bg-card shadow-card">
+          <Card>
             <div className="flex items-center justify-between px-5 pb-1 pt-4">
               <h2 className="text-[13px] font-bold text-tk-onyx">Paper trail</h2>
             </div>
@@ -310,9 +311,9 @@ export default async function ProjectDetailPage({
                 ))
               )}
             </ul>
-          </section>
+          </Card>
 
-          <section className="rounded-2xl border border-line bg-card shadow-card">
+          <Card>
             <div className="flex items-center justify-between px-5 pb-1 pt-4">
               <h2 className="text-[13px] font-bold text-tk-onyx">Links</h2>
               <span className="text-[11px] text-ink-3">staging · live · repo</span>
@@ -340,11 +341,11 @@ export default async function ProjectDetailPage({
             </ul>
             <form action={addProjectLink} className="flex gap-2 border-t border-line px-4 py-3">
               <input type="hidden" name="projectId" value={project.id} />
-              <input name="label" placeholder="Label" className="w-24 rounded-lg border border-line bg-well px-2.5 py-1.5 text-xs outline-none focus:border-tk-teal" />
-              <input name="url" placeholder="https://…" className="min-w-0 flex-1 rounded-lg border border-line bg-well px-2.5 py-1.5 text-xs outline-none focus:border-tk-teal" />
+              <input name="label" placeholder="Label" className="w-24 rounded-lg border border-line bg-well px-2.5 py-1.5 text-xs focus:border-tk-teal" />
+              <input name="url" placeholder="https://…" className="min-w-0 flex-1 rounded-lg border border-line bg-well px-2.5 py-1.5 text-xs focus:border-tk-teal" />
               <button className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal">Add</button>
             </form>
-          </section>
+          </Card>
 
           {projectPunchlists.length > 0 ? (
             <section>
@@ -356,7 +357,7 @@ export default async function ProjectDetailPage({
             </section>
           ) : null}
 
-          <section className="rounded-2xl border border-line bg-card shadow-card">
+          <Card>
             <div className="flex items-center justify-between px-5 pb-1 pt-4">
               <h2 className="text-[13px] font-bold text-tk-onyx">Open tasks</h2>
               <span className="text-[11px] tabular-nums text-ink-3">{tasks.length}</span>
@@ -391,13 +392,13 @@ export default async function ProjectDetailPage({
                 />
               </div>
             )}
-          </section>
+          </Card>
 
           {project.notes ? (
-            <section className="rounded-2xl border border-line bg-card p-5 shadow-card">
+            <Card className="p-5">
               <h2 className="text-[13px] font-bold text-tk-onyx">Notes</h2>
               <p className="mt-2 text-sm leading-relaxed text-tk-slate">{project.notes}</p>
-            </section>
+            </Card>
           ) : null}
         </div>
       </div>
@@ -407,11 +408,11 @@ export default async function ProjectDetailPage({
 
 function Stat({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+    <Card className="px-5 py-4">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
       <p className="mt-1.5 text-[23px] font-semibold leading-tight tracking-tight text-tk-onyx tabular-nums">{value}</p>
       <p className="mt-0.5 truncate text-xs text-ink-3">{sub}</p>
-    </div>
+    </Card>
   )
 }
 

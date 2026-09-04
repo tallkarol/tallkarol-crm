@@ -54,7 +54,7 @@ export function ClientComposer() {
         onChange={(e) => setName(e.target.value)}
         placeholder="Client name"
         aria-label="Client name"
-        className="w-44 rounded-lg border border-line bg-card px-2.5 py-1.5 text-sm text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:outline-none"
+        className="w-44 rounded-lg border border-line bg-card px-2.5 py-1.5 text-sm text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal"
       />
       <label className="sr-only" htmlFor="new-client-status">
         Status
@@ -63,7 +63,7 @@ export function ClientComposer() {
         id="new-client-status"
         value={status}
         onChange={(e) => setStatus(e.target.value as ClientStatus)}
-        className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-sm text-tk-onyx focus:border-tk-teal focus:outline-none"
+        className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-sm text-tk-onyx focus:border-tk-teal"
       >
         {CLIENT_STATUSES.map((id) => (
           <option key={id} value={id}>

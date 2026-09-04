@@ -3,6 +3,7 @@ import { CHART } from "@/lib/insights/chart"
 import { cn } from "@/lib/cn"
 import { formatWholeMoney, type Horizon, type Verdict } from "@/lib/revenue"
 import { Delta } from "./bits"
+import { Card } from "@/components/ui/Card"
 
 const VERDICT: Record<Verdict, { label: string; className: string }> = {
   ahead: { label: "Ahead", className: "bg-good-soft text-good" },
@@ -139,7 +140,7 @@ export function HorizonPanel({
   const ahead = horizon.pace?.aheadCents ?? null
 
   return (
-    <section className="flex flex-col rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+    <Card className="flex flex-col px-5 py-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-[11px] font-bold uppercase tracking-widest text-tk-slate">
@@ -195,6 +196,6 @@ export function HorizonPanel({
       <p className="mt-3 border-t border-line pt-2.5 text-xs leading-relaxed text-tk-slate">
         {note ?? defaultNote(horizon)}
       </p>
-    </section>
+    </Card>
   )
 }

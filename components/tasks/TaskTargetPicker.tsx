@@ -170,7 +170,7 @@ function Select({
         onChange={(e) => onChange(e.target.value)}
         aria-label={empty}
         className={cn(
-          "rounded-lg border px-2.5 py-1.5 text-xs outline-none focus:border-tk-teal disabled:opacity-50",
+          "rounded-lg border px-2.5 py-1.5 text-xs focus:border-tk-teal disabled:opacity-50",
           value
             ? "border-line bg-well text-tk-slate"
             : "border-dashed border-line-strong bg-card text-ink-3"

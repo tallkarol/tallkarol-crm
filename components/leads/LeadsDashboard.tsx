@@ -16,6 +16,7 @@ import {
   type Qualification,
 } from "@/lib/lead"
 import { SalesBoard } from "@/components/leads/SalesBoard"
+import { Card } from "@/components/ui/Card"
 import {
   TemplateCard,
   TemplatePreviewModal,
@@ -143,7 +144,7 @@ export function LeadsDashboard({ leads: initial }: { leads: LeadListItem[] }) {
       <SalesBoard leads={leads} onSelect={(id) => setQuery({ lead: id })} />
 
       {upcoming.length > 0 ? (
-        <section className="mt-8 rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+        <Card className="mt-8 px-5 py-4">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-3">
             Upcoming meetings
           </h2>
@@ -163,7 +164,7 @@ export function LeadsDashboard({ leads: initial }: { leads: LeadListItem[] }) {
               </li>
             ))}
           </ul>
-        </section>
+        </Card>
       ) : null}
 
       <div
@@ -192,7 +193,7 @@ export function LeadsDashboard({ leads: initial }: { leads: LeadListItem[] }) {
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
-        <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+        <Card className="overflow-hidden">
           <div className="border-b border-line px-4 py-3">
             <h2 className="text-sm font-semibold text-tk-onyx">
               {visible.length} {visible.length === 1 ? "lead" : "leads"}
@@ -250,7 +251,7 @@ export function LeadsDashboard({ leads: initial }: { leads: LeadListItem[] }) {
               })}
             </ul>
           )}
-        </section>
+        </Card>
 
         <LeadWorkspace
           lead={selected}
@@ -284,13 +285,13 @@ function LeadWorkspace({
 
   if (!lead) {
     return (
-      <section className="flex min-h-[28rem] flex-col items-center justify-center rounded-2xl border border-dashed border-line bg-well px-6 text-center shadow-card">
+      <Card surface="well" className="flex min-h-[28rem] flex-col items-center justify-center border-dashed px-6 text-center">
         <p className="text-sm font-semibold text-tk-onyx">Pick a lead</p>
         <p className="mt-1 max-w-sm text-sm text-ink-3">
           Form answers, qualification, a meeting, and the templates live in this
           pane.
         </p>
-      </section>
+      </Card>
     )
   }
 
@@ -348,7 +349,7 @@ function LeadWorkspace({
 
   return (
     <div className="space-y-4">
-      <section className="rounded-2xl border border-line bg-card p-5 shadow-card">
+      <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 className="text-xl font-semibold tracking-tight text-tk-onyx">
@@ -397,10 +398,10 @@ function LeadWorkspace({
             })}
           </div>
         </div>
-      </section>
+      </Card>
 
       {lead.formLines.length > 0 || lead.projectTypes.length > 0 ? (
-        <section className="rounded-2xl border border-line bg-card p-5 shadow-card">
+        <Card className="p-5">
           <h3 className="text-sm font-semibold text-tk-onyx">What they sent</h3>
           <dl className="mt-3 grid gap-2 sm:grid-cols-2">
             {lead.projectTypes.length > 0 ? (
@@ -418,10 +419,10 @@ function LeadWorkspace({
               </div>
             ))}
           </dl>
-        </section>
+        </Card>
       ) : null}
 
-      <section className="rounded-2xl border border-line bg-card p-5 shadow-card">
+      <Card className="p-5">
         <div className="flex items-center gap-2">
           <Calendar className="size-4 text-tk-teal" aria-hidden />
           <h3 className="text-sm font-semibold text-tk-onyx">Meeting</h3>
@@ -447,7 +448,7 @@ function LeadWorkspace({
               type="datetime-local"
               defaultValue={toLocalInput(lead.lead.meetingAt)}
               key={`${lead.id}-meeting-${lead.lead.meetingAt ?? "none"}`}
-              className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal"
+              className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal"
             />
           </label>
           <label className="block text-sm">
@@ -457,7 +458,7 @@ function LeadWorkspace({
               defaultValue={lead.lead.meetingNotes}
               key={`${lead.id}-mnotes-${lead.lead.meetingNotes}`}
               placeholder="Zoom, their timezone…"
-              className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal"
+              className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal"
             />
           </label>
           <div className="sm:col-span-2">
@@ -470,9 +471,9 @@ function LeadWorkspace({
             </button>
           </div>
         </form>
-      </section>
+      </Card>
 
-      <section className="rounded-2xl border border-line bg-card p-5 shadow-card">
+      <Card className="p-5">
         <label className="block">
           <span className="text-sm font-semibold text-tk-onyx">Notes</span>
           <textarea
@@ -485,12 +486,12 @@ function LeadWorkspace({
                 void persistNotes(e.target.value)
               }
             }}
-            className="mt-2 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal"
+            className="mt-2 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal"
           />
         </label>
-      </section>
+      </Card>
 
-      <section className="rounded-2xl border border-line bg-card p-5 shadow-card">
+      <Card className="p-5">
         <div className="flex items-center gap-2">
           <Mail className="size-4 text-tk-teal" aria-hidden />
           <h3 className="text-sm font-semibold text-tk-onyx">Email templates</h3>
@@ -542,7 +543,7 @@ function LeadWorkspace({
             ))}
           </ul>
         ) : null}
-      </section>
+      </Card>
 
       {error ? <p className="text-sm text-tk-teal">{error}</p> : null}
     </div>

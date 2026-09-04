@@ -18,6 +18,7 @@ import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { updateTask } from "@/lib/task-actions"
 import { isoDay, type HubTask } from "@/lib/task-view"
+import { Card as TkCard } from "@/components/ui/Card"
 
 export type WeekEvent = {
   id: string
@@ -165,9 +166,9 @@ export function TaskWeekView({
 
       <DragOverlay>
         {active ? (
-          <div className="w-44 rotate-2 rounded-xl border border-line bg-card p-2.5 shadow-overlay">
+          <TkCard radius="xl" elevation="none" className="w-44 rotate-2 p-2.5 shadow-overlay">
             <p className="text-[13px] font-medium text-tk-onyx">{active.title}</p>
-          </div>
+          </TkCard>
         ) : null}
       </DragOverlay>
     </DndContext>

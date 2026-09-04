@@ -10,6 +10,7 @@ import { ROUTES } from "@/lib/nav"
 import { blockDeepLink } from "@/lib/notion-scan"
 import { ago, stamp } from "../format"
 import { acceptProposal, dismissProposal, scanNotebook, syncNotebook } from "../actions"
+import { Card } from "@/components/ui/Card"
 
 export const dynamic = "force-dynamic"
 
@@ -139,7 +140,7 @@ export default async function NotebookPage({
 
       <div className="mt-5 flex flex-col gap-4 xl:flex-row">
         {/* Page tree */}
-        <div className="flex shrink-0 flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-card xl:w-[300px]">
+        <Card className="flex shrink-0 flex-col overflow-hidden xl:w-[300px]">
           <div className="border-b border-line bg-well px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">
             Pages
           </div>
@@ -191,7 +192,7 @@ export default async function NotebookPage({
               </span>
             ) : null}
           </div>
-        </div>
+        </Card>
 
         {/* Inbox + reading pane */}
         <div className="flex min-w-0 flex-1 flex-col gap-4">
@@ -262,7 +263,7 @@ export default async function NotebookPage({
           ) : null}
 
           {selected ? (
-            <div className="flex flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+            <Card className="flex flex-col overflow-hidden">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-well px-4 py-2">
                 <span className="text-[13px] font-semibold text-tk-onyx">
                   {selected.title}
@@ -320,7 +321,7 @@ export default async function NotebookPage({
                     ))
                 )}
               </div>
-            </div>
+            </Card>
           ) : null}
         </div>
       </div>

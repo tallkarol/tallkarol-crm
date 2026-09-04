@@ -6,6 +6,7 @@ import { Search } from "lucide-react"
 import { ToolButton } from "@/components/dashboard/ToolButton"
 import { cn } from "@/lib/cn"
 import { clientColor, markColor } from "@/lib/client-colors"
+import { Card } from "@/components/ui/Card"
 
 /** One row the palette can jump to. `slug` colours the chip when it is a client's thing. */
 export type PaletteEntry = {
@@ -141,10 +142,7 @@ function PaletteDialog({
         onClick={onClose}
         className="absolute inset-0 bg-scrim backdrop-blur-[3px]"
       />
-      <div
-        onKeyDown={onKey}
-        className="absolute left-1/2 top-[14vh] w-[min(640px,92vw)] -translate-x-1/2 overflow-hidden rounded-2xl border border-line bg-card text-tk-onyx shadow-hover motion-safe:animate-[tk-rise_.2s_ease_both]"
-      >
+      <Card elevation="none" className="absolute left-1/2 top-[14vh] w-[min(640px,92vw)] -translate-x-1/2 overflow-hidden text-tk-onyx shadow-hover motion-safe:animate-[tk-rise_.2s_ease_both]" onKeyDown={onKey}>
         <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
           <Search className="size-[18px] text-ink-3" aria-hidden />
           <input
@@ -154,7 +152,7 @@ function PaletteDialog({
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search clients, projects, retainers, or jump to a page…"
             aria-label="Search"
-            className="flex-1 bg-transparent text-[15px] text-tk-onyx outline-none placeholder:text-ink-3"
+            className="flex-1 bg-transparent text-[15px] text-tk-onyx placeholder:text-ink-3"
           />
           <kbd className="rounded-md border border-line px-1.5 py-0.5 font-ui text-[10.5px] font-semibold text-ink-3">
             esc
@@ -206,7 +204,7 @@ function PaletteDialog({
             )
           })}
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { formatMoney } from "@/lib/work"
 import type { MixSlice } from "@/lib/revenue"
 import { ChartTip, MIX_COLORS } from "./bits"
 import { CHART } from "@/lib/insights/chart"
+import { Card } from "@/components/ui/Card"
 
 function Donut({
   slices,
@@ -80,7 +81,7 @@ export function MixPanel({
 }) {
   const total = slices.reduce((sum, slice) => sum + slice.cents, 0)
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="overflow-hidden">
       <div className="border-b border-line px-5 py-3.5">
         <h2 className="text-sm font-semibold text-tk-onyx">{title}</h2>
       </div>
@@ -117,6 +118,6 @@ export function MixPanel({
           })}
         </ul>
       </div>
-    </section>
+    </Card>
   )
 }

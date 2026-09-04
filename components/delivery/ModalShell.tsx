@@ -1,6 +1,7 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { PeekEsc } from "@/components/peek/controls"
+import { Card as TkCard } from "@/components/ui/Card"
 
 /**
  * The centered dialog the delivery ledger opens a row into.
@@ -32,7 +33,7 @@ export function ModalShell({
         className="absolute inset-0 bg-scrim backdrop-blur-[2px] motion-safe:animate-[tk-fade-in_.18s_ease-out]"
       />
       <div className="absolute inset-0 flex items-start justify-center overflow-y-auto p-3 sm:p-6">
-        <div className="relative w-full max-w-[62rem] overflow-hidden rounded-2xl border border-line bg-card shadow-[0_24px_70px_-18px_rgba(15,22,21,.45)] motion-safe:animate-[tk-modal-in_.2s_ease-out]">
+        <TkCard elevation="none" className="relative w-full max-w-[62rem] overflow-hidden shadow-[0_24px_70px_-18px_rgba(15,22,21,.45)] motion-safe:animate-[tk-modal-in_.2s_ease-out]">
           <div className="relative">
             {header}
             <Link
@@ -50,7 +51,7 @@ export function ModalShell({
               {footer}
             </div>
           ) : null}
-        </div>
+        </TkCard>
       </div>
     </div>
   )

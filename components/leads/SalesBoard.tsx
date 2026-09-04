@@ -23,6 +23,7 @@ import {
   type SalesStageId,
 } from "@/lib/lead"
 import { formatMoney } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 const EDGE = "#006965"
 
@@ -277,7 +278,7 @@ export function SalesBoard({
                       placeholder="$ value"
                       aria-label={`Estimated value for ${lead.name} (hidden)`}
                       onPointerDown={(e) => e.stopPropagation()}
-                      className="mt-1.5 w-full rounded-md border border-line bg-well px-2 py-1 text-[11px] tabular-nums outline-none"
+                      className="mt-1.5 w-full rounded-md border border-line bg-well px-2 py-1 text-[11px] tabular-nums"
                     />
                   ) : (
                     <input
@@ -292,7 +293,7 @@ export function SalesBoard({
                         if (e.key === "Enter") (e.target as HTMLInputElement).blur()
                       }}
                       onBlur={(e) => saveValue(lead, e.target.value)}
-                      className="mt-1.5 w-full rounded-md border border-line bg-well px-2 py-1 text-[11px] tabular-nums outline-none focus:border-tk-teal"
+                      className="mt-1.5 w-full rounded-md border border-line bg-well px-2 py-1 text-[11px] tabular-nums focus:border-tk-teal"
                     />
                   )}
                 </DraggableCard>
@@ -303,12 +304,9 @@ export function SalesBoard({
       </div>
       <DragOverlay>
         {active ? (
-          <div
-            className="w-56 rotate-2 rounded-xl border border-line bg-card p-2.5 shadow-overlay"
-            style={{ borderLeftWidth: 3, borderLeftColor: EDGE }}
-          >
+          <Card radius="xl" elevation="none" className="w-56 rotate-2 p-2.5 shadow-overlay" style={{ borderLeftWidth: 3, borderLeftColor: EDGE }}>
             <CardBody lead={active} />
-          </div>
+          </Card>
         ) : null}
       </DragOverlay>
     </DndContext>

@@ -1,6 +1,7 @@
 import { formatMoney } from "@/lib/work"
 import type { RunwayMonth } from "@/lib/revenue"
 import { cn } from "@/lib/cn"
+import { Card } from "@/components/ui/Card"
 
 export function YearRunway({
   year,
@@ -17,7 +18,7 @@ export function YearRunway({
   const gap = goalCents != null ? goalCents - landingCents : null
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="overflow-hidden">
       <div className="flex flex-wrap items-end justify-between gap-2 border-b border-line px-5 py-3.5">
         <div>
           <h2 className="text-sm font-semibold text-tk-onyx">{year} runway</h2>
@@ -84,6 +85,6 @@ export function YearRunway({
             : `Booked work already clears the ${formatMoney(goalCents!)} goal by ${formatMoney(-gap)}.`}
         </p>
       ) : null}
-    </section>
+    </Card>
   )
 }

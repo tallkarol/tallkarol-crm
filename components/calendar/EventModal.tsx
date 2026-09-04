@@ -14,6 +14,7 @@ import Link from "next/link"
 import { cn } from "@/lib/cn"
 import { parseRichText, presentCalendarCopy, safeHref } from "@/lib/linkify"
 import { markColor } from "@/lib/client-colors"
+import { Card } from "@/components/ui/Card"
 
 export type EventModalItem = {
   title: string
@@ -207,12 +208,7 @@ export function EventModal({
         aria-label="Close event"
         onClick={onClose}
       />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="event-modal-title"
-        className="relative flex max-h-[min(40rem,90dvh)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-overlay motion-safe:animate-[tk-modal-in_.22s_ease-out]"
-      >
+      <Card elevation="none" className="relative flex max-h-[min(40rem,90dvh)] w-full max-w-lg flex-col overflow-hidden shadow-overlay motion-safe:animate-[tk-modal-in_.22s_ease-out]" role="dialog" aria-modal="true" aria-labelledby="event-modal-title">
         <div className="h-1 shrink-0" style={{ background: markColor(color) }} />
 
         <header className="flex shrink-0 items-start justify-between gap-3 px-6 pb-4 pt-4">
@@ -379,7 +375,7 @@ export function EventModal({
             ) : null}
           </footer>
         ) : null}
-      </div>
+      </Card>
     </div>,
     document.body
   )

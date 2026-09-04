@@ -7,6 +7,7 @@ import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { formatStamp } from "@/lib/support"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Activity" }
 export const dynamic = "force-dynamic"
@@ -60,7 +61,7 @@ export default async function LogsPage({
       <PageHeader title="Activity" />
 
       {events.length === 0 ? (
-        <div className="mt-8 max-w-2xl rounded-2xl border border-dashed border-line bg-well p-6 text-sm text-tk-slate">
+        <Card surface="well" elevation="none" className="mt-8 max-w-2xl border-dashed p-6 text-sm text-tk-slate">
           <p className="font-semibold text-tk-onyx">Nothing reported yet</p>
           <p className="mt-1.5 text-ink-3">
             Wired apps post the events worth keeping — sign-ins, access requests, deliveries, run
@@ -76,7 +77,7 @@ export default async function LogsPage({
             </Link>
             .
           </p>
-        </div>
+        </Card>
       ) : (
         <>
           <div className="mt-4 flex flex-wrap items-center gap-1.5">
@@ -94,7 +95,7 @@ export default async function LogsPage({
             ))}
           </div>
 
-          <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+          <Card className="mt-4 overflow-hidden">
             {groups.map((group) => (
               <div key={group.day}>
                 <div className="sticky top-0 z-[1] border-b border-line bg-well px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3 backdrop-blur">
@@ -153,7 +154,7 @@ export default async function LogsPage({
                 ))}
               </div>
             ))}
-          </div>
+          </Card>
           <p className="mt-3 text-xs text-ink-3">
             Newest {visible.length} of the last {LIMIT} events · last one{" "}
             {formatStamp(events[0].occurredAt)}

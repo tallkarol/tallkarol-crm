@@ -3,6 +3,7 @@ import { db } from "@/db"
 import { clientColor, markColor } from "@/lib/client-colors"
 import { formatDay } from "@/lib/work"
 import { addPortalGrant, previewPortal, removePortalGrant } from "./actions"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Client Portals" }
 export const dynamic = "force-dynamic"
@@ -27,13 +28,9 @@ export default async function ClientPortalsPage() {
         {clients.map((client) => {
           const members = grants.filter((g) => g.clientId === client.id)
           return (
-            <section
-              key={client.id}
-              className="rounded-2xl border border-line bg-card p-5 shadow-card"
-              style={{ borderLeftWidth: 3, borderLeftColor: markColor(clientColor(client.slug)) }}
-            >
+            <Card className="p-5" key={client.id} style={{ borderLeftWidth: 3, borderLeftColor: markColor(clientColor(client.slug)) }}>
               <div className="flex flex-wrap items-center gap-2.5">
-                <span className="size-2 rounded-full" style={{ background: clientColor(client.slug) }} />
+                <span className="tk-client-mark size-2 rounded-full" style={{ "--c": clientColor(client.slug) } as React.CSSProperties} />
                 <h2 className="font-['Inter_Tight',sans-serif] text-base font-bold text-tk-onyx">
                   {client.name}
                 </h2>
@@ -87,13 +84,13 @@ export default async function ClientPortalsPage() {
                   type="email"
                   required
                   placeholder="name@client.com"
-                  className="min-w-0 flex-1 rounded-lg border border-line bg-well px-3 py-1.5 text-sm outline-none focus:border-tk-teal"
+                  className="min-w-0 flex-1 rounded-lg border border-line bg-well px-3 py-1.5 text-sm focus:border-tk-teal"
                 />
                 <button className="rounded-full border border-line px-3.5 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal">
                   Grant access
                 </button>
               </form>
-            </section>
+            </Card>
           )
         })}
       </div>

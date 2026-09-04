@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
+import { Card } from "@/components/ui/Card"
 import {
   formatAxisMoney,
   formatWholeMoney,
@@ -24,7 +25,7 @@ export function YearGapBar({
 }) {
   if (plan.goalCents == null || plan.goalCents <= 0) {
     return (
-      <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <Card className="overflow-hidden">
         <div className="border-b border-line px-5 py-3.5">
           <h2 className="text-sm font-semibold text-tk-onyx">Making the year</h2>
         </div>
@@ -38,7 +39,7 @@ export function YearGapBar({
           </Link>{" "}
           to see the gap.
         </p>
-      </section>
+      </Card>
     )
   }
 
@@ -55,7 +56,7 @@ export function YearGapBar({
   const h2Gap = plan.h2LandingCents - halfGoal
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3.5">
         <h2 className="text-sm font-semibold text-tk-onyx">Making the year</h2>
         <p className="text-xs tabular-nums text-ink-3">
@@ -140,6 +141,6 @@ export function YearGapBar({
           </>
         )}
       </p>
-    </section>
+    </Card>
   )
 }

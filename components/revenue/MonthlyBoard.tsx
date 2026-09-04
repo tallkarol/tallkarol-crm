@@ -14,6 +14,7 @@ import { BilledChart } from "./BilledChart"
 import { CashChart } from "./CashChart"
 import { RateChart } from "./RateChart"
 import { CHART } from "@/lib/insights/chart"
+import { Card } from "@/components/ui/Card"
 
 const VIEWS = [
   { id: "billed", label: "Billed" },
@@ -55,13 +56,13 @@ export function MonthlyBoard({
   const hasRemainder = cash.some((point) => point.remainder > 0)
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3.5">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-tk-onyx">Monthly run rate</h2>
           <p className="mt-0.5 text-xs text-ink-3">{note}</p>
         </div>
-        <div className="flex rounded-lg border border-line bg-well p-0.5">
+        <Card surface="well" radius="lg" elevation="none" className="flex p-0.5">
           {VIEWS.map((option) => (
             <button
               key={option.id}
@@ -78,7 +79,7 @@ export function MonthlyBoard({
               {option.label}
             </button>
           ))}
-        </div>
+        </Card>
       </div>
 
       <div className="px-3 pt-4">
@@ -134,6 +135,6 @@ export function MonthlyBoard({
           fixed-fee work stay blank.
         </p>
       )}
-    </section>
+    </Card>
   )
 }

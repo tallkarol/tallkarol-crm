@@ -238,7 +238,7 @@ export function NotesControl({
         }}
         rows={rows}
         placeholder={placeholder}
-        className="w-full resize-y rounded-xl border border-line bg-card px-3 py-2 text-sm leading-relaxed text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:outline-none"
+        className="w-full resize-y rounded-xl border border-line bg-card px-3 py-2 text-sm leading-relaxed text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal"
       />
       <p className="mt-1 min-h-4 text-[11px] text-ink-3">
         {state === "saving"

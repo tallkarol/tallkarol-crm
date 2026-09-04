@@ -3,6 +3,7 @@ import { ROUTES } from "@/lib/nav"
 import { LIST_STATUS_LABEL, SOURCE_KIND_LABEL } from "@/lib/punchlist"
 import type { PunchlistSummary } from "@/lib/punchlists"
 import { formatDay } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 /** The rows a client hub or project page shows — title, progress, tests. */
 export function PunchlistList({
@@ -13,7 +14,7 @@ export function PunchlistList({
   peekBase?: string
 }) {
   return (
-    <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="divide-y divide-line overflow-hidden">
       {rows.map((row) => (
         <div key={row.id} className="flex items-center justify-between gap-4 px-5 py-3">
           <div className="min-w-0">
@@ -61,6 +62,6 @@ export function PunchlistList({
           </div>
         </div>
       ))}
-    </div>
+    </Card>
   )
 }

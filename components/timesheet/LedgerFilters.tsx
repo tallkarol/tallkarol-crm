@@ -76,7 +76,7 @@ export function LedgerFilters({
           onChange={(event) => setText(event.target.value)}
           placeholder="Search summaries…"
           aria-label="Search session highlights"
-          className="w-56 rounded-lg border border-line bg-card py-1.5 pl-8 pr-3 text-xs text-tk-onyx outline-none placeholder:text-ink-3 focus:border-tk-teal"
+          className="w-56 rounded-lg border border-line bg-card py-1.5 pl-8 pr-3 text-xs text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal"
         />
       </form>
 
@@ -84,7 +84,7 @@ export function LedgerFilters({
         value={clientSlug}
         onChange={(event) => push({ client: event.target.value })}
         aria-label="Client"
-        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
+        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate focus:border-tk-teal"
       >
         <option value="">All clients</option>
         {clients.map((client) => (
@@ -98,7 +98,7 @@ export function LedgerFilters({
         value={source}
         onChange={(event) => push({ source: event.target.value })}
         aria-label="Source"
-        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
+        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate focus:border-tk-teal"
       >
         {SOURCES.map((option) => (
           <option key={option.value} value={option.value}>
@@ -113,7 +113,7 @@ export function LedgerFilters({
           value={from}
           onChange={(event) => push({ from: event.target.value })}
           aria-label="From date"
-          className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-xs text-tk-slate outline-none focus:border-tk-teal"
+          className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-xs text-tk-slate focus:border-tk-teal"
         />
         <span className="text-xs text-ink-3">→</span>
         <input
@@ -121,7 +121,7 @@ export function LedgerFilters({
           value={to}
           onChange={(event) => push({ to: event.target.value })}
           aria-label="To date"
-          className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-xs text-tk-slate outline-none focus:border-tk-teal"
+          className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-xs text-tk-slate focus:border-tk-teal"
         />
       </div>
 

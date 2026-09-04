@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 import { TicketQueue, type QueueInitial } from "@/components/support/TicketQueue"
 import type { QueueRow } from "@/components/support/types"
 import { ROUTES } from "@/lib/nav"
+import { Card } from "@/components/ui/Card"
 
 /**
  * List left, ticket right. Below xl the detail becomes a slide-over so the
@@ -24,7 +25,7 @@ export function SupportConsole({
   const closeHref = query ? `${ROUTES.support}?${query}` : ROUTES.support
 
   return (
-    <div className="mt-5 flex h-[calc(100dvh-11.5rem)] min-h-[32rem] overflow-hidden rounded-2xl border border-line bg-card shadow-card md:h-[calc(100dvh-9rem)]">
+    <Card className="mt-5 flex h-[calc(100dvh-11.5rem)] min-h-[32rem] overflow-hidden md:h-[calc(100dvh-9rem)]">
       <TicketQueue rows={rows} selected={selected} initial={initial} />
 
       {detail ? (
@@ -55,7 +56,7 @@ export function SupportConsole({
           </dl>
         </aside>
       )}
-    </div>
+    </Card>
   )
 }
 

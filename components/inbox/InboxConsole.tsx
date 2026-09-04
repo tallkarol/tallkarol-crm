@@ -28,6 +28,7 @@ import {
 } from "@/lib/inbox"
 import { ROUTES } from "@/lib/nav"
 import { markColor } from "@/lib/client-colors"
+import { Card } from "@/components/ui/Card"
 
 type Result = { ok: boolean; error?: string }
 
@@ -231,7 +232,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
         </nav>
 
         {/* ---- stream ---- */}
-        <section className="overflow-hidden rounded-2xl border border-line bg-card">
+        <Card elevation="none" className="overflow-hidden">
           {visible.length === 0 ? (
             <p className="px-4 py-16 text-center text-sm text-ink-3">
               {lens === "unread" ? "Inbox zero." : "Nothing in this view."}
@@ -290,10 +291,10 @@ export function InboxConsole({ data }: { data: InboxData }) {
               </div>
             ))
           )}
-        </section>
+        </Card>
 
         {/* ---- workspace ---- */}
-        <section className="overflow-hidden rounded-2xl border border-line bg-card">
+        <Card elevation="none" className="overflow-hidden">
           {selected ? (
             <Workspace
               item={selected}
@@ -310,7 +311,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
               </p>
             </div>
           )}
-        </section>
+        </Card>
       </div>
     </>
   )
@@ -452,7 +453,7 @@ function Workspace({
               }
             }}
             aria-label="Task title"
-            className="min-w-0 flex-1 rounded-md border border-line bg-card px-2 py-1 text-[12px] outline-none focus:border-tk-teal"
+            className="min-w-0 flex-1 rounded-md border border-line bg-card px-2 py-1 text-[12px] focus:border-tk-teal"
           />
           <button
             type="button"

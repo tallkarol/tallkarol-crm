@@ -11,6 +11,7 @@ import {
 } from "@/lib/products"
 import { allTasks } from "@/lib/tasks"
 import type { HubTask } from "@/lib/task-view"
+import { Card } from "@/components/ui/Card"
 import {
   PRODUCT_STATUS_LABEL,
   PRODUCT_STUDIO_KIND_LABEL,
@@ -162,11 +163,7 @@ export default async function ProductsPage({
                   const blurb = product.notes || product.tagline
 
                   return (
-                    <article
-                      key={product.id}
-                      className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5 pb-4 shadow-card"
-                      style={{ borderLeftWidth: 3, borderLeftColor: markColor(color) }}
-                    >
+                    <Card className="flex flex-col gap-3 p-5 pb-4" key={product.id} style={{ borderLeftWidth: 3, borderLeftColor: markColor(color) }}>
                       <div className="flex flex-wrap items-center gap-2">
                         <span
                           className="size-2 rounded-full"
@@ -227,7 +224,7 @@ export default async function ProductsPage({
                             : ""}
                         </span>
                       </div>
-                    </article>
+                    </Card>
                   )
                 })}
               </div>
@@ -251,7 +248,7 @@ function Kpi({
   tone?: "good" | "bad"
 }) {
   return (
-    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+    <Card className="px-5 py-4">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">
         {label}
       </p>
@@ -269,6 +266,6 @@ function Kpi({
       >
         {sub}
       </p>
-    </div>
+    </Card>
   )
 }

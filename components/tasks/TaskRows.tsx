@@ -13,6 +13,7 @@ import {
   type RenderRow,
 } from "@/lib/task-view"
 import { CADENCE_LABEL } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 /**
  * Rows, banded by whatever the list is ordered by. The tint flips on a *run* of
@@ -37,12 +38,12 @@ export function TaskRows({
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center">
+      <Card surface="well" elevation="none" className="border-dashed px-6 py-10 text-center">
         <p className="text-sm font-semibold text-tk-onyx">Nothing here</p>
         <p className="mt-1 text-sm text-ink-3">
           Clear a filter above, or add a task to this view.
         </p>
-      </div>
+      </Card>
     )
   }
 
@@ -67,7 +68,7 @@ export function TaskRows({
                 {group.rows.length}
               </span>
             </h3>
-            <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+            <Card className="overflow-hidden">
               {group.rows.map((row) => (
                 <Row
                   key={row.id}
@@ -83,7 +84,7 @@ export function TaskRows({
                   }
                 />
               ))}
-            </div>
+            </Card>
           </section>
         ))}
       </div>
@@ -91,7 +92,7 @@ export function TaskRows({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="overflow-hidden">
       {rows.map((row) => (
         <Row
           key={row.id}
@@ -105,7 +106,7 @@ export function TaskRows({
           }
         />
       ))}
-    </div>
+    </Card>
   )
 }
 

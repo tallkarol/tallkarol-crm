@@ -28,6 +28,7 @@ import {
   ticketState,
 } from "@/lib/support"
 import { formatDay } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 export type DetailTab = "thread" | "payload" | "env" | "related"
 
@@ -238,7 +239,7 @@ export function TicketDetail({
             </dl>
 
             {triggeredBy.length ? (
-              <div className="mt-4 rounded-xl border border-line bg-well p-3">
+              <Card surface="well" radius="xl" elevation="none" className="mt-4 p-3">
                 <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">
                   Raised by
                 </p>
@@ -263,7 +264,7 @@ export function TicketDetail({
                     ) : null}
                   </p>
                 ))}
-              </div>
+              </Card>
             ) : null}
 
             {ticket.description ? (

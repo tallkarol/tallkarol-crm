@@ -19,6 +19,7 @@ import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { WORKSTREAM_STAGES, ordinal } from "@/lib/pipeline"
 import type { WorkstreamStage } from "@/db/schema"
+import { Card as TkCard } from "@/components/ui/Card"
 
 export type LaneStream = { id: string; title: string; stage: string; pass: number }
 
@@ -75,7 +76,7 @@ export function WorkstreamLane({ lane }: { lane: LaneData }) {
   }
 
   return (
-    <section className="rounded-2xl border border-line bg-well p-3.5">
+    <TkCard surface="well" elevation="none" className="p-3.5">
       <div className="flex flex-wrap items-center gap-2.5 px-1 pb-1">
         <span className="size-2 rounded-full" style={{ background: markColor(color) }} />
         <h3 className="text-sm font-semibold text-tk-onyx">{lane.projectName}</h3>
@@ -115,19 +116,16 @@ export function WorkstreamLane({ lane }: { lane: LaneData }) {
         </div>
         <DragOverlay>
           {active ? (
-            <div
-              className="w-56 rotate-2 rounded-xl border border-line bg-card p-3 shadow-overlay"
-              style={{ borderLeftWidth: 3, borderLeftColor: markColor(color) }}
-            >
+            <TkCard radius="xl" elevation="none" className="w-56 rotate-2 p-3 shadow-overlay" style={{ borderLeftWidth: 3, borderLeftColor: markColor(color) }}>
               <p className="text-[13px] font-semibold text-tk-onyx">{active.title}</p>
               <span className="mt-1.5 inline-flex rounded-full bg-tk-teal/10 px-2 py-0.5 text-[11px] font-semibold text-tk-teal">
                 {ordinal(active.pass)} pass
               </span>
-            </div>
+            </TkCard>
           ) : null}
         </DragOverlay>
       </DndContext>
-    </section>
+    </TkCard>
   )
 }
 

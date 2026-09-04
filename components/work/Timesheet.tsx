@@ -27,6 +27,7 @@ import {
   saveTimeEntry,
 } from "@/lib/timesheet-actions"
 import { formatMoney } from "@/lib/work"
+import { Card } from "@/components/ui/Card"
 
 export type TimesheetRow = {
   id: string
@@ -407,7 +408,7 @@ export function Timesheet({
             onChange={(event) =>
               router.push(ROUTES.timesheetFor(event.target.value, month))
             }
-            className="rounded-lg border border-line bg-card px-3 py-1.5 text-sm font-semibold text-tk-onyx outline-none focus:border-tk-teal"
+            className="rounded-lg border border-line bg-card px-3 py-1.5 text-sm font-semibold text-tk-onyx focus:border-tk-teal"
           >
             {clients.map((item) => (
               <option key={item.id} value={item.slug}>
@@ -460,7 +461,7 @@ export function Timesheet({
         </p>
       ) : null}
 
-      <section className="mt-4 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <Card className="mt-4 overflow-hidden">
         <div className="flex flex-wrap items-start justify-between gap-6 border-b border-line px-5 py-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">
@@ -727,7 +728,7 @@ export function Timesheet({
                               if (row.id || hasWork(row)) flushSave(index)
                             }}
                             aria-label={`Project, row ${index + 1}`}
-                            className="w-full rounded border border-transparent bg-transparent px-1.5 py-1.5 text-xs text-tk-slate outline-none hover:border-line-strong focus:border-tk-teal disabled:hover:border-transparent"
+                            className="w-full rounded border border-transparent bg-transparent px-1.5 py-1.5 text-xs text-tk-slate hover:border-line-strong focus:border-tk-teal disabled:hover:border-transparent"
                           >
                             <option value="">— retainer</option>
                             {projects.map((p) => (
@@ -756,7 +757,7 @@ export function Timesheet({
             </tfoot>
           </table>
         </div>
-      </section>
+      </Card>
 
       {status ? (
         <p className="mt-3 text-sm text-ink-3" role="status">
@@ -779,7 +780,7 @@ export function Timesheet({
 
 function sheetInput(readOnly: boolean, extra?: string) {
   return cn(
-    "w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 text-sm text-tk-onyx outline-none",
+    "w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 text-sm text-tk-onyx",
     "placeholder:text-ink-3",
     readOnly
       ? "cursor-default text-tk-slate"

@@ -1,9 +1,10 @@
 import { RefreshInsights } from "@/components/insights/RefreshInsights"
+import { Card } from "@/components/ui/Card"
 
 /** Rendered whenever a property has no v2 snapshot in the cache yet. */
 export function EmptySnapshot({ slug, siteName }: { slug: string; siteName: string }) {
   return (
-    <div className="flex min-h-[18rem] flex-col items-center justify-center rounded-2xl border border-dashed border-line bg-well px-6 text-center shadow-card">
+    <Card surface="well" className="flex min-h-[18rem] flex-col items-center justify-center border-dashed px-6 text-center">
       <p className="text-sm font-semibold text-tk-onyx">
         Nothing fetched yet for {siteName}
       </p>
@@ -15,6 +16,6 @@ export function EmptySnapshot({ slug, siteName }: { slug: string; siteName: stri
       <div className="mt-5">
         <RefreshInsights slug={slug} refreshedAt={null} label="Fetch now" primary />
       </div>
-    </div>
+    </Card>
   )
 }

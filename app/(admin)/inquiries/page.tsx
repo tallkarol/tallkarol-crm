@@ -5,6 +5,7 @@ import { db } from "@/db"
 import { inquiries, type InquiryStatus } from "@/db/schema"
 import { readAttribution, sourceLabel } from "@/lib/attribution"
 import { ROUTES } from "@/lib/nav"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Inbox" }
 
@@ -65,7 +66,7 @@ export default async function InboxPage({
         }
       />
 
-      <div className="mt-8 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+      <Card className="mt-8 overflow-hidden">
         {rows.length === 0 ? (
           <p className="px-6 py-12 text-center text-sm text-ink-3">
             No inquiries yet.
@@ -109,7 +110,7 @@ export default async function InboxPage({
             ))}
           </ul>
         )}
-      </div>
+      </Card>
     </>
   )
 }

@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/cn"
 import { reorderAttentionTasks, setTaskDone } from "@/lib/task-actions"
 import { markColor } from "@/lib/client-colors"
+import { Card } from "@/components/ui/Card"
 
 export type AttentionTone = "bad" | "warn" | "ok" | "neutral"
 
@@ -176,7 +177,7 @@ export function NeedsAttention({
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+    <Card className="overflow-hidden">
       <div className="flex items-center gap-2.5 border-b border-line px-[18px] py-3">
         <h2 className="font-ui text-[13.5px] font-bold tracking-tight text-tk-onyx">Needs attention</h2>
         {count > 0 ? (
@@ -298,7 +299,7 @@ export function NeedsAttention({
           </Link>
         </div>
       ) : null}
-    </section>
+    </Card>
   )
 }
 

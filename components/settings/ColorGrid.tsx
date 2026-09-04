@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react"
 import { saveClientColor } from "@/app/(admin)/settings/colors/actions"
 import { clientColor, isHexColor } from "@/lib/client-colors"
+import { Card } from "@/components/ui/Card"
 
 type Row = { name: string; slug: string }
 type Group = { label: string; rows: Row[] }
@@ -66,7 +67,7 @@ function ColorRow({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-line bg-card px-3 py-2.5 shadow-card">
+    <Card radius="xl" className="flex items-center gap-3 px-3 py-2.5">
       {/* The native picker is the whole swatch — no library, and it is the
           control people already know from every other Mac app. */}
       <label className="relative shrink-0 cursor-pointer">
@@ -92,7 +93,7 @@ function ColorRow({
             onChange={(e) => setValue(e.target.value)}
             onBlur={(e) => commit(e.target.value)}
             spellCheck={false}
-            className="w-24 bg-transparent font-mono text-xs text-ink-3 outline-none focus:text-tk-onyx"
+            className="w-24 bg-transparent font-mono text-xs text-ink-3 focus:text-tk-onyx"
           />
           {pending && <span className="text-[11px] text-ink-3">saving…</span>}
           {!pending && dirty && <span className="text-[11px] text-ink-3">unsaved</span>}
@@ -115,6 +116,6 @@ function ColorRow({
           Reset
         </button>
       )}
-    </div>
+    </Card>
   )
 }

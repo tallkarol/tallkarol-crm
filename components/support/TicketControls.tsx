@@ -82,7 +82,7 @@ export function PlatformField({
         }}
         placeholder="Shopify, WordPress, internal app…"
         disabled={pending}
-        className="w-full rounded-lg border border-line bg-card px-2 py-1 text-[13px] text-tk-onyx outline-none focus:border-tk-teal disabled:opacity-60"
+        className="w-full rounded-lg border border-line bg-card px-2 py-1 text-[13px] text-tk-onyx focus:border-tk-teal disabled:opacity-60"
       />
       <datalist id="tk-platforms">
         {known.map((p) => (
@@ -125,7 +125,7 @@ export function NoteComposer({ id }: { id: string }) {
         }}
         rows={3}
         placeholder="Add a note — what you found, what you did…"
-        className="w-full resize-y rounded-xl border border-line bg-card px-3 py-2 text-[13px] leading-relaxed text-tk-onyx outline-none placeholder:text-ink-3 focus:border-tk-teal"
+        className="w-full resize-y rounded-xl border border-line bg-card px-3 py-2 text-[13px] leading-relaxed text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal"
       />
       <div className="mt-1.5 flex items-center gap-3">
         <button

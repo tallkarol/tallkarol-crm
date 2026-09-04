@@ -8,6 +8,7 @@ import type { InvoiceStatus } from "@/db/schema"
 import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
+import { Card } from "@/components/ui/Card"
 import {
   INVOICE_STATUS_LABEL,
   formatDay,
@@ -165,7 +166,7 @@ export function InvoicesHub({ invoices }: { invoices: InvoiceHubRow[] }) {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search number, client, work…"
           aria-label="Search invoices"
-          className="min-w-[220px] flex-1 rounded-lg border border-line bg-card px-3 py-2 text-sm outline-none placeholder:text-ink-3 focus:border-tk-teal sm:max-w-xs"
+          className="min-w-[220px] flex-1 rounded-lg border border-line bg-card px-3 py-2 text-sm placeholder:text-ink-3 focus:border-tk-teal sm:max-w-xs"
         />
         <div className="flex flex-wrap gap-2">
           {clients.map((client) => {
@@ -263,13 +264,13 @@ export function InvoicesHub({ invoices }: { invoices: InvoiceHubRow[] }) {
                 {formatMoney(month.cents)}
               </span>
             </div>
-            <div className="mt-2 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+            <Card className="mt-2 overflow-hidden">
               <ul className="divide-y divide-line">
                 {month.rows.map((invoice) => (
                   <InvoiceRow key={invoice.id} invoice={invoice} />
                 ))}
               </ul>
-            </div>
+            </Card>
           </section>
         ))
       )}

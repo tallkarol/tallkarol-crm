@@ -8,6 +8,7 @@ import {
   liveSubscriptionCount,
 } from "@/lib/notify"
 import { saveQuietHours } from "./actions"
+import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Notifications" }
 export const dynamic = "force-dynamic"
@@ -24,7 +25,7 @@ export default async function NotificationSettingsPage() {
     <>
       <PageHeader title="Notifications" />
 
-      <section className="mt-8 max-w-2xl rounded-2xl border border-line bg-card p-5 shadow-card">
+      <Card className="mt-8 max-w-2xl p-5">
         <h2 className="text-sm font-semibold text-tk-onyx">This device</h2>
         <p className="mt-1 text-sm text-ink-3">
           Push notifications reach any browser you enable them in — Chrome on
@@ -36,9 +37,9 @@ export default async function NotificationSettingsPage() {
         <div className="mt-4">
           <PushToggle />
         </div>
-      </section>
+      </Card>
 
-      <section className="mt-6 max-w-2xl rounded-2xl border border-line bg-card p-5 shadow-card">
+      <Card className="mt-6 max-w-2xl p-5">
         <h2 className="text-sm font-semibold text-tk-onyx">What gets sent</h2>
         <p className="mt-1 text-sm text-ink-3">
           Each alert is sent once per thing. A flag that stays raised for a week
@@ -55,9 +56,9 @@ export default async function NotificationSettingsPage() {
             }))}
           />
         </div>
-      </section>
+      </Card>
 
-      <section className="mt-6 max-w-2xl rounded-2xl border border-line bg-card p-5 shadow-card">
+      <Card className="mt-6 max-w-2xl p-5">
         <h2 className="text-sm font-semibold text-tk-onyx">Quiet hours</h2>
         <p className="mt-1 text-sm text-ink-3">
           Nothing is sent between these hours, workspace time — except a
@@ -72,7 +73,7 @@ export default async function NotificationSettingsPage() {
               min={0}
               max={23}
               defaultValue={prefs.quietFrom}
-              className="mt-1 w-24 rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal"
+              className="mt-1 w-24 rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal"
             />
           </label>
           <label className="block text-sm">
@@ -83,7 +84,7 @@ export default async function NotificationSettingsPage() {
               min={0}
               max={23}
               defaultValue={prefs.quietTo}
-              className="mt-1 w-24 rounded-lg border border-line bg-well px-3 py-2 text-sm outline-none focus:border-tk-teal"
+              className="mt-1 w-24 rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal"
             />
           </label>
           <button
@@ -93,7 +94,7 @@ export default async function NotificationSettingsPage() {
             Save
           </button>
         </form>
-      </section>
+      </Card>
     </>
   )
 }

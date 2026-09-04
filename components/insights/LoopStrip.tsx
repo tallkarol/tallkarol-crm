@@ -1,17 +1,18 @@
 import Link from "next/link"
 import { fmtInt } from "@/lib/insights/derive"
 import type { CrmSlice } from "@/lib/insights/types"
+import { Card } from "@/components/ui/Card"
 
 function Step({ value, label }: { value: number; label: string }) {
   return (
-    <div className="rounded-xl border border-line bg-well px-3 py-2">
+    <Card surface="well" radius="xl" elevation="none" className="px-3 py-2">
       <p className="text-base font-bold leading-tight tabular-nums text-tk-onyx">
         {fmtInt(value)}
       </p>
       <p className="text-[9.5px] font-semibold uppercase tracking-wide text-ink-3">
         {label}
       </p>
-    </div>
+    </Card>
   )
 }
 

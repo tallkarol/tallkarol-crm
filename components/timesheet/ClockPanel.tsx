@@ -115,7 +115,7 @@ export function ClockPanel({
             onChange={(event) => setNote(event.target.value)}
             placeholder="What are you working on? (optional)"
             aria-label="Session note"
-            className="w-full max-w-sm rounded-lg border border-line bg-card px-3 py-1.5 text-sm text-tk-onyx outline-none placeholder:text-ink-3 focus:border-tk-teal"
+            className="w-full max-w-sm rounded-lg border border-line bg-card px-3 py-1.5 text-sm text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal"
           />
         </div>
 

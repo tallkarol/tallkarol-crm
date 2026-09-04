@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { PageHeader } from "@/components/PageHeader"
 import { findScaffold, SCAFFOLDS } from "@/content/scaffolds"
 import { ROUTES } from "@/lib/nav"
+import { Card } from "@/components/ui/Card"
 
 export function generateMetadata({ params }: { params: { slug: string } }) {
   const scaffold = findScaffold(params.slug)
@@ -47,7 +48,7 @@ export default function ScaffoldPage({
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-3">
           Stack
         </h2>
-        <div className="mt-2.5 overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+        <Card className="mt-2.5 overflow-hidden">
           <table className="w-full text-left text-[13px]">
             <tbody>
               {scaffold.stack.map((row) => (
@@ -68,7 +69,7 @@ export default function ScaffoldPage({
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       </section>
 
       <section className="mt-6">
@@ -77,15 +78,12 @@ export default function ScaffoldPage({
         </h2>
         <div className="mt-2.5 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {scaffold.commands.map((row) => (
-            <div
-              key={row.cmd}
-              className="rounded-xl border border-line bg-card px-4 py-3 shadow-card"
-            >
+            <Card radius="xl" className="px-4 py-3" key={row.cmd}>
               <code className="rounded bg-well px-1.5 py-0.5 font-mono text-xs font-semibold text-tk-onyx">
                 {row.cmd}
               </code>
               <p className="mt-1.5 text-[12.5px] text-tk-slate">{row.what}</p>
-            </div>
+            </Card>
           ))}
         </div>
       </section>
@@ -96,10 +94,7 @@ export default function ScaffoldPage({
         </h2>
         <div className="mt-2.5 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {scaffold.playbook.map((section) => (
-            <div
-              key={section.title}
-              className="rounded-2xl border border-line bg-card p-5 shadow-card"
-            >
+            <Card className="p-5" key={section.title}>
               <p className="text-[14px] font-semibold text-tk-onyx">
                 {section.title}
               </p>
@@ -116,7 +111,7 @@ export default function ScaffoldPage({
                   </li>
                 ))}
               </ol>
-            </div>
+            </Card>
           ))}
         </div>
       </section>

@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import { cn } from "@/lib/cn"
+import { Card } from "@/components/ui/Card"
 
 const RANGES = [
   { days: "7", label: "7d" },
@@ -17,7 +18,7 @@ export function RangeSwitcher() {
   const current = search.get("range") === "7" ? "7" : search.get("range") === "90" ? "90" : "28"
 
   return (
-    <div className="flex rounded-lg border border-line bg-card p-0.5">
+    <Card radius="lg" elevation="none" className="flex p-0.5">
       {RANGES.map((r) => (
         <Link
           key={r.days}
@@ -33,6 +34,6 @@ export function RangeSwitcher() {
           {r.label}
         </Link>
       ))}
-    </div>
+    </Card>
   )
 }

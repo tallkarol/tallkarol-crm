@@ -1,4 +1,5 @@
 import type { Attribution, AttributionTouch } from "@/lib/attribution"
+import { Card } from "@/components/ui/Card"
 
 function TouchRows({ touch, title }: { touch?: AttributionTouch; title: string }) {
   if (!touch || Object.keys(touch).length === 0) return null
@@ -30,7 +31,7 @@ function TouchRows({ touch, title }: { touch?: AttributionTouch; title: string }
 export function AttributionCard({ attribution }: { attribution: Attribution }) {
   const path = attribution.path || []
   return (
-    <section className="mt-4 rounded-2xl border border-line bg-card p-5 shadow-card">
+    <Card className="mt-4 p-5">
       <h2 className="text-sm font-semibold text-tk-onyx">How they got here</h2>
       <div className="mt-4 grid gap-6 sm:grid-cols-2">
         <TouchRows touch={attribution.first} title="First touch" />
@@ -62,6 +63,6 @@ export function AttributionCard({ attribution }: { attribution: Attribution }) {
           client_id {attribution.client_id}
         </p>
       )}
-    </section>
+    </Card>
   )
 }

@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react"
 import { Badge } from "@/components/work/Badge"
 import type { MeetingProposal } from "@/lib/meetings"
 import { dismissMeeting, logMeeting } from "@/lib/meetings-actions"
+import { Card } from "@/components/ui/Card"
 
 function pad(n: number) {
   return String(n).padStart(2, "0")
@@ -99,12 +100,12 @@ export function MeetingInbox({ proposals }: { proposals: MeetingProposal[] }) {
       ) : null}
 
       {open.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-line bg-well px-6 py-10 text-center shadow-card">
+        <Card surface="well" className="mt-6 border-dashed px-6 py-10 text-center">
           <p className="text-sm font-semibold text-tk-onyx">Nothing waiting</p>
           <p className="mt-1 text-sm text-ink-3">
             Every matched meeting is either logged or waved off.
           </p>
-        </div>
+        </Card>
       ) : (
         grouped.map(([day, items]) => (
           <section key={day} className="mt-6">
@@ -158,13 +159,13 @@ export function MeetingInbox({ proposals }: { proposals: MeetingProposal[] }) {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-line bg-card px-5 py-3 shadow-card">
+    <Card className="px-5 py-3">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
         {label}
       </p>
       <p className="mt-1 text-xl font-semibold tabular-nums text-tk-onyx">
         {value}
       </p>
-    </div>
+    </Card>
   )
 }

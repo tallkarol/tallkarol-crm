@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/cn"
 import { dismissLeftOffAction, replyLeftOffAction } from "@/lib/leftoff-actions"
 import { setTaskDone } from "@/lib/task-actions"
+import { Card as TkCard } from "@/components/ui/Card"
 import {
   KIND_LABEL,
   WAITING_KINDS,
@@ -82,7 +83,7 @@ const GHOST_BTN =
 const ICON_BTN =
   "rounded-md p-1.5 text-ink-3 hover:bg-well transition-colors duration-[120ms] hover:text-tk-onyx focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-tk-teal"
 const REPLY_INPUT =
-  "h-8 min-w-0 flex-1 rounded-lg border border-line bg-well px-2.5 text-[12.5px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:bg-card focus:outline-none"
+  "h-8 min-w-0 flex-1 rounded-lg border border-line bg-well px-2.5 text-[12.5px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal focus:bg-card"
 const SEND_BTN =
   "h-8 shrink-0 rounded-lg bg-accent px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95"
 
@@ -115,10 +116,7 @@ export function WaitingStrip({ payload }: { payload: WaitingPayload | null }) {
   const hidden = payload ? Math.max(payload.total - payload.items.length, 0) : 0
 
   return (
-    <section
-      aria-labelledby={headingId}
-      className="mt-6 min-w-0 overflow-hidden rounded-2xl border border-line bg-card shadow-card"
-    >
+    <TkCard className="mt-6 min-w-0 overflow-hidden" aria-labelledby={headingId}>
       <div className="flex flex-wrap items-center gap-2.5 border-b border-line px-[18px] py-3">
         {total > 0 ? (
           <span
@@ -178,7 +176,7 @@ export function WaitingStrip({ payload }: { payload: WaitingPayload | null }) {
           ))}
         </ul>
       )}
-    </section>
+    </TkCard>
   )
 }
 

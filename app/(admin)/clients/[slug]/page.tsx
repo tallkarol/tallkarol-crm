@@ -38,6 +38,7 @@ import { ROUTES } from "@/lib/nav"
 import { punchlistsFor } from "@/lib/punchlists"
 import { tasksFor, taskTargets } from "@/lib/tasks"
 import { currentMonth } from "@/lib/timesheet"
+import { Card as TkCard } from "@/components/ui/Card"
 import {
   CADENCE_LABEL,
   CONTRACT_STATUS_LABEL,
@@ -627,7 +628,7 @@ export default async function ClientDetailPage({
                 </Link>
               }
             >
-              <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+              <TkCard className="overflow-hidden">
                 <div className="flex flex-wrap gap-8 border-b border-line px-5 py-4">
                   <Stat
                     label="Outstanding"
@@ -705,10 +706,10 @@ export default async function ClientDetailPage({
                     </table>
                   </div>
                 ) : null}
-              </div>
+              </TkCard>
 
               {sortedContracts.length > 0 ? (
-                <div className="mt-3 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+                <TkCard className="mt-3 divide-y divide-line overflow-hidden">
                   {sortedContracts.map((contract) => (
                     <Link
                       key={contract.id}
@@ -745,7 +746,7 @@ export default async function ClientDetailPage({
                       </StatusPill>
                     </Link>
                   ))}
-                </div>
+                </TkCard>
               ) : null}
             </Block>
           ) : null}
@@ -763,9 +764,9 @@ export default async function ClientDetailPage({
               </Link>
             }
           >
-            <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+            <TkCard className="overflow-hidden">
               <MeetingList upcoming={hub.upcoming} recent={hub.recentMeetings} />
-            </div>
+            </TkCard>
           </Block>
 
           {/* --------------------------------------------------- tickets */}
@@ -784,16 +785,16 @@ export default async function ClientDetailPage({
                 </Link>
               }
             >
-              <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+              <TkCard className="overflow-hidden">
                 <TicketList tickets={hub.openTickets} />
-              </div>
+              </TkCard>
             </Block>
           ) : null}
 
           {/* --------------------------------------------------- reports */}
           {sortedReports.length > 0 ? (
             <Block id="reports" title="Reports">
-              <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+              <TkCard className="divide-y divide-line overflow-hidden">
                 {sortedReports.map((report) => (
                   <div
                     key={report.id}
@@ -831,13 +832,13 @@ export default async function ClientDetailPage({
                     </div>
                   </div>
                 ))}
-              </div>
+              </TkCard>
             </Block>
           ) : null}
 
           {sortedProposals.length > 0 ? (
             <Block id="proposals" title="Proposals">
-              <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+              <TkCard className="divide-y divide-line overflow-hidden">
                 {sortedProposals.map((proposal) => (
                   <div
                     key={proposal.id}
@@ -870,7 +871,7 @@ export default async function ClientDetailPage({
                     ) : null}
                   </div>
                 ))}
-              </div>
+              </TkCard>
             </Block>
           ) : null}
 
@@ -955,7 +956,7 @@ export default async function ClientDetailPage({
           {/* ------------------------------------------------ brainstorm */}
           {brainstorm.length > 0 ? (
             <Block id="brainstorm" title="Brainstorm">
-              <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+              <TkCard className="divide-y divide-line overflow-hidden">
                 {brainstorm.map((note) => (
                   <div key={note.id} className="px-5 py-3">
                     <p className="text-[13.5px] text-tk-onyx">{note.body}</p>
@@ -970,14 +971,14 @@ export default async function ClientDetailPage({
                     </p>
                   </div>
                 ))}
-              </div>
+              </TkCard>
             </Block>
           ) : null}
 
           {/* ------------------------------------------------ worksheets */}
           {sortedWorksheets.length > 0 ? (
             <Block id="worksheets" title="Worksheets">
-              <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card shadow-card">
+              <TkCard className="divide-y divide-line overflow-hidden">
                 {sortedWorksheets.map((worksheet) => (
                   <div
                     key={worksheet.id}
@@ -1021,7 +1022,7 @@ export default async function ClientDetailPage({
                     </div>
                   </div>
                 ))}
-              </div>
+              </TkCard>
             </Block>
           ) : null}
 
@@ -1169,12 +1170,12 @@ function monthName(month: string) {
 
 function Kpi({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-line bg-card px-4 py-3 shadow-card">
+    <TkCard className="px-4 py-3">
       <p className="mb-1.5 text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-3">
         {label}
       </p>
       {children}
-    </div>
+    </TkCard>
   )
 }
 
@@ -1202,9 +1203,9 @@ function Block({
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+    <TkCard className="px-5 py-4">
       {children}
-    </div>
+    </TkCard>
   )
 }
 
@@ -1247,11 +1248,11 @@ function Stat({
 
 function RailCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-line bg-card px-4 py-3.5 shadow-card">
+    <TkCard className="px-4 py-3.5">
       <h3 className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-3">
         {title}
       </h3>
       {children}
-    </div>
+    </TkCard>
   )
 }

@@ -81,7 +81,7 @@ export function SessionFilters({
           onChange={(event) => setText(event.target.value)}
           placeholder="Search everything you said…"
           aria-label="Search prompts and replies"
-          className="w-72 rounded-lg border border-line bg-card py-1.5 pl-8 pr-3 text-xs text-tk-onyx outline-none placeholder:text-ink-3 focus:border-tk-teal"
+          className="w-72 rounded-lg border border-line bg-card py-1.5 pl-8 pr-3 text-xs text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal"
         />
       </form>
 
@@ -89,7 +89,7 @@ export function SessionFilters({
         value={clientSlug}
         onChange={(event) => push({ client: event.target.value })}
         aria-label="Client"
-        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
+        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate focus:border-tk-teal"
       >
         <option value="">All clients</option>
         {clients.map((client) => (
@@ -103,7 +103,7 @@ export function SessionFilters({
         value={surface}
         onChange={(event) => push({ surface: event.target.value })}
         aria-label="Surface"
-        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
+        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate focus:border-tk-teal"
       >
         {SURFACES.map((option) => (
           <option key={option.value} value={option.value}>
@@ -116,7 +116,7 @@ export function SessionFilters({
         value={since || "7d"}
         onChange={(event) => push({ since: event.target.value })}
         aria-label="How far back"
-        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate outline-none focus:border-tk-teal"
+        className="rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-slate focus:border-tk-teal"
       >
         {SINCE.map((option) => (
           <option key={option.value} value={option.value}>

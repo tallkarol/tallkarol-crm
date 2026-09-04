@@ -17,6 +17,7 @@ import type { MeetingSource } from "@/lib/calendar"
 import type { UpcomingMeeting } from "@/lib/calendar-types"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
+import { Card } from "@/components/ui/Card"
 
 const DAY_MS = 86_400_000
 const WINDOW_DAYS = 5
@@ -403,10 +404,7 @@ export function WeekBoard({
 
   if (!configured) {
     return (
-      <section
-        className="rounded-2xl border border-line bg-card shadow-card"
-        aria-labelledby="week-board-title"
-      >
+      <Card aria-labelledby="week-board-title">
         <div className="flex items-center gap-2.5 border-b border-line px-[18px] py-3">
           <h2
             id="week-board-title"
@@ -424,15 +422,12 @@ export function WeekBoard({
             Connect calendars →
           </Link>
         </div>
-      </section>
+      </Card>
     )
   }
 
   return (
-    <section
-      className="relative rounded-2xl border border-line bg-card shadow-card"
-      aria-labelledby="week-board-title"
-    >
+    <Card className="relative" aria-labelledby="week-board-title">
       <div className="flex flex-wrap items-center gap-2.5 border-b border-line px-[18px] py-3">
         <h2
           id="week-board-title"
@@ -443,11 +438,7 @@ export function WeekBoard({
         <span className="font-ui text-xs text-ink-3">
           {start ? rangeLabel(start) : " "}
         </span>
-        <div
-          role="group"
-          aria-label="Move the window"
-          className="ml-0.5 inline-flex items-center gap-0.5 rounded-lg border border-line bg-well p-0.5"
-        >
+        <Card surface="well" radius="lg" elevation="none" className="ml-0.5 inline-flex items-center gap-0.5 p-0.5" role="group" aria-label="Move the window">
           <button type="button" aria-label="Previous five days" onClick={goPrev} className={segBtn}>
             <ChevronLeft className="size-3.5" aria-hidden />
           </button>
@@ -457,7 +448,7 @@ export function WeekBoard({
           <button type="button" aria-label="Next five days" onClick={goNext} className={segBtn}>
             <ChevronRight className="size-3.5" aria-hidden />
           </button>
-        </div>
+        </Card>
         <div className="ml-auto">
           <Link
             href={ROUTES.calendar}
@@ -658,6 +649,6 @@ export function WeekBoard({
           onClose={() => setOpenMeeting(null)}
         />
       ) : null}
-    </section>
+    </Card>
   )
 }
