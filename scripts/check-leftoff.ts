@@ -5,6 +5,12 @@
  */
 
 import {
+  BAND_OF_KIND,
+  WAITING_KINDS,
+  bandCounts,
+  emptyCounts,
+} from "@/lib/waiting"
+import {
   LEFTOFF_RULES,
   clipHead,
   clipTail,
@@ -23,6 +29,9 @@ import {
   readAgents,
   readHandoff,
   resumeCommand,
+  workspaceFromCwd,
+  cursorHref,
+  resumeHref,
   sortViews,
   toView,
   type NoteFacts,
@@ -235,6 +244,22 @@ check("resume quotes a single quote", resumeCommand(note({ cwd: "/Users/k/it's" 
 check("no resume for cursor", resumeCommand(note({ surface: "cursor", sessionRef: "cursor:abc" })), "")
 check("no resume for a junk id", resumeCommand(note({ sessionRef: "x; rm -rf /" })), "")
 check("project from cwd", projectFromCwd("/Users/karolbuczek/Work/tallkarol/"), "tallkarol")
+
+// The workspace is the FIRST directory under Work, not the last segment:
+// a chat in tallkarol/crm must open Cursor on tallkarol, not on crm.
+check("workspace from a nested cwd", workspaceFromCwd("/Users/karolbuczek/Work/tallkarol/crm"), "/Users/karolbuczek/Work/tallkarol")
+check("workspace from the root itself", workspaceFromCwd("/Users/karolbuczek/Work/axvor"), "/Users/karolbuczek/Work/axvor")
+check("workspace drops a trailing slash", workspaceFromCwd("/Users/karolbuczek/Work/tallkarol/"), "/Users/karolbuczek/Work/tallkarol")
+check("workspace deep under Work", workspaceFromCwd("/Users/karolbuczek/Work/gdi-wordpress-multisite/wp-content/themes/gdi"), "/Users/karolbuczek/Work/gdi-wordpress-multisite")
+// Outside Work there is nothing to trim to, so the cwd is opened as given
+// rather than guessed at.
+check("a cwd outside Work is unchanged", workspaceFromCwd("/opt/src/thing/sub"), "/opt/src/thing/sub")
+check("a bare Work opens Work", workspaceFromCwd("/Users/karolbuczek/Work"), "/Users/karolbuczek/Work")
+check("no cwd, no workspace", workspaceFromCwd(""), "")
+
+check("cursor href encodes per segment", cursorHref("/Users/k/Work/my repo/app"), "cursor://file/Users/k/Work/my%20repo")
+check("no cursor href without a cwd", cursorHref(""), "")
+check("resume href carries the ref", resumeHref("claude:7b1d"), "tallkarol://leftoff?ref=claude%3A7b1d")
 check("clip flattens and caps", clip("a\n\n b   c".repeat(200), 10), "a b ca b …")
 
 console.log("messages")
@@ -322,6 +347,42 @@ console.log("repos and browsers")
   check("both browsers are captured", browsers.browsers.map((b) => b.browser), ["Chrome", "Safari"])
   check("the Chrome field still answers on its own", browsers.browser?.browser, "Chrome")
   check("no browser row leaks into the notes", browsers.notes.length, 1)
+}
+
+
+/* ------------------------------------------------------------------ bands */
+
+// The board's morning view is only as trustworthy as this table, and nothing
+// else in the repo tested lib/waiting.ts at all before now.
+console.log("")
+console.log("bands")
+
+check("every kind has a band", WAITING_KINDS.every((k) => BAND_OF_KIND[k] !== undefined), true)
+
+// Standing rows are the ones the queue deliberately never admits — repos,
+// parked chats, a browser snapshot. If a kind ever maps here it would vanish:
+// the band is rendered from the leftoff payload, not from the queue.
+check("no kind maps to standing", WAITING_KINDS.some((k) => BAND_OF_KIND[k] === "standing"), false)
+
+// A blocked chat is the one kind that is also a conversation. It answers, so
+// that Morning shows it and Code shows it, and neither has to special-case it.
+check("a blocked chat answers", BAND_OF_KIND.blocked_chat, "answer")
+check("a ticket answers", BAND_OF_KIND.ticket_no_reply, "answer")
+check("an overdue task decides", BAND_OF_KIND.overdue_task, "decide")
+check("unbilled hours decide", BAND_OF_KIND.unbilled_session, "decide")
+
+{
+  const counts = emptyCounts()
+  counts.ticket_no_reply = 9
+  counts.new_inquiry = 1
+  counts.blocked_chat = 2
+  counts.overdue_task = 11
+  const b = bandCounts(counts)
+  check("bandCounts totals answer", b.answer, 12)
+  check("bandCounts totals decide", b.decide, 11)
+  check("bandCounts leaves standing empty", b.standing, 0)
+  const summed = b.answer + b.decide + b.standing
+  check("no item is lost or double-counted", summed, 23)
 }
 
 console.log("")

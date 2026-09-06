@@ -323,7 +323,7 @@ async function clientIdForSlug(slug: string | undefined, client: Executor): Prom
 
 type ClientLite = { slug: string; name: string } | null
 
-function facts(row: SessionNote, clientRow?: ClientLite): NoteFacts {
+function facts(row: SessionNote, clientRow?: ClientLite, ticketNumber?: string | null): NoteFacts {
   const c: LeftOffClient | null = clientRow
     ? { slug: clientRow.slug, name: clientRow.name, color: clientColor(clientRow.slug) }
     : null
@@ -332,6 +332,7 @@ function facts(row: SessionNote, clientRow?: ClientLite): NoteFacts {
     reply: row.reply,
     taskId: row.taskId,
     ticketId: row.ticketId,
+    ticketNumber: ticketNumber ?? null,
     client: c,
     sessionRef: row.sessionRef,
     surface: row.surface,
@@ -366,10 +367,12 @@ export async function loadNoteFacts(now: Date, client: Executor = db): Promise<N
       ownSlug: clients.slug,
       ownName: clients.name,
       viaSessionId: agentSessions.clientId,
+      ticketNumber: supportTickets.number,
     })
     .from(sessionNotes)
     .leftJoin(clients, eq(clients.id, sessionNotes.clientId))
     .leftJoin(agentSessions, eq(agentSessions.sessionRef, sessionNotes.sessionRef))
+    .leftJoin(supportTickets, eq(supportTickets.id, sessionNotes.ticketId))
     .where(gte(sessionNotes.eventAt, since))
     .orderBy(desc(sessionNotes.eventAt))
     .limit(200)
@@ -389,7 +392,8 @@ export async function loadNoteFacts(now: Date, client: Executor = db): Promise<N
   return rows.map((r) =>
     facts(
       r.note,
-      r.ownSlug ? { slug: r.ownSlug, name: r.ownName ?? r.ownSlug } : fallback.get(r.viaSessionId ?? "") ?? null
+      r.ownSlug ? { slug: r.ownSlug, name: r.ownName ?? r.ownSlug } : fallback.get(r.viaSessionId ?? "") ?? null,
+      r.ticketNumber
     )
   )
 }

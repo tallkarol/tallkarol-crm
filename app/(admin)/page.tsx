@@ -435,6 +435,7 @@ export default async function DashboardPage({
     { kind: "page", label: "Clients", href: ROUTES.clients },
     { kind: "page", label: "Leads", href: ROUTES.leads },
     { kind: "page", label: "Tickets", href: ROUTES.support },
+    { kind: "page", label: "Inspiration", href: ROUTES.inspiration },
     { kind: "page", label: "Settings", href: ROUTES.settings },
     ...clients.map((c) => ({
       kind: "client" as const,
@@ -474,7 +475,7 @@ export default async function DashboardPage({
         <PeekRouter peek={searchParams.peek} closeHref="/" />
       ) : null}
       <WaitingStrip payload={waitingQueue} />
-      <LeftOffBoard payload={leftoff} />
+      <LeftOffBoard payload={leftoff} waiting={waitingQueue} />
 
       <div className="mt-6 grid min-w-0 gap-3.5 xl:grid-cols-[minmax(0,8fr)_minmax(300px,4fr)]">
         <div className="grid min-w-0 content-start gap-3.5">

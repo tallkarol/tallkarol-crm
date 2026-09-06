@@ -6,6 +6,11 @@ import { PeekEsc } from "@/components/peek/controls"
  * The slide-over frame every peek card lives in. Server-rendered; the URL is
  * the state (?peek=…), so back button, refresh, and sharing all behave.
  * Backdrop click and Esc both return to closeHref.
+ *
+ * z-75, not the 70 every other overlay uses: the dashboard renders PeekRouter
+ * BEFORE LeftOffBoard, so at a tied z-index the board wins on DOM order and a
+ * peek opened from a card on the board would slide in behind it. 75 clears the
+ * board and still passes under the skip link (80) and the floating clock (100).
  */
 export function PeekShell({
   closeHref,
@@ -19,7 +24,7 @@ export function PeekShell({
   children: ReactNode
 }) {
   return (
-    <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label={eyebrow}>
+    <div className="fixed inset-0 z-[75]" role="dialog" aria-modal="true" aria-label={eyebrow}>
       <PeekEsc closeHref={closeHref} />
       <Link
         href={closeHref}

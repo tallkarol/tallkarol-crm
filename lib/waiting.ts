@@ -97,6 +97,66 @@ export const KIND_LABEL: Record<WaitingKind, string> = {
   unbilled_session: "Unbilled",
 }
 
+/* ------------------------------------------------------------------ bands */
+
+export const WAITING_BANDS = ["answer", "decide", "standing"] as const
+export type WaitingBand = (typeof WAITING_BANDS)[number]
+
+/**
+ * Which band a kind falls in, for the board's morning view.
+ *
+ * `KIND_RANK` above orders the queue by how expensive the stall is. This
+ * orders it by a different question — what the row costs YOU — because that
+ * is the question you are actually asking at 8am. `answer` is everything
+ * somebody is waiting on words for; `decide` is everything no reply will
+ * clear.
+ *
+ * Nothing is mapped to `standing`. Standing rows are precisely the ones this
+ * queue refuses to admit — dirty repos, parked chats, a browser snapshot —
+ * and they come from the leftoff payload instead. The band exists so they
+ * have somewhere to be folded rather than nowhere to be seen.
+ *
+ * The known soft edge, stated rather than hidden: a ticket that needs a real
+ * investigation is not a one-line reply, and it will sit in `answer` looking
+ * cheaper than it is. No column in the database knows the difference. The
+ * judgement is made here, in one table, where changing it is one line.
+ */
+export const BAND_OF_KIND: Record<WaitingKind, WaitingBand> = {
+  blocked_chat: "answer",
+  ticket_no_reply: "answer",
+  new_inquiry: "answer",
+  monitor_failing: "decide",
+  overdue_task: "decide",
+  punchlist_item: "decide",
+  untested_item: "decide",
+  unbilled_session: "decide",
+}
+
+export const BAND_LABEL: Record<WaitingBand, string> = {
+  answer: "Answer",
+  decide: "Decide",
+  standing: "Standing",
+}
+
+/**
+ * Deliberately says "words", not "a reply box". Only `blocked_chat` carries a
+ * `reply` verb; a ticket's verb is `open`, because replying to a ticket is a
+ * screen and not an endpoint. The hint must not promise the row can do more
+ * than the row can do.
+ */
+export const BAND_HINT: Record<WaitingBand, string> = {
+  answer: "somebody is waiting on words from you",
+  decide: "no reply will clear these \u2014 do it, move it, or drop it",
+  standing: "nothing is asking \u2014 it is not your turn",
+}
+
+/** How many of `items` fall in each band. Counts, not the capped list. */
+export function bandCounts(counts: WaitingCounts): Record<WaitingBand, number> {
+  const out: Record<WaitingBand, number> = { answer: 0, decide: 0, standing: 0 }
+  for (const kind of WAITING_KINDS) out[BAND_OF_KIND[kind]] += counts[kind]
+  return out
+}
+
 /** Two words from `lib/attention.ts`, plus the rung a ledger row sits on. */
 export type WaitingSeverity = "hot" | "warn" | "quiet"
 

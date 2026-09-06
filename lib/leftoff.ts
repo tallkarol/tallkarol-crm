@@ -159,6 +159,8 @@ export type NoteFacts = {
   reply?: string
   taskId?: string | null
   ticketId?: string | null
+  /** The ticket's display number. `ticketId` is a uuid; /support/[number] wants this. */
+  ticketNumber?: string | null
   client?: LeftOffClient | null
 }
 
@@ -241,6 +243,48 @@ export function projectFromCwd(cwd: string) {
   const trimmed = cwd.replace(/\/+$/, "")
   const last = trimmed.slice(trimmed.lastIndexOf("/") + 1)
   return last
+}
+
+/**
+ * The workspace root a cwd sits in.
+ *
+ * `projectFromCwd` deliberately returns the LAST segment, which is the right
+ * label — a chat in `~/Work/tallkarol/crm` is working on "crm". It is the
+ * wrong thing to hand an editor: Cursor should open the workspace, and on
+ * this machine every repo is the first directory under `Work/`. A path that
+ * is not under Work comes back unchanged, because guessing at someone else's
+ * layout is worse than opening exactly where the chat was sitting.
+ */
+export function workspaceFromCwd(cwd: string) {
+  const trimmed = cwd.replace(/\/+$/, "")
+  if (!trimmed) return ""
+  const parts = trimmed.split("/")
+  const work = parts.lastIndexOf("Work")
+  if (work === -1 || work + 1 >= parts.length) return trimmed
+  return parts.slice(0, work + 2).join("/")
+}
+
+/**
+ * `cursor://file<encoded path>` — byte-for-byte the URL the Mac app builds in
+ * `LeftOffHandler.openInCursor`, so a click in the browser and a click in the
+ * menu-bar panel raise the same window. Encoded per segment: the separators
+ * have to survive, everything inside them must not.
+ */
+export function cursorHref(cwd: string) {
+  const workspace = workspaceFromCwd(cwd)
+  if (!workspace) return ""
+  return `cursor://file${workspace.split("/").map(encodeURIComponent).join("/")}`
+}
+
+/**
+ * `tallkarol://leftoff?ref=` — the Mac app runs the resume command in Terminal
+ * and opens Cursor on the folder, the same two things the menu-bar panel does.
+ * It resolves the ref against its own poller cache, so this silently does
+ * nothing if the app is not running or has not yet seen the session; that is
+ * why `cursorHref` is offered beside it rather than behind it.
+ */
+export function resumeHref(sessionRef: string) {
+  return `tallkarol://leftoff?ref=${encodeURIComponent(sessionRef)}`
 }
 
 function shellQuote(path: string) {
@@ -335,6 +379,7 @@ export type LeftOffNoteView = {
   pendingReply: string
   taskId: string | null
   ticketId: string | null
+  ticketNumber: string | null
   handoff: Handoff | null
   agents: AgentsView | null
   /** Set only on `surface: "repo"` rows. */
@@ -408,6 +453,7 @@ export function toView(n: NoteFacts, now: Date): LeftOffNoteView {
     pendingReply: n.reply ?? "",
     taskId: n.taskId ?? null,
     ticketId: n.ticketId ?? null,
+    ticketNumber: n.ticketNumber ?? null,
     handoff: readHandoff(n.meta),
     agents: readAgents(n.meta, now, n.state),
     repo: readRepo(n),
