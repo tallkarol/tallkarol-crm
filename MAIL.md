@@ -155,6 +155,11 @@ npm run inbox:sync -- --dry
 npm run check:jmap           # routing tests, no mailbox
 ```
 
+The CRM chat uses the same functions (`lib/inbox-sync.ts`). Ask it "what's in
+agent@" for a live peek, or "read the one from …" / "read GIRLFRIEND ALERT"
+for the body — that hits JMAP directly. Confirm `sync_inbox` only when you
+want copies in `inbox_mail` (tickets, the inbox stream). The chat never sends.
+
 Env:
 
 | Variable | Who | Used by |

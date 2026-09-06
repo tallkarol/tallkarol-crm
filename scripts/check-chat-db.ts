@@ -13,6 +13,7 @@ import {
   send,
   threadDetail,
 } from "@/lib/chat/turns"
+import { PERSONAL_CALENDAR_ID, pickCalendarSource } from "@/lib/calendar-write"
 
 /**
  * The chat spine, against a real database.
@@ -47,6 +48,22 @@ async function main() {
   check("classify: work history → chat", classify("what did I work on for x in june") === "chat")
   check("classify: 'why is … failing' → debug", classify("why is the UWD build still failing") === "debug")
   check("classify: security → security_review", classify("check this for xss") === "security_review")
+
+  const calendars = [
+    { kind: "google", enabled: true, writable: false, label: "Personal", externalId: PERSONAL_CALENDAR_ID },
+    { kind: "google", enabled: true, writable: true, label: "Remote", externalId: "karol.remote@gmail.com" },
+    { kind: "cal_com", enabled: true, writable: false, label: "Cal.com bookings", externalId: "" },
+  ]
+  const dest = pickCalendarSource(calendars, null)
+  const personal = pickCalendarSource(calendars, "personal")
+  const remote = pickCalendarSource(calendars, "Remote")
+  check("pickCalendar: empty hint is the destination", !("error" in dest) && dest.source.label === "Remote")
+  check(
+    "pickCalendar: personal alias hits gmail",
+    !("error" in personal) && personal.source.externalId === PERSONAL_CALENDAR_ID
+  )
+  check("pickCalendar: remote by label", !("error" in remote) && remote.source.label === "Remote")
+  check("pickCalendar: unknown is an error, not a silent destination", "error" in pickCalendarSource(calendars, "Outlook"))
 
   /* --- send --- */
   const first = await send({
@@ -107,6 +124,50 @@ async function main() {
       : JSON.stringify(sessions)
   )
 
+  const inbox = await invokeTool({
+    userId: admin.id,
+    turnId: first.turn.id,
+    name: "list_inbox",
+    args: { lens: "all" },
+  })
+  check(
+    "list_inbox ran",
+    inbox.status === "ran",
+    inbox.status === "ran"
+      ? `${(inbox.result as { items: unknown[] }).items.length} items`
+      : JSON.stringify(inbox)
+  )
+
+  const leftover = await invokeTool({
+    userId: admin.id,
+    turnId: first.turn.id,
+    name: "list_leftoff",
+    args: {},
+  })
+  check(
+    "list_leftoff ran",
+    leftover.status === "ran",
+    leftover.status === "ran"
+      ? `${(leftover.result as { notes: unknown[] }).notes.length} notes`
+      : JSON.stringify(leftover)
+  )
+
+  const peek = await invokeTool({
+    userId: admin.id,
+    turnId: first.turn.id,
+    name: "peek_agent_mailbox",
+    args: { limit: 5 },
+  })
+  check(
+    "peek_agent_mailbox ran",
+    peek.status === "ran",
+    peek.status === "ran"
+      ? (peek.result as { configured?: boolean; error?: string }).configured
+        ? `${(peek.result as { messages: unknown[] }).messages.length} headers`
+        : (peek.result as { error?: string }).error ?? "token missing"
+      : JSON.stringify(peek)
+  )
+
   /* --- a write parks, it does not run --- */
   const task = await invokeTool({
     userId: admin.id,
@@ -115,6 +176,23 @@ async function main() {
     args: { title: "smoke test — delete me", clientSlug: slug },
   })
   check("create_task parked as pending", task.status === "pending")
+
+  const calEvent = await invokeTool({
+    userId: admin.id,
+    turnId: first.turn.id,
+    name: "create_calendar_event",
+    args: {
+      title: "smoke test — delete me",
+      startsAt: "2026-09-07T10:00",
+      calendar: "personal",
+    },
+  })
+  check("create_calendar_event parked as pending", calEvent.status === "pending")
+  check(
+    "calendar preview names Personal",
+    calEvent.status === "pending" &&
+      JSON.stringify(calEvent.preview).includes("Personal")
+  )
   check(
     "preview rendered for the card",
     task.status === "pending" && Array.isArray((task.preview as { fields?: unknown[] })?.fields)

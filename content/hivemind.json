@@ -1,18 +1,18 @@
 {
-  "scannedAt": "2026-09-04T02:14:42.670Z",
+  "scannedAt": "2026-09-04T02:53:04.324Z",
   "plugin": {
     "name": "daedalus-hive-mind",
-    "version": "0.12.0",
+    "version": "0.14.0",
     "root": "~/Work/daedalus-hive-mind"
   },
   "counts": {
     "root": 1,
     "lane": 7,
-    "agent": 8,
-    "skill": 20,
-    "reference": 11,
-    "script": 30,
-    "command": 15,
+    "agent": 9,
+    "skill": 22,
+    "reference": 12,
+    "script": 29,
+    "command": 17,
     "routine": 7,
     "pipeline": 1
   },
@@ -25,7 +25,7 @@
       "source": "skills/team-charter/SKILL.md",
       "meta": {
         "plugin": "daedalus-hive-mind",
-        "version": "0.12.0"
+        "version": "0.14.0"
       }
     },
     {
@@ -130,6 +130,18 @@
       "meta": {
         "tools": "inherits the session's tools",
         "model": "sonnet"
+      }
+    },
+    {
+      "id": "agent:inspector",
+      "label": "inspector",
+      "kind": "agent",
+      "lane": "lane:build",
+      "blurb": "Escalated code review — the strongest model at the highest effort goes over what a medium agent (Cursor Composer, Sonnet) built for Karol.",
+      "source": "agents/inspector.md",
+      "meta": {
+        "tools": "Read, Grep, Glob, Bash, Edit, Write",
+        "model": "fable"
       }
     },
     {
@@ -309,14 +321,6 @@
       "source": "skills/follow-up/SKILL.md"
     },
     {
-      "id": "script:follow-up/__pycache__",
-      "label": "__pycache__",
-      "kind": "script",
-      "lane": "lane:planning",
-      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
-      "source": "skills/follow-up/scripts/__pycache__"
-    },
-    {
       "id": "script:follow-up/follow-up.py",
       "label": "follow-up.py",
       "kind": "script",
@@ -325,37 +329,61 @@
       "source": "skills/follow-up/scripts/follow-up.py"
     },
     {
+      "id": "skill:inspector",
+      "label": "inspector",
+      "kind": "skill",
+      "lane": "lane:build",
+      "blurb": "Escalate a medium agent's work to the strongest model for review — a Cursor Composer or Sonnet session's changes (or any git range, or the dirty tree) become a dossier (diff since the work…",
+      "source": "skills/inspector/SKILL.md"
+    },
+    {
+      "id": "script:inspector/inspector.py",
+      "label": "inspector.py",
+      "kind": "script",
+      "lane": "lane:build",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/inspector/scripts/inspector.py"
+    },
+    {
+      "id": "reference:inspector/slop-catalog.md",
+      "label": "slop-catalog.md",
+      "kind": "reference",
+      "lane": "lane:build",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/inspector/references/slop-catalog.md"
+    },
+    {
       "id": "skill:launch-audit",
       "label": "launch-audit",
       "kind": "skill",
+      "lane": "lane:delivery",
       "blurb": "Pre-launch and post-launch website audits that become a client handoff report — crawl health, redirects, security headers and exposed files, WordPress hardening, metadata and structured dat…",
       "source": "skills/launch-audit/SKILL.md"
-    },
-    {
-      "id": "script:launch-audit/__pycache__",
-      "label": "__pycache__",
-      "kind": "script",
-      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
-      "source": "skills/launch-audit/scripts/__pycache__"
     },
     {
       "id": "script:launch-audit/launch-audit.py",
       "label": "launch-audit.py",
       "kind": "script",
+      "lane": "lane:delivery",
       "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
       "source": "skills/launch-audit/scripts/launch-audit.py"
     },
     {
       "id": "script:launch-audit/launch_audit",
-      "label": "launch_audit",
+      "label": "launch_audit/",
       "kind": "script",
-      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
-      "source": "skills/launch-audit/scripts/launch_audit"
+      "lane": "lane:delivery",
+      "blurb": "A package of companion code the skill calls into.",
+      "source": "skills/launch-audit/scripts/launch_audit",
+      "meta": {
+        "contents": "5 files"
+      }
     },
     {
       "id": "reference:launch-audit/report-fonts.html",
       "label": "report-fonts.html",
       "kind": "reference",
+      "lane": "lane:delivery",
       "blurb": "Reference the skill reads before acting.",
       "source": "skills/launch-audit/references/report-fonts.html"
     },
@@ -363,6 +391,7 @@
       "id": "reference:launch-audit/report.css",
       "label": "report.css",
       "kind": "reference",
+      "lane": "lane:delivery",
       "blurb": "Reference the skill reads before acting.",
       "source": "skills/launch-audit/references/report.css"
     },
@@ -370,6 +399,7 @@
       "id": "reference:launch-audit/sample-handoff.html",
       "label": "sample-handoff.html",
       "kind": "reference",
+      "lane": "lane:delivery",
       "blurb": "Reference the skill reads before acting.",
       "source": "skills/launch-audit/references/sample-handoff.html"
     },
@@ -377,6 +407,7 @@
       "id": "reference:launch-audit/sample-internal.html",
       "label": "sample-internal.html",
       "kind": "reference",
+      "lane": "lane:delivery",
       "blurb": "Reference the skill reads before acting.",
       "source": "skills/launch-audit/references/sample-internal.html"
     },
@@ -440,6 +471,7 @@
       "id": "skill:lessons",
       "label": "lessons",
       "kind": "skill",
+      "lane": "lane:foundation",
       "blurb": "Mistakes that were fixed more than once across a project's Claude Code and Cursor conversations — tool errors and their fix loops, Karol's corrections, rejected plans, files the agent edite…",
       "source": "skills/lessons/SKILL.md"
     },
@@ -447,6 +479,7 @@
       "id": "script:lessons/lessons.py",
       "label": "lessons.py",
       "kind": "script",
+      "lane": "lane:foundation",
       "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
       "source": "skills/lessons/scripts/lessons.py"
     },
@@ -454,6 +487,7 @@
       "id": "reference:lessons/example-rules-tallkarol.json",
       "label": "example-rules-tallkarol.json",
       "kind": "reference",
+      "lane": "lane:foundation",
       "blurb": "Reference the skill reads before acting.",
       "source": "skills/lessons/references/example-rules-tallkarol.json"
     },
@@ -464,14 +498,6 @@
       "lane": "lane:ledger",
       "blurb": "Log agent hours into the tallkarol CRM timesheet — the agent meter's unlogged time for a client, weighted so six concurrent agents are not six hours, proposed with client/project/summary/ho…",
       "source": "skills/log-session/SKILL.md"
-    },
-    {
-      "id": "script:log-session/__pycache__",
-      "label": "__pycache__",
-      "kind": "script",
-      "lane": "lane:ledger",
-      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
-      "source": "skills/log-session/scripts/__pycache__"
     },
     {
       "id": "script:log-session/log-session.py",
@@ -538,20 +564,50 @@
       "source": "skills/spec-sheet/SKILL.md"
     },
     {
-      "id": "script:spec-sheet/__pycache__",
-      "label": "__pycache__",
-      "kind": "script",
-      "lane": "lane:planning",
-      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
-      "source": "skills/spec-sheet/scripts/__pycache__"
-    },
-    {
       "id": "script:spec-sheet/spec-sheet.py",
       "label": "spec-sheet.py",
       "kind": "script",
       "lane": "lane:planning",
       "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
       "source": "skills/spec-sheet/scripts/spec-sheet.py"
+    },
+    {
+      "id": "skill:styleguide",
+      "label": "styleguide",
+      "kind": "skill",
+      "lane": "lane:build",
+      "blurb": "Extract a site's existing design system and turn it into a Figma file — tokens (theme.json presets and the stylesheets' own custom properties, resolved at desktop and mobile), every button…",
+      "source": "skills/styleguide/SKILL.md"
+    },
+    {
+      "id": "script:styleguide/lib",
+      "label": "lib/",
+      "kind": "script",
+      "lane": "lane:build",
+      "blurb": "A package of companion code the skill calls into.",
+      "source": "skills/styleguide/scripts/lib",
+      "meta": {
+        "contents": "5 files"
+      }
+    },
+    {
+      "id": "script:styleguide/php",
+      "label": "php/",
+      "kind": "script",
+      "lane": "lane:build",
+      "blurb": "A package of companion code the skill calls into.",
+      "source": "skills/styleguide/scripts/php",
+      "meta": {
+        "contents": "1 file"
+      }
+    },
+    {
+      "id": "script:styleguide/styleguide.mjs",
+      "label": "styleguide.mjs",
+      "kind": "script",
+      "lane": "lane:build",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/styleguide/scripts/styleguide.mjs"
     },
     {
       "id": "skill:team-charter",
@@ -568,14 +624,6 @@
       "lane": "lane:ledger",
       "blurb": "The ledger lane's data layer — clock in/out per client/project from any session, attach work evidence (commits, diffs, meetings), and produce invoice math.",
       "source": "skills/timeclock/SKILL.md"
-    },
-    {
-      "id": "script:timeclock/__pycache__",
-      "label": "__pycache__",
-      "kind": "script",
-      "lane": "lane:ledger",
-      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
-      "source": "skills/timeclock/scripts/__pycache__"
     },
     {
       "id": "script:timeclock/client-for.py",
@@ -735,6 +783,17 @@
       }
     },
     {
+      "id": "command:inspect",
+      "label": "/inspect",
+      "kind": "command",
+      "lane": "lane:build",
+      "blurb": "Escalated review — a medium agent's changes (a Cursor/Sonnet session, a git range, or the dirty tree) go to the inspector agent at the strongest model and highest effort; findings become a…",
+      "source": "commands/inspect.md",
+      "meta": {
+        "arguments": "[--session <ref>…] [--since 3h] [--range A..B] [--dirty] [--path glob] | sessions | pick <run> <nums|all|auto|none> [--reject …] | apply <run> | history | lessons <run> — e.g. \"\", \"--session cursor:cbc1e85f\", \"--since 2h --path dev/**\", \"pick 20260904-1 1,3,auto\""
+      }
+    },
+    {
       "id": "command:invoice",
       "label": "/invoice",
       "kind": "command",
@@ -749,6 +808,7 @@
       "id": "command:launch-audit",
       "label": "/launch-audit",
       "kind": "command",
+      "lane": "lane:delivery",
       "blurb": "Pre- or post-launch website audit → client handoff report + internal report, stored per client + codebase in the CRM",
       "source": "commands/launch-audit.md",
       "meta": {
@@ -770,6 +830,7 @@
       "id": "command:lessons",
       "label": "/lessons",
       "kind": "command",
+      "lane": "lane:foundation",
       "blurb": "Mistakes fixed more than once across this project's Claude Code + Cursor conversations → clustered and costed → rules for .claude/rules and .cursor/rules, after Karol approves",
       "source": "commands/lessons.md",
       "meta": {
@@ -821,6 +882,17 @@
       }
     },
     {
+      "id": "command:styleguide",
+      "label": "/styleguide",
+      "kind": "command",
+      "lane": "lane:build",
+      "blurb": "Extract a site's design system (tokens, button states, patterns, pages) read-only and build it as a Figma file — variables with CSS code syntax, styles, a Button component set, DOM-named fr…",
+      "source": "commands/styleguide.md",
+      "meta": {
+        "arguments": "<site url> [--wp <wordpress root>] [--page <url>]... [--client <slug>] [--skip mobile] — e.g. \"https://uwd.gdi-multi-site-wp.local/ --page https://uwd.gdi-multi-site-wp.local/replacement-windows/\""
+      }
+    },
+    {
       "id": "routine:meter",
       "label": "Agent meter",
       "kind": "routine",
@@ -848,10 +920,11 @@
       "id": "routine:summarize",
       "label": "Session summarizer",
       "kind": "routine",
-      "blurb": "At session end a headless call turns the transcript into one invoice-voice line, while the transcript is still on disk.",
+      "blurb": "At session end a headless call turns the transcript into one invoice-voice line, while the transcript is still on disk. A twice-daily sweep then catches what the hook missed and flushes anything summarized but never pushed.",
       "source": "skills/session-log/SKILL.md",
       "meta": {
-        "cadence": "session end, plus a weekly sweep"
+        "cadence": "session end, plus a scheduled sweep",
+        "schedule": "07:15, 19:15 — LaunchAgent installed"
       }
     },
     {
@@ -861,7 +934,8 @@
       "blurb": "Read-only audit → fix picklist → Karol picks → approved ops only, backup-first.",
       "source": "skills/website-care/SKILL.md",
       "meta": {
-        "cadence": "weekly, per care client"
+        "cadence": "weekly, per care client",
+        "onboarded": "2 clients — mineralife, zemvelo"
       }
     },
     {
@@ -973,6 +1047,11 @@
       "rel": "contains"
     },
     {
+      "source": "lane:build",
+      "target": "agent:inspector",
+      "rel": "contains"
+    },
+    {
       "source": "lane:ledger",
       "target": "agent:purser",
       "rel": "contains"
@@ -1074,17 +1153,27 @@
     },
     {
       "source": "skill:follow-up",
-      "target": "script:follow-up/__pycache__",
-      "rel": "contains"
-    },
-    {
-      "source": "skill:follow-up",
       "target": "script:follow-up/follow-up.py",
       "rel": "contains"
     },
     {
-      "source": "skill:launch-audit",
-      "target": "script:launch-audit/__pycache__",
+      "source": "lane:build",
+      "target": "skill:inspector",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:inspector",
+      "target": "script:inspector/inspector.py",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:inspector",
+      "target": "reference:inspector/slop-catalog.md",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:delivery",
+      "target": "skill:launch-audit",
       "rel": "contains"
     },
     {
@@ -1153,6 +1242,11 @@
       "rel": "contains"
     },
     {
+      "source": "lane:foundation",
+      "target": "skill:lessons",
+      "rel": "contains"
+    },
+    {
       "source": "skill:lessons",
       "target": "script:lessons/lessons.py",
       "rel": "contains"
@@ -1165,11 +1259,6 @@
     {
       "source": "lane:ledger",
       "target": "skill:log-session",
-      "rel": "contains"
-    },
-    {
-      "source": "skill:log-session",
-      "target": "script:log-session/__pycache__",
       "rel": "contains"
     },
     {
@@ -1214,12 +1303,27 @@
     },
     {
       "source": "skill:spec-sheet",
-      "target": "script:spec-sheet/__pycache__",
+      "target": "script:spec-sheet/spec-sheet.py",
       "rel": "contains"
     },
     {
-      "source": "skill:spec-sheet",
-      "target": "script:spec-sheet/spec-sheet.py",
+      "source": "lane:build",
+      "target": "skill:styleguide",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:styleguide",
+      "target": "script:styleguide/lib",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:styleguide",
+      "target": "script:styleguide/php",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:styleguide",
+      "target": "script:styleguide/styleguide.mjs",
       "rel": "contains"
     },
     {
@@ -1230,11 +1334,6 @@
     {
       "source": "lane:ledger",
       "target": "skill:timeclock",
-      "rel": "contains"
-    },
-    {
-      "source": "skill:timeclock",
-      "target": "script:timeclock/__pycache__",
       "rel": "contains"
     },
     {
@@ -1444,12 +1543,22 @@
     },
     {
       "source": "skill:team-charter",
+      "target": "skill:inspector",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:team-charter",
       "target": "skill:leftoff",
       "rel": "loads"
     },
     {
       "source": "skill:team-charter",
       "target": "agent:docent",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:team-charter",
+      "target": "agent:inspector",
       "rel": "loads"
     },
     {
@@ -1513,6 +1622,16 @@
       "rel": "loads"
     },
     {
+      "source": "command:inspect",
+      "target": "skill:inspector",
+      "rel": "loads"
+    },
+    {
+      "source": "command:inspect",
+      "target": "agent:inspector",
+      "rel": "loads"
+    },
+    {
       "source": "command:invoice",
       "target": "skill:timeclock",
       "rel": "loads"
@@ -1565,6 +1684,11 @@
     {
       "source": "command:spec-sheet",
       "target": "skill:spec-sheet",
+      "rel": "loads"
+    },
+    {
+      "source": "command:styleguide",
+      "target": "skill:styleguide",
       "rel": "loads"
     },
     {

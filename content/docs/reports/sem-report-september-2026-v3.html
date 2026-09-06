@@ -93,7 +93,7 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
     <div><span class="k">Headline</span><span class="v">Analytics has been under-counting since 17 July</span></div>
     <div><span class="k">Cause</span><span class="v">Found &mdash; one Tag Manager trigger</span></div>
     <div><span class="k">New campaign</span><span class="v">Live 2 Sept &middot; $22.93 &middot; 6 clicks</span></div>
-    <div><span class="k">Index</span><span class="v">60 of 63 &middot; 3 open</span></div>
+    <div><span class="k">Index</span><span class="v">61 of 63 &middot; 2 open</span></div>
   </div>
   <div class="toc">
     <ol>
@@ -437,14 +437,15 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
 </section>
 
 <section id="s8">
-  <div class="sec-label"><span class="n">08</span><h2>Index check &mdash; 3 September</h2></div>
-  <p>The scan ran this morning against Search Console. Sixty of sixty-three submitted URLs are indexed. Nothing
-  new broke, and nothing was fixed since yesterday.</p>
+  <div class="sec-label"><span class="n">08</span><h2>Index check &mdash; 4 September</h2></div>
+  <p>Sixty-one of sixty-three submitted URLs are now indexed. The glutathione post was crawled overnight, which
+  leaves two outstanding and settles the question of whether the crawl paths deployed on 2 September were
+  working.</p>
   <div class="grid g4">
-    <div class="stat good"><span class="num">60/63</span><span class="lbl">Indexed</span><span class="sub">95% of the sitemap</span></div>
+    <div class="stat good"><span class="num">61/63</span><span class="lbl">Indexed</span><span class="sub">97% of the sitemap</span></div>
     <div class="stat"><span class="num">0</span><span class="lbl">Newly opened</span></div>
-    <div class="stat"><span class="num">0</span><span class="lbl">Resolved today</span></div>
-    <div class="stat warn"><span class="num">3</span><span class="lbl">Still open</span></div>
+    <div class="stat good"><span class="num">1</span><span class="lbl">Resolved today</span></div>
+    <div class="stat warn"><span class="num">2</span><span class="lbl">Still open</span></div>
   </div>
   <div class="tablecard" style="margin-top:16px">
   <table>
@@ -454,29 +455,30 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
       <tr><td class="mono">1 Sep</td><td class="r">59 / 63</td><td class="muted">no change</td></tr>
       <tr><td class="mono">2 Sep</td><td class="r">60 / 63</td><td><span class="chip ok">Las Vegas page indexed</span></td></tr>
       <tr><td class="mono">3 Sep</td><td class="r">60 / 63</td><td class="muted">no change</td></tr>
+      <tr><td class="mono">4 Sep</td><td class="r">61 / 63</td><td><span class="chip ok">glutathione post indexed</span></td></tr>
     </tbody>
   </table>
   </div>
-  <h3 style="margin-top:22px">The three that remain</h3>
+  <h3 style="margin-top:22px">The two that remain</h3>
   <div class="stack">
-    <div class="statusrow"><span class="st open">7 scans</span><span class="what">
-      <b>/blog/glutathione-reduced-vs-liposomal</b>
-      <span class="why">Google reports &ldquo;URL is unknown to Google&rdquo; &mdash; it has never been crawled at
-      all, despite being in the sitemap since 30 August. This is the worst of the three: unknown is a step behind
-      discovered.</span></span></div>
-    <div class="statusrow"><span class="st open">7 scans</span><span class="what">
+    <div class="statusrow"><span class="st done">fixed</span><span class="what">
+      <b>/blog/glutathione-reduced-vs-liposomal <span class="fixed">indexed 4 Sep</span></b>
+      <span class="why">Google had never crawled it at all &mdash; &ldquo;URL is unknown&rdquo; across eight
+      scans since 30 August. It was the worst of the three and it is now in. The internal crawl paths deployed
+      on 2 September are the likely reason.</span></span></div>
+    <div class="statusrow"><span class="st open">9 scans</span><span class="what">
       <b>/serving/colorado/boulder</b>
       <span class="why">&ldquo;Discovered &mdash; currently not indexed&rdquo;. Google knows it exists and has
       chosen not to crawl it yet. Typical for a thin location page with few internal links.</span></span></div>
-    <div class="statusrow"><span class="st open">2 scans</span><span class="what">
+    <div class="statusrow"><span class="st open">4 scans</span><span class="what">
       <b>/blog/mineralife-is-hiring</b>
       <span class="why">&ldquo;Discovered &mdash; currently not indexed&rdquo;, first seen 2 September when the
-      clean slug replaced the previous emoji URL. Two days old &mdash; give it a week before treating it as a
-      problem.</span></span></div>
+      clean slug replaced the previous emoji URL. Still only days old &mdash; give it a week before treating it
+      as a problem.</span></span></div>
   </div>
-  <p style="margin-top:16px">Internal crawl paths for these were deployed on 2 September. One day is not enough
-  time for Google to act on that, so the right response for now is to wait rather than to intervene again. If
-  the glutathione post is still unknown a week from now, request indexing for it directly.</p>
+  <p style="margin-top:16px">Three findings have now been resolved in five days: the emoji hiring URL, the Las
+  Vegas page, and the glutathione post. Both remaining URLs are &ldquo;discovered, not indexed&rdquo; rather than
+  uncrawled, which is the milder state and usually resolves itself. Keep waiting rather than intervening.</p>
   <p class="small muted">Filed against maintenance task <code>b008884d</code> for the September period.</p>
 </section>
 
@@ -557,17 +559,15 @@ footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(-
   <p class="small muted" style="margin-top:14px">Google still has no field data from real visitors for this site
   &mdash; loading speeds above are laboratory measurements. That needs sustained real traffic before it changes,
   and it is not something to act on.</p>
-  <div class="card tint rail warn" style="margin-top:16px">
-    <h3>Speed slipped after the 4 September changes <span class="new">4 Sep</span></h3>
-    <p class="small">Three measurements were taken across the two days: 90 mobile / 99 desktop on 3 September,
-    then 69 / 67 and 82 / 82 within an hour of each other on 4 September. Laboratory scores bounce, and the
-    spread between the last two shows how much &mdash; so the exact figure is not worth arguing about. The
-    direction is consistent though, and the cause is visible in the detail: main-thread blocking now runs to
-    450&nbsp;ms on mobile and 390&nbsp;ms on desktop.</p>
-    <p class="small">The most likely explanation is not a regression at all. Until yesterday the Analytics tag
-    was skipped and cost nothing to run; it now actually loads and executes on every page. Working measurement
-    has a price in milliseconds. Worth watching over the coming week rather than reacting to, and worth
-    re-checking once real traffic gives Google field data to replace the laboratory guess.</p>
+  <div class="card tint rail good" style="margin-top:16px">
+    <h3>No speed cost from the tracking fix <span class="fixed">4 Sep</span></h3>
+    <p class="small">Turning the Analytics tag back on meant it now actually loads and executes on every page,
+    where before it was skipped and cost nothing &mdash; so it was worth checking whether working measurement had
+    been paid for in load time. Four measurements were taken across the two days: 90 mobile / 99 desktop, then
+    69 / 67, then 82 / 82, then 89 / 100. The middle reading was an outlier. Laboratory scores bounce by twenty
+    points on a site this size, which is exactly why one reading is never enough to call a trend.</p>
+    <p class="small">The conclusion is that nothing slipped. Speed is where it was, accessibility and best
+    practices are back at 100, and the tag&rsquo;s cost is inside the noise. No action needed.</p>
   </div>
 </section>
 

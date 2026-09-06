@@ -567,12 +567,37 @@ body {
 .tk-live-dot {
   animation: tk-pulse 1.6s ease-in-out infinite;
 }
+
+/* Chat: the assistant is working. Three dots rising in sequence, no words —
+   the label lives on the container for screen readers, so the motion is
+   decoration and never the only thing carrying the meaning. */
+@keyframes tk-wave {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+.tk-wave-dot {
+  animation: tk-wave 1.15s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 140ms);
+}
 @media (prefers-reduced-motion: reduce) {
   .tk-rise {
     animation: none;
   }
   .tk-live-dot {
     animation: none;
+  }
+  /* Hold a legible resting state rather than vanishing mid-keyframe. */
+  .tk-wave-dot {
+    animation: none;
+    opacity: 0.55;
   }
 }
 

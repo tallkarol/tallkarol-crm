@@ -6,6 +6,7 @@ import { AlertTriangle, Check, X } from "lucide-react"
 import { decideApproval } from "@/lib/chat/actions"
 import type { ChatToolCall } from "@/db/schema"
 import type { ToolPreview } from "@/lib/chat/tools"
+import { Card } from "@/components/ui/Card"
 
 const VERB: Record<string, string> = {
   log_time: "Log this time",
@@ -38,7 +39,7 @@ export function ApprovalCard({ call }: { call: ChatToolCall }) {
   }
 
   return (
-    <div className="mt-2 overflow-hidden rounded-2xl border border-line bg-well shadow-card">
+    <Card surface="well" className="mt-2 overflow-hidden">
       <div className="flex items-center gap-2 border-b border-line px-4 py-2.5">
         <AlertTriangle className="size-3.5 text-warn" />
         <span className="text-xs font-semibold text-tk-onyx">
@@ -98,6 +99,6 @@ export function ApprovalCard({ call }: { call: ChatToolCall }) {
           </button>
         </div>
       ) : null}
-    </div>
+    </Card>
   )
 }

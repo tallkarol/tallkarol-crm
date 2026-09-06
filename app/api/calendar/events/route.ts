@@ -15,8 +15,8 @@ export const dynamic = "force-dynamic"
  * Create an event on the destination calendar from anything holding a device
  * token — the `/follow-up` skill, a shortcut, a script.
  *
- * { title, startsAt, endsAt, timeZone?, description?, location?,
- *   attendees?: string[], clientRequestId? }
+ * { title, startsAt, endsAt?, timeZone?, description?, location?,
+ *   attendees?: string[], calendar?, clientRequestId? }
  *
  * `startsAt`/`endsAt` are local wall-clock `YYYY-MM-DDTHH:mm` read in
  * `timeZone` (default UTC — send yours). `clientRequestId` is stored on the
@@ -45,6 +45,7 @@ export async function POST(request: Request) {
     endsAt: readString(body, "endsAt") ?? "",
     timeZone: readString(body, "timeZone") ?? "UTC",
     attendees,
+    calendar: readString(body, "calendar"),
     refKey: readString(body, "clientRequestId"),
   })
   if (!result.ok) {

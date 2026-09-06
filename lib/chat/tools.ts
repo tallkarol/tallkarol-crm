@@ -1,12 +1,22 @@
 import { asc, eq } from "drizzle-orm"
 import { db } from "@/db"
 import { clients, projects } from "@/db/schema"
+import { BOARD_TOOLS } from "@/lib/chat/tools-board"
+import { INBOX_TOOLS } from "@/lib/chat/tools-inbox"
+import { INSPIRATION_TOOLS } from "@/lib/chat/tools-inspiration"
+import {
+  hoursLabel,
+  ISO_DAY,
+  num,
+  range,
+  str,
+  type ToolSpec,
+} from "@/lib/chat/tool-helpers"
 import { refreshInsightsAction } from "@/lib/insights/actions"
 import { logAgentTime } from "@/lib/punches"
 import { ledgerEntries } from "@/lib/sheets"
 import { searchSessions } from "@/lib/leftoff-history"
 import { insertTaskRow, resolveTaskTarget } from "@/lib/task-insert"
-import { monthEnd } from "@/lib/timesheet"
 
 /**
  * What the chat can actually do.
@@ -23,63 +33,7 @@ import { monthEnd } from "@/lib/timesheet"
  * retrying a dropped connection — cannot double-apply.
  */
 
-export type ToolContext = {
-  userId: string
-  threadId: string
-  /** The parked tool call's key, handed to domain writes that accept one. */
-  idempotencyKey: string
-}
-
-export type ToolPreview = {
-  title: string
-  /** Ordered label/value pairs; rendered verbatim on the approval card. */
-  fields: { label: string; value: string }[]
-  note?: string
-}
-
-export type ToolSpec = {
-  name: string
-  description: string
-  mutating: boolean
-  /** JSON Schema handed to the model. Kept by hand so it cannot drift. */
-  parameters: Record<string, unknown>
-  preview?: (args: Record<string, unknown>, ctx: ToolContext) => Promise<ToolPreview>
-  run: (args: Record<string, unknown>, ctx: ToolContext) => Promise<unknown>
-}
-
-/* ---------- argument helpers ---------- */
-
-function str(args: Record<string, unknown>, key: string): string | undefined {
-  const value = args[key]
-  return typeof value === "string" && value.trim() ? value.trim() : undefined
-}
-
-function num(args: Record<string, unknown>, key: string): number | undefined {
-  const value = args[key]
-  if (typeof value === "number" && Number.isFinite(value)) return value
-  if (typeof value === "string" && value.trim() && !Number.isNaN(Number(value))) {
-    return Number(value)
-  }
-  return undefined
-}
-
-const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/
-const ISO_MONTH = /^\d{4}-\d{2}$/
-
-/** Accepts "2026-06" or "2026-06-01" and returns an inclusive day range. */
-function range(from?: string, to?: string): { from?: string; to?: string } {
-  if (from && ISO_MONTH.test(from)) {
-    return { from: `${from}-01`, to: to && ISO_DAY.test(to) ? to : monthEnd(from) }
-  }
-  return {
-    from: from && ISO_DAY.test(from) ? from : undefined,
-    to: to && ISO_DAY.test(to) ? to : undefined,
-  }
-}
-
-function hoursLabel(hours: number): string {
-  return `${hours.toFixed(2)} h`
-}
+export type { ToolContext, ToolPreview, ToolSpec } from "@/lib/chat/tool-helpers"
 
 /* ---------- read tools ---------- */
 
@@ -367,6 +321,9 @@ export const TOOLS: readonly ToolSpec[] = [
   searchWorkHistory,
   searchPastSessions,
   listClients,
+  ...INBOX_TOOLS,
+  ...BOARD_TOOLS,
+  ...INSPIRATION_TOOLS,
   logTime,
   createTask,
   refreshInsights,

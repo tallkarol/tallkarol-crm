@@ -1,6 +1,6 @@
-import { desc, isNull } from "drizzle-orm"
+import { and, desc, eq, isNull, sql } from "drizzle-orm"
 import { db } from "@/db"
-import { inboxMail, inboxState } from "@/db/schema"
+import { clients, inboxMail, inboxState } from "@/db/schema"
 import { clientColor } from "@/lib/client-colors"
 import { readLead } from "@/lib/lead"
 import { ROUTES } from "@/lib/nav"
@@ -231,4 +231,76 @@ export async function loadInbox(now = new Date()): Promise<InboxData> {
   }))
 
   return { items, counts, clients, ready }
+}
+
+export async function loadInboxMail(id: string) {
+  const mail = await db.query.inboxMail.findFirst({
+    where: eq(inboxMail.id, id),
+    with: { client: { columns: { slug: true, name: true } } },
+  })
+  if (!mail) return null
+  return {
+    id: mail.id,
+    messageId: mail.messageId,
+    from: { name: mail.fromName, email: mail.fromEmail },
+    to: mail.toEmail,
+    subject: mail.subject,
+    snippet: mail.snippet,
+    body: mail.body,
+    receivedAt: mail.receivedAt.toISOString(),
+    client: mail.client ? { slug: mail.client.slug, name: mail.client.name } : null,
+    ticketId: mail.ticketId,
+  }
+}
+
+export async function searchInboxMail(
+  q: string,
+  opts: { clientSlug?: string; limit?: number } = {}
+) {
+  const needle = `%${q.replace(/[%_]/g, "\\$&")}%`
+  const limit = Math.min(opts.limit ?? 25, 50)
+
+  const rows = await db
+    .select({
+      id: inboxMail.id,
+      subject: inboxMail.subject,
+      snippet: inboxMail.snippet,
+      fromName: inboxMail.fromName,
+      fromEmail: inboxMail.fromEmail,
+      toEmail: inboxMail.toEmail,
+      receivedAt: inboxMail.receivedAt,
+      ticketId: inboxMail.ticketId,
+      clientSlug: clients.slug,
+      clientName: clients.name,
+    })
+    .from(inboxMail)
+    .leftJoin(clients, eq(clients.id, inboxMail.clientId))
+    .where(
+      and(
+        sql`(
+          ${inboxMail.subject} ilike ${needle} escape '\\'
+          or ${inboxMail.snippet} ilike ${needle} escape '\\'
+          or ${inboxMail.body} ilike ${needle} escape '\\'
+          or ${inboxMail.fromEmail} ilike ${needle} escape '\\'
+          or ${inboxMail.fromName} ilike ${needle} escape '\\'
+          or ${inboxMail.toEmail} ilike ${needle} escape '\\'
+        )`,
+        opts.clientSlug ? eq(clients.slug, opts.clientSlug) : undefined
+      )
+    )
+    .orderBy(desc(inboxMail.receivedAt))
+    .limit(limit)
+
+  return rows.map((row) => ({
+    id: row.id,
+    key: `mail:${row.id}`,
+    subject: row.subject,
+    snippet: row.snippet,
+    from: row.fromName || row.fromEmail,
+    fromEmail: row.fromEmail,
+    to: row.toEmail,
+    receivedAt: row.receivedAt.toISOString(),
+    client: row.clientSlug ? { slug: row.clientSlug, name: row.clientName } : null,
+    ticketId: row.ticketId,
+  }))
 }

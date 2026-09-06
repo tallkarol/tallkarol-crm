@@ -25,6 +25,9 @@ yarn-error.log*
 # env
 .env
 .env*.local
+# `.env*.local` requires the name to END there, so a .env.local.bak — the kind
+# of thing an editor or a rotation script leaves behind — was committable.
+.env*.local.*
 
 # vercel / railway
 .vercel
@@ -39,6 +42,7 @@ next-env.d.ts
 service-account*.json
 gcp-*.json
 /.next-build/
+/.next-merge/
 /.next-smoke/
 /.next-review/
 /.next-wait/

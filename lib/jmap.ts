@@ -135,17 +135,111 @@ function bodyOf(email: RawEmail) {
   return ""
 }
 
+const EMAIL_HEADERS = [
+  "id",
+  "threadId",
+  "messageId",
+  "inReplyTo",
+  "subject",
+  "preview",
+  "receivedAt",
+  "from",
+  "to",
+  "header:Delivered-To:asText",
+  "header:X-Original-To:asText",
+] as const
+
+const EMAIL_BODY = ["textBody", "htmlBody", "bodyValues"] as const
+
+function emailGetArgs(
+  accountId: string,
+  ids: string[] | { resultOf: string; name: string; path: string },
+  bodies: boolean
+) {
+  return {
+    accountId,
+    ...(Array.isArray(ids) ? { ids } : { "#ids": ids }),
+    properties: bodies ? [...EMAIL_HEADERS, ...EMAIL_BODY] : [...EMAIL_HEADERS],
+    ...(bodies
+      ? {
+          fetchTextBodyValues: true,
+          fetchHTMLBodyValues: true,
+          maxBodyValueBytes: 100_000,
+        }
+      : {}),
+  }
+}
+
+function toJmapEmail(email: RawEmail): JmapEmail {
+  const from = email.from?.[0]
+  return {
+    id: email.id,
+    // Fall back to the JMAP id so a message without a Message-Id header still
+    // dedupes on re-sync.
+    messageId: email.messageId?.[0] || `jmap:${email.id}`,
+    threadId: email.threadId ?? "",
+    inReplyTo: email.inReplyTo?.[0] ?? "",
+    fromName: from?.name ?? "",
+    fromEmail: from?.email ?? "",
+    toEmail: email.to?.[0]?.email ?? "",
+    deliveredTo: (email["header:Delivered-To:asText"] ?? "").trim(),
+    originalTo: (email["header:X-Original-To:asText"] ?? "").trim(),
+    subject: email.subject ?? "",
+    snippet: (email.preview ?? "").trim(),
+    body: bodyOf(email),
+    receivedAt: email.receivedAt ?? new Date().toISOString(),
+  }
+}
+
+/**
+ * Pick one live message out of a newest-first list.
+ *
+ * An id wins (JMAP id or RFC Message-ID). Otherwise subject / from are
+ * case-insensitive contains. Returns the newest hit plus any other matches
+ * so a caller can ask which one, instead of silently opening the wrong mail.
+ */
+export function matchLiveMail<
+  T extends { id: string; messageId?: string; subject: string; fromEmail: string },
+>(
+  mail: T[],
+  opts: { id?: string; subject?: string; from?: string }
+): { hit: T | null; others: T[] } {
+  const id = opts.id?.trim()
+  if (id) {
+    const exact = mail.find((m) => m.id === id || m.messageId === id)
+    if (exact) return { hit: exact, others: [] }
+  }
+
+  const subject = opts.subject?.trim().toLowerCase()
+  const from = opts.from?.trim().toLowerCase()
+  if (!subject && !from) return { hit: null, others: [] }
+
+  const matched = mail.filter((m) => {
+    if (subject && !m.subject.toLowerCase().includes(subject)) return false
+    if (from && !m.fromEmail.toLowerCase().includes(from)) return false
+    return true
+  })
+  return { hit: matched[0] ?? null, others: matched.slice(1) }
+}
+
 /**
  * Newest messages in the mailbox, most recent first. `sinceIso` trims the
  * query to what has arrived since the last sync — the whole mailbox is never
- * fetched twice.
+ * fetched twice. Pass `bodies: false` for a header peek so we do not pull
+ * every text part just to throw it away.
  */
 export async function fetchRecentMail(
   config: JmapConfig,
-  options: { limit?: number; sinceIso?: string | null; mailbox?: string } = {}
+  options: {
+    limit?: number
+    sinceIso?: string | null
+    mailbox?: string
+    bodies?: boolean
+  } = {}
 ): Promise<JmapEmail[]> {
   const { apiUrl, accountId } = await jmapSession(config)
   const limit = Math.min(options.limit ?? 50, 200)
+  const bodies = options.bodies !== false
 
   const filter: Record<string, unknown> = {}
   if (options.sinceIso) filter.after = options.sinceIso
@@ -166,29 +260,11 @@ export async function fetchRecentMail(
       ],
       [
         "Email/get",
-        {
+        emailGetArgs(
           accountId,
-          "#ids": { resultOf: "q", name: "Email/query", path: "/ids" },
-          properties: [
-            "id",
-            "threadId",
-            "messageId",
-            "inReplyTo",
-            "subject",
-            "preview",
-            "receivedAt",
-            "from",
-            "to",
-            "textBody",
-            "htmlBody",
-            "bodyValues",
-            "header:Delivered-To:asText",
-            "header:X-Original-To:asText",
-          ],
-          fetchTextBodyValues: true,
-          fetchHTMLBodyValues: true,
-          maxBodyValueBytes: 100_000,
-        },
+          { resultOf: "q", name: "Email/query", path: "/ids" },
+          bodies
+        ),
         "g",
       ],
     ],
@@ -196,27 +272,25 @@ export async function fetchRecentMail(
 
   const get = response.methodResponses.find((r) => r[0] === "Email/get")
   const list = get?.[1]?.list ?? []
+  return list.map(toJmapEmail)
+}
 
-  return list.map((email): JmapEmail => {
-    const from = email.from?.[0]
-    return {
-      id: email.id,
-      // Fall back to the JMAP id so a message without a Message-Id header still
-      // dedupes on re-sync.
-      messageId: email.messageId?.[0] || `jmap:${email.id}`,
-      threadId: email.threadId ?? "",
-      inReplyTo: email.inReplyTo?.[0] ?? "",
-      fromName: from?.name ?? "",
-      fromEmail: from?.email ?? "",
-      toEmail: email.to?.[0]?.email ?? "",
-      deliveredTo: (email["header:Delivered-To:asText"] ?? "").trim(),
-      originalTo: (email["header:X-Original-To:asText"] ?? "").trim(),
-      subject: email.subject ?? "",
-      snippet: (email.preview ?? "").trim(),
-      body: bodyOf(email),
-      receivedAt: email.receivedAt ?? new Date().toISOString(),
-    }
-  })
+/** One message by JMAP id. Writes nothing. */
+export async function fetchMailById(
+  config: JmapConfig,
+  id: string
+): Promise<JmapEmail | null> {
+  const trimmed = id.trim()
+  if (!trimmed) return null
+  const { apiUrl, accountId } = await jmapSession(config)
+  const response = (await post(apiUrl, config.token, {
+    using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+    methodCalls: [["Email/get", emailGetArgs(accountId, [trimmed], true), "g"]],
+  })) as { methodResponses: [string, { list?: RawEmail[] }, string][] }
+
+  const get = response.methodResponses.find((r) => r[0] === "Email/get")
+  const email = get?.[1]?.list?.[0]
+  return email ? toJmapEmail(email) : null
 }
 
 /** The domain half of an address, lowercased. */

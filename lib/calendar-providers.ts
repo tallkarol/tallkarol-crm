@@ -134,11 +134,15 @@ export type NewGoogleEvent = {
   title: string
   description: string
   location: string
-  /** Local wall-clock, `YYYY-MM-DDTHH:mm`, interpreted in `timeZone`. */
+  /**
+   * Timed: local wall-clock `YYYY-MM-DDTHH:mm[:ss]`, read in `timeZone`.
+   * All-day: `YYYY-MM-DD`. The all-day end is exclusive (the day after).
+   */
   startsAt: string
   endsAt: string
   timeZone: string
   attendees: string[]
+  allDay?: boolean
   /**
    * Caller's own id, stored as a private extended property so a retry can
    * find the event it already made instead of making a second one.
@@ -188,8 +192,12 @@ export async function createGoogleEvent(
         summary: input.title,
         description: input.description || undefined,
         location: input.location || undefined,
-        start: { dateTime: input.startsAt, timeZone: input.timeZone },
-        end: { dateTime: input.endsAt, timeZone: input.timeZone },
+        start: input.allDay
+          ? { date: input.startsAt.slice(0, 10) }
+          : { dateTime: input.startsAt, timeZone: input.timeZone },
+        end: input.allDay
+          ? { date: input.endsAt.slice(0, 10) }
+          : { dateTime: input.endsAt, timeZone: input.timeZone },
         attendees: input.attendees.length
           ? input.attendees.map((email) => ({ email }))
           : undefined,

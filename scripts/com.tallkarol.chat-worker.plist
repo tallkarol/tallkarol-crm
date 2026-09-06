@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The chat worker, kept alive by launchd.
+
+  Turns are queued by the CRM and run here, so a worker that is not running
+  means questions sit in the queue unanswered — indistinguishable, from the
+  page, from a model taking its time. Rather than remember to start it, let
+  launchd own it: RunAtLoad brings it up at login, KeepAlive brings it back
+  if it dies.
+
+  Install:   launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tallkarol.chat-worker.plist
+  Stop:      launchctl bootout gui/$(id -u)/com.tallkarol.chat-worker
+  Status:    launchctl print gui/$(id -u)/com.tallkarol.chat-worker | head
+  Log:       tail -f ~/Library/Logs/tallkarol/chat-worker.log
+
+  Copy this file into ~/Library/LaunchAgents/ after editing it — launchd reads
+  its own copy, not this one.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tallkarol.chat-worker</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/npm</string>
+        <string>run</string>
+        <string>chat:worker</string>
+    </array>
+
+    <!-- The worker reads .env.local relative to the working directory. -->
+    <key>WorkingDirectory</key>
+    <string>/Users/karolbuczek/Work/tallkarol/crm</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <!-- launchd starts with a bare PATH; node and npm live in Homebrew. -->
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <!-- Point at the deployed CRM instead when the worker should serve it. -->
+        <key>CRM_URL</key>
+        <string>http://localhost:3001</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- If it dies on startup (missing key), fail slowly instead of spinning. -->
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+
+    <key>StandardOutPath</key>
+    <string>/Users/karolbuczek/Library/Logs/tallkarol/chat-worker.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/karolbuczek/Library/Logs/tallkarol/chat-worker.log</string>
+</dict>
+</plist>

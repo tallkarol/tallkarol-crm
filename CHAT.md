@@ -123,20 +123,53 @@ never writes SQL and cannot reach anything not on this list.
 | `search_work_history` | `ledgerEntries` (`lib/sheets.ts`) | no |
 | `search_sessions` | `searchSessions` (`lib/leftoff-history.ts`) | no |
 | `list_clients` | `clients` + `projects` | no |
+| `peek_agent_mailbox` | `peekAgentMailbox` (`lib/inbox-sync.ts`) | no |
+| `list_inbox` | `loadInbox` (`lib/inbox-data.ts`) | no |
+| `read_mail` | `loadInboxMail` / `readAgentMail` | no |
+| `search_mail` | `searchInboxMail` | no |
+| `list_leftoff` | `loadLeftOff` | no |
+| `list_waiting` | `loadWaiting` | no |
+| `list_tasks` | `listTasks` | no |
+| `list_calendar` | `getMeetingsInWindow` | no |
+| `create_calendar_event` | `writeCalendarEvent` | **yes** |
+| `list_inspiration` | `listBoards` / `listPinsOnBoard` | no |
+| `pin_inspiration` | `pinInspiration` (`lib/inspiration-data.ts`) | **yes** |
+| `sync_inbox` | `runInboxSync` | **yes** |
+| `archive_inbox_item` | `setInboxItemState` | **yes** |
+| `snooze_inbox_item` | `snoozeInboxItem` | **yes** |
+| `assign_inbox_item` | `assignInboxClient` | **yes** |
+| `inbox_to_ticket` | `mailToTicketById` | **yes** |
+| `inbox_to_task` | `makeInboxTask` | **yes** |
+| `dismiss_leftoff` | `dismissNote` | **yes** |
+| `complete_task` | `completeTask` | **yes** |
 | `log_time` | `logAgentTime` (`lib/punches.ts`) | **yes** |
 | `create_task` | `resolveTaskTarget` + `insertTaskRow` | **yes** |
 | `refresh_insights` | `refreshInsightsAction` | **yes** |
 
+`peek_agent_mailbox` is the live JMAP read of **agent@** — id, headers, and
+snippet, nothing written, nothing sent. `read_mail` opens one of those by
+id or subject, live, so a message does not have to be synced first.
+`list_inbox` / `search_mail` read what has already landed in `inbox_mail`.
+`sync_inbox` is the write that files copies across; its preview is a dry run
+of the same planner the CLI uses.
+
+`create_calendar_event` writes through `writeCalendarEvent`. Personal / life
+blocks default to **Personal** (`karolzbuczek@gmail.com`). Work / client
+meetings go on **Remote**. The New-event form still uses the Destination
+flag (Remote) when no calendar is named.
+
 Reads run on the worker and come back as results. **Writes never run on the
 worker.** They arrive as intentions, park at `pending`, render a preview card,
-and are executed by the CRM under Karol's user only after he confirms.
+and are executed by the CRM under Karol's user only after he confirms. The
+agent never sends mail.
 
 The preview is built by the same tool that performs the write, from the same
 arguments, so the card cannot describe one time entry and file another.
 
 `chat_tool_calls.idempotencyKey` travels into the domain write — into
-`logAgentTime`'s `clientRequestId`, into the task's `refId` — so confirming
-twice, or a retry after a dropped connection, cannot double-apply.
+`logAgentTime`'s `clientRequestId`, into the task's `refId`, into the
+Google event's `tk_ref` — so confirming twice, or a retry after a dropped
+connection, cannot double-apply.
 
 ### `log_time` invents a clock face
 
@@ -154,6 +187,7 @@ All on device-token auth (`authenticateTimeRequest`), same as `/api/time/*`.
 | `POST /api/chat/queue` | **worker.** Claims the oldest queued turn, returns thread + tools + model. |
 | `POST /api/chat/turns/[id]` | **worker.** Posts the reply, or an error (with a `detector` to escalate). |
 | `POST /api/chat/approvals/[id]` | confirm or reject a parked write. |
+| `POST /api/chat/worker` | **worker.** Heartbeat only. Separate from `queue` so a busy worker can say it is alive without claiming more work. |
 
 The browser does not use these — `lib/chat/actions.ts` holds server actions that
 call the same functions in `lib/chat/turns.ts`, so a shortcut and the page
@@ -162,6 +196,16 @@ cannot drift apart.
 Claiming is a compare-and-swap, not a held transaction: read the oldest queued
 id, update `where id = ? and status = 'queued'`, and an empty result means
 another worker won. The loser takes the next one.
+
+## Checks
+
+| Command | Touches the DB | What it guards |
+|---|---|---|
+| `npm run check:chat` | no | Ladder arithmetic — every rung pair must clear its break-even, rungs must climb in price, and nothing escalates without a detector. |
+| `npm run check:chat:db` | yes | The spine end to end: routing, claiming, both kinds of tool, pricing, approval, the escalation chain. Creates one throwaway thread and deletes it. |
+
+`check:chat:db` rejects the write it proposes rather than confirming it, so it
+never creates a time entry or a task.
 
 ## Running the worker
 
@@ -185,6 +229,40 @@ npm run chat:worker
 Nothing about the worker is deployed. Railway runs the CRM; the queue simply
 sits until a Mac is awake, which is also the honest failure mode — a turn
 queued at 2am answers when Karol opens the laptop.
+
+### launchd keeps it up
+
+Remembering to start the worker is the whole failure: a message queued with
+nothing attached is answered in sixteen seconds or in twenty minutes depending
+only on whether a terminal happened to be open. So launchd owns it —
+`RunAtLoad` at login, `KeepAlive` if it dies.
+
+```sh
+cp scripts/com.tallkarol.chat-worker.plist ~/Library/LaunchAgents/
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tallkarol.chat-worker.plist
+```
+
+| | |
+|---|---|
+| Stop | `launchctl bootout gui/$(id -u)/com.tallkarol.chat-worker` |
+| Status | `launchctl print gui/$(id -u)/com.tallkarol.chat-worker \| head` |
+| Log | `tail -f ~/Library/Logs/tallkarol/chat-worker.log` |
+
+launchd reads its own copy in `~/Library/LaunchAgents`, so edits to the file in
+`scripts/` do nothing until it is copied over and re-bootstrapped. The plist
+carries `CRM_URL`; point it at the deployed CRM to serve that instead of dev.
+
+### Telling "thinking" from "nobody is listening"
+
+`lib/chat/worker-status.ts` keeps a heartbeat in `app_settings` under
+`chat_worker`, and the chat page swaps the "Working…" dots for a plain notice
+when the last beat is over twenty seconds old.
+
+The beat runs on a **timer in the worker, not its poll loop**. A worker
+running a two-minute turn polls the queue zero times, so a poll-based signal
+would call it dead in the middle of the job it was doing. Nothing is lost
+while it is down: the turn stays `queued` and is claimed the moment a worker
+returns.
 
 ## What is not built yet
 

@@ -1,13 +1,15 @@
 "use client"
 
-import { useEffect, useRef, useState, useTransition } from "react"
+import { useEffect, useRef, useState, useTransition, type CSSProperties } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowUp, Terminal } from "lucide-react"
+import { ArrowUp, Terminal, Unplug } from "lucide-react"
 import { ApprovalCard } from "@/components/chat/ApprovalCard"
 import { LadderTrace } from "@/components/chat/LadderTrace"
 import { cn } from "@/lib/cn"
 import { sendMessage } from "@/lib/chat/actions"
+import type { WorkerStatus } from "@/lib/chat/worker-status"
 import type { ChatToolCall, ChatTurn } from "@/db/schema"
+import { Card } from "@/components/ui/Card"
 
 export type ChatMessageView = {
   id: string
@@ -22,8 +24,9 @@ export type ChatMessageView = {
 }
 
 const SUGGESTIONS = [
+  "What's in agent@?",
+  "What's waiting on me?",
   "What did I work on for Mineralife in June?",
-  "Log 3 hours to Mineralife for the toll filling page",
   "Find the session where I fixed the UWD build",
 ]
 
@@ -39,10 +42,12 @@ export function ChatView({
   threadId,
   messages,
   waiting,
+  worker,
 }: {
   threadId: string | null
   messages: ChatMessageView[]
   waiting: boolean
+  worker: WorkerStatus
 }) {
   const router = useRouter()
   const [text, setText] = useState("")
@@ -88,7 +93,7 @@ export function ChatView({
             {messages.map((message) => (
               <Turn key={message.id} message={message} />
             ))}
-            {waiting ? <Thinking /> : null}
+            {waiting ? worker.online ? <Thinking /> : <Stranded worker={worker} /> : null}
           </div>
         )}
         <div ref={foot} />
@@ -100,7 +105,7 @@ export function ChatView({
             {error}
           </p>
         ) : null}
-        <div className="flex items-end gap-2 rounded-2xl border border-line bg-card p-2 shadow-card focus-within:border-line-strong">
+        <Card className="flex items-end gap-2 p-2 focus-within:border-line-strong">
           <textarea
             ref={box}
             rows={1}
@@ -113,7 +118,7 @@ export function ChatView({
                 submit(text)
               }
             }}
-            className="max-h-40 min-h-[38px] flex-1 resize-none bg-transparent px-2 py-2 text-sm text-tk-onyx outline-none placeholder:text-ink-3"
+            className="max-h-40 min-h-[38px] flex-1 resize-none bg-transparent px-2 py-2 text-sm text-tk-onyx placeholder:text-ink-3"
           />
           <button
             type="button"
@@ -124,7 +129,7 @@ export function ChatView({
           >
             <ArrowUp className="size-4" />
           </button>
-        </div>
+        </Card>
         <p className="mt-1.5 px-1 text-[11px] text-ink-3">
           Reads answer straight away. Anything that writes shows a preview and
           waits for you.
@@ -181,21 +186,58 @@ function ReadNote({ call }: { call: ChatToolCall }) {
   )
 }
 
+/**
+ * Wordless on purpose — the dots say it. `role="status"` and the label keep
+ * the meaning for anyone who cannot see them, and `.tk-wave-dot` holds a
+ * still resting state under reduced motion instead of freezing mid-rise.
+ */
 function Thinking() {
   return (
-    <div className="flex items-center gap-2 px-1 text-xs text-ink-3">
-      <span className="flex gap-1">
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className="size-1.5 animate-pulse rounded-full bg-ink-3"
-            style={{ animationDelay: `${i * 0.15}s` }}
-          />
-        ))}
-      </span>
-      Working…
+    <div
+      role="status"
+      aria-label="Working"
+      className="flex items-center gap-1 px-1 py-1"
+    >
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="tk-wave-dot size-[5px] rounded-full bg-ink-3"
+          style={{ "--i": i } as CSSProperties}
+        />
+      ))}
     </div>
   )
+}
+
+/**
+ * Queued, but nothing is listening.
+ *
+ * Without this the page shows "Working…" forever and the honest answer —
+ * the worker on the Mac is not running — is invisible. The question is not
+ * lost: it stays queued and the worker picks it up the moment it starts.
+ */
+function Stranded({ worker }: { worker: WorkerStatus }) {
+  return (
+    <div className="flex items-start gap-2 rounded-xl bg-warn-soft px-3 py-2.5 text-xs text-warn">
+      <Unplug className="mt-0.5 size-3.5 shrink-0" />
+      <div>
+        <p className="font-semibold">No worker attached — nothing is running this.</p>
+        <p className="mt-1 text-warn/90">
+          Your question is queued and will be answered as soon as the worker is
+          back. Start it on the Mac with{" "}
+          <code className="font-mono">npm run chat:worker</code>.
+          {worker.lastSeenAt ? ` Last seen ${ago(worker.secondsAgo)} ago.` : ""}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function ago(seconds: number | null) {
+  if (seconds == null) return "a while"
+  if (seconds < 90) return `${seconds}s`
+  if (seconds < 5400) return `${Math.round(seconds / 60)}m`
+  return `${Math.round(seconds / 3600)}h`
 }
 
 function Empty({ onPick }: { onPick: (value: string) => void }) {
@@ -206,7 +248,7 @@ function Empty({ onPick }: { onPick: (value: string) => void }) {
           Ask about the work, or tell it to do something.
         </p>
         <p className="mt-1 text-xs text-ink-3">
-          It reads the timesheet, past sessions and the client roster.
+          It reads agent@, the inbox, leftover, the timesheet and the roster.
         </p>
       </div>
       <div className="flex flex-wrap justify-center gap-2">

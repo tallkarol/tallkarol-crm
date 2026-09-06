@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import {
   Calendar,
   LifeBuoy,
+  Images,
   NotebookText,
   Plus,
   Receipt,
@@ -23,6 +24,7 @@ const KINDS = [
   { id: "task", label: "Task", Icon: SquareCheck },
   { id: "ticket", label: "Ticket", Icon: LifeBuoy, href: ROUTES.support },
   { id: "note", label: "Note", Icon: NotebookText, href: ROUTES.notebooks },
+  { id: "inspiration", label: "Inspiration", Icon: Images, href: ROUTES.inspiration },
   { id: "lead", label: "Lead", Icon: Target, href: ROUTES.leads },
   { id: "invoice", label: "Invoice", Icon: Receipt, href: ROUTES.invoices },
   { id: "meeting", label: "Meeting", Icon: Calendar, href: ROUTES.calendar },

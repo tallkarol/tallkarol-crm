@@ -11,6 +11,7 @@ import {
   localPartOf,
   matchClientByAlias,
   matchClientByDomain,
+  matchLiveMail,
   resolveClient,
   resolveMailboxId,
 } from "../lib/jmap"
@@ -292,6 +293,60 @@ console.log("\nKarol's real aliases, end to end")
   check("support@ → no client, by design", route("support"), null)
   check("invoices@ → no client", route("invoices"), null)
   check("hello@ → no client", route("hello"), null)
+}
+
+console.log("\nLive mail pick")
+{
+  const mail = [
+    {
+      id: "j1",
+      messageId: "<a@b>",
+      subject: "GIRLFRIEND ALERT",
+      fromEmail: "kingakornak@gmail.com",
+    },
+    {
+      id: "j2",
+      messageId: "<c@d>",
+      subject: "Fwd: WP Engine scheduled maintenance",
+      fromEmail: "kbuczek@mineralifeonline.com",
+    },
+    {
+      id: "j3",
+      messageId: "<e@f>",
+      subject: "GIRLFRIEND ALERT",
+      fromEmail: "other@example.com",
+    },
+  ]
+  check(
+    "id wins even when subject would match more than one",
+    matchLiveMail(mail, { id: "j3", subject: "GIRLFRIEND" }).hit?.id,
+    "j3"
+  )
+  check(
+    "Message-ID is accepted as id",
+    matchLiveMail(mail, { id: "<a@b>" }).hit?.id,
+    "j1"
+  )
+  check(
+    "subject contains-match takes the newest",
+    matchLiveMail(mail, { subject: "girlfriend alert" }).hit?.id,
+    "j1"
+  )
+  check(
+    "other subject matches are returned, not dropped",
+    matchLiveMail(mail, { subject: "girlfriend" }).others.map((m) => m.id),
+    ["j3"]
+  )
+  check(
+    "from narrows a shared subject",
+    matchLiveMail(mail, { subject: "girlfriend", from: "kingakornak" }).hit?.id,
+    "j1"
+  )
+  check(
+    "unknown id with no subject is a miss, not the first message",
+    matchLiveMail(mail, { id: "missing" }).hit,
+    null
+  )
 }
 
 console.log(

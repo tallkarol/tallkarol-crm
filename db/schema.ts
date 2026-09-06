@@ -3255,3 +3255,89 @@ export type ChatToolCall = typeof chatToolCalls.$inferSelect
 export type ChatPool = (typeof chatPoolEnum.enumValues)[number]
 export type ChatTurnStatus = (typeof chatTurnStatusEnum.enumValues)[number]
 export type ChatToolStatus = (typeof chatToolStatusEnum.enumValues)[number]
+
+/**
+ * Mood boards. A board is a named pile of pins — links, videos, site
+ * screenshots, images — that Karol drops in from chat or the page.
+ */
+export const inspirationBoards = pgTable(
+  "inspiration_boards",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: text("slug").notNull().unique(),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    byUpdated: index("inspiration_boards_updated_idx").on(table.updatedAt),
+  })
+)
+
+export const inspirationPins = pgTable(
+  "inspiration_pins",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    boardId: uuid("board_id")
+      .notNull()
+      .references(() => inspirationBoards.id, { onDelete: "cascade" }),
+    /** video | website | image | note */
+    kind: text("kind").notNull(),
+    url: text("url").notNull().default(""),
+    title: text("title").notNull().default(""),
+    note: text("note").notNull().default(""),
+    /** instagram | youtube | vimeo | tiktok | x | web | image */
+    provider: text("provider").notNull().default(""),
+    embedUrl: text("embed_url").notNull().default(""),
+    previewUrl: text("preview_url").notNull().default(""),
+    siteName: text("site_name").notNull().default(""),
+    description: text("description").notNull().default(""),
+    metadata: jsonb("metadata").notNull().default({}),
+    position: integer("position").notNull().default(0),
+    createdBy: uuid("created_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    byBoard: index("inspiration_pins_board_idx").on(
+      table.boardId,
+      table.createdAt
+    ),
+    byBoardUrl: uniqueIndex("inspiration_pins_board_url_idx").on(
+      table.boardId,
+      table.url
+    ),
+  })
+)
+
+export const inspirationBoardsRelations = relations(
+  inspirationBoards,
+  ({ many }) => ({
+    pins: many(inspirationPins),
+  })
+)
+
+export const inspirationPinsRelations = relations(
+  inspirationPins,
+  ({ one }) => ({
+    board: one(inspirationBoards, {
+      fields: [inspirationPins.boardId],
+      references: [inspirationBoards.id],
+    }),
+    creator: one(users, {
+      fields: [inspirationPins.createdBy],
+      references: [users.id],
+    }),
+  })
+)
+
+export type InspirationBoard = typeof inspirationBoards.$inferSelect
+export type InspirationPin = typeof inspirationPins.$inferSelect

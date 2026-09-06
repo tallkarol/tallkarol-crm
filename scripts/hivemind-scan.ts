@@ -127,7 +127,15 @@ const LANES: {
     label: "Build",
     blurb:
       "Design and implementation in one context; security and QA review the result in parallel, not as a relay.",
-    members: ["db-specialist", "security-reviewer", "ux-builder", "qa", "design-system", "browser-check"],
+    members: [
+      "db-specialist", "security-reviewer", "ux-builder", "qa",
+      "design-system", "browser-check",
+      // Escalated review of what a medium model built — a reviewer, like qa
+      // and security-reviewer, not a link in the build chain.
+      "inspector",
+      // Extracts a site's existing design system; design-system's sibling.
+      "styleguide",
+    ],
   },
   {
     id: "lane:content",
@@ -140,7 +148,11 @@ const LANES: {
     id: "lane:delivery",
     label: "Delivery",
     blurb: "Handoff and training material for the people who will use what shipped.",
-    members: ["docent"],
+    members: [
+      "docent",
+      // Pre/post-launch audit that becomes a client handoff report.
+      "launch-audit",
+    ],
   },
   {
     id: "lane:care",
@@ -164,7 +176,11 @@ const LANES: {
     id: "lane:foundation",
     label: "Foundation",
     blurb: "What every lane loads first: the operating manual and the brand layer.",
-    members: ["team-charter", "client-pack"],
+    members: [
+      "team-charter", "client-pack",
+      // Recurring mistakes become rules the whole hive works under.
+      "lessons",
+    ],
   },
 ]
 
@@ -181,6 +197,13 @@ const ROUTINES: {
   cadence: string
   /** Hook script basename, when this routine is wired as a hook. */
   hookScript?: string
+  /** LaunchAgent basename, when this routine also runs on a clock. */
+  plist?: string
+  /** Pack-relative file whose presence means a client is onboarded onto this
+   *  routine. The count goes on the node, because "weekly, per care client"
+   *  reads the same whether that is two clients or none — and it was none for
+   *  as long as the lane existed. */
+  countPacks?: string
   source: string
   drives: string[]
 }[] = [
@@ -208,14 +231,16 @@ const ROUTINES: {
     id: "routine:summarize",
     label: "Session summarizer",
     blurb:
-      "At session end a headless call turns the transcript into one invoice-voice line, while the transcript is still on disk.",
-    cadence: "session end, plus a weekly sweep",
+      "At session end a headless call turns the transcript into one invoice-voice line, while the transcript is still on disk. A twice-daily sweep then catches what the hook missed and flushes anything summarized but never pushed.",
+    cadence: "session end, plus a scheduled sweep",
+    plist: "com.tallkarol.daedalus.session-log.plist",
     source: "skills/session-log/SKILL.md",
     drives: ["session-log"],
   },
   {
     id: "routine:care",
     label: "Care cycle",
+    countPacks: "care/PLAN.md",
     blurb: "Read-only audit → fix picklist → Karol picks → approved ops only, backup-first.",
     cadence: "weekly, per care client",
     source: "skills/website-care/SKILL.md",
@@ -378,17 +403,32 @@ for (const dir of dirs(join(ROOT, "skills"))) {
       if (f.startsWith(".")) continue
       // Test files are real, but they're not part of the map's story.
       if (/^test_|\.test\./.test(f)) continue
+      // Compiled bytecode is not an instrument. These were being drawn as
+      // scripts, which is how six __pycache__ directories ended up on a map
+      // of what the hive is made of.
+      if (f === "__pycache__" || f === "node_modules") continue
+
+      const full = join(subDir, f)
+      const isDir = statSync(full).isDirectory()
+      // A nested package is one instrument, not N — count its files rather
+      // than exploding it across the graph.
+      const fileCount = isDir
+        ? readdirSync(full).filter((n) => !n.startsWith(".") && n !== "__pycache__").length
+        : 0
+
       const id = `${sub === "scripts" ? "script" : "reference"}:${dir}/${f}`
       addNode({
         id,
-        label: f,
+        label: isDir ? `${f}/` : f,
         kind: sub === "scripts" ? "script" : "reference",
         lane,
-        blurb:
-          sub === "scripts"
+        blurb: isDir
+          ? "A package of companion code the skill calls into."
+          : sub === "scripts"
             ? "Companion instrument — the deterministic part the model calls instead of doing by hand."
             : "Reference the skill reads before acting.",
-        source: rel(join(subDir, f)),
+        source: rel(full),
+        ...(isDir ? { meta: { contents: `${fileCount} file${fileCount === 1 ? "" : "s"}` } } : {}),
       })
       addLink(`skill:${name}`, id, "contains")
     }
@@ -464,6 +504,44 @@ for (const file of files(join(ROOT, "commands"), ".md")) {
 
 // --- routines, checked against the wired hooks
 
+/**
+ * A routine can also run on a clock. Same rule as the hooks above: the map
+ * reports what is actually installed on this Mac, not what the repo wishes
+ * were — a schedule nobody loaded is exactly the kind of thing that quietly
+ * stops being true.
+ */
+const AGENTS_DIR = join(homedir(), "Library", "LaunchAgents")
+
+/** Client packs carrying a given file — how many clients a lane really has. */
+const PACKS = join(
+  process.env.DAEDALUS_CLIENT_PACKS ?? join(homedir(), "Work", "daedalus-client-packs"),
+  "clients"
+)
+
+function packsWith(relative: string): string[] {
+  return dirs(PACKS).filter((slug) => existsSync(join(PACKS, slug, relative)))
+}
+
+function launchdSchedule(plist: string): string | null {
+  const path = join(AGENTS_DIR, plist)
+  if (!existsSync(path)) return null
+  try {
+    const xml = read(path)
+    const times: string[] = []
+    // Each StartCalendarInterval dict contributes one Hour/Minute pair.
+    for (const block of xml.split("<dict>").slice(1)) {
+      const hour = /<key>Hour<\/key>\s*<integer>(\d+)<\/integer>/.exec(block)
+      const minute = /<key>Minute<\/key>\s*<integer>(\d+)<\/integer>/.exec(block)
+      if (hour) {
+        times.push(`${hour[1].padStart(2, "0")}:${(minute?.[1] ?? "0").padStart(2, "0")}`)
+      }
+    }
+    return times.length ? times.join(", ") : "installed"
+  } catch {
+    return "installed"
+  }
+}
+
 const hooksPath = join(ROOT, "hooks", "hooks.json")
 const wiredScripts = new Set<string>()
 const eventsByScript = new Map<string, Set<string>>()
@@ -501,6 +579,23 @@ for (const routine of ROUTINES) {
     source: routine.source,
     meta: {
       cadence: routine.cadence,
+      ...(routine.countPacks
+        ? (() => {
+            const on = packsWith(routine.countPacks)
+            return {
+              onboarded: on.length
+                ? `${on.length} client${on.length === 1 ? "" : "s"} — ${on.join(", ")}`
+                : "no client is onboarded yet — the lane has never run",
+            }
+          })()
+        : {}),
+      ...(routine.plist
+        ? {
+            schedule: launchdSchedule(routine.plist)
+              ? `${launchdSchedule(routine.plist)} — LaunchAgent installed`
+              : "declared, but the LaunchAgent is NOT installed",
+          }
+        : {}),
       ...(events.length ? { "hook events": events.sort().join(", ") } : {}),
       ...(routine.hookScript ? { script: routine.hookScript } : {}),
     },

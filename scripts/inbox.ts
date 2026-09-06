@@ -14,51 +14,16 @@
 import { loadLocalEnv } from "../lib/load-env"
 loadLocalEnv()
 
-import { eq, sql } from "drizzle-orm"
-import { db } from "../db"
-import { appSettings, clients, inboxMail } from "../db/schema"
 import {
-  fetchRecentMail,
-  jmapConfig,
-  jmapSession,
-  listMailboxes,
-  resolveClient,
-  resolveMailboxId,
-} from "../lib/jmap"
-import { DEFAULT_TICKET_ALIASES, shouldAutoTicket, ticketFromMail } from "../lib/inbox-mail"
+  checkAgentMailbox,
+  peekAgentMailbox,
+  planInboxSync,
+  runInboxSync,
+} from "../lib/inbox-sync"
 
-const SETTING_KEY = "inbox_mail_sync"
-
-type SyncSetting = {
-  lastSyncAt?: string
-  /** Folder name or id. A name is resolved to an id at sync time. */
-  mailbox?: string
-  /** Alias local-part → client slug or id, for aliases that are not slugs. */
-  aliasMap?: Record<string, string>
-  /** Aliases whose mail opens a ticket on arrival instead of waiting for triage. */
-  ticketAliases?: string[]
-}
-
-async function readSetting(): Promise<SyncSetting> {
-  const [row] = await db
-    .select()
-    .from(appSettings)
-    .where(eq(appSettings.key, SETTING_KEY))
-    .limit(1)
-  const value = row?.value
-  return value && typeof value === "object" ? (value as SyncSetting) : {}
-}
-
-async function writeSetting(next: SyncSetting) {
-  await db
-    .insert(appSettings)
-    .values({ key: SETTING_KEY, value: next })
-    .onConflictDoUpdate({ target: appSettings.key, set: { value: next, updatedAt: new Date() } })
-}
-
-function requireConfig() {
-  const config = jmapConfig()
-  if (!config) {
+function requireConfigured(error?: string) {
+  if (!error) return
+  if (error.includes("AGENT_FASTMAIL_TOKEN")) {
     console.log("AGENT_FASTMAIL_TOKEN is not set.")
     console.log("")
     console.log("  1. Fastmail → Settings → My email addresses → add the alias, redirecting")
@@ -68,140 +33,84 @@ function requireConfig() {
     console.log("  4. AGENT_FASTMAIL_TOKEN=… in .env.local, then re-run this")
     process.exit(1)
   }
-  return config
+  console.error(error)
+  process.exit(1)
 }
 
 async function check(peek: boolean) {
-  const config = requireConfig()
-  const session = await jmapSession(config)
-  console.log(`connected · account ${session.accountId}`)
+  const status = await checkAgentMailbox()
+  requireConfigured(status.error)
+  if (status.error) {
+    console.error(status.error)
+    process.exit(1)
+  }
 
-  const setting = await readSetting()
-  console.log(`last sync: ${setting.lastSyncAt ?? "never"}`)
-  console.log(`folder:    ${setting.mailbox ?? "(whole account)"}`)
-  console.log(`aliasMap:  ${JSON.stringify(setting.aliasMap ?? {})}`)
-  console.log(`→ tickets: ${(setting.ticketAliases ?? DEFAULT_TICKET_ALIASES).join(", ")}`)
+  console.log(`connected · account ${status.accountId}`)
+  console.log(`last sync: ${status.lastSyncAt ?? "never"}`)
+  console.log(`folder:    ${status.mailbox ?? "(whole account)"}`)
+  console.log(`aliasMap:  ${JSON.stringify(status.aliasMap)}`)
+  console.log(`→ tickets: ${status.ticketAliases.join(", ")}`)
 
-  const boxes = await listMailboxes(config)
   console.log("\nfolders")
-  for (const box of boxes) {
-    const mark = setting.mailbox && resolveMailboxId(boxes, setting.mailbox) === box.id ? "→" : " "
+  for (const box of status.folders) {
+    const mark = box.selected ? "→" : " "
     console.log(`  ${mark} ${box.name.padEnd(24)} ${String(box.total).padStart(6)}  ${box.id}`)
   }
-  if (setting.mailbox && !resolveMailboxId(boxes, setting.mailbox)) {
-    console.log(`\n  WARNING: configured folder "${setting.mailbox}" matches nothing above.`)
-  }
+  if (status.warning) console.log(`\n  WARNING: ${status.warning}.`)
 
   if (!peek) return
 
-  // Read-only diagnostic: which header actually carries the original alias
-  // after a Fastmail redirect. Nothing is written.
-  const mailboxId = setting.mailbox ? resolveMailboxId(boxes, setting.mailbox) : null
-  const mail = await fetchRecentMail(config, { limit: 10, mailbox: mailboxId ?? undefined })
-  console.log(`\nnewest ${mail.length} message(s) — nothing written`)
-  for (const m of mail) {
-    console.log(`\n  subject      ${m.subject}`)
-    console.log(`  from         ${m.fromEmail}`)
-    console.log(`  To:          ${m.toEmail || "(none)"}`)
+  const live = await peekAgentMailbox(10)
+  requireConfigured(live.error)
+  if (live.error) {
+    console.error(live.error)
+    process.exit(1)
+  }
+  console.log(`\nnewest ${live.messages.length} message(s) — nothing written`)
+  for (const m of live.messages) {
+    console.log(`\n  id           ${m.id}`)
+    console.log(`  subject      ${m.subject}`)
+    console.log(`  from         ${m.from}`)
+    console.log(`  To:          ${m.to || "(none)"}`)
     console.log(`  Delivered-To ${m.deliveredTo || "(none)"}`)
     console.log(`  X-Original-To ${m.originalTo || "(none)"}`)
+    if (m.snippet) console.log(`  snippet      ${m.snippet}`)
     console.log(`  received     ${m.receivedAt}`)
   }
 }
 
 async function sync(all: boolean, dry: boolean) {
-  const config = requireConfig()
-  const setting = await readSetting()
-  const sinceIso = all ? null : (setting.lastSyncAt ?? null)
-
-  let mailboxId: string | undefined
-  if (setting.mailbox) {
-    const boxes = await listMailboxes(config)
-    const resolved = resolveMailboxId(boxes, setting.mailbox)
-    if (!resolved) {
-      console.log(`configured folder "${setting.mailbox}" does not exist — run inbox:check`)
+  if (dry) {
+    const plan = await planInboxSync({ all })
+    requireConfigured(plan.error)
+    if (plan.error) {
+      console.error(plan.error)
       process.exit(1)
     }
-    mailboxId = resolved
-  }
-
-  const mail = await fetchRecentMail(config, { limit: 50, sinceIso, mailbox: mailboxId })
-  console.log(`fetched ${mail.length} message(s)${sinceIso ? ` since ${sinceIso}` : ""}`)
-
-  const clientRows = await db
-    .select({ id: clients.id, slug: clients.slug, domains: clients.domains })
-    .from(clients)
-  const aliasMap = setting.aliasMap ?? {}
-
-  const ticketAliases = setting.ticketAliases ?? DEFAULT_TICKET_ALIASES
-
-  let added = 0
-  let ticketed = 0
-  for (const message of mail) {
-    const { clientId, via } = resolveClient(message, clientRows, aliasMap)
-    const recipients = [message.toEmail, message.deliveredTo, message.originalTo].filter(Boolean)
-    const autoTicket = shouldAutoTicket(recipients, ticketAliases)
-    const label = clientId
-      ? `${clientRows.find((c) => c.id === clientId)?.slug} (via ${via})`
-      : "unassigned"
-
-    if (dry) {
-      console.log(
-        `  ${message.subject.slice(0, 52).padEnd(52)}  ${label.padEnd(22)}${autoTicket ? "→ ticket" : ""}`
-      )
-      continue
+    console.log(`fetched ${plan.fetched} message(s)${plan.since ? ` since ${plan.since}` : ""}`)
+    for (const row of plan.rows) {
+      const label = row.clientSlug ? `${row.clientSlug} (via ${row.via})` : "unassigned"
+      const extra = row.alreadyStored ? " (already stored)" : row.autoTicket ? "→ ticket" : ""
+      console.log(`  ${row.subject.slice(0, 52).padEnd(52)}  ${label.padEnd(22)}${extra}`)
     }
-
-    const [inserted] = await db
-      .insert(inboxMail)
-      .values({
-        messageId: message.messageId,
-        threadId: message.threadId,
-        inReplyTo: message.inReplyTo,
-        fromName: message.fromName,
-        fromEmail: message.fromEmail,
-        // Prefer whichever recipient header survived the redirect, so the row
-        // records the alias it was actually sent to.
-        toEmail: message.deliveredTo || message.originalTo || message.toEmail,
-        subject: message.subject,
-        snippet: message.snippet,
-        body: message.body.slice(0, 100_000),
-        clientId,
-        receivedAt: new Date(message.receivedAt),
-      })
-      // A re-sync must never duplicate; the message id is the natural key.
-      .onConflictDoNothing({ target: inboxMail.messageId })
-      .returning()
-    if (!inserted) continue
-
-    added += 1
-    let note = ""
-    if (autoTicket) {
-      const result = await ticketFromMail(inserted)
-      if (result.ok && result.created) {
-        ticketed += 1
-        note = `→ ${result.ticket.number}`
-      } else if (!result.ok) {
-        note = `→ ticket FAILED: ${result.error}`
-      }
-    }
-    console.log(`  + ${message.subject.slice(0, 52).padEnd(52)}  ${label.padEnd(22)}${note}`)
-  }
-
-  if (dry) {
     console.log("\ndry run — nothing written")
     return
   }
 
-  const newest = mail.reduce<string | null>(
-    (latest, m) => (latest == null || m.receivedAt > latest ? m.receivedAt : latest),
-    null
-  )
-  if (newest) await writeSetting({ ...setting, lastSyncAt: newest })
-
-  const [{ count }] = await db.select({ count: sql<number>`count(*)::int` }).from(inboxMail)
+  const result = await runInboxSync({ all })
+  requireConfigured(result.error)
+  if (result.error) {
+    console.error(result.error)
+    process.exit(1)
+  }
+  console.log(`fetched ${result.fetched ?? result.rows.length} message(s)`)
+  for (const row of result.rows) {
+    const label = row.clientSlug ?? "unassigned"
+    const note = row.ticket ? `→ ${row.ticket}` : row.error ? `→ ticket FAILED: ${row.error}` : ""
+    console.log(`  + ${row.subject.slice(0, 52).padEnd(52)}  ${label.padEnd(22)}${note}`)
+  }
   console.log(
-    `\nadded ${added} new · ${ticketed} opened as tickets · ${count} total in inbox_mail`
+    `\nadded ${result.added} new · ${result.ticketed} opened as tickets · ${result.total} total in inbox_mail`
   )
 }
 

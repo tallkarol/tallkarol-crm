@@ -59,6 +59,9 @@ export async function decideApproval(input: {
   revalidatePath("/chat")
   revalidatePath("/timesheet")
   revalidatePath("/tasks")
+  revalidatePath("/inbox")
+  revalidatePath("/inspiration")
+  revalidatePath("/")
 
   if (!outcome.ok) return { ok: false, error: outcome.error }
   return { ok: true, status: outcome.call.status }

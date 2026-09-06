@@ -59,8 +59,15 @@ the real test.
 ### Creating events from the CRM
 
 Mark exactly one Google source as **Destination**. Events made with **New
-event** are written there, then synced back. That calendar needs *Make changes
-to events*, not just read access.
+event** (and `POST /api/calendar/events` with no `calendar`) are written
+there, then synced back. That calendar needs *Make changes to events*, not
+just read access.
+
+The CRM chat has `create_calendar_event`. Personal / life blocks default to
+**Personal** (`karolzbuczek@gmail.com`). Work / client meetings go on
+**Remote**. Both calendars must already be shared with the service account
+at *Make changes to events*. Karol confirms the card before anything is
+written.
 
 ### From a device token
 

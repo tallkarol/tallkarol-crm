@@ -63,6 +63,17 @@ type Claim = {
   tools?: ToolSchema[]
 }
 
+/**
+ * The timeout is load-bearing, not defensive dressing.
+ *
+ * The poll is awaited inside the loop, so a request that never settles stops
+ * the worker dead — and the heartbeat, which runs on its own timer, would go
+ * on reporting a healthy worker that had not claimed anything in hours. That
+ * is worse than being down, because the page would say "thinking". One poll
+ * was observed hanging for 31 minutes. Failing the call keeps the loop moving.
+ */
+const REQUEST_TIMEOUT_MS = 30_000
+
 async function crm(path: string, body: unknown) {
   const response = await fetch(`${CRM}${path}`, {
     method: "POST",
@@ -71,6 +82,7 @@ async function crm(path: string, body: unknown) {
       "content-type": "application/json",
     },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   })
   if (!response.ok) {
     throw new Error(`${path} → ${response.status} ${await response.text()}`)
@@ -123,8 +135,23 @@ function buildPrompt(claim: Claim): string {
     "",
     "Answer in his voice: direct, plain, no hype and no filler. Short answers",
     "are correct answers. Use the tools for anything factual — never guess at",
-    "hours, dates or client names, and call list_clients when you need to turn",
-    "a name into a slug.",
+    "hours, dates, mail or client names, and call list_clients when you need",
+    "to turn a name into a slug.",
+    "",
+    "Mail: peek_agent_mailbox for live agent@ (id + headers). read_mail pulls",
+    "the body from agent@ by that id or by subject — do not ask Karol to sync",
+    "just to read. list_inbox / search_mail are the CRM copies. sync_inbox",
+    "files copies into inbox_mail (proposed). You never send, delete, or flag",
+    "mail. You never read karol@.",
+    "",
+    "Calendar: list_calendar to read. create_calendar_event to propose a block",
+    "(Karol confirms). Personal / life / girlfriend events go on Personal",
+    "(karolzbuczek@gmail.com) — that is the default. Work / client meetings",
+    "go on Remote. Zone defaults to Europe/Warsaw.",
+    "",
+    "Inspiration: pin_inspiration when Karol sends a URL (or image) and says",
+    "it is inspiration for something — that something is the board name.",
+    "list_inspiration to see what is already on a board.",
     "",
     "Tools whose description says PROPOSES ONLY do not perform the action.",
     "They return `pending`. When one does, tell Karol exactly what is waiting",
@@ -207,8 +234,31 @@ async function runTurn(claim: Claim) {
   }
 }
 
+/**
+ * "Still here" on a timer of its own.
+ *
+ * It cannot ride the poll loop, because a turn that runs for two minutes
+ * polls zero times — the CRM would call this worker dead precisely while it
+ * was busiest. A timer keeps beating through `Agent.prompt`, so the chat page
+ * can tell "thinking" from "nobody is listening". Failures are swallowed: a
+ * missed beat is a cosmetic wrong badge, and must never take down the worker.
+ */
+const HEARTBEAT_MS = 5000
+
+function startHeartbeat() {
+  const beat = () => {
+    void crm("/api/chat/worker", { worker: NAME }).catch(() => {})
+  }
+  beat()
+  const timer = setInterval(beat, HEARTBEAT_MS)
+  // Do not hold the process open on this alone.
+  timer.unref?.()
+  return timer
+}
+
 async function loop() {
   console.log(`chat worker ${NAME} → ${CRM} (cwd ${CWD})`)
+  startHeartbeat()
   for (;;) {
     try {
       const claim = (await crm("/api/chat/queue", { worker: NAME })) as Claim

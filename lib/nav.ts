@@ -35,6 +35,7 @@ export type NavIconName =
   | "support"
   | "uptime"
   | "notebooks"
+  | "inspiration"
   | "product"
   | "settings"
   | "team"
@@ -96,6 +97,8 @@ export const ROUTES = {
   support: "/support",
   uptime: "/uptime",
   notebooks: "/notebooks",
+  inspiration: "/inspiration",
+  inspirationBoard: (slug: string) => `/inspiration/${slug}`,
   vault: "/vault",
   slinks: "/slinks",
   scaffolds: "/scaffolds",
@@ -187,6 +190,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
       { href: ROUTES.contacts, label: "Contacts", icon: "contacts" },
       { href: ROUTES.clients, label: "Clients", icon: "clients" },
       { href: ROUTES.notebooks, label: "Notebooks", icon: "notebooks" },
+      { href: ROUTES.inspiration, label: "Inspiration", icon: "inspiration" },
       { href: ROUTES.proposals, label: "Proposals", icon: "proposals" },
       { href: ROUTES.worksheets, label: "Worksheets", icon: "worksheets" },
       { href: ROUTES.contracts, label: "Contracts", icon: "contracts" },

@@ -1,5 +1,6 @@
 import { cn } from "@/lib/cn"
 import { formatCents, type BudgetState } from "@/lib/chat/budget"
+import { Card } from "@/components/ui/Card"
 
 /**
  * Where the month stands, in the two currencies that matter: the Cursor pool
@@ -21,7 +22,7 @@ export function BudgetMeters({ budget }: { budget: BudgetState }) {
         : "bg-accent-mark"
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-4 shadow-card">
+    <Card className="flex flex-col gap-3 p-4">
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">
           This month
@@ -70,6 +71,6 @@ export function BudgetMeters({ budget }: { budget: BudgetState }) {
           allowance runs out, then it spills into the $400 above.
         </p>
       </div>
-    </div>
+    </Card>
   )
 }

@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn"
 import { getSessionUser } from "@/lib/auth"
 import { budgetState } from "@/lib/chat/budget"
 import { listThreads, threadDetail } from "@/lib/chat/turns"
+import { workerStatus } from "@/lib/chat/worker-status"
 import { ROUTES } from "@/lib/nav"
 
 export const metadata = { title: "Chat" }
@@ -20,9 +21,10 @@ export default async function ChatPage({
   const user = await getSessionUser()
   if (!user) redirect("/login")
 
-  const [threads, budget] = await Promise.all([
+  const [threads, budget, worker] = await Promise.all([
     listThreads(user.id),
     budgetState(),
+    workerStatus(),
   ])
 
   const threadId = searchParams.thread ?? threads[0]?.id ?? null
@@ -92,7 +94,12 @@ export default async function ChatPage({
         </aside>
 
         <section className="flex min-h-[28rem] flex-col">
-          <ChatView threadId={threadId} messages={messages} waiting={waiting} />
+          <ChatView
+            threadId={threadId}
+            messages={messages}
+            waiting={waiting}
+            worker={worker}
+          />
         </section>
       </div>
     </>
