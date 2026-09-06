@@ -1,8 +1,9 @@
 {
   "name": "TallKarol",
   "short_name": "TallKarol",
-  "description": "Clock in and out, see what needs you, and get told when something does.",
-  "start_url": "/timesheet/live",
+  "id": "/timesheet/live",
+  "description": "Clear what is waiting on you, clock in and out, and get told when something needs you.",
+  "start_url": "/#leftoff",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",

@@ -22,7 +22,7 @@ billed 0.38 is always recoverable.
 | Route | Does |
 | --- | --- |
 | `/timesheet` | Dashboard — live clock, month tiles, engagement cards, what needs attention. |
-| `/timesheet/live` | Clock in and out from a browser. The PWA's start page. |
+| `/timesheet/live` | Clock in and out from a browser. The PWA's "Clock in" shortcut; it was the start page until the board took that. |
 | `/timesheet/review` | Approval queue. `?tab=meetings` is the calendar inbox. |
 | `/timesheet/sheets` | Every client-month, grouped by state, defaulted to this year. |
 | `/timesheet/[client]/[month]` | The sheet. `?client=&month=` still redirects here. |
