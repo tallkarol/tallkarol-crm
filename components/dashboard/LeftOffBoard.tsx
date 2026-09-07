@@ -55,6 +55,7 @@ import {
   type WaitingSeverity,
 } from "@/lib/waiting"
 import { Card as TkCard } from "@/components/ui/Card"
+import { WaitingStrip } from "@/components/dashboard/WaitingStrip"
 import {
   convertLeftOffAction,
   dismissLeftOffAction,
@@ -338,11 +339,18 @@ const SEVERITY_TONE: Record<WaitingSeverity, LaneTone> = {
   quiet: "neutral",
 }
 
-type ViewKey = "morning" | "code" | "admin"
+type ViewKey = "morning" | "code" | "admin" | "queue"
+/**
+ * Queue sits last on purpose. It is the decision queue's own card strip,
+ * moved off the dashboard — the same rows Morning bands, drawn the way the
+ * strip drew them, with each row's verbs inline. Last position so the keys
+ * for Code and Admin do not move under anyone's fingers.
+ */
 const VIEWS: { key: ViewKey; label: string }[] = [
   { key: "morning", label: "Morning" },
   { key: "code", label: "Code" },
   { key: "admin", label: "Admin" },
+  { key: "queue", label: "Queue" },
 ]
 
 /** "2m ago" / "3h ago" / "1d ago" from an ISO timestamp — display only, no live tick. */
@@ -540,7 +548,8 @@ export function LeftOffBoard({
         adminItems.filter((i) => lane.kinds.includes(i.kind)).map((i) => i.id)
       )
     }
-    return [[...bands.answer, ...bands.decide].map((i) => i.id)]
+    if (view === "morning") return [[...bands.answer, ...bands.decide].map((i) => i.id)]
+    return []
   }, [view, byLane, adminItems, bands])
   const order = useMemo(() => lanesOf.flat(), [lanesOf])
 
@@ -668,20 +677,10 @@ export function LeftOffBoard({
           return
         }
         default:
-          // 1/2/3 belong to the view switcher; the lane jump keeps 4-9, which
-          // is only ever useful in a lane view anyway.
-          if (/^[123]$/.test(event.key)) {
+          if (/^[1-4]$/.test(event.key)) {
             event.preventDefault()
             setView(VIEWS[Number(event.key) - 1].key)
             setSelected(null)
-            return
-          }
-          if (/^[4-9]$/.test(event.key)) {
-            const column = lanesOf[Number(event.key) - 1]
-            if (column?.length) {
-              event.preventDefault()
-              select(column[0])
-            }
           }
       }
     }
@@ -738,7 +737,9 @@ export function LeftOffBoard({
                   ? byLane.waiting.length
                   : v.key === "admin"
                     ? adminTotal
-                    : (counts?.answer ?? 0) + (counts?.decide ?? 0)
+                    : v.key === "queue"
+                      ? (waiting?.total ?? 0)
+                      : (counts?.answer ?? 0) + (counts?.decide ?? 0)
               return (
                 <button
                   key={v.key}
@@ -841,7 +842,11 @@ export function LeftOffBoard({
         </header>
 
         {/* ---------------------------------------------------------- body */}
-        {view === "morning" ? (
+        {view === "queue" ? (
+          <div ref={bodyRef} className="min-h-0 overflow-y-auto px-3 pb-3 md:px-5 md:pb-4">
+            <WaitingStrip payload={waiting} />
+          </div>
+        ) : view === "morning" ? (
           <div ref={bodyRef} className="min-h-0 overflow-y-auto">
             <Bands
               bands={bands}

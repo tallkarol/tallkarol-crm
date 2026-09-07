@@ -10,7 +10,6 @@ import {
   type AttentionMore,
 } from "@/components/dashboard/NeedsAttention"
 import { Unread } from "@/components/dashboard/Unread"
-import { WaitingStrip } from "@/components/dashboard/WaitingStrip"
 import { WeekBoard } from "@/components/dashboard/WeekBoard"
 import type { PaletteEntry } from "@/components/dashboard/CommandPalette"
 import { PeekRouter, peekHref } from "@/components/peek/PeekRouter"
@@ -474,7 +473,6 @@ export default async function DashboardPage({
       {searchParams.peek ? (
         <PeekRouter peek={searchParams.peek} closeHref="/" />
       ) : null}
-      <WaitingStrip payload={waitingQueue} />
       <LeftOffBoard payload={leftoff} waiting={waitingQueue} />
 
       <div className="mt-6 grid min-w-0 gap-3.5 xl:grid-cols-[minmax(0,8fr)_minmax(300px,4fr)]">
