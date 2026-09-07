@@ -12,7 +12,12 @@ import type {
 import { getSessionUser } from "@/lib/auth"
 import { budgetState } from "@/lib/chat/budget"
 import { CHAT_ZONE, modelChain } from "@/lib/chat/format"
-import { listThreads, pendingThreadIds, threadDetail } from "@/lib/chat/turns"
+import {
+  listArchivedThreads,
+  listThreads,
+  pendingThreadIds,
+  threadDetail,
+} from "@/lib/chat/turns"
 import { workerStatus } from "@/lib/chat/worker-status"
 import { ROUTES } from "@/lib/nav"
 
@@ -36,8 +41,9 @@ export default async function ChatPage({
   const user = await getSessionUser()
   if (!user) redirect("/login")
 
-  const [threads, pendingIds, budget, worker] = await Promise.all([
+  const [threads, archivedThreads, pendingIds, budget, worker] = await Promise.all([
     listThreads(user.id),
+    listArchivedThreads(user.id),
     pendingThreadIds(user.id),
     budgetState(),
     workerStatus(),
@@ -95,11 +101,12 @@ export default async function ChatPage({
     chain: modelChain(turns.map((t) => t.model)),
   }
 
-  const rows: ThreadRow[] = threads.map((thread) => ({
+  const rows: ThreadRow[] = [...threads, ...archivedThreads].map((thread) => ({
     id: thread.id,
     title: thread.title || "Untitled",
     lastMessageAt: thread.lastMessageAt.toISOString(),
     needsYou: pendingIds.has(thread.id),
+    archived: thread.archivedAt !== null,
   }))
 
   const budgetView: BudgetView = {
@@ -134,6 +141,7 @@ export default async function ChatPage({
       <ChatView
         threadId={threadId}
         title={detail?.thread.title || "Untitled"}
+        archived={detail?.thread.archivedAt != null}
         messages={messages}
         pending={pending}
         stats={stats}

@@ -2,7 +2,12 @@
 
 import { revalidatePath } from "next/cache"
 import { getSessionUser } from "@/lib/auth"
-import { decideToolCall, renameThread as rename, send } from "@/lib/chat/turns"
+import {
+  decideToolCall,
+  renameThread as rename,
+  send,
+  setThreadArchived,
+} from "@/lib/chat/turns"
 
 /**
  * What the browser calls. Machine callers use /api/chat/* with a device
@@ -53,6 +58,21 @@ export async function renameThread(input: {
     const title = await rename(user.id, input.threadId, input.title)
     revalidatePath("/chat")
     return { ok: true, title }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) }
+  }
+}
+
+export async function archiveThread(input: {
+  threadId: string
+  archived: boolean
+}): Promise<ActionResult<{ archived: boolean }>> {
+  const user = await getSessionUser()
+  if (!user) return { ok: false, error: "Sign in first." }
+  try {
+    await setThreadArchived(user.id, input.threadId, input.archived)
+    revalidatePath("/chat")
+    return { ok: true, archived: input.archived }
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) }
   }

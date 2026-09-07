@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useState } from "react"
 import Link from "next/link"
-import { BookOpen, MessagesSquare, Plus, Search } from "lucide-react"
+import { BookOpen, ChevronRight, MessagesSquare, Plus, Search } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { dayBucket, listStamp, type DayBucket } from "@/lib/chat/format"
@@ -43,6 +43,12 @@ export function ChatSidebar({
 }) {
   const [tab, setTab] = useState<Tab>("threads")
   const [q, setQ] = useState("")
+  const [archivedOpen, setArchivedOpen] = useState(false)
+
+  // Land on an archived thread (a link, a restore) and its group is open.
+  useEffect(() => {
+    if (threads.some((t) => t.archived && t.id === activeId)) setArchivedOpen(true)
+  }, [threads, activeId])
 
   useEffect(() => {
     try {
@@ -68,6 +74,8 @@ export function ChatSidebar({
   const visible = needle
     ? threads.filter((t) => t.title.toLowerCase().includes(needle))
     : threads
+  const active = visible.filter((t) => !t.archived)
+  const archived = visible.filter((t) => t.archived)
 
   const counts = {
     command: SKILL_DOCS.filter((d) => d.kind === "command").length,
@@ -122,7 +130,7 @@ export function ChatSidebar({
             ) : null}
 
             {BUCKETS.map((bucket) => {
-              const rows = visible.filter(
+              const rows = active.filter(
                 (t) => dayBucket(t.lastMessageAt, at) === bucket.key
               )
               if (rows.length === 0) return null
@@ -131,42 +139,51 @@ export function ChatSidebar({
                   <div className="px-2 pb-1 pt-3 font-ui text-[10px] font-bold uppercase tracking-[0.1em] text-ink-3">
                     {bucket.label}
                   </div>
-                  {rows.map((thread) => {
-                    const active = thread.id === activeId
-                    return (
-                      <Link
-                        key={thread.id}
-                        href={`${ROUTES.chat}?thread=${thread.id}`}
-                        aria-current={active ? "page" : undefined}
-                        className={cn(
-                          "block rounded-lg px-2 py-[7px]",
-                          active ? "bg-accent-soft" : "hover:bg-well"
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "block truncate text-[12.5px] font-medium",
-                            active ? "font-semibold text-accent-ink" : "text-tk-onyx"
-                          )}
-                        >
-                          {thread.title}
-                        </span>
-                        <span className="mt-0.5 flex items-center gap-1.5 font-ui text-[11px] text-ink-3">
-                          {thread.needsYou ? (
-                            <>
-                              <span className="size-1.5 rounded-full bg-warn" aria-hidden />
-                              <span className="font-semibold text-warn">Needs you</span>
-                              <span aria-hidden>·</span>
-                            </>
-                          ) : null}
-                          <span>{listStamp(thread.lastMessageAt, at)}</span>
-                        </span>
-                      </Link>
-                    )
-                  })}
+                  {rows.map((thread) => (
+                    <ThreadLink
+                      key={thread.id}
+                      thread={thread}
+                      active={thread.id === activeId}
+                      now={at}
+                    />
+                  ))}
                 </Fragment>
               )
             })}
+
+            {archived.length > 0 ? (
+              <>
+                <button
+                  type="button"
+                  aria-expanded={archivedOpen}
+                  onClick={() => setArchivedOpen((open) => !open)}
+                  className="mt-3 flex w-full items-center gap-1.5 rounded-md px-2 pb-1 pt-1 text-left font-ui text-[10px] font-bold uppercase tracking-[0.1em] text-ink-3 hover:text-tk-onyx"
+                >
+                  <ChevronRight
+                    className={cn(
+                      "size-3 transition-transform motion-reduce:transition-none",
+                      archivedOpen && "rotate-90"
+                    )}
+                    aria-hidden
+                  />
+                  Archived
+                  <span className="ml-auto font-semibold tracking-normal opacity-80">
+                    {archived.length}
+                  </span>
+                </button>
+                {archivedOpen
+                  ? archived.map((thread) => (
+                      <ThreadLink
+                        key={thread.id}
+                        thread={thread}
+                        active={thread.id === activeId}
+                        now={at}
+                        muted
+                      />
+                    ))
+                  : null}
+              </>
+            ) : null}
           </div>
 
           <BudgetMeters budget={budget} />
@@ -190,6 +207,49 @@ export function ChatSidebar({
         </>
       )}
     </div>
+  )
+}
+
+function ThreadLink({
+  thread,
+  active,
+  now,
+  muted,
+}: {
+  thread: ThreadRow
+  active: boolean
+  now: Date
+  /** Archived rows read a step quieter until they are brought back. */
+  muted?: boolean
+}) {
+  return (
+    <Link
+      href={`${ROUTES.chat}?thread=${thread.id}`}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "block rounded-lg px-2 py-[7px]",
+        active ? "bg-accent-soft" : "hover:bg-well"
+      )}
+    >
+      <span
+        className={cn(
+          "block truncate text-[12.5px] font-medium",
+          active ? "font-semibold text-accent-ink" : muted ? "text-ink-2" : "text-tk-onyx"
+        )}
+      >
+        {thread.title}
+      </span>
+      <span className="mt-0.5 flex items-center gap-1.5 font-ui text-[11px] text-ink-3">
+        {thread.needsYou ? (
+          <>
+            <span className="size-1.5 rounded-full bg-warn" aria-hidden />
+            <span className="font-semibold text-warn">Needs you</span>
+            <span aria-hidden>·</span>
+          </>
+        ) : null}
+        <span>{listStamp(thread.lastMessageAt, now)}</span>
+      </span>
+    </Link>
   )
 }
 

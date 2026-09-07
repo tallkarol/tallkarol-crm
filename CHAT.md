@@ -306,8 +306,11 @@ never scrolls away, the thread on the right, only the thread scrolling.
 | `/chat?new` | an empty composer; the first line starts and names the thread |
 
 **The rail** has two tabs. *Threads* — grouped Today / Yesterday / Earlier,
-an amber "Needs you" on any thread with a write parked, and the month's
-budget under the list. *Skills* — every command, skill and agent from the
+an amber "Needs you" on any thread with a write parked, an Archived group
+folded at the bottom, and the month's budget under the list. Archive is the
+box icon in the thread header; it stamps `archivedAt` and nothing else, so
+Restore (same spot, on an archived thread) or simply sending into the
+thread brings it back. Nothing is ever deleted. *Skills* — every command, skill and agent from the
 committed hive-mind scan, grouped by lane; a row opens to what it is and
 what to type, and each form either drops into the composer with its blank
 selected or, when it needs no argument, sends. The tab is remembered per

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNull, sql } from "drizzle-orm"
+import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm"
 import { db } from "@/db"
 import {
   chatMessages,
@@ -169,6 +169,8 @@ export async function send(input: {
     .set({
       lastMessageAt: new Date(),
       title: sql`case when ${chatThreads.title} = '' then ${titleFrom(text)} else ${chatThreads.title} end`,
+      // A thread you are talking in is not archived, whatever it was before.
+      archivedAt: null,
     })
     .where(eq(chatThreads.id, threadId))
 
@@ -516,6 +518,32 @@ export async function listThreads(userId: string, limit = 30) {
     orderBy: [desc(chatThreads.lastMessageAt)],
     limit,
   })
+}
+
+export async function listArchivedThreads(userId: string, limit = 30) {
+  return db.query.chatThreads.findMany({
+    where: and(eq(chatThreads.userId, userId), isNotNull(chatThreads.archivedAt)),
+    orderBy: [desc(chatThreads.lastMessageAt)],
+    limit,
+  })
+}
+
+/**
+ * Archive is a stamp, not a delete: the rows stay, the thread drops out of
+ * the main list into the Archived group, and clearing the stamp brings it
+ * back. Sending into an archived thread clears it too (see `send`).
+ */
+export async function setThreadArchived(
+  userId: string,
+  threadId: string,
+  archived: boolean
+) {
+  const [row] = await db
+    .update(chatThreads)
+    .set({ archivedAt: archived ? new Date() : null })
+    .where(and(eq(chatThreads.id, threadId), eq(chatThreads.userId, userId)))
+    .returning({ id: chatThreads.id })
+  if (!row) throw new Error("Not your thread.")
 }
 
 export async function threadDetail(userId: string, threadId: string) {

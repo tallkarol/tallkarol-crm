@@ -12,6 +12,8 @@ import {
 import { useRouter } from "next/navigation"
 import {
   Activity,
+  Archive,
+  ArchiveRestore,
   BarChart3,
   Clock,
   FileText,
@@ -27,7 +29,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
-import { renameThread, sendMessage } from "@/lib/chat/actions"
+import { archiveThread, renameThread, sendMessage } from "@/lib/chat/actions"
 import {
   dayKey,
   dayLabel,
@@ -64,6 +66,7 @@ import type {
 export function ChatView({
   threadId,
   title,
+  archived,
   messages,
   pending,
   stats,
@@ -73,6 +76,7 @@ export function ChatView({
 }: {
   threadId: string | null
   title: string
+  archived: boolean
   messages: ChatMessageView[]
   pending: PendingView | null
   stats: ThreadStats
@@ -124,6 +128,7 @@ export function ChatView({
       <Header
         threadId={threadId}
         title={title}
+        archived={archived}
         stats={stats}
         worker={worker}
         firstAt={messages[0]?.createdAt ?? null}
@@ -166,6 +171,7 @@ export function ChatView({
 function Header({
   threadId,
   title,
+  archived,
   stats,
   worker,
   firstAt,
@@ -173,6 +179,7 @@ function Header({
 }: {
   threadId: string | null
   title: string
+  archived: boolean
   stats: ThreadStats
   worker: WorkerStatus
   firstAt: string | null
@@ -183,6 +190,22 @@ function Header({
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(title)
   const [saving, startSaving] = useTransition()
+  const [archiving, startArchiving] = useTransition()
+
+  /**
+   * Archiving leaves the thread: the list has moved it to the Archived group
+   * and the newest active thread takes its place. Restoring stays put — you
+   * are looking at the thread you just brought back.
+   */
+  function setArchived(next: boolean) {
+    if (!threadId) return
+    startArchiving(async () => {
+      const result = await archiveThread({ threadId, archived: next })
+      if (!result.ok) return
+      if (next) router.push(ROUTES.chat)
+      else router.refresh()
+    })
+  }
 
   useEffect(() => {
     setDraft(title)
@@ -248,6 +271,14 @@ function Header({
         <p className="mt-0.5 flex items-center gap-1.5 truncate font-ui text-[11px] text-ink-3">
           {threadId ? (
             <>
+              {archived ? (
+                <>
+                  <span className="rounded-full bg-well px-1.5 py-px text-[10px] font-bold uppercase tracking-[0.06em] text-ink-3 ring-1 ring-line">
+                    Archived
+                  </span>
+                  <Sep />
+                </>
+              ) : null}
               {firstAt ? <span>{dayLabel(firstAt, now)}</span> : null}
               {stats.turns > 0 ? (
                 <>
@@ -275,15 +306,31 @@ function Header({
       <WorkerPill worker={worker} />
 
       {threadId ? (
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          aria-label="Rename thread"
-          title="Rename"
-          className="grid size-[30px] shrink-0 place-items-center rounded-lg text-ink-3 hover:bg-card hover:text-tk-onyx hover:ring-1 hover:ring-line"
-        >
-          <Pencil className="size-4" aria-hidden />
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            aria-label="Rename thread"
+            title="Rename"
+            className="grid size-[30px] shrink-0 place-items-center rounded-lg text-ink-3 hover:bg-card hover:text-tk-onyx hover:ring-1 hover:ring-line"
+          >
+            <Pencil className="size-4" aria-hidden />
+          </button>
+          <button
+            type="button"
+            disabled={archiving}
+            onClick={() => setArchived(!archived)}
+            aria-label={archived ? "Restore thread" : "Archive thread"}
+            title={archived ? "Restore" : "Archive"}
+            className="grid size-[30px] shrink-0 place-items-center rounded-lg text-ink-3 hover:bg-card hover:text-tk-onyx hover:ring-1 hover:ring-line disabled:opacity-50"
+          >
+            {archived ? (
+              <ArchiveRestore className="size-4" aria-hidden />
+            ) : (
+              <Archive className="size-4" aria-hidden />
+            )}
+          </button>
+        </>
       ) : null}
     </header>
   )

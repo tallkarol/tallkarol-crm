@@ -40,6 +40,8 @@ export type ThreadRow = {
   lastMessageAt: string
   /** A write is parked for Karol in this thread. */
   needsYou: boolean
+  /** Stamped out of the main list; lives in the Archived group until restored. */
+  archived: boolean
 }
 
 export type BudgetView = {
