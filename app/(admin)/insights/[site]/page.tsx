@@ -160,7 +160,7 @@ export default async function InsightsOverviewPage({
         </div>
       ) : null}
 
-      <div className="mt-3 grid gap-3 xl:grid-cols-12">
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 xl:grid-cols-12">
         <Card
           title={`${metrics.length > 0 ? "Daily trend" : "Trend"}`}
           note="previous window dashed"
@@ -211,7 +211,7 @@ export default async function InsightsOverviewPage({
         </div>
       </div>
 
-      <div className="mt-3 grid gap-3 xl:grid-cols-12">
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 xl:grid-cols-12">
         <Card title="Channels" note={`${TABLE_WINDOW_DAYS}d sessions`} className="xl:col-span-5">
           {hasGa4 ? (
             <BarList rows={snapshot.ga4.channels.slice(0, 6)} />
@@ -233,24 +233,24 @@ export default async function InsightsOverviewPage({
         >
           {hasGa4 ? (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[420px] border-collapse text-xs">
+              <table className="w-full border-collapse text-xs sm:min-w-[420px]">
                 <thead>
                   <tr className="border-b border-line text-left text-[10px] font-bold uppercase tracking-wide text-ink-3">
                     <th className="px-5 py-2 font-bold">Page</th>
                     <th className="px-3 py-2 text-right font-bold">Sessions</th>
-                    <th className="px-5 py-2 text-right font-bold">Key events</th>
+                    <th className="hidden px-5 py-2 text-right font-bold sm:table-cell">Key events</th>
                   </tr>
                 </thead>
                 <tbody>
                   {snapshot.ga4.pages.slice(0, 6).map((row) => (
                     <tr key={row.name} className="border-b border-line last:border-0">
-                      <td className="max-w-[22rem] truncate px-5 py-2 font-medium text-tk-onyx" title={row.name}>
+                      <td className="max-w-[9rem] truncate sm:max-w-[22rem] px-5 py-2 font-medium text-tk-onyx" title={row.name}>
                         {row.name}
                       </td>
                       <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">
                         {fmtInt(row.sessions)}
                       </td>
-                      <td className="px-5 py-2 text-right tabular-nums text-tk-onyx">
+                      <td className="hidden px-5 py-2 text-right tabular-nums text-tk-onyx sm:table-cell">
                         {fmtInt(row.keyEvents)}
                       </td>
                     </tr>
@@ -321,7 +321,7 @@ export default async function InsightsOverviewPage({
                 <tbody>
                   {ads.campaigns.map((row) => (
                     <tr key={row.id || row.name} className="border-b border-line last:border-0">
-                      <td className="max-w-[22rem] truncate px-5 py-2 font-medium text-tk-onyx" title={row.name}>
+                      <td className="max-w-[9rem] truncate sm:max-w-[22rem] px-5 py-2 font-medium text-tk-onyx" title={row.name}>
                         {row.name}
                       </td>
                       <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">

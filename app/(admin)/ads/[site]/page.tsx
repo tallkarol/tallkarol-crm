@@ -180,16 +180,16 @@ export default async function PaidAdsPage({
       >
         {ads.campaigns.length ? (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse text-xs">
+            <table className="w-full border-collapse text-xs sm:min-w-[640px]">
               <thead>
                 <tr className="border-b border-line text-left text-[10px] font-bold uppercase tracking-wide text-ink-3">
                   <th className="px-5 py-2 font-bold">Campaign</th>
                   <th className="px-3 py-2 text-right font-bold">Spend</th>
-                  <th className="px-3 py-2 text-right font-bold">Clicks</th>
-                  <th className="px-3 py-2 text-right font-bold">Impr.</th>
-                  <th className="px-3 py-2 text-right font-bold">CTR</th>
-                  <th className="px-3 py-2 text-right font-bold">CPC</th>
-                  <th className="px-3 py-2 text-right font-bold">Conv.</th>
+                  <th className="hidden px-3 py-2 text-right font-bold sm:table-cell">Clicks</th>
+                  <th className="hidden px-3 py-2 text-right font-bold sm:table-cell">Impr.</th>
+                  <th className="hidden px-3 py-2 text-right font-bold sm:table-cell">CTR</th>
+                  <th className="hidden px-3 py-2 text-right font-bold sm:table-cell">CPC</th>
+                  <th className="hidden px-3 py-2 text-right font-bold sm:table-cell">Conv.</th>
                   <th className="px-5 py-2 text-right font-bold">CPA</th>
                 </tr>
               </thead>
@@ -207,7 +207,7 @@ export default async function PaidAdsPage({
                       className="border-b border-line last:border-0"
                     >
                       <td
-                        className="max-w-[22rem] truncate px-5 py-2 font-medium text-tk-onyx"
+                        className="max-w-[9rem] truncate sm:max-w-[22rem] px-5 py-2 font-medium text-tk-onyx"
                         title={row.name}
                       >
                         {row.name}
@@ -220,19 +220,19 @@ export default async function PaidAdsPage({
                       <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">
                         {fmtMoney(row.spend, currency)}
                       </td>
-                      <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">
+                      <td className="hidden px-3 py-2 text-right tabular-nums text-tk-onyx sm:table-cell">
                         {fmtInt(row.clicks)}
                       </td>
-                      <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">
+                      <td className="hidden px-3 py-2 text-right tabular-nums text-tk-onyx sm:table-cell">
                         {fmtInt(row.impressions)}
                       </td>
-                      <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">
+                      <td className="hidden px-3 py-2 text-right tabular-nums text-tk-onyx sm:table-cell">
                         {rowRates.ctr == null ? "—" : fmtPct01(rowRates.ctr)}
                       </td>
-                      <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">
+                      <td className="hidden px-3 py-2 text-right tabular-nums text-tk-onyx sm:table-cell">
                         {rowRates.cpc == null ? "—" : fmtMoney(rowRates.cpc, currency)}
                       </td>
-                      <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">
+                      <td className="hidden px-3 py-2 text-right tabular-nums text-tk-onyx sm:table-cell">
                         {fmtConv(row.conversions)}
                       </td>
                       <td className="px-5 py-2 text-right tabular-nums text-tk-onyx">

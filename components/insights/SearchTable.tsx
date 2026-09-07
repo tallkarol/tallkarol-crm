@@ -18,28 +18,28 @@ export function SearchTable({
   }
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[560px] border-collapse text-xs">
+      <table className="w-full border-collapse text-xs sm:min-w-[560px]">
         <thead>
           <tr className="border-b border-tk-slate/12 text-left text-[10px] font-bold uppercase tracking-wide text-tk-slate/55">
             <th className="px-5 py-2 font-bold">{nameHeader}</th>
             <th className="px-3 py-2 text-right font-bold">Clicks</th>
-            <th className="px-3 py-2 text-right font-bold">Impressions</th>
-            <th className="px-3 py-2 text-right font-bold">CTR</th>
+            <th className="hidden px-3 py-2 text-right font-bold sm:table-cell">Impressions</th>
+            <th className="hidden px-3 py-2 text-right font-bold sm:table-cell">CTR</th>
             <th className="px-3 py-2 text-right font-bold">Position</th>
-            <th className="px-5 py-2 text-right font-bold">Δ pos</th>
+            <th className="hidden px-5 py-2 text-right font-bold sm:table-cell">Δ pos</th>
           </tr>
         </thead>
         <tbody>
           {shown.map((row) => (
             <tr key={row.name} className="border-b border-tk-slate/[.06] last:border-0">
-              <td className="max-w-[22rem] truncate px-5 py-2 font-medium text-tk-onyx" title={row.name}>
+              <td className="max-w-[9rem] truncate sm:max-w-[22rem] px-5 py-2 font-medium text-tk-onyx" title={row.name}>
                 {row.name}
               </td>
               <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">{fmtInt(row.clicks)}</td>
-              <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">{fmtInt(row.impressions)}</td>
-              <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">{fmtPct01(row.ctr)}</td>
+              <td className="hidden px-3 py-2 text-right tabular-nums text-tk-onyx sm:table-cell">{fmtInt(row.impressions)}</td>
+              <td className="hidden px-3 py-2 text-right tabular-nums text-tk-onyx sm:table-cell">{fmtPct01(row.ctr)}</td>
               <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">{row.position.toFixed(1)}</td>
-              <td className="px-5 py-2 text-right">
+              <td className="hidden px-5 py-2 text-right sm:table-cell">
                 <PositionDelta position={row.position} prevPosition={row.prevPosition} />
               </td>
             </tr>

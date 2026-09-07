@@ -49,20 +49,20 @@ export function ClientTable({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[50rem] text-left text-sm">
+          <table className="w-full text-left text-sm sm:min-w-[50rem]">
             <thead>
               <tr className="border-b border-line text-[11px] font-semibold uppercase tracking-wider text-ink-3">
                 <th className="px-5 py-2.5 font-semibold">Client</th>
                 <th className="px-3 py-2.5 text-right font-semibold">Billed</th>
                 <th className="px-3 py-2.5 text-right font-semibold">Hours</th>
-                <th className="px-3 py-2.5 text-right font-semibold">Rate</th>
-                <th className="min-w-[9rem] px-3 py-2.5 font-semibold">Share</th>
-                <th className="px-3 py-2.5 text-right font-semibold">
+                <th className="hidden px-3 py-2.5 text-right font-semibold sm:table-cell">Rate</th>
+                <th className="hidden min-w-[9rem] px-3 py-2.5 font-semibold sm:table-cell">Share</th>
+                <th className="hidden px-3 py-2.5 text-right font-semibold sm:table-cell">
                   {quarterLabel}
                 </th>
-                <th className="px-3 py-2.5 text-right font-semibold">Logged</th>
-                <th className="w-36 px-3 py-2.5 font-semibold">12 mo</th>
-                <th className="px-5 py-2.5 font-semibold">Kind</th>
+                <th className="hidden px-3 py-2.5 text-right font-semibold sm:table-cell">Logged</th>
+                <th className="hidden w-36 px-3 py-2.5 font-semibold sm:table-cell">12 mo</th>
+                <th className="hidden px-5 py-2.5 font-semibold sm:table-cell">Kind</th>
               </tr>
             </thead>
             <tbody>
@@ -97,12 +97,12 @@ export function ClientTable({
                     <td className="px-3 py-3 text-right tabular-nums text-tk-slate">
                       {row.invoiceHours > 0 ? fmtHours(row.invoiceHours) : "—"}
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-tk-onyx">
+                    <td className="hidden px-3 py-3 text-right tabular-nums text-tk-onyx sm:table-cell">
                       {row.hourlyCents != null
                         ? `${formatMoney(row.hourlyCents)}/hr`
                         : "fixed"}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="hidden px-3 py-3 sm:table-cell">
                       <div className="flex items-center gap-2">
                         <span className="block h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-well">
                           <span
@@ -118,16 +118,16 @@ export function ClientTable({
                         </span>
                       </div>
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-tk-slate">
+                    <td className="hidden px-3 py-3 text-right tabular-nums text-tk-slate sm:table-cell">
                       {row.quarterCents > 0 ? formatMoney(row.quarterCents) : "—"}
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-ink-3">
+                    <td className="hidden px-3 py-3 text-right tabular-nums text-ink-3 sm:table-cell">
                       {row.loggedHours > 0 ? fmtHours(row.loggedHours) : "—"}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="hidden px-3 py-3 sm:table-cell">
                       <MiniBars values={row.spark} label={`${row.name} last 12 months`} />
                     </td>
-                    <td className="px-5 py-3 text-xs text-ink-3">
+                    <td className="hidden px-5 py-3 text-xs text-ink-3 sm:table-cell">
                       {mixLabel(row)}
                     </td>
                   </tr>

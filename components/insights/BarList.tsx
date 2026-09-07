@@ -26,7 +26,7 @@ export function BarList({
       {rows.map((row) => (
         <div
           key={row.name}
-          className="grid grid-cols-[minmax(0,9rem)_1fr_5rem] items-center gap-3 text-xs"
+          className="grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)_5rem] items-center gap-3 text-xs"
         >
           <p className="truncate font-medium text-tk-onyx" title={row.name}>
             {row.name}
