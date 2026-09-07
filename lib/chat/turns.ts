@@ -17,6 +17,7 @@ import {
   type ModelKey,
   type TokenUsage,
 } from "@/lib/chat/models"
+import { parseCommand } from "@/lib/chat/skills"
 import { toolByName, type ToolContext } from "@/lib/chat/tools"
 
 /**
@@ -57,6 +58,9 @@ const RULES: { job: JobType; test: RegExp }[] = [
  * shows up as a bad answer rather than a bad bill.
  */
 export function classify(text: string): JobType {
+  // A slash command the hive mind knows is not a question to answer but a
+  // procedure to run; it gets the worker's skill toolset, not the chat rung.
+  if (parseCommand(text)) return "skill"
   for (const rule of RULES) {
     if (rule.test.test(text)) return rule.job
   }
@@ -285,11 +289,15 @@ export async function invokeTool(input: {
   }
 }
 
-/** The worker posts the assistant's reply and what the run cost. */
+/**
+ * The worker posts the assistant's reply and what the run cost. A skill turn
+ * names its speaker ("/inspect") so the thread shows who answered.
+ */
 export async function completeTurn(input: {
   turnId: string
   body: string
   usage?: Partial<TokenUsage>
+  agent?: string
 }) {
   const turn = await db.query.chatTurns.findFirst({
     where: eq(chatTurns.id, input.turnId),
@@ -309,7 +317,7 @@ export async function completeTurn(input: {
     .values({
       threadId: turn.threadId,
       role: "assistant",
-      agent: "Assistant",
+      agent: input.agent?.trim().slice(0, 60) || "Assistant",
       body: input.body,
       turnId: turn.id,
     })
@@ -477,6 +485,30 @@ export async function pendingApprovals(userId: string) {
 }
 
 /* ---------- reading ---------- */
+
+/** Threads with a write parked for Karol — the amber dot in the sidebar. */
+export async function pendingThreadIds(userId: string): Promise<Set<string>> {
+  const rows = await db
+    .selectDistinct({ threadId: chatToolCalls.threadId })
+    .from(chatToolCalls)
+    .innerJoin(chatThreads, eq(chatToolCalls.threadId, chatThreads.id))
+    .where(
+      and(eq(chatToolCalls.status, "pending"), eq(chatThreads.userId, userId))
+    )
+  return new Set(rows.map((r) => r.threadId))
+}
+
+export async function renameThread(userId: string, threadId: string, title: string) {
+  const clean = title.trim().slice(0, 120)
+  if (!clean) throw new Error("A thread needs a name.")
+  const [row] = await db
+    .update(chatThreads)
+    .set({ title: clean })
+    .where(and(eq(chatThreads.id, threadId), eq(chatThreads.userId, userId)))
+    .returning({ id: chatThreads.id })
+  if (!row) throw new Error("Not your thread.")
+  return clean
+}
 
 export async function listThreads(userId: string, limit = 30) {
   return db.query.chatThreads.findMany({

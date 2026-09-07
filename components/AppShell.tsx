@@ -9,11 +9,19 @@ import { ThemeToggle } from "@/components/ThemeToggle"
 import { logoutAction } from "@/lib/actions"
 import { cn } from "@/lib/cn"
 import { HideMoneyToggle } from "@/components/HideMoneyToggle"
-import { ADMIN_NAV, type NavSection } from "@/lib/nav"
+import { ADMIN_NAV, ROUTES, type NavSection } from "@/lib/nav"
 import { primeHideMoney } from "@/lib/money-privacy"
 import type { Theme } from "@/lib/theme"
 
 const STORAGE_KEY = "tk-crm-sidebar-collapsed"
+
+/**
+ * Routes that own their own scrolling. The chat is one frame the height of
+ * the window — a persistent thread rail beside a thread that scrolls on its
+ * own — so the canvas padding and the <main> scroller both step aside and
+ * the page gets a flex column to fill instead.
+ */
+const FULL_BLEED = new Set<string>([ROUTES.chat])
 
 export function AppShell({
   email,
@@ -39,6 +47,7 @@ export function AppShell({
   primeHideMoney(hideMoney)
 
   const pathname = usePathname()
+  const fullBleed = FULL_BLEED.has(pathname)
   const [collapsed, setCollapsed] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -166,10 +175,19 @@ export function AppShell({
 
         <main
           id="main"
-          className="tk-main-scroll relative min-w-0 flex-1 overflow-x-hidden overflow-y-auto"
+          className={cn(
+            "relative min-w-0 flex-1",
+            fullBleed
+              ? "flex min-h-0 flex-col overflow-hidden"
+              : "tk-main-scroll overflow-x-hidden overflow-y-auto"
+          )}
         >
           {/* Full-bleed canvas — pages cap their own prose/form widths. */}
-          <div className="w-full px-5 py-8 sm:px-8">
+          <div
+            className={
+              fullBleed ? "flex min-h-0 flex-1 flex-col" : "w-full px-5 py-8 sm:px-8"
+            }
+          >
             {children}
           </div>
         </main>

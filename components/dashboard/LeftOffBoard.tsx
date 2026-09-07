@@ -55,7 +55,6 @@ import {
   type WaitingSeverity,
 } from "@/lib/waiting"
 import { Card as TkCard } from "@/components/ui/Card"
-import { WaitingStrip } from "@/components/dashboard/WaitingStrip"
 import {
   convertLeftOffAction,
   dismissLeftOffAction,
@@ -339,18 +338,17 @@ const SEVERITY_TONE: Record<WaitingSeverity, LaneTone> = {
   quiet: "neutral",
 }
 
-type ViewKey = "morning" | "code" | "admin" | "queue"
-/**
- * Queue sits last on purpose. It is the decision queue's own card strip,
- * moved off the dashboard — the same rows Morning bands, drawn the way the
- * strip drew them, with each row's verbs inline. Last position so the keys
- * for Code and Admin do not move under anyone's fingers.
- */
+/** What the drawer is looking at: a queue row, or a chat. */
+type Selection =
+  | { kind: "waiting"; item: WaitingItem }
+  | { kind: "note"; note: LeftOffNoteView }
+  | null
+
+type ViewKey = "morning" | "code" | "admin"
 const VIEWS: { key: ViewKey; label: string }[] = [
   { key: "morning", label: "Morning" },
   { key: "code", label: "Code" },
   { key: "admin", label: "Admin" },
-  { key: "queue", label: "Queue" },
 ]
 
 /** "2m ago" / "3h ago" / "1d ago" from an ISO timestamp — display only, no live tick. */
@@ -527,6 +525,22 @@ export function LeftOffBoard({
 
   const counts = useMemo(() => (waiting ? bandCounts(waiting.counts) : null), [waiting])
 
+  /**
+   * The drawer's subject. A selection is a ref string, and the ref belongs
+   * either to the waiting queue or to a chat, so this is where the two halves
+   * meet. Nothing is fetched — both payloads are already in hand, which is why
+   * the drawer opens instantly where the old `?peek=` link took a server round
+   * trip.
+   */
+  const selection = useMemo((): Selection => {
+    if (!selected) return null
+    const item = (waiting?.items ?? []).find((i) => i.id === selected)
+    if (item) return { kind: "waiting", item }
+    const note = notes.find((n) => n.sessionRef === selected)
+    if (note) return { kind: "note", note }
+    return null
+  }, [selected, waiting, notes])
+
   /** Everything admin that qualified — not the capped list the queue hands out. */
   const adminTotal = useMemo(
     () =>
@@ -677,7 +691,7 @@ export function LeftOffBoard({
           return
         }
         default:
-          if (/^[1-4]$/.test(event.key)) {
+          if (/^[1-3]$/.test(event.key)) {
             event.preventDefault()
             setView(VIEWS[Number(event.key) - 1].key)
             setSelected(null)
@@ -737,9 +751,7 @@ export function LeftOffBoard({
                   ? byLane.waiting.length
                   : v.key === "admin"
                     ? adminTotal
-                    : v.key === "queue"
-                      ? (waiting?.total ?? 0)
-                      : (counts?.answer ?? 0) + (counts?.decide ?? 0)
+                    : (counts?.answer ?? 0) + (counts?.decide ?? 0)
               return (
                 <button
                   key={v.key}
@@ -842,11 +854,13 @@ export function LeftOffBoard({
         </header>
 
         {/* ---------------------------------------------------------- body */}
-        {view === "queue" ? (
-          <div ref={bodyRef} className="min-h-0 overflow-y-auto px-3 pb-3 md:px-5 md:pb-4">
-            <WaitingStrip payload={waiting} />
-          </div>
-        ) : view === "morning" ? (
+        <div
+          className={cn(
+            "grid min-h-0 grid-cols-[minmax(0,1fr)]",
+            selection && "md:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,470px)]"
+          )}
+        >
+        {view === "morning" ? (
           <div ref={bodyRef} className="min-h-0 overflow-y-auto">
             <Bands
               bands={bands}
@@ -901,6 +915,16 @@ export function LeftOffBoard({
             </p>
           </div>
         )}
+
+        {selection ? (
+          <Drawer
+            selection={selection}
+            onClose={() => setSelected(null)}
+            replying={replyingRef === selected}
+            onReplyToggle={setReplyingRef}
+          />
+        ) : null}
+        </div>
 
         {/* -------------------------------------------------------- footer */}
         <footer className="flex items-center gap-2 border-t border-line bg-card px-5 py-2">
@@ -1454,6 +1478,20 @@ function WaitingCard({
 
 /* ----------------------------------------------------------------- bands */
 
+/**
+ * How old a row is, weighted so sorting is visible without reading.
+ *
+ * Every age rendered the same grey was the single biggest reason Morning read
+ * as a wall: a ticket unanswered for 115 days and one called "FAQ" looked
+ * identical. `since` is on every queue row, so this needs no new data.
+ */
+function ageTone(since: string) {
+  const days = (Date.now() - new Date(since).getTime()) / 86_400_000
+  if (days >= 30) return "font-extrabold text-bad"
+  if (days >= 7) return "font-bold text-warn"
+  return "text-ink-3"
+}
+
 function Bands({
   bands,
   counts,
@@ -1471,6 +1509,21 @@ function Bands({
   onSelect: (ref: string) => void
   missing: boolean
 }) {
+  // Decide is thirty-odd rows that are mostly one client's, so it groups by
+  // client and the rows stop repeating the name. Answer stays flat and sorted
+  // by age — grouping it would bury the oldest thing, which is the whole point
+  // of the band.
+  const decideByClient = useMemo(() => {
+    const map = new Map<string, WaitingItem[]>()
+    for (const item of bands.decide) {
+      const key = item.client || "House"
+      const list = map.get(key)
+      if (list) list.push(item)
+      else map.set(key, [item])
+    }
+    return Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length)
+  }, [bands.decide])
+
   if (missing) {
     return (
       <p className="px-5 py-10 text-center text-[13px] text-ink-3">
@@ -1478,35 +1531,61 @@ function Bands({
       </p>
     )
   }
+
+  const hidden = (band: WaitingBand) => Math.max((counts?.[band] ?? 0) - bands[band].length, 0)
+
   return (
     <div>
-      {(["answer", "decide"] as const).map((band) => (
-        <section key={band}>
-          <BandHead band={band} n={counts?.[band] ?? bands[band].length} />
-          {bands[band].length === 0 ? (
-            <p className="border-b border-line bg-card px-5 py-4 text-[12.5px] text-ink-3">
-              Nothing to {band === "answer" ? "answer" : "decide"}.
-            </p>
-          ) : (
-            <>
-              {bands[band].map((item) => (
+      <section>
+        <BandHead band="answer" n={counts?.answer ?? bands.answer.length} />
+        {bands.answer.length === 0 ? (
+          <BandEmpty>Nothing to answer.</BandEmpty>
+        ) : (
+          bands.answer.map((item) => (
+            <BandRow
+              key={item.id}
+              item={item}
+              showClient
+              selected={selected === item.id}
+              onSelect={onSelect}
+            />
+          ))
+        )}
+        {hidden("answer") > 0 ? <Hidden n={hidden("answer")} /> : null}
+      </section>
+
+      <section>
+        <BandHead band="decide" n={counts?.decide ?? bands.decide.length} />
+        {bands.decide.length === 0 ? (
+          <BandEmpty>Nothing to decide.</BandEmpty>
+        ) : (
+          decideByClient.map(([client, items]) => (
+            <div key={client}>
+              <div className="flex items-center gap-2 border-b border-line bg-well py-1.5 pl-7 pr-5">
+                <span className="font-ui text-[10.5px] font-bold text-tk-slate">{client}</span>
+                <span className="ml-auto font-ui text-[10.5px] font-bold tabular-nums text-ink-3">
+                  {items.length}
+                </span>
+              </div>
+              {items.map((item) => (
                 <BandRow key={item.id} item={item} selected={selected === item.id} onSelect={onSelect} />
               ))}
-              {(counts?.[band] ?? 0) > bands[band].length ? (
-                <p className="border-b border-line bg-card px-5 py-2 text-[11px] text-ink-3">
-                  +{(counts?.[band] ?? 0) - bands[band].length} more — the queue hands out 24 rows at a time
-                </p>
-              ) : null}
-            </>
-          )}
-        </section>
-      ))}
+            </div>
+          ))
+        )}
+        {hidden("decide") > 0 ? <Hidden n={hidden("decide")} /> : null}
+      </section>
 
       <section>
         <BandHead band="standing" n={standing.total} />
-        <Fold label={`${standing.repos.length} repos with uncommitted work`} detail={standing.repos.slice(0, 4).map((r) => r.title).join(" · ")} />
-        <Fold label={`${standing.parked.length} chats parked`} detail="went quiet without finishing" />
-        <Fold label={`${standing.working.length} chats working`} detail={standing.working[0]?.title ?? "nothing mid-turn"} />
+        <Fold
+          label={`${standing.repos.length} repos with uncommitted work`}
+          detail={standing.repos.slice(0, 4).map((r) => r.title).join(" · ")}
+        />
+        <Fold
+          label={`${standing.parked.length} chats parked · ${standing.working.length} working`}
+          detail={standing.working[0]?.title ?? "nothing mid-turn"}
+        />
         {browser ? (
           <Fold
             label={`${browser.windows.length} ${browser.windows.length === 1 ? "window" : "windows"}`}
@@ -1518,9 +1597,21 @@ function Bands({
   )
 }
 
+function BandEmpty({ children }: { children: ReactNode }) {
+  return <p className="border-b border-line bg-card px-5 py-4 text-[12.5px] text-ink-3">{children}</p>
+}
+
+function Hidden({ n }: { n: number }) {
+  return (
+    <p className="border-b border-line bg-card px-5 py-2 text-[11px] text-ink-3">
+      +{n} more — the queue hands out 24 rows at a time
+    </p>
+  )
+}
+
 function BandHead({ band, n }: { band: WaitingBand; n: number }) {
   return (
-    <div className="flex items-baseline gap-2.5 border-b border-line bg-canvas px-5 py-2">
+    <div className="sticky top-0 z-10 flex items-baseline gap-2.5 border-b border-line bg-canvas px-5 py-2">
       <h3 className="font-ui text-[12px] font-extrabold tracking-tight text-tk-onyx">{BAND_LABEL[band]}</h3>
       <p className="min-w-0 truncate text-[11px] text-ink-3">{BAND_HINT[band]}</p>
       <span className="ml-auto shrink-0 font-ui text-[10.5px] font-extrabold tabular-nums text-ink-3">{n}</span>
@@ -1528,76 +1619,52 @@ function BandHead({ band, n }: { band: WaitingBand; n: number }) {
   )
 }
 
+/**
+ * Three things and nothing else: how old, what it is called, whose it is.
+ *
+ * The reference, the priority, the restated age and the verb button all moved
+ * to the drawer. What was left was a row you can read in one fixation instead
+ * of a sentence you had to cross 1,396px of monitor to finish.
+ */
 function BandRow({
   item,
+  showClient,
   selected,
   onSelect,
 }: {
   item: WaitingItem
+  showClient?: boolean
   selected: boolean
   onSelect: (ref: string) => void
 }) {
-  const router = useRouter()
-  const [, startTransition] = useTransition()
-  const [done, setDone] = useState(false)
   const tone = SEVERITY_TONE[item.severity]
-  const complete = item.verbs.find((v) => v.id === "complete")
-  const Icon = KIND_ICON[item.kind]
-
-  function tick() {
-    if (!complete) return
-    setDone(true)
-    startTransition(async () => {
-      const result = await setTaskDone(complete.ref, true)
-      if (!result.ok) setDone(false)
-      else router.refresh()
-    })
-  }
-  if (done) return null
-
   return (
-    <div
+    <button
+      type="button"
       data-ref={item.id}
       tabIndex={-1}
+      aria-current={selected}
       onFocus={() => onSelect(item.id)}
       onClick={() => onSelect(item.id)}
       className={cn(
-        "grid min-w-0 grid-cols-[3px_auto_minmax(0,1fr)_auto_auto] items-center gap-2.5 border-b border-line bg-card pr-5 outline-none",
-        selected && "bg-well"
+        "grid w-full grid-cols-[3px_minmax(0,1fr)_auto] items-center gap-2.5 border-b border-line pr-5 text-left outline-none transition-colors",
+        selected ? "bg-well" : "bg-card hover:bg-well/60"
       )}
     >
       <span
         aria-hidden
         className={cn("h-full", tone === "bad" ? "bg-bad" : tone === "warn" ? "bg-warn" : "bg-transparent")}
       />
-      <span
-        style={item.color ? ({ "--c": item.color } as React.CSSProperties) : undefined}
-        className={cn(CHIP, "my-1.5", item.client ? "tk-client-tint tk-client-ink" : "bg-well text-tk-onyx")}
-      >
-        <Icon className="size-3" aria-hidden />
-        {item.client || KIND_LABEL[item.kind]}
-      </span>
-      <Link
-        href={item.href}
-        data-act="peek"
-        className={cn("min-w-0 truncate py-1.5 text-[12.5px] text-tk-onyx hover:underline", FOCUS)}
-      >
+      <span className={cn("min-w-0 truncate py-2 text-[12.5px] text-tk-onyx", selected && "font-semibold")}>
         {item.title}
-        {item.subtitle ? <span className="ml-1.5 text-ink-3">· {item.subtitle}</span> : null}
-      </Link>
-      <span className="shrink-0 whitespace-nowrap text-[10.5px] tabular-nums text-ink-3">{item.ageLabel}</span>
-      {complete ? (
-        <button type="button" data-act="complete" onClick={tick} className={cn(GHOST_BTN, "my-1")}>
-          <CheckCircle2 className="size-3" aria-hidden />
-          Done
-        </button>
-      ) : (
-        <Link href={item.href} data-act="open" className={cn(GHOST_BTN, "my-1")}>
-          <ArrowUpRight className="size-3" aria-hidden />
-          Open
-        </Link>
-      )}
-    </div>
+        {showClient && item.client ? (
+          <span className="ml-2 font-ui text-[10px] font-bold text-ink-3">{item.client}</span>
+        ) : null}
+      </span>
+      <span className={cn("shrink-0 whitespace-nowrap font-ui text-[10.5px] tabular-nums", ageTone(item.since))}>
+        {item.ageLabel}
+      </span>
+    </button>
   )
 }
 
@@ -1607,5 +1674,363 @@ function Fold({ label, detail }: { label: string; detail: string }) {
       <span className="shrink-0 font-semibold text-tk-onyx">{label}</span>
       <span className="min-w-0 truncate text-ink-3">{detail}</span>
     </div>
+  )
+}
+
+/* ---------------------------------------------------------------- drawer */
+
+/**
+ * Everything a row used to carry, given room to be legible.
+ *
+ * The list next to this is three fields wide on purpose; this is where the
+ * reference number, the priority, the excerpt, the handoff and — most of all —
+ * the verbs live. A 27px button that says "Reply" beats a 22px icon in a hover
+ * rail on a 33px row, and a hover rail is not reachable on a touch screen at
+ * all.
+ *
+ * On a phone it stops being a column beside the list and becomes a sheet over
+ * it: the same content, full width, Esc or the close button to go back.
+ */
+function Drawer({
+  selection,
+  onClose,
+  replying,
+  onReplyToggle,
+}: {
+  selection: NonNullable<Selection>
+  onClose: () => void
+  replying: boolean
+  onReplyToggle: (ref: string | null) => void
+}) {
+  return (
+    <aside
+      aria-label="Details"
+      className={cn(
+        "fixed inset-0 z-10 grid grid-rows-[auto_minmax(0,1fr)_auto] bg-card",
+        "md:relative md:inset-auto md:border-l md:border-line"
+      )}
+    >
+      {selection.kind === "waiting" ? (
+        <WaitingDetail item={selection.item} onClose={onClose} />
+      ) : (
+        <NoteDetail
+          note={selection.note}
+          onClose={onClose}
+          replying={replying}
+          onReplyToggle={onReplyToggle}
+        />
+      )}
+    </aside>
+  )
+}
+
+function DrawerHead({
+  title,
+  chips,
+  onClose,
+}: {
+  title: string
+  chips: ReactNode
+  onClose: () => void
+}) {
+  return (
+    <header className="border-b border-line px-5 py-4">
+      <div className="flex items-start gap-3">
+        <h3 className="min-w-0 flex-1 font-ui text-[15.5px] font-extrabold leading-snug tracking-tight text-tk-onyx [overflow-wrap:anywhere]">
+          {title}
+        </h3>
+        <button type="button" onClick={onClose} aria-label="Close details" className={ICON_BTN}>
+          <X className="size-3.5" />
+        </button>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-3">{chips}</div>
+    </header>
+  )
+}
+
+function Block({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="grid gap-1.5">
+      <h4 className="font-ui text-[9.5px] font-extrabold uppercase tracking-[0.07em] text-ink-3">{label}</h4>
+      {children}
+    </div>
+  )
+}
+
+function Quote({ children }: { children: ReactNode }) {
+  return (
+    <p className="rounded-r-md border-l-2 border-line-strong bg-well px-3 py-2 text-[12.5px] leading-relaxed text-tk-onyx [overflow-wrap:anywhere]">
+      {children}
+    </p>
+  )
+}
+
+const DRAWER_BODY = "grid content-start gap-4 overflow-y-auto px-5 py-4"
+const DRAWER_FOOT = "flex flex-wrap items-center gap-1.5 border-t border-line bg-well px-5 py-3"
+const BTN =
+  "inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-line bg-card px-2.5 font-ui text-[11px] font-bold text-tk-onyx transition-colors hover:bg-well " +
+  FOCUS
+const BTN_GO =
+  "inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-accent px-3 font-ui text-[11px] font-bold text-tk-linen hover:brightness-95 " +
+  FOCUS
+
+/* ------------------------------------------------------- a queue row */
+
+function WaitingDetail({ item, onClose }: { item: WaitingItem; onClose: () => void }) {
+  const router = useRouter()
+  const [, startTransition] = useTransition()
+  const [done, setDone] = useState(false)
+  const Icon = KIND_ICON[item.kind]
+  const complete = item.verbs.find((v) => v.id === "complete")
+
+  function tick() {
+    if (!complete) return
+    setDone(true)
+    startTransition(async () => {
+      const result = await setTaskDone(complete.ref, true)
+      if (!result.ok) setDone(false)
+      else {
+        router.refresh()
+        onClose()
+      }
+    })
+  }
+
+  return (
+    <>
+      <DrawerHead
+        title={item.title}
+        onClose={onClose}
+        chips={
+          <>
+            <span
+              style={item.color ? ({ "--c": item.color } as React.CSSProperties) : undefined}
+              className={cn(CHIP, item.client ? "tk-client-tint tk-client-ink" : "bg-well text-tk-onyx")}
+            >
+              {item.client || "House"}
+            </span>
+            <span className={cn(CHIP, "bg-well text-tk-onyx")}>
+              <Icon className="size-3" aria-hidden />
+              {KIND_LABEL[item.kind]}
+            </span>
+            <span className="tabular-nums">{item.ageLabel}</span>
+          </>
+        }
+      />
+      <div className={DRAWER_BODY}>
+        {/* The severity the row's 3px stripe could only hint at. */}
+        {item.severity === "hot" ? (
+          <p className="rounded-lg bg-bad-soft px-3 py-2.5 text-[12.5px] font-semibold text-bad">
+            {item.subtitle || "This one is overdue for your attention."}
+          </p>
+        ) : item.subtitle ? (
+          <Block label="What is stuck">
+            <Quote>{item.subtitle}</Quote>
+          </Block>
+        ) : null}
+
+        <Block label="Waiting since">
+          <p className="text-[12.5px] text-tk-onyx">
+            {new Date(item.since).toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" })}
+          </p>
+        </Block>
+      </div>
+      <div className={DRAWER_FOOT}>
+        {complete && !done ? (
+          <button type="button" onClick={tick} className={BTN_GO}>
+            <CheckCircle2 className="size-3" aria-hidden />
+            {complete.label}
+          </button>
+        ) : null}
+        <Link href={item.href} className={cn(complete ? BTN : BTN_GO)}>
+          <ArrowUpRight className="size-3" aria-hidden />
+          Open
+        </Link>
+      </div>
+    </>
+  )
+}
+
+/* ------------------------------------------------------------- a chat */
+
+function NoteDetail({
+  note,
+  onClose,
+  replying,
+  onReplyToggle,
+}: {
+  note: LeftOffNoteView
+  onClose: () => void
+  replying: boolean
+  onReplyToggle: (ref: string | null) => void
+}) {
+  const SurfaceIcon = SURFACE_ICON[note.surface] ?? NotebookText
+  const resume = note.resumeCommand ? resumeHref(note.sessionRef) : ""
+  const cursor = note.cwd ? cursorHref(note.cwd) : ""
+  const canReply = note.state !== "gone" && note.surface !== "manual"
+
+  const dismiss = dismissLeftOffAction.bind(null, note.sessionRef)
+  const pin = pinLeftOffAction.bind(null, note.sessionRef, !note.pinned)
+  const reply = replyLeftOffAction.bind(null, note.sessionRef)
+  const toTask = convertLeftOffAction.bind(null, note.sessionRef, "task")
+  const toTicket = convertLeftOffAction.bind(null, note.sessionRef, "ticket")
+
+  return (
+    <>
+      <DrawerHead
+        title={note.title}
+        onClose={onClose}
+        chips={
+          <>
+            {note.client ? (
+              <Link
+                href={ROUTES.client(note.client.slug)}
+                style={{ "--c": note.client.color } as React.CSSProperties}
+                className={cn(CHIP, "tk-client-tint tk-client-ink hover:underline")}
+              >
+                {note.client.name}
+              </Link>
+            ) : (
+              <span className={cn(CHIP, "bg-well text-tk-onyx")}>House</span>
+            )}
+            <span className="inline-flex items-center gap-1">
+              <SurfaceIcon className="size-3" aria-hidden />
+              {SURFACE_LABEL[note.surface] ?? note.surface}
+            </span>
+            {note.project ? (
+              <span className="inline-flex items-center gap-1">
+                <FolderKanban className="size-3" aria-hidden />
+                {note.project}
+              </span>
+            ) : null}
+            {note.branch && note.branch !== "main" ? (
+              <span className="inline-flex items-center gap-1">
+                <GitBranch className="size-3" aria-hidden />
+                {note.branch}
+              </span>
+            ) : null}
+            <span className="tabular-nums">{note.ago}</span>
+          </>
+        }
+      />
+      <div className={DRAWER_BODY}>
+        {note.state === "blocked" && note.blockedOn ? (
+          <p className="rounded-lg bg-bad-soft px-3 py-2.5 text-[12.5px] font-semibold text-bad">
+            Wants: {note.blockedOn}
+          </p>
+        ) : null}
+        {note.lastPrompt ? (
+          <Block label="You said">
+            <Quote>{note.lastPrompt}</Quote>
+          </Block>
+        ) : null}
+        {note.lastReply ? (
+          <Block label="It said">
+            <Quote>{note.lastReply}</Quote>
+          </Block>
+        ) : null}
+        {note.handoff ? (
+          <Block label="Handoff">
+            <dl className="grid gap-1 text-[12.5px] leading-relaxed">
+              {(
+                [
+                  ["Done", note.handoff.done],
+                  ["Blocked on", note.handoff.blocked],
+                  ["Next", note.handoff.next],
+                ] as const
+              ).map(([term, value]) =>
+                value ? (
+                  <div key={term} className="grid grid-cols-[76px_minmax(0,1fr)] gap-2">
+                    <dt className="font-ui text-[10px] font-extrabold uppercase tracking-[0.05em] text-ink-3">
+                      {term}
+                    </dt>
+                    <dd className="m-0 text-tk-onyx">{value}</dd>
+                  </div>
+                ) : null
+              )}
+            </dl>
+          </Block>
+        ) : null}
+        {note.agents ? (
+          <Block label="Running agents">
+            <p className="text-[12.5px] text-tk-onyx">
+              {note.agents.running} — {note.agents.types.join(", ")}
+            </p>
+          </Block>
+        ) : null}
+        {note.pendingReply ? (
+          <Block label="Reply queued">
+            <Quote>{note.pendingReply}</Quote>
+          </Block>
+        ) : null}
+        {replying && canReply ? (
+          <form action={reply} className="flex min-w-0 items-center gap-1.5">
+            <input
+              name="text"
+              type="text"
+              autoFocus
+              placeholder={note.state === "working" ? "Queue for its next turn…" : "Reply…"}
+              aria-label={`Reply to ${note.title}`}
+              className={REPLY_INPUT}
+            />
+            <button type="submit" className={SEND_BTN}>
+              Send
+            </button>
+          </form>
+        ) : null}
+      </div>
+      <div className={DRAWER_FOOT}>
+        {resume ? (
+          <a href={resume} data-act="resume" className={BTN_GO}>
+            <Play className="size-3" aria-hidden />
+            Resume
+          </a>
+        ) : null}
+        {cursor ? (
+          <a href={cursor} data-act="cursor" className={BTN}>
+            <SquareCode className="size-3" aria-hidden />
+            Cursor
+          </a>
+        ) : null}
+        {canReply ? (
+          <button
+            type="button"
+            data-act="reply"
+            onClick={() => onReplyToggle(replying ? null : note.sessionRef)}
+            className={cn(BTN, replying && "text-tk-teal")}
+          >
+            <CornerDownLeft className="size-3" aria-hidden />
+            Reply
+          </button>
+        ) : null}
+        {note.taskId ? null : (
+          <form action={toTask} data-act="task">
+            <button type="submit" className={BTN}>
+              <ListChecks className="size-3" aria-hidden />
+              Task
+            </button>
+          </form>
+        )}
+        {note.ticketId ? null : (
+          <form action={toTicket} data-act="ticket">
+            <button type="submit" className={BTN}>
+              <LifeBuoy className="size-3" aria-hidden />
+              Ticket
+            </button>
+          </form>
+        )}
+        <span className="grow" />
+        <form action={pin} data-act="pin">
+          <button type="submit" aria-label={note.pinned ? "Unpin" : "Pin"} className={ICON_BTN}>
+            {note.pinned ? <PinOff className="size-3.5" /> : <Pin className="size-3.5" />}
+          </button>
+        </form>
+        <form action={dismiss} data-act="dismiss">
+          <button type="submit" aria-label="Dismiss" className={ICON_BTN}>
+            <X className="size-3.5" />
+          </button>
+        </form>
+      </div>
+    </>
   )
 }

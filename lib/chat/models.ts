@@ -184,6 +184,7 @@ export type JobType =
   | "architecture"
   | "writing"
   | "report"
+  | "skill"
 
 export type Ladder = {
   job: JobType
@@ -304,6 +305,20 @@ export const LADDERS: Record<JobType, Ladder> = {
     detector: "section schema",
     maxEscalations: 1,
     note: "Only the closing narrative goes to a premium model.",
+  },
+  /**
+   * A `/command` from the hive mind. The worker hands the model the command
+   * file and lets it read the skill and run its scripts, so this is
+   * procedural, multi-step work with shell — above the chat rung, still on
+   * the Cursor pool. No detector: a skill that went wrong says so in prose.
+   */
+  skill: {
+    job: "skill",
+    label: "Hive-mind skill",
+    rungs: ["grok-4.6-high"],
+    detector: "",
+    maxEscalations: 0,
+    note: "Follows a SKILL.md with read and shell; not a chat answer.",
   },
 }
 

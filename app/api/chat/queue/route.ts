@@ -4,6 +4,7 @@ import { db } from "@/db"
 import { chatMessages } from "@/db/schema"
 import { asc } from "drizzle-orm"
 import { modelFor, type ModelKey } from "@/lib/chat/models"
+import { parseCommand } from "@/lib/chat/skills"
 import { claimTurn, markRunning } from "@/lib/chat/turns"
 import { toolSchemas } from "@/lib/chat/tools"
 import {
@@ -45,7 +46,18 @@ export async function POST(request: Request) {
 
   const spec = modelFor(turn.model as ModelKey)
 
+  /**
+   * A skill turn carries the command it was queued for, parsed here from the
+   * message the turn answers, so the worker and the CRM agree on which
+   * command file to open. Parsed on this side on purpose: the worker never
+   * decides what it is allowed to run.
+   */
+  const asked = history.find((m) => m.id === turn.messageId)
+  const command =
+    turn.jobType === "skill" && asked ? parseCommand(asked.body) : null
+
   return NextResponse.json({
+    command,
     turn: {
       id: turn.id,
       threadId: turn.threadId,

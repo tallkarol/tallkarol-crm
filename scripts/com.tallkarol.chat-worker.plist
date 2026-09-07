@@ -41,6 +41,10 @@
         <!-- Point at the deployed CRM instead when the worker should serve it. -->
         <key>CRM_URL</key>
         <string>http://localhost:3001</string>
+        <!-- Lets /commands from the chat run the hive mind's skills, with
+             shell and edit on this Mac. Remove the key to refuse skill turns. -->
+        <key>CHAT_WORKER_SKILLS</key>
+        <string>/Users/karolbuczek/.claude</string>
     </dict>
 
     <key>RunAtLoad</key>

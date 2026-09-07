@@ -72,6 +72,12 @@ adjacent pair and fails the build on a rung that loses money.
 | `architecture` | Opus 5 Max | — |
 | `writing` | Fable 5.1 High | — |
 | `report` | Composer 2.5 → Grok 4.6 High | section schema |
+| `skill` | Grok 4.6 High | — |
+
+`skill` is any message that starts with a `/command` the hive mind knows
+(`lib/chat/skills.ts` reads the names from the committed scan). It is not a
+question to answer but a procedure to run, so it skips the chat rung and the
+worker hands the model the command file — see "Skill turns" below.
 
 **Ladders exist only where a machine can tell us the attempt failed, for free.**
 A test suite, a compiler, a validator. Security review, architecture and brand
@@ -225,6 +231,29 @@ npm run chat:worker
 | `CHAT_WORKER_NAME` | Shows in `chat_turns.claimedBy`. Defaults to `mac-<pid>`. |
 | `CHAT_WORKER_REPO` | Repo the agent runs against, for jobs that touch code. |
 | `CHAT_WORKER_IDLE_MS` | Poll interval when the queue is empty. Default 2500. |
+| `CHAT_WORKER_SKILLS` | Directory holding `commands/<name>.md` and `skills/<name>/SKILL.md` — normally `~/.claude`. **Unset, skill turns are refused.** |
+
+### Skill turns
+
+A `/command` message is queued as a `skill` job. The claim carries
+`command: { name, args }`, parsed on the CRM side from the message so the
+worker never decides what it may run. The worker then does what Claude Code
+does with a slash command: reads `commands/<name>.md` from
+`CHAT_WORKER_SKILLS`, strips the frontmatter, fills in `$ARGUMENTS`, and
+runs the model on that with the CRM tools alongside. The reply comes back
+with `agent: "/name"`, so the thread shows who answered.
+
+**This is the one place the worker's trust boundary opens.** A chat turn
+runs with `tools: ["mcp"]` — the CRM callbacks and nothing else. A skill
+turn runs with read, shell, grep, glob, ls and edit as well, because a
+SKILL.md has scripts to run and files to read, and a "/clock status"
+answered by a model with no shell would be a confident guess about the
+timeclock. So the grant is made in the worker's own environment: without
+`CHAT_WORKER_SKILLS` the turn fails with a plain error in the thread and
+nothing escalates. The CRM cannot switch it on remotely.
+
+The launchd plist in `scripts/` sets it. Copy it over and re-bootstrap after
+changing it — launchd reads its own copy.
 
 Nothing about the worker is deployed. Railway runs the CRM; the queue simply
 sits until a Mac is awake, which is also the honest failure mode — a turn
@@ -264,14 +293,54 @@ would call it dead in the middle of the job it was doing. Nothing is lost
 while it is down: the turn stays `queued` and is claimed the moment a worker
 returns.
 
+## The page
+
+`/chat` is one frame the height of the window (AppShell's `FULL_BLEED` hands
+it a flex column instead of the scrolling canvas): a rail on the left that
+never scrolls away, the thread on the right, only the thread scrolling.
+
+| Route | Shows |
+|---|---|
+| `/chat` | the newest thread |
+| `/chat?thread=<id>` | that thread |
+| `/chat?new` | an empty composer; the first line starts and names the thread |
+
+**The rail** has two tabs. *Threads* — grouped Today / Yesterday / Earlier,
+an amber "Needs you" on any thread with a write parked, and the month's
+budget under the list. *Skills* — every command, skill and agent from the
+committed hive-mind scan, grouped by lane; a row opens to what it is and
+what to type, and each form either drops into the composer with its blank
+selected or, when it needs no argument, sends. The tab is remembered per
+browser.
+
+**The thread.** Karol's messages are a bubble; replies are prose on the
+canvas with the model that answered beside the name. Reads show as chips
+(`peek_agent_mailbox · 6`), writes as the approval card, and the rungs a
+question climbed as a footnote with cost and time. Failed reads and failed
+writes stay visible as what they are.
+
+**The composer.** Enter sends, Shift+Enter breaks a line, `/` opens the
+palette over the commands. The sidebar and the empty-thread starters reach
+the box through a window event (`components/chat/compose-bus.ts`), the same
+idiom as the dashboard's left-off board.
+
+Every time on the page is formatted in `Europe/Warsaw` on both sides of
+hydration (`lib/chat/format.ts`): the server runs in UTC and a day heading
+that moved between server and client would be a hydration error.
+
 ## What is not built yet
 
 - **Streaming.** The page polls every three seconds while a turn is in flight.
   Adequate for work that takes tens of seconds; a stream can come later without
   changing the contract.
-- **Agents as people.** One assistant today. `chat_messages.agent` already
-  carries a speaker name so a roster and group threads do not need a migration.
-- **Voice and attachments.** In the mockup, not in the build.
+- **Agents as people.** One assistant, plus the `/command` that answered a
+  skill turn. `chat_messages.agent` carries the speaker name so a roster and
+  group threads do not need a migration.
+- **Voice and attachments.** In the mockup, not in the build. The composer
+  deliberately has no attach or dictate buttons until they do something.
+- **Structured skill results.** A skill's picklist (inspector findings, a
+  punch list) arrives as prose. A card with checkboxes needs the skill to
+  return structured output the CRM can render; nothing does yet.
 - **Repo work.** The worker can run code jobs, but the `code_tested` / `debug`
   ladders have no runner wiring the detector back yet — the escalation path
   exists and is tested, nothing calls it automatically.

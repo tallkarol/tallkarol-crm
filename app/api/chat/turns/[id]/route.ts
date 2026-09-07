@@ -13,8 +13,8 @@ export const dynamic = "force-dynamic"
 /**
  * The worker reports back.
  *
- *   { "body": "...", "usage": { ... } }            finished
- *   { "error": "...", "detector": "test suite" }   failed
+ *   { "body": "...", "usage": { ... }, "agent"?: "/inspect" }   finished
+ *   { "error": "...", "detector": "test suite" }               failed
  *
  * Tool calls do not arrive here — they happen mid-run through
  * /api/chat/tools, so a read the model made is already recorded by the time
@@ -63,6 +63,7 @@ export async function POST(
   const result = await completeTurn({
     turnId: params.id,
     body: text,
+    agent: readString(body, "agent") ?? undefined,
     usage: {
       inputTokens: int("inputTokens"),
       outputTokens: int("outputTokens"),

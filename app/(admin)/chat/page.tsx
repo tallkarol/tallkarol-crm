@@ -1,111 +1,155 @@
-import Link from "next/link"
 import { redirect } from "next/navigation"
-import { PageHeader } from "@/components/PageHeader"
-import { BudgetMeters } from "@/components/chat/BudgetMeters"
-import { ChatView, type ChatMessageView } from "@/components/chat/ChatView"
-import { cn } from "@/lib/cn"
+import { ChatFrame } from "@/components/chat/ChatFrame"
+import { ChatSidebar } from "@/components/chat/ChatSidebar"
+import { ChatView } from "@/components/chat/ChatView"
+import type {
+  BudgetView,
+  ChatMessageView,
+  PendingView,
+  ThreadRow,
+  ThreadStats,
+} from "@/components/chat/types"
 import { getSessionUser } from "@/lib/auth"
 import { budgetState } from "@/lib/chat/budget"
-import { listThreads, threadDetail } from "@/lib/chat/turns"
+import { CHAT_ZONE, modelChain } from "@/lib/chat/format"
+import { listThreads, pendingThreadIds, threadDetail } from "@/lib/chat/turns"
 import { workerStatus } from "@/lib/chat/worker-status"
 import { ROUTES } from "@/lib/nav"
 
 export const metadata = { title: "Chat" }
 export const dynamic = "force-dynamic"
 
+/**
+ * One frame the height of the window: the thread rail on the left, the
+ * thread on the right, only the thread scrolling. The shell hands this
+ * route a flex column instead of a scrolling canvas (FULL_BLEED in AppShell).
+ *
+ *   /chat              the newest thread
+ *   /chat?thread=<id>  that thread
+ *   /chat?new          an empty composer; the first line starts a thread
+ */
 export default async function ChatPage({
   searchParams,
 }: {
-  searchParams: { thread?: string }
+  searchParams: { thread?: string; new?: string }
 }) {
   const user = await getSessionUser()
   if (!user) redirect("/login")
 
-  const [threads, budget, worker] = await Promise.all([
+  const [threads, pendingIds, budget, worker] = await Promise.all([
     listThreads(user.id),
+    pendingThreadIds(user.id),
     budgetState(),
     workerStatus(),
   ])
 
-  const threadId = searchParams.thread ?? threads[0]?.id ?? null
+  const isNew = searchParams.new !== undefined
+  const threadId = isNew ? null : (searchParams.thread ?? threads[0]?.id ?? null)
   const detail = threadId ? await threadDetail(user.id, threadId) : null
+  if (threadId && !detail) redirect(ROUTES.chat)
+
+  const now = new Date()
+  const turns = detail?.turns ?? []
+  const calls = detail?.calls ?? []
 
   /**
-   * Turns hang off the USER message they answer, not the assistant message
-   * they produced — an escalation chain has one question and several attempts,
-   * and only the question is guaranteed to exist while they are still running.
+   * Turns hang off the USER message they answer — an escalation chain has
+   * one question and several attempts. The assistant message that closed a
+   * chain carries it too, so the ladder reads as a footnote under the reply.
    */
-  const messages: ChatMessageView[] = (detail?.messages ?? []).map((message) => ({
-    id: message.id,
-    role: message.role,
-    agent: message.agent,
-    body: message.body,
-    createdAt: message.createdAt.toISOString(),
-    turnId: message.turnId,
-    turns:
+  const messages: ChatMessageView[] = (detail?.messages ?? []).map((message) => {
+    const produced = message.turnId ? turns.find((t) => t.id === message.turnId) : null
+    const chain =
       message.role === "user"
-        ? (detail?.turns ?? []).filter((turn) => turn.messageId === message.id)
-        : [],
-    calls: (detail?.calls ?? []).filter(
-      (call) => message.turnId != null && call.turnId === message.turnId
-    ),
+        ? turns.filter((t) => t.messageId === message.id)
+        : produced
+          ? turns.filter((t) => t.messageId === produced.messageId)
+          : []
+    return {
+      id: message.id,
+      role: message.role,
+      agent: message.agent,
+      body: message.body,
+      createdAt: message.createdAt.toISOString(),
+      turnId: message.turnId,
+      chain,
+      calls: message.turnId ? calls.filter((c) => c.turnId === message.turnId) : [],
+    }
+  })
+
+  const inFlight = turns.find(
+    (t) => t.status === "queued" || t.status === "claimed" || t.status === "running"
+  )
+  const pending: PendingView | null = inFlight
+    ? {
+        model: inFlight.model,
+        claimedBy: inFlight.claimedBy,
+        since: (inFlight.startedAt ?? inFlight.claimedAt ?? inFlight.createdAt).toISOString(),
+        status: inFlight.status as PendingView["status"],
+      }
+    : null
+
+  const stats: ThreadStats = {
+    turns: turns.length,
+    cents: turns.reduce((sum, t) => sum + Number(t.costCents), 0),
+    chain: modelChain(turns.map((t) => t.model)),
+  }
+
+  const rows: ThreadRow[] = threads.map((thread) => ({
+    id: thread.id,
+    title: thread.title || "Untitled",
+    lastMessageAt: thread.lastMessageAt.toISOString(),
+    needsYou: pendingIds.has(thread.id),
   }))
 
-  const waiting = (detail?.turns ?? []).some(
-    (turn) =>
-      turn.status === "queued" ||
-      turn.status === "claimed" ||
-      turn.status === "running"
-  )
+  const budgetView: BudgetView = {
+    period: new Intl.DateTimeFormat("en-GB", { month: "long", timeZone: CHAT_ZONE }).format(
+      budget.periodStart
+    ),
+    other: {
+      spentCents: budget.other.spentCents,
+      limitCents: budget.other.limitCents,
+      reserveCents: budget.other.reserveCents,
+      fraction: budget.other.fraction,
+      level: budget.other.level,
+      cutoff: budget.other.cutoff,
+      routineExhausted: budget.other.routineExhausted,
+    },
+    cursor: { spentCents: budget.cursor.spentCents, turns: budget.cursor.turns },
+  }
 
   return (
-    <>
-      <PageHeader title="Chat" />
-
-      {/* `grid-cols-[minmax(0,1fr)]` and not a bare one-column grid: an auto
-          track sizes to its widest child's min-content, and one unbreakable
-          run like `2026-10-12T10:00` grew the column to 417px inside a 380px
-          screen, clipping every message on the right. */}
-      <div className="mt-4 grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
-        <aside className="flex min-w-0 flex-col gap-3">
-          <Link
-            href={ROUTES.chat}
-            className="rounded-xl border border-line bg-card px-3 py-2 text-xs font-semibold text-tk-slate outline-accent-ink hover:border-line-strong"
-          >
-            New thread
-          </Link>
-
-          {threads.length ? (
-            <nav className="flex flex-col gap-0.5">
-              {threads.map((thread) => (
-                <Link
-                  key={thread.id}
-                  href={`${ROUTES.chat}?thread=${thread.id}`}
-                  className={cn(
-                    "truncate rounded-lg px-3 py-1.5 text-xs outline-accent-ink",
-                    thread.id === threadId
-                      ? "bg-accent-soft font-semibold text-accent-ink"
-                      : "text-ink-2 hover:bg-well"
-                  )}
-                >
-                  {thread.title || "Untitled"}
-                </Link>
-              ))}
-            </nav>
-          ) : null}
-
-          <BudgetMeters budget={budget} />
-        </aside>
-
-        <section className="flex min-h-[28rem] min-w-0 flex-col">
-          <ChatView
-            threadId={threadId}
-            messages={messages}
-            waiting={waiting}
-            worker={worker}
-          />
-        </section>
-      </div>
-    </>
+    <ChatFrame
+      routeKey={threadId ?? "new"}
+      sidebar={
+        <ChatSidebar
+          threads={rows}
+          activeId={threadId}
+          isNew={isNew || (threadId === null && threads.length === 0)}
+          budget={budgetView}
+          now={now.toISOString()}
+        />
+      }
+    >
+      <ChatView
+        threadId={threadId}
+        title={detail?.thread.title || "Untitled"}
+        messages={messages}
+        pending={pending}
+        stats={stats}
+        worker={worker}
+        greeting={greeting(now, user.name)}
+        now={now.toISOString()}
+      />
+    </ChatFrame>
   )
+}
+
+function greeting(now: Date, name: string): string {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: false, timeZone: CHAT_ZONE }).format(now)
+  )
+  const part = hour < 12 ? "Morning" : hour < 18 ? "Afternoon" : "Evening"
+  const first = name.trim().split(/\s+/)[0]
+  return first ? `${part}, ${first}.` : `${part}.`
 }

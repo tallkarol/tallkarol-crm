@@ -1,5 +1,7 @@
+import { existsSync, readFileSync } from "node:fs"
+import { join } from "node:path"
 import { Agent, CursorAgentError } from "@cursor/sdk"
-import type { SDKCustomTool, SDKJsonValue } from "@cursor/sdk"
+import type { SDKCustomTool, SDKJsonValue, ToolName } from "@cursor/sdk"
 import { loadLocalEnv } from "@/lib/load-env"
 
 /**
@@ -29,6 +31,21 @@ const API_KEY = process.env.CURSOR_API_KEY || ""
 const NAME = process.env.CHAT_WORKER_NAME || `mac-${process.pid}`
 const IDLE_MS = Number(process.env.CHAT_WORKER_IDLE_MS || 2500)
 const CWD = process.env.CHAT_WORKER_REPO || process.cwd()
+
+/**
+ * Where the hive mind's commands and skills are installed — the directory
+ * holding `commands/<name>.md` and `skills/<name>/SKILL.md`, normally
+ * ~/.claude (global symlinks into daedalus-hive-mind).
+ *
+ * Unset means skill turns are REFUSED, and that is the point of the
+ * variable: a skill turn hands the model shell and edit on this Mac, which
+ * a chat turn never gets. Turning that on is a decision the worker's owner
+ * makes in its environment, not something the CRM can switch on remotely.
+ */
+const SKILLS = process.env.CHAT_WORKER_SKILLS || ""
+
+/** What a skill turn may use. A chat turn stays on `["mcp"]`. */
+const SKILL_TOOLS: ToolName[] = ["mcp", "read", "shell", "grep", "glob", "ls", "edit"]
 
 if (!TOKEN) {
   console.error("CRM_DEVICE_TOKEN missing — issue one at Settings → Devices.")
@@ -61,6 +78,8 @@ type Claim = {
   turn: QueuedTurn | null
   messages?: { role: string; agent: string; body: string; at: string }[]
   tools?: ToolSchema[]
+  /** Set on a `skill` turn: the command the CRM parsed from the message. */
+  command?: { name: string; args: string } | null
 }
 
 /**
@@ -124,12 +143,46 @@ function customTools(turn: QueuedTurn, tools: ToolSchema[]) {
   return map
 }
 
-function buildPrompt(claim: Claim): string {
-  const transcript = (claim.messages ?? [])
+function transcript(claim: Claim): string {
+  return (claim.messages ?? [])
     .filter((m) => m.role === "user" || m.role === "assistant")
     .map((m) => `${m.role === "user" ? "Karol" : "You"}: ${m.body}`)
     .join("\n\n")
+}
 
+/**
+ * A skill turn's prompt IS the command file, the way Claude Code runs a
+ * slash command: frontmatter stripped, `$ARGUMENTS` filled in, the rest
+ * followed as written. The model gets told where the skills live and is
+ * expected to read them rather than recall them.
+ */
+function skillPrompt(claim: Claim, command: { name: string; args: string }): string {
+  const raw = readFileSync(join(SKILLS, "commands", `${command.name}.md`), "utf8")
+  const body = raw
+    .replace(/^---[\s\S]*?\n---\n?/, "")
+    .replace(/\$ARGUMENTS/g, command.args || "(no arguments)")
+    .trim()
+
+  return [
+    `You are running Karol's /${command.name} command from the Tall Karol CRM chat, on his Mac, in ${CWD}.`,
+    "",
+    `Skills are installed at ${join(SKILLS, "skills")}/<name>/SKILL.md. Read a skill's file before following it — never guess what it says. Its scripts run from that directory with the shell.`,
+    "",
+    "The CRM tools are available too. Any that PROPOSES ONLY parks the write for Karol's approval — say so in one line and do not claim it is done.",
+    "",
+    "When finished, reply in Karol's voice: direct, plain, short. State the outcome, and give him any numbered list he has to pick from.",
+    "",
+    "--- command ---",
+    "",
+    body,
+    "",
+    "--- conversation so far ---",
+    "",
+    transcript(claim),
+  ].join("\n")
+}
+
+function buildPrompt(claim: Claim): string {
   return [
     "You are Karol's assistant inside the Tall Karol CRM.",
     "",
@@ -159,7 +212,7 @@ function buildPrompt(claim: Claim): string {
     "",
     "Conversation so far:",
     "",
-    transcript,
+    transcript(claim),
   ].join("\n")
 }
 
@@ -172,14 +225,42 @@ async function runTurn(claim: Claim) {
     `[${label}] ${turn.jobType} rung ${turn.rung} → ${turn.model}${turn.effort ? ` (${turn.effort})` : ""}`
   )
 
+  /**
+   * A skill turn is refused, not degraded, when this worker cannot run it:
+   * answering "/clock status" with a chat model that has no shell would
+   * produce a confident guess about the timeclock, which is worse than an
+   * honest error in the thread. No detector, so nothing escalates.
+   */
+  const command = turn.jobType === "skill" ? claim.command ?? null : null
+  if (turn.jobType === "skill") {
+    const refusal = !command
+      ? "The CRM could not tell which command this was."
+      : !SKILLS
+        ? "This worker was started without CHAT_WORKER_SKILLS, so skill turns are off. Set it to the directory holding commands/ and skills/ (normally ~/.claude) and restart the worker."
+        : !existsSync(join(SKILLS, "commands", `${command.name}.md`))
+          ? `No command file for /${command.name} under ${SKILLS}/commands.`
+          : null
+    if (refusal) {
+      console.error(`[${label}] refused: ${refusal}`)
+      await crm(`/api/chat/turns/${turn.id}`, { error: refusal }).catch(() => {})
+      return
+    }
+  }
+
   try {
     /**
-     * `tools: ["mcp"]` is deliberate and load-bearing: it leaves the model
-     * with the CRM callbacks and NOTHING else — no shell, no edit, no read.
-     * A chat turn has no business touching the filesystem, and the cheapest
-     * way to guarantee that is to not hand over the tool.
+     * `tools: ["mcp"]` is deliberate and load-bearing for a chat turn: it
+     * leaves the model with the CRM callbacks and NOTHING else — no shell,
+     * no edit, no read. A chat turn has no business touching the filesystem,
+     * and the cheapest way to guarantee that is to not hand over the tool.
+     *
+     * A skill turn is the one exception, and it is gated above: the command
+     * file it follows needs to read a SKILL.md and run its scripts, so it
+     * gets the toolset Claude Code would have had.
      */
-    const result = await Agent.prompt(buildPrompt(claim), {
+    const result = await Agent.prompt(
+      command ? skillPrompt(claim, command) : buildPrompt(claim),
+      {
       apiKey: API_KEY,
       model: {
         id: turn.model,
@@ -187,7 +268,7 @@ async function runTurn(claim: Claim) {
           ? { params: [{ id: "reasoningEffort", value: turn.effort }] }
           : {}),
       },
-      tools: ["mcp"],
+      tools: command ? SKILL_TOOLS : ["mcp"],
       name: `chat ${label}`,
       idempotencyKey: turn.id,
       local: {
@@ -197,7 +278,8 @@ async function runTurn(claim: Claim) {
         settingSources: [],
         customTools: customTools(turn, claim.tools ?? []),
       },
-    })
+      }
+    )
 
     if (result.status !== "finished") {
       /**
@@ -216,6 +298,7 @@ async function runTurn(claim: Claim) {
     await crm(`/api/chat/turns/${turn.id}`, {
       body: result.result ?? "",
       usage: result.usage ?? {},
+      ...(command ? { agent: `/${command.name}` } : {}),
     })
     console.log(
       `[${label}] done${result.durationMs ? ` in ${(result.durationMs / 1000).toFixed(1)}s` : ""}`
