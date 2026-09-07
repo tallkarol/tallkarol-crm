@@ -478,20 +478,20 @@ export default async function DashboardPage({
       <div className="mt-6 grid min-w-0 gap-3.5 xl:grid-cols-[minmax(0,8fr)_minmax(300px,4fr)]">
         <div className="grid min-w-0 content-start gap-3.5">
           <div className="tk-rise min-w-0" style={rise(1)}>
-            <WeekBoard
-              configured={meetings.configured}
-              meetings={meetings.meetings}
-              sources={meetings.sources}
-            />
-          </div>
-          <div className="tk-rise min-w-0" style={rise(2)}>
             <NeedsAttention groups={groups} more={more} />
           </div>
         </div>
 
         <div className="grid min-w-0 content-start gap-3.5">
-          <div className="tk-rise min-w-0" style={rise(3)}>
+          <div className="tk-rise min-w-0" style={rise(2)}>
             <Unread summary={unread} />
+          </div>
+          <div className="tk-rise min-w-0" style={rise(3)}>
+            <WeekBoard
+              configured={meetings.configured}
+              meetings={meetings.meetings}
+              sources={meetings.sources}
+            />
           </div>
           <div className="tk-rise min-w-0" style={rise(4)}>
             <MonthBilled

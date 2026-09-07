@@ -496,37 +496,13 @@ export function WeekBoard({
 
       <div
         className={cn(
-          "mt-2.5 overflow-x-auto border-t border-line transition-opacity duration-150 motion-reduce:transition-none",
+          "mt-2.5 border-t border-line transition-opacity duration-150 motion-reduce:transition-none",
           loading && "opacity-60"
         )}
       >
         {start ? (
           <>
-            <div className="hidden grid-cols-5 divide-x divide-line lg:grid lg:min-w-0">
-              {days.map((d) => {
-                const key = dayKey(d, false)
-                const isToday = key === todayKey
-                const isPast = key < todayKey
-                return (
-                  <div key={key} className="grid justify-items-center gap-[3px] px-1.5 py-2 text-center lg:min-w-0">
-                    <span className="font-ui text-[10px] font-bold uppercase tracking-wide text-ink-3">
-                      {d.toLocaleDateString(undefined, { weekday: "short" })}
-                    </span>
-                    <span
-                      className={cn(
-                        "grid size-[26px] place-items-center rounded-full font-display text-[13px] font-semibold tabular-nums",
-                        isToday ? "bg-accent text-tk-linen" : "text-tk-onyx",
-                        isPast && !isToday && "opacity-55"
-                      )}
-                    >
-                      {d.getDate()}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-
-            <div className="relative grid grid-cols-1 divide-y divide-line lg:min-h-[11.5rem] lg:min-w-0 lg:grid-cols-5 lg:divide-x lg:divide-y-0">
+            <div className="relative grid grid-cols-1 divide-y divide-line">
               {isWindowEmpty ? (
                 <p className="pointer-events-none absolute inset-0 grid place-items-center px-6 text-center font-ui text-[12.5px] text-ink-3">
                   Nothing on the calendars in these five days.
@@ -546,13 +522,13 @@ export function WeekBoard({
                       colRefs.current[index] = node
                     }}
                     className={cn(
-                      "space-y-1.5 px-1.5 py-2 transition-colors duration-150 motion-reduce:transition-none lg:min-w-0",
+                      "space-y-1.5 px-1.5 py-2 transition-colors duration-150 motion-reduce:transition-none",
                       isDropTarget && "bg-accent/10"
                     )}
                   >
                     {/* Stacked days need their own label; the column headings
                         above only exist from lg up. */}
-                    <p className="flex items-baseline gap-1.5 px-1 pb-0.5 font-ui text-[11px] font-bold uppercase tracking-wide text-ink-3 lg:hidden">
+                    <p className="flex items-baseline gap-1.5 px-1 pb-0.5 font-ui text-[11px] font-bold uppercase tracking-wide text-ink-3">
                       {d.toLocaleDateString(undefined, { weekday: "short" })}
                       <span
                         className={cn(
