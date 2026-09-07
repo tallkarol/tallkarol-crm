@@ -94,7 +94,7 @@ export default async function RetainersPage({
       <PageHeader title="Retainers" />
       {searchParams.peek ? <PeekRouter peek={searchParams.peek} closeHref={ROUTES.retainers} /> : null}
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi label="Recurring base" value={`${formatMoney(baseCents)}/mo`} sub={`${active.length} active · ${capacity} hrs capacity`} />
         <Kpi
           label="Outstanding"
@@ -132,7 +132,7 @@ export default async function RetainersPage({
         </div>
       ) : null}
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2 2xl:grid-cols-3">
         {active.map((r) => {
           const color = clientColor(r.client.slug)
           const rate = retainerRateCents(r, invoices)

@@ -54,7 +54,7 @@ export default async function UptimePage({
           {APP_HEALTH.length} {APP_HEALTH.length === 1 ? "app" : "apps"} · server,
           frontend, latest run, email
         </p>
-        <div className="mt-3 grid gap-3 lg:grid-cols-2">
+        <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-2">
           {APP_HEALTH.map((app) => (
             <AppHealthCard
               key={app.slug}

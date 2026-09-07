@@ -130,13 +130,13 @@ function Row({ row, openHref }: { row: DeliveryRow; openHref: string }) {
   const lead = row.flags[0]
 
   return (
-    <li className="flex min-h-[46px] items-center gap-2.5 border-b border-line pr-3 last:border-b-0 hover:bg-well">
-      <span aria-hidden className="w-[3px] self-stretch" style={{ background: markColor(row.color) }} />
+    <li className="flex min-h-[46px] flex-wrap items-center gap-x-2.5 gap-y-1 border-b border-line pb-1.5 pr-3 last:border-b-0 hover:bg-well sm:flex-nowrap sm:gap-2.5 sm:pb-0">
+      <span aria-hidden className="w-[3px] shrink-0 self-stretch" style={{ background: markColor(row.color) }} />
 
       <Link
         href={openHref}
         scroll={false}
-        className="flex min-w-[220px] shrink-0 items-baseline gap-2 py-2 pl-2.5 focus-visible:underline"
+        className="flex min-w-0 items-baseline gap-2 py-2 pl-2.5 focus-visible:underline sm:min-w-[220px] sm:shrink-0"
       >
         <span className="text-[10.5px] font-bold uppercase tracking-[0.05em] text-ink-3">
           {row.clientName}
@@ -144,7 +144,7 @@ function Row({ row, openHref }: { row: DeliveryRow; openHref: string }) {
         <span className="truncate text-[13px] font-semibold text-tk-onyx">{row.name}</span>
       </Link>
 
-      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+      <div className="order-last flex w-full min-w-0 items-center gap-2.5 pl-2.5 sm:order-none sm:w-auto sm:flex-1 sm:pl-0">
         {row.kind === "project" ? (
           <StatusMenu
             options={PROJECT_STATUS_OPTIONS}
@@ -162,12 +162,19 @@ function Row({ row, openHref }: { row: DeliveryRow; openHref: string }) {
         )}
 
         {row.rail && row.rail.some((s) => s.count > 0) ? (
-          <>
+          // The rail is shrink-0 at 83px and overflowed its own flex parent,
+          // squeezing the flag beside it to zero width and pushing it off the
+          // edge. It is a desk instrument; the flag is the signal.
+          <span className="hidden items-center gap-2.5 sm:flex">
             <Rail rail={row.rail} />
             <span className="shrink-0 text-[11px] text-ink-3">{row.railNote}</span>
-          </>
+          </span>
         ) : null}
-        {row.capacity ? <CapMeter capacity={row.capacity} /> : null}
+        {row.capacity ? (
+          <span className="hidden sm:contents">
+            <CapMeter capacity={row.capacity} />
+          </span>
+        ) : null}
 
         {lead ? (
           <span className="min-w-0 truncate text-[11.5px] text-ink-3">
@@ -200,7 +207,7 @@ function Row({ row, openHref }: { row: DeliveryRow; openHref: string }) {
         href={openHref}
         scroll={false}
         aria-label={`Open ${row.clientName} ${row.name}`}
-        className="shrink-0 rounded px-1 text-[15px] leading-none tracking-[1px] text-ink-3 hover:text-tk-teal"
+        className="hidden shrink-0 rounded px-1 text-[15px] leading-none tracking-[1px] text-ink-3 hover:text-tk-teal sm:inline"
       >
         ⋯
       </Link>
@@ -269,7 +276,7 @@ export function DeliveryLedger({
 
   return (
     <>
-      <div className="mt-5 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-2.5 sm:grid-cols-2 xl:grid-cols-5">
         <Tile
           label="Needs you"
           value={totals.needsYou}

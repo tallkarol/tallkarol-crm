@@ -65,7 +65,7 @@ export default async function ProjectsPage({
       <PageHeader title="Projects" />
       {searchParams.peek ? <PeekRouter peek={searchParams.peek} closeHref={ROUTES.projects} /> : null}
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi label="In delivery" value={String(inDelivery.length)} sub={inDelivery.map((p) => p.name).join(" · ") || "none"} />
         <Kpi
           label="Known unbilled"
@@ -82,7 +82,7 @@ export default async function ProjectsPage({
         <Kpi label={`Collected ${now.getFullYear()}`} value={formatMoney(collectedYtd)} sub="paid project invoices this year" />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2">
         {activeProjects.map((project) => {
           const color = clientColor(project.client.slug)
           const deliverables = [...project.deliverables].sort((a, b) => a.sort - b.sort)
