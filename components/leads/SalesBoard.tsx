@@ -246,7 +246,7 @@ export function SalesBoard({
           {error}
         </p>
       ) : null}
-      <div className="mt-3 grid gap-2.5 overflow-x-auto pb-2 [grid-template-columns:repeat(5,minmax(196px,1fr))]">
+      <div className="mt-3 grid gap-2.5 overflow-x-auto pb-2 [grid-template-columns:repeat(5,78vw)] sm:[grid-template-columns:repeat(5,minmax(196px,1fr))]">
         {SALES_STAGES.map((stage) => {
           const inStage = rows.filter((l) => leadStage(l) === stage.id)
           const weighted = inStage.reduce(

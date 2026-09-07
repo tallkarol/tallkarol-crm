@@ -7,6 +7,7 @@ import { NewEventForm } from "@/components/calendar/NewEventForm"
 import { Badge } from "@/components/work/Badge"
 import type { CalendarItem, CalendarLane, CalendarSnapshot } from "@/lib/calendar-types"
 import { syncCalendars } from "@/lib/calendar-actions"
+import { markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { inkColor } from "@/lib/client-colors"
 import { Card } from "@/components/ui/Card"
@@ -293,7 +294,7 @@ export function CalendarBoard({
               <div
                 key={cell.key}
                 className={cn(
-                  "min-h-[6.5rem] border-b border-r border-line p-1.5 text-left align-top last:border-r-0",
+                  "min-h-[3.5rem] border-b border-r border-line p-1 text-left align-top last:border-r-0 sm:min-h-[6.5rem] sm:p-1.5",
                   !cell.inMonth && "bg-well",
                   isSelected && "bg-well"
                 )}
@@ -310,7 +311,27 @@ export function CalendarBoard({
                   {cell.day}
                 </button>
 
-                <span className="mt-1 block space-y-0.5">
+                {items.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setSelected(cell.key)}
+                    aria-label={`${items.length} on this day — show the agenda`}
+                    className="mt-1 flex w-full flex-wrap items-center gap-[3px] px-0.5 sm:hidden"
+                  >
+                    {items.slice(0, 5).map((item) => (
+                      <span
+                        key={`dot:${cell.key}:${item.id}`}
+                        className={cn("size-[5px] shrink-0 rounded-full", item.cancelled && "opacity-40")}
+                        style={{ background: markColor(laneById.get(item.laneId)?.color ?? "#006965") }}
+                      />
+                    ))}
+                    {items.length > 5 ? (
+                      <span className="text-[9px] leading-none text-ink-3">+{items.length - 5}</span>
+                    ) : null}
+                  </button>
+                ) : null}
+
+                <span className="mt-1 hidden space-y-0.5 sm:block">
                   {items.slice(0, 3).map((item) => {
                     const lane = laneById.get(item.laneId)
                     return (

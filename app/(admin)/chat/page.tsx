@@ -62,8 +62,12 @@ export default async function ChatPage({
     <>
       <PageHeader title="Chat" />
 
-      <div className="mt-4 grid min-h-0 flex-1 gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
-        <aside className="flex flex-col gap-3">
+      {/* `grid-cols-[minmax(0,1fr)]` and not a bare one-column grid: an auto
+          track sizes to its widest child's min-content, and one unbreakable
+          run like `2026-10-12T10:00` grew the column to 417px inside a 380px
+          screen, clipping every message on the right. */}
+      <div className="mt-4 grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
+        <aside className="flex min-w-0 flex-col gap-3">
           <Link
             href={ROUTES.chat}
             className="rounded-xl border border-line bg-card px-3 py-2 text-xs font-semibold text-tk-slate outline-accent-ink hover:border-line-strong"
@@ -93,7 +97,7 @@ export default async function ChatPage({
           <BudgetMeters budget={budget} />
         </aside>
 
-        <section className="flex min-h-[28rem] flex-col">
+        <section className="flex min-h-[28rem] min-w-0 flex-col">
           <ChatView
             threadId={threadId}
             messages={messages}

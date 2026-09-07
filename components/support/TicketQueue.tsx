@@ -603,7 +603,7 @@ function Row({
           </span>
           <span
             className={cn(
-              "truncate text-[13.5px] font-semibold",
+              "line-clamp-2 text-[13.5px] font-semibold [overflow-wrap:anywhere] sm:line-clamp-none sm:truncate",
               open ? "text-tk-teal" : "text-tk-onyx"
             )}
             title={row.title}
@@ -613,7 +613,7 @@ function Row({
         </span>
         {tight ? null : (
           <span className="mt-0.5 flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-[11.5px] text-ink-3">
-            <span className="flex shrink-0 items-center gap-1.5 font-semibold text-tk-slate">
+            <span className="flex min-w-0 items-center gap-1.5 truncate font-semibold text-tk-slate">
               <span
                 className="size-[7px] rounded-full"
                 style={{ background: markColor(row.color) }}
@@ -623,14 +623,14 @@ function Row({
             </span>
             {row.platform ? (
               <>
-                <span className="shrink-0 text-ink-3">·</span>
-                <span className="shrink-0">{row.platform}</span>
+                <span className="hidden shrink-0 text-ink-3 sm:inline">·</span>
+                <span className="hidden shrink-0 sm:inline">{row.platform}</span>
               </>
             ) : null}
-            <span className="shrink-0 text-ink-3">·</span>
-            <span className="shrink-0">{row.source}</span>
+            <span className="hidden shrink-0 text-ink-3 sm:inline">·</span>
+            <span className="hidden shrink-0 sm:inline">{row.source}</span>
             {row.payloadCount ? (
-              <span className="shrink-0 rounded bg-well px-1.5 font-mono text-[10px] text-ink-3">
+              <span className="hidden shrink-0 rounded bg-well px-1.5 font-mono text-[10px] text-ink-3 sm:inline">
                 {"{ } "}
                 {row.payloadCount}
               </span>
@@ -638,7 +638,7 @@ function Row({
             {row.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="shrink-0 rounded bg-well px-1.5 font-mono text-[10px] text-ink-3"
+                className="hidden shrink-0 rounded bg-well px-1.5 font-mono text-[10px] text-ink-3 sm:inline"
               >
                 {tag}
               </span>
@@ -646,7 +646,7 @@ function Row({
           </span>
         )}
       </span>
-      <span className="flex shrink-0 items-center gap-2 px-3 py-2">
+      <span className="flex shrink-0 items-center gap-1.5 px-2 py-2 sm:gap-2 sm:px-3">
         {tight && row.platform ? (
           <span className="hidden rounded bg-well px-1.5 font-mono text-[10px] text-ink-3 sm:inline">
             {row.platform}
@@ -654,7 +654,7 @@ function Row({
         ) : null}
         <span
           className={cn(
-            "rounded-full px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wide",
+            "rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide sm:px-2 sm:text-[10.5px]",
             priorityTone(row.priority)
           )}
         >

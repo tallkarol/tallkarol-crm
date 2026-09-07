@@ -159,7 +159,7 @@ function Turn({ message }: { message: ChatMessageView }) {
             {message.agent}
           </div>
         ) : null}
-        <div className="whitespace-pre-wrap">{message.body}</div>
+        <div className="whitespace-pre-wrap [overflow-wrap:anywhere]">{message.body}</div>
       </div>
 
       <div className="w-full max-w-[46rem]">
