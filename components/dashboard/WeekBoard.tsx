@@ -502,13 +502,13 @@ export function WeekBoard({
       >
         {start ? (
           <>
-            <div className="grid min-w-[55rem] grid-cols-5 divide-x divide-line lg:min-w-0">
+            <div className="hidden grid-cols-5 divide-x divide-line lg:grid lg:min-w-0">
               {days.map((d) => {
                 const key = dayKey(d, false)
                 const isToday = key === todayKey
                 const isPast = key < todayKey
                 return (
-                  <div key={key} className="grid min-w-[11rem] justify-items-center gap-[3px] px-1.5 py-2 text-center lg:min-w-0">
+                  <div key={key} className="grid justify-items-center gap-[3px] px-1.5 py-2 text-center lg:min-w-0">
                     <span className="font-ui text-[10px] font-bold uppercase tracking-wide text-ink-3">
                       {d.toLocaleDateString(undefined, { weekday: "short" })}
                     </span>
@@ -526,7 +526,7 @@ export function WeekBoard({
               })}
             </div>
 
-            <div className="relative grid min-h-[11.5rem] min-w-[55rem] grid-cols-5 divide-x divide-line lg:min-w-0">
+            <div className="relative grid grid-cols-1 divide-y divide-line lg:min-h-[11.5rem] lg:min-w-0 lg:grid-cols-5 lg:divide-x lg:divide-y-0">
               {isWindowEmpty ? (
                 <p className="pointer-events-none absolute inset-0 grid place-items-center px-6 text-center font-ui text-[12.5px] text-ink-3">
                   Nothing on the calendars in these five days.
@@ -546,10 +546,24 @@ export function WeekBoard({
                       colRefs.current[index] = node
                     }}
                     className={cn(
-                      "min-w-[11rem] space-y-1.5 px-1.5 py-2 transition-colors duration-150 motion-reduce:transition-none lg:min-w-0",
+                      "space-y-1.5 px-1.5 py-2 transition-colors duration-150 motion-reduce:transition-none lg:min-w-0",
                       isDropTarget && "bg-accent/10"
                     )}
                   >
+                    {/* Stacked days need their own label; the column headings
+                        above only exist from lg up. */}
+                    <p className="flex items-baseline gap-1.5 px-1 pb-0.5 font-ui text-[11px] font-bold uppercase tracking-wide text-ink-3 lg:hidden">
+                      {d.toLocaleDateString(undefined, { weekday: "short" })}
+                      <span
+                        className={cn(
+                          "rounded-full px-1.5 font-display text-[12px] tabular-nums",
+                          key === todayKey ? "bg-accent text-tk-linen" : "text-tk-onyx",
+                          isPast && key !== todayKey && "opacity-55"
+                        )}
+                      >
+                        {d.getDate()}
+                      </span>
+                    </p>
                     {items.length === 0 ? (
                       !isPast ? (
                         <p className="py-3.5 text-center font-ui text-[11.5px] text-ink-3">—</p>

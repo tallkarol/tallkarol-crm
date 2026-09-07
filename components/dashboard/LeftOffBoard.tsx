@@ -708,14 +708,14 @@ export function LeftOffBoard({
         // Content-sized rather than inset-stretched, and `grid-cols-[minmax(0,1fr)]`
         // so the single implicit column cannot size to the header's min-content
         // and push the last lane past the right edge.
-        className="absolute left-1/2 top-1/2 grid max-h-[calc(100%-2rem)] w-[min(1360px,calc(100%-2rem))] -translate-x-1/2 -translate-y-1/2 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[18px] border border-line bg-canvas shadow-overlay motion-safe:animate-[tk-modal-in_.2s_ease-out]"
+        className="absolute left-1/2 top-1/2 grid max-h-[calc(100%-1rem)] w-[min(1360px,calc(100%-1rem))] -translate-x-1/2 -translate-y-1/2 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[14px] border border-line bg-canvas shadow-overlay motion-safe:animate-[tk-modal-in_.2s_ease-out] sm:max-h-[calc(100%-2rem)] sm:w-[min(1360px,calc(100%-2rem))] sm:rounded-[18px]"
       >
         {/* -------------------------------------------------------- header */}
-        <header className="flex min-w-0 items-center gap-3 overflow-hidden border-b border-line bg-card px-5 py-3 [&>*]:shrink-0">
+        <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-card px-3 py-2.5 md:min-w-0 md:flex-nowrap md:overflow-hidden md:px-5 md:py-3 md:[&>*]:shrink-0">
           {payload && payload.counts.blocked > 0 ? (
-            <span aria-hidden className="size-2.5 rounded-full bg-bad motion-safe:animate-pulse" />
+            <span aria-hidden className="order-1 size-2.5 rounded-full bg-bad motion-safe:animate-pulse md:order-none" />
           ) : null}
-          <div className="flex min-w-0 items-baseline gap-2">
+          <div className="order-2 flex min-w-0 flex-1 items-baseline gap-2 md:order-none md:flex-none">
             <h2
               id={titleId}
               className="whitespace-nowrap font-display text-[17px] font-semibold leading-tight tracking-tight text-tk-onyx"
@@ -730,7 +730,7 @@ export function LeftOffBoard({
           <div
             role="group"
             aria-label="View"
-            className="ml-3 flex items-center gap-0.5 rounded-lg border border-line bg-well p-0.5"
+            className="order-4 flex w-full items-center gap-0.5 overflow-x-auto rounded-lg border border-line bg-well p-0.5 [scrollbar-width:none] md:order-none md:ml-3 md:w-auto md:overflow-visible [&::-webkit-scrollbar]:hidden"
           >
             {VIEWS.map((v, i) => {
               const n =
@@ -770,9 +770,9 @@ export function LeftOffBoard({
             })}
           </div>
 
-          <div className="ml-auto" />
+          <div className="hidden md:ml-auto md:block" />
 
-          <label className="relative flex h-7 w-40 items-center xl:w-52">
+          <label className="relative order-5 flex h-7 flex-1 items-center md:order-none md:w-40 md:flex-none xl:w-52">
             <Search aria-hidden className="pointer-events-none absolute left-2.5 size-3.5 text-ink-3" />
             <input
               ref={filterRef}
@@ -795,7 +795,7 @@ export function LeftOffBoard({
               elevation="none"
               // Shrinkable and scrollable: seven clients must not be able to
               // widen the header past the dialog.
-              className="flex min-w-0 shrink items-center gap-0.5 overflow-x-auto p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="hidden min-w-0 shrink items-center gap-0.5 overflow-x-auto p-0.5 [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden"
               role="group"
               aria-label="Filter by client"
             >
@@ -831,7 +831,7 @@ export function LeftOffBoard({
             onClick={closeBoard}
             aria-label="Close the board"
             className={cn(
-              "flex h-7 items-center gap-1.5 rounded-lg border border-line bg-card pl-2 pr-1.5 text-ink-3 transition-colors duration-[120ms] hover:bg-well hover:text-tk-onyx",
+              "order-3 flex h-7 items-center gap-1.5 rounded-lg border border-line bg-card pl-2 pr-1.5 text-ink-3 transition-colors duration-[120ms] hover:bg-well hover:text-tk-onyx md:order-none",
               FOCUS
             )}
           >
@@ -856,7 +856,7 @@ export function LeftOffBoard({
         ) : view === "admin" ? (
           <div
             ref={bodyRef}
-            className="grid min-h-0 grid-cols-[repeat(3,minmax(0,1fr))_repeat(3,minmax(0,164px))] gap-3 px-5 py-4"
+            className="flex min-h-0 flex-col gap-3 overflow-y-auto px-3 py-3 md:grid md:grid-cols-[repeat(3,minmax(0,1fr))_repeat(3,minmax(0,164px))] md:overflow-hidden md:px-5 md:py-4"
           >
             {ADMIN_LANES.map((lane) => (
               <AdminLane
@@ -875,7 +875,7 @@ export function LeftOffBoard({
             // Three lanes take the width; the three read-only ones are rails.
             // Every track is minmax(0,…) so the grid shrinks instead of
             // scrolling — the whole point of the layout.
-            className="grid min-h-0 grid-cols-[repeat(3,minmax(0,1fr))_repeat(3,minmax(0,164px))] gap-3 px-5 py-4"
+            className="flex min-h-0 flex-col gap-3 overflow-y-auto px-3 py-3 md:grid md:grid-cols-[repeat(3,minmax(0,1fr))_repeat(3,minmax(0,164px))] md:overflow-hidden md:px-5 md:py-4"
           >
             {CODE_LANES.map((lane) => (
               <Lane
@@ -1000,7 +1000,7 @@ function Lane({
 }) {
   const headingId = useId()
   return (
-    <section aria-labelledby={headingId} className="grid min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] gap-2">
+    <section aria-labelledby={headingId} className="grid min-w-0 shrink-0 grid-rows-[auto_auto] gap-2 md:min-h-0 md:grid-rows-[auto_minmax(0,1fr)]">
       <div className="flex min-w-0 items-center gap-2 px-0.5">
         <span
           aria-hidden
@@ -1019,7 +1019,8 @@ function Lane({
       </div>
       <div
         className={cn(
-          "flex min-h-[132px] min-w-0 flex-col gap-2 overflow-y-auto rounded-[14px] border p-2 [&>*]:min-w-0",
+          "flex min-w-0 flex-col gap-2 rounded-[14px] border p-2 md:min-h-[132px] md:overflow-y-auto [&>*]:min-w-0",
+          notes.length === 0 && "hidden md:flex",
           TONE_WELL[lane.tone],
           lane.dashedWell && "border-dashed bg-transparent"
         )}
@@ -1047,7 +1048,7 @@ function Lane({
 function LaneEmpty({ lane }: { lane: Pick<LaneConfig, "emptyIcon" | "emptyTitle" | "emptyBody"> }) {
   const Icon = lane.emptyIcon
   return (
-    <div className="m-auto grid justify-items-center gap-1 px-3 py-6 text-center">
+    <div className="m-auto hidden justify-items-center gap-1 px-3 py-6 text-center md:grid">
       <Icon className="mb-0.5 size-4 text-ink-3" aria-hidden />
       <p className="font-ui text-[12px] font-bold text-tk-onyx">{lane.emptyTitle}</p>
       <p className="max-w-[30ch] text-[11px] leading-relaxed text-ink-3">{lane.emptyBody}</p>
@@ -1301,7 +1302,7 @@ function AdminLane({
   const headingId = useId()
   const hidden = Math.max(total - items.length, 0)
   return (
-    <section aria-labelledby={headingId} className="grid min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] gap-2">
+    <section aria-labelledby={headingId} className="grid min-w-0 shrink-0 grid-rows-[auto_auto] gap-2 md:min-h-0 md:grid-rows-[auto_minmax(0,1fr)]">
       <div className="flex min-w-0 items-center gap-2 px-0.5">
         <span aria-hidden className={cn("size-[7px] shrink-0 rounded-full", TONE_DOT[lane.tone])} />
         <h3 id={headingId} className="truncate font-ui text-[12px] font-extrabold tracking-tight text-tk-onyx">
@@ -1313,7 +1314,8 @@ function AdminLane({
       </div>
       <div
         className={cn(
-          "flex min-h-[132px] min-w-0 flex-col gap-2 overflow-y-auto rounded-[14px] border p-2 [&>*]:min-w-0",
+          "flex min-w-0 flex-col gap-2 rounded-[14px] border p-2 md:min-h-[132px] md:overflow-y-auto [&>*]:min-w-0",
+          items.length === 0 && "hidden md:flex",
           TONE_WELL[lane.tone]
         )}
       >

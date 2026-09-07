@@ -537,11 +537,13 @@ function AttentionItemView({
       ref={itemRef}
       style={style}
       className={cn(
-        "group grid grid-cols-[28px_22px_minmax(0,1fr)_auto] items-center gap-2 rounded-lg bg-card px-1.5 py-1.5 transition-[box-shadow,background-color,transform] hover:bg-well transition-colors duration-[120ms]",
+        "group grid grid-cols-[22px_minmax(0,1fr)_auto] items-center gap-2 rounded-lg bg-card px-1.5 py-1.5 transition-[box-shadow,background-color,transform] hover:bg-well transition-colors duration-[120ms] sm:grid-cols-[28px_22px_minmax(0,1fr)_auto]",
         className
       )}
     >
-      {dragHandle ?? <span />}
+      {/* display:none removes the track entirely on a phone; `contents` hands
+          the cell back to the handle itself from sm up. */}
+      <span className="hidden sm:contents">{dragHandle ?? <span />}</span>
       {completable ? (
         <CompleteButton
           title={item.title}
@@ -571,7 +573,7 @@ function AttentionItemView({
           ) : null}
         </span>
       </Link>
-      <span className="pr-2 text-right">
+      <span className="text-right sm:pr-2">
         {item.amount ? (
           <span className="font-display text-[15px] font-semibold tracking-tight tabular-nums text-tk-onyx">
             {item.amount}
