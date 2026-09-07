@@ -704,10 +704,10 @@ export function LeftOffBoard({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        // Content-sized rather than inset-stretched, and `grid-cols-[minmax(0,1fr)]`
-        // so the single implicit column cannot size to the header's min-content
-        // and push the last lane past the right edge.
-        className="absolute left-1/2 top-1/2 grid max-h-[calc(100%-1rem)] w-[min(1360px,calc(100%-1rem))] -translate-x-1/2 -translate-y-1/2 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[14px] border border-line bg-canvas shadow-overlay motion-safe:animate-[tk-modal-in_.2s_ease-out] sm:max-h-[calc(100%-2rem)] sm:w-[min(1360px,calc(100%-2rem))] sm:rounded-[18px]"
+        // Fullscreen. `grid-cols-[minmax(0,1fr)]` so the single implicit
+        // column cannot size to the header's min-content and push the last
+        // lane past the right edge.
+        className="absolute inset-0 grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden bg-canvas motion-safe:animate-[tk-modal-in_.2s_ease-out]"
       >
         {/* -------------------------------------------------------- header */}
         <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-card px-3 py-2.5 md:min-w-0 md:flex-nowrap md:overflow-hidden md:px-5 md:py-3 md:[&>*]:shrink-0">

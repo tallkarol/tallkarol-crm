@@ -190,7 +190,9 @@ function Row({
           href={`${peekBase}${join}peek=task:${row.id}`}
           scroll={false}
           className={cn(
-            "block truncate text-[13.5px] font-semibold hover:text-tk-teal",
+            // `line-clamp` needs display:-webkit-box, so it cannot share a class list
+            // with `block` — that is why the long titles ran to six lines.
+            "line-clamp-2 text-[13.5px] font-semibold [overflow-wrap:anywhere] hover:text-tk-teal sm:line-clamp-none sm:block sm:truncate",
             done ? "text-ink-3 line-through" : "text-tk-onyx"
           )}
         >
@@ -214,41 +216,41 @@ function Row({
           )}
           {showProductBesideClient ? (
             <>
-              <span aria-hidden className="shrink-0 text-ink-3">
+              <span aria-hidden className="hidden shrink-0 text-ink-3 sm:inline">
                 ·
               </span>
-              <span className="shrink-0">{row.productName}</span>
+              <span className="hidden shrink-0 sm:inline">{row.productName}</span>
             </>
           ) : row.projectName ? (
             <>
-              <span aria-hidden className="shrink-0 text-ink-3">
+              <span aria-hidden className="hidden shrink-0 text-ink-3 sm:inline">
                 ·
               </span>
-              <span className="shrink-0">{row.projectName}</span>
+              <span className="hidden shrink-0 sm:inline">{row.projectName}</span>
             </>
           ) : row.retainerName ? (
             <>
-              <span aria-hidden className="shrink-0 text-ink-3">
+              <span aria-hidden className="hidden shrink-0 text-ink-3 sm:inline">
                 ·
               </span>
-              <span className="shrink-0">retainer</span>
+              <span className="hidden shrink-0 sm:inline">retainer</span>
             </>
           ) : null}
           {row.deliverableLabel ? (
-            <span className="shrink-0 rounded bg-well px-1.5 font-mono text-[10px] text-ink-3">
+            <span className="hidden shrink-0 rounded bg-well px-1.5 font-mono text-[10px] text-ink-3 sm:inline">
               {row.deliverableLabel}
             </span>
           ) : null}
           {row.labels.map((label) => (
             <span
               key={label}
-              className="shrink-0 rounded bg-well px-1.5 font-mono text-[10px] text-ink-3"
+              className="hidden shrink-0 rounded bg-well px-1.5 font-mono text-[10px] text-ink-3 sm:inline"
             >
               {label}
             </span>
           ))}
           {row.items.total > 0 ? (
-            <span className="shrink-0 rounded bg-well px-1.5 font-mono text-[10px] text-ink-3">
+            <span className="hidden shrink-0 rounded bg-well px-1.5 font-mono text-[10px] text-ink-3 sm:inline">
               {row.items.done}/{row.items.total}
             </span>
           ) : null}
@@ -258,7 +260,7 @@ function Row({
         </span>
       </span>
 
-      <span className="flex items-center gap-2 px-3 py-2.5">
+      <span className="flex items-center gap-1.5 px-2 py-2.5 sm:gap-2 sm:px-3">
         <span
           aria-hidden
           title={row.priority === 1 ? "High priority" : undefined}
@@ -287,7 +289,7 @@ function Row({
         {row.cadence !== "none" && row.status === "open" ? (
           <Pill tone="rep">{CADENCE_LABEL[row.cadence].toLowerCase()}</Pill>
         ) : null}
-        <span className="w-[52px] shrink-0 text-right font-mono text-[11px] text-ink-3">
+        <span className="hidden w-[52px] shrink-0 text-right font-mono text-[11px] text-ink-3 sm:block">
           {dueLabel(row)}
         </span>
       </span>

@@ -168,16 +168,16 @@ function SheetGroup({ group, rows }: { group: Group; rows: SheetSummary[] }) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px] border-collapse text-sm">
+        <table className="w-full border-collapse text-sm sm:min-w-[720px]">
           <thead>
             <tr className="border-b border-line text-left text-[11px] font-semibold uppercase tracking-wide text-ink-3">
-              <th className="px-5 py-2 font-semibold">Client</th>
+              <th className="px-3 py-2 font-semibold sm:px-5">Client</th>
               <th className="px-3 py-2 font-semibold">Month</th>
               <th className="px-3 py-2 text-right font-semibold">Hours</th>
               <th className="px-3 py-2 text-right font-semibold">Value</th>
-              <th className="px-3 py-2 font-semibold">State</th>
-              <th className="px-3 py-2 font-semibold">Invoice</th>
-              <th className="px-5 py-2 text-right font-semibold">Last entry</th>
+              <th className="hidden px-3 py-2 font-semibold sm:table-cell">State</th>
+              <th className="hidden px-3 py-2 font-semibold sm:table-cell">Invoice</th>
+              <th className="hidden px-5 py-2 text-right font-semibold sm:table-cell">Last entry</th>
             </tr>
           </thead>
           <tbody>
@@ -186,7 +186,7 @@ function SheetGroup({ group, rows }: { group: Group; rows: SheetSummary[] }) {
                 key={row.key}
                 className="border-b border-line transition-colors last:border-0 hover:bg-well"
               >
-                <td className="px-5 py-2.5">
+                <td className="px-3 py-2.5 sm:px-5">
                   <Link
                     href={ROUTES.timesheetFor(row.clientSlug, row.month)}
                     className="flex items-center gap-2 font-medium text-tk-onyx hover:text-tk-teal"
@@ -213,10 +213,10 @@ function SheetGroup({ group, rows }: { group: Group; rows: SheetSummary[] }) {
                 <td className="px-3 py-2.5 text-right font-mono tabular-nums text-tk-slate">
                   {row.valueCents != null ? formatMoney(row.valueCents) : "—"}
                 </td>
-                <td className="px-3 py-2.5">
+                <td className="hidden px-3 py-2.5 sm:table-cell">
                   <StateBadge state={row.state} />
                 </td>
-                <td className="px-3 py-2.5">
+                <td className="hidden px-3 py-2.5 sm:table-cell">
                   {row.invoiceNumber ? (
                     <Link
                       href={ROUTES.invoice(row.invoiceNumber)}
@@ -228,7 +228,7 @@ function SheetGroup({ group, rows }: { group: Group; rows: SheetSummary[] }) {
                     <span className="text-ink-3">—</span>
                   )}
                 </td>
-                <td className="px-5 py-2.5 text-right text-xs text-ink-3">
+                <td className="hidden px-5 py-2.5 text-right text-xs text-ink-3 sm:table-cell">
                   {shortDay(row.lastEditedOn)}
                 </td>
               </tr>

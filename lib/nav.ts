@@ -159,7 +159,6 @@ export const ADMIN_NAV: readonly NavSection[] = [
       { href: ROUTES.insights, label: "Analytics", icon: "analytics" },
       { href: ROUTES.paidAds, label: "Paid Ads", icon: "ads" },
       { href: ROUTES.reports, label: "Reports", icon: "reports" },
-      { href: ROUTES.revenue, label: "Revenue", icon: "revenue" },
       { href: ROUTES.logs, label: "Logs", icon: "logs" },
       { href: ROUTES.uptime, label: "Uptime", icon: "uptime" },
     ],
@@ -196,6 +195,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
       { href: ROUTES.contracts, label: "Contracts", icon: "contracts" },
       { href: ROUTES.expenses, label: "Expenses", icon: "expenses" },
       { href: ROUTES.invoices, label: "Invoices", icon: "invoices" },
+      { href: ROUTES.revenue, label: "Revenue", icon: "revenue" },
     ],
   },
   {

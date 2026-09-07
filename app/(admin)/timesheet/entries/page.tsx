@@ -102,16 +102,16 @@ export default async function LedgerPage({
       ) : (
         <Card className="mt-5 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] border-collapse text-sm">
+            <table className="w-full border-collapse text-sm sm:min-w-[860px]">
               <thead>
                 <tr className="border-b border-line bg-well text-left text-[11px] font-semibold uppercase tracking-wide text-ink-3">
-                  <th className="px-5 py-2 font-semibold">Date</th>
+                  <th className="px-3 py-2 font-semibold sm:px-5">Date</th>
                   <th className="px-3 py-2 font-semibold">Client</th>
-                  <th className="px-3 py-2 font-semibold">Project</th>
-                  <th className="px-3 py-2 font-semibold">Session highlights</th>
+                  <th className="hidden px-3 py-2 font-semibold sm:table-cell">Project</th>
+                  <th className="hidden px-3 py-2 font-semibold sm:table-cell">Session highlights</th>
                   <th className="px-3 py-2 text-right font-semibold">Hrs</th>
-                  <th className="px-3 py-2 font-semibold">Src</th>
-                  <th className="px-5 py-2 font-semibold">Invoice</th>
+                  <th className="hidden px-3 py-2 font-semibold sm:table-cell">Src</th>
+                  <th className="hidden px-5 py-2 font-semibold sm:table-cell">Invoice</th>
                 </tr>
               </thead>
               <tbody>
@@ -120,7 +120,7 @@ export default async function LedgerPage({
                     key={row.id}
                     className="border-b border-line last:border-0 hover:bg-well"
                   >
-                    <td className="whitespace-nowrap px-5 py-2.5 text-tk-slate">
+                    <td className="whitespace-nowrap px-3 py-2.5 text-tk-slate sm:px-5">
                       <Link
                         href={ROUTES.timesheetFor(
                           row.clientSlug,
@@ -141,12 +141,13 @@ export default async function LedgerPage({
                         {row.clientName}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 text-ink-3">
+                    <td className="hidden px-3 py-2.5 text-ink-3 sm:table-cell">
                       {row.projectName ?? (
                         <span className="text-ink-3">retainer</span>
                       )}
                     </td>
-                    <td className="px-3 py-2.5 text-tk-slate">
+                    <td className="hidden px-3 py-2.5 text-tk-slate sm:table-cell">
+                      <span>
                       {row.summary || (
                         <span className="text-amber-700">no summary</span>
                       )}
@@ -165,16 +166,17 @@ export default async function LedgerPage({
                           ))}
                         </span>
                       ) : null}
+                      </span>
                     </td>
                     <td className="px-3 py-2.5 text-right font-mono tabular-nums text-tk-slate">
                       {formatSheetHours(row.hours)}
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td className="hidden px-3 py-2.5 sm:table-cell">
                       <span className="rounded bg-well px-1.5 py-0.5 font-mono text-[10px] font-semibold text-ink-3">
                         {SOURCE_LABEL[row.source] ?? row.source}
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-5 py-2.5">
+                    <td className="hidden whitespace-nowrap px-5 py-2.5 sm:table-cell">
                       {row.invoiceNumber ? (
                         <Link
                           href={ROUTES.invoice(row.invoiceNumber)}

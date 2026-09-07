@@ -104,7 +104,7 @@ function Row({
   return (
     <li className="px-5 py-3 hover:bg-well">
       <Link href={href} scroll={false} className="block">
-        <p className="flex items-start gap-2 text-sm font-semibold text-tk-onyx">
+        <p className="flex flex-wrap items-start gap-x-2 gap-y-1 text-sm font-semibold text-tk-onyx sm:flex-nowrap">
           <span
             className={cn(
               "mt-0.5 inline-flex h-5 shrink-0 items-center rounded-full px-2 text-[11px] font-semibold ring-1 ring-inset",
@@ -113,7 +113,7 @@ function Row({
           >
             {STATE_LABEL[row.state]}
           </span>
-          <span className="min-w-0 flex-1 truncate">
+          <span className="min-w-0 flex-1 [overflow-wrap:anywhere] sm:truncate">
             {row.title || "Untitled conversation"} <Meta row={row} />
           </span>
           {row.client ? (
