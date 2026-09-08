@@ -69,6 +69,11 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
   const [hovered, setHovered] = useState<string | null>(null)
   const [view, setView] = useState({ x: 0, y: 0, k: 1 })
   const [showTable, setShowTable] = useState(false)
+
+  useEffect(() => {
+    // Mount-time only, so a later toggle to the graph sticks.
+    if (window.matchMedia("(max-width: 767px)").matches) setShowTable(true)
+  }, [])
   const [settled, setSettled] = useState(false)
 
   const svgRef = useRef<SVGSVGElement>(null)
@@ -517,7 +522,15 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
+      {/* On a desk the table sits BELOW the map and both are useful at once.
+          On a phone the map is 70vh of four-pixel nodes above the thing you
+          can actually read, so there the two are exclusive. */}
+      <div
+        className={cn(
+          "grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-[minmax(0,1fr)_300px]",
+          showTable && "hidden sm:grid"
+        )}
+      >
         {/* The map */}
         <Card radius="xl" className="relative overflow-hidden">
           <svg
@@ -753,14 +766,14 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
           and the linear read for anyone not driving a force graph by pointer. */}
       {showTable ? (
         <Card radius="xl" className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-[12.5px]">
+          <table className="w-full text-left text-[12.5px] sm:min-w-[640px]">
             <caption className="sr-only">Every node in the hive mind map</caption>
             <thead>
               <tr className="border-b border-line text-[10.5px] uppercase tracking-wide text-ink-3">
                 <th scope="col" className="px-3 py-2 font-semibold">Kind</th>
                 <th scope="col" className="px-3 py-2 font-semibold">Name</th>
-                <th scope="col" className="px-3 py-2 font-semibold">What it is</th>
-                <th scope="col" className="px-3 py-2 font-semibold">Source</th>
+                <th scope="col" className="hidden px-3 py-2 font-semibold sm:table-cell">What it is</th>
+                <th scope="col" className="hidden px-3 py-2 font-semibold sm:table-cell">Source</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -786,8 +799,8 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
                         {node.label}
                       </button>
                     </td>
-                    <td className="max-w-[46ch] px-3 py-2 text-tk-slate">{node.blurb}</td>
-                    <td className="px-3 py-2 font-mono text-[11px] text-ink-3">{node.source}</td>
+                    <td className="hidden max-w-[46ch] px-3 py-2 text-tk-slate sm:table-cell">{node.blurb}</td>
+                    <td className="hidden px-3 py-2 font-mono text-[11px] text-ink-3 sm:table-cell">{node.source}</td>
                   </tr>
                 ))}
             </tbody>
