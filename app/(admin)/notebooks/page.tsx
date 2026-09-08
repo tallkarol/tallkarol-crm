@@ -114,7 +114,7 @@ export default async function NotebooksPage() {
           </p>
         </Card>
       ) : (
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {links.map((link) => {
             const live = link.pages.filter((p) => !p.archived)
             const blocks = live.reduce((n, p) => n + p.blocks.length, 0)

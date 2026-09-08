@@ -86,7 +86,7 @@ export function NewEventForm({
       onSubmit={submit}
       className="mt-4 rounded-2xl border border-line bg-card px-5 py-4 shadow-card"
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
         <label className="sm:col-span-2">
           <span className={label}>Title</span>
           <input

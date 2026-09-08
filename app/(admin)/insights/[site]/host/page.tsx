@@ -151,7 +151,7 @@ export default async function InsightsHostPage({
         tables stay on their own {TABLE_WINDOW_DAYS}-day fetch.
       </p>
 
-      <div className="mt-3 grid gap-3 xl:grid-cols-2">
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 xl:grid-cols-2">
         <Card title="Pages">
           <BarList
             rows={vercel?.pages ?? []}
@@ -168,7 +168,7 @@ export default async function InsightsHostPage({
         </Card>
       </div>
 
-      <div className="mt-3 grid gap-3 xl:grid-cols-2">
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 xl:grid-cols-2">
         <Card title="Devices">
           <MeterList rows={vercel?.devices ?? []} />
         </Card>

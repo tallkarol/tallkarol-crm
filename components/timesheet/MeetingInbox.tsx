@@ -87,7 +87,7 @@ export function MeetingInbox({ proposals }: { proposals: MeetingProposal[] }) {
 
   return (
     <>
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-3">
         <Stat label="Unlogged meetings" value={String(open.length)} />
         <Stat label="Hours waiting" value={totalHours.toFixed(1)} />
         <Stat label="Logged this visit" value={String(loggedCount)} />

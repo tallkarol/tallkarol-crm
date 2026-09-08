@@ -20,7 +20,7 @@ export function VaultComposer({ clients }: { clients: ClientOption[] }) {
           form.current?.reset()
         }}
         autoComplete="off"
-        className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-6"
+        className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 lg:grid-cols-6"
       >
         <label className="block text-sm lg:col-span-2">
           <span className="text-xs font-medium text-ink-3">What for</span>

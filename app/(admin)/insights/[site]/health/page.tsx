@@ -70,7 +70,7 @@ export default async function InsightsHealthPage({
       </div>
 
       {snapshot ? (
-        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+        <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-2">
           {snapshot.health.map((h) => (
             <TkCard className="px-5 py-3" key={h.id}>
               <div className="flex items-center justify-between gap-3">

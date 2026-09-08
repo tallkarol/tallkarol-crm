@@ -76,7 +76,7 @@ export default async function ProductsPage({
         {now.toLocaleDateString("en-US", { day: "numeric", month: "long" })}
       </p>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi
           label="Building"
           value={String(building.length)}
@@ -150,7 +150,7 @@ export default async function ProductsPage({
                 Nothing here yet.
               </p>
             ) : (
-              <div className="grid gap-4 lg:grid-cols-2">
+              <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2">
                 {studio.products.map((product) => {
                   const color = clientColor(product.slug)
                   const open = openByProduct.get(product.id) ?? []

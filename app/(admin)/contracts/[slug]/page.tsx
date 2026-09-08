@@ -93,7 +93,7 @@ export default async function ContractDetailPage({
         {contract.effectiveOn ? ` · ${formatDay(contract.effectiveOn)}` : ""}
       </p>
 
-      <dl className="mt-6 grid gap-3 sm:grid-cols-2">
+      <dl className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
         {contract.counterparty ? (
           <Card className="px-5 py-3">
             <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">

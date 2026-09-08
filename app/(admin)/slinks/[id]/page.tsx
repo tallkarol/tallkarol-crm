@@ -152,7 +152,7 @@ export default async function SlinkEditor({ params }: { params: { id: string } }
         </section>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] lg:items-start">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[1.5fr_1fr] lg:items-start">
         {/* ---------------------------------------------------------- content */}
         <section className="grid gap-3">
           <h2 className="font-['Inter_Tight',sans-serif] text-[11.5px] font-bold uppercase tracking-[0.14em] text-ink-3">

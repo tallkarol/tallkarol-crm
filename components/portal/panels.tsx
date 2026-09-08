@@ -87,7 +87,7 @@ export async function PortalOverview({ clients, firstName }: { clients: Client[]
       </p>
 
       {meters.length > 0 ? (
-        <div className="mt-4 grid gap-3.5 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3.5 sm:grid-cols-2">
           {meters.map((m) => (
             <div key={m.id} className="rounded-2xl border border-tk-slate/15 bg-white p-4 shadow-sm">
               <div className="flex items-baseline justify-between gap-3">
@@ -110,7 +110,7 @@ export async function PortalOverview({ clients, firstName }: { clients: Client[]
         </div>
       ) : null}
 
-      <div className="mt-3.5 grid gap-3.5 lg:grid-cols-2">
+      <div className="mt-3.5 grid grid-cols-[minmax(0,1fr)] gap-3.5 lg:grid-cols-2">
         {journals.length > 0 ? (
           <div className="rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
             <div className="flex items-center justify-between px-4 pt-3.5">
@@ -190,7 +190,7 @@ export async function PortalTickets({ clients }: { clients: Client[] }) {
   const closed = tickets.filter((t) => !ticketOpen(t))
 
   return (
-    <div className="mt-4 grid gap-3.5 lg:grid-cols-[1.5fr_1fr]">
+    <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3.5 lg:grid-cols-[1.5fr_1fr]">
       <div className="min-w-0 rounded-2xl border border-tk-slate/15 bg-white shadow-sm">
         <div className="flex items-center justify-between px-4 pt-3.5">
           <h2 className="text-[13px] font-bold text-tk-onyx">Your queue</h2>

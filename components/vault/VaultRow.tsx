@@ -65,7 +65,7 @@ export function VaultRow({
               setSecret(null)
             })
           }}
-          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6"
+          className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 lg:grid-cols-6"
         >
           <input type="hidden" name="id" value={entry.id} />
           <Field label="What for" className="lg:col-span-2">

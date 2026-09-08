@@ -236,7 +236,7 @@ async function ProjectModal({ slug, closeHref }: { slug: string; closeHref: stri
         ]}
       />
 
-      <div className="grid lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <div className="border-line px-4 py-3.5 lg:border-r">
           <Block
             title="Workstreams"
@@ -556,7 +556,7 @@ async function RetainerModal({ slug, closeHref }: { slug: string; closeHref: str
         ]}
       />
 
-      <div className="grid lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <div className="border-line px-4 py-3.5 lg:border-r">
           <Block title="Hours by month" count="against the ceiling">
             <Burndown months={months} cap={retainer.hoursPerMonth} />

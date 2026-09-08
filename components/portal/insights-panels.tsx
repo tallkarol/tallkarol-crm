@@ -338,7 +338,7 @@ function PortalInsightsBody({
         from the Google APIs by TALLKAROL
       </p>
 
-      <div className="mt-2.5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-2.5 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {hasGa4 ? (
           <>
             <KpiTile
@@ -418,7 +418,7 @@ function PortalInsightsBody({
       </div>
 
       {hasGa4 || hasGsc ? (
-        <div className="mt-3.5 grid gap-3.5 lg:grid-cols-2">
+        <div className="mt-3.5 grid grid-cols-[minmax(0,1fr)] gap-3.5 lg:grid-cols-2">
           {hasGa4 ? (
             <Card title="Daily sessions" note={win.label}>
               <div className="px-5 pb-4 pt-2">
@@ -437,7 +437,7 @@ function PortalInsightsBody({
       ) : null}
 
       {hasGa4 ? (
-        <div className="mt-3.5 grid gap-3.5 lg:grid-cols-2">
+        <div className="mt-3.5 grid grid-cols-[minmax(0,1fr)] gap-3.5 lg:grid-cols-2">
           <Card title="Where visits come from" note={`last ${TABLE_WINDOW_DAYS} days`}>
             <BarList rows={snapshot.ga4.channels.slice(0, 8)} />
           </Card>

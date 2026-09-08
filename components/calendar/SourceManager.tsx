@@ -49,7 +49,7 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
 
   return (
     <>
-      <div className="mt-8 grid gap-3 sm:grid-cols-2">
+      <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
         <ConfigRow
           label="Google service account"
           ok={snapshot.config.google}
@@ -201,7 +201,7 @@ export function SourceManager({ snapshot }: { snapshot: CalendarSnapshot }) {
           ))}
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
           <label>
             <span className={label}>Name</span>
             <input

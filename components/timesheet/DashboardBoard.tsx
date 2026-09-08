@@ -15,7 +15,7 @@ export function DashboardBoard({ data }: { data: TimesheetDashboard }) {
     <div className="mt-6 flex flex-col gap-4">
       <Tiles data={data} />
       <Engagements data={data} />
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2">
         <Attention items={data.attention} />
         <MonthBars data={data} />
       </div>
@@ -78,7 +78,7 @@ function Tiles({ data }: { data: TimesheetDashboard }) {
   const waiting = data.pendingPunches + data.unloggedMeetings
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <Tile
         label={`Hours · ${monthLabel(data.month)}`}
         value={data.hoursThisMonth.toLocaleString("en-US", {
@@ -139,7 +139,7 @@ function Engagements({ data }: { data: TimesheetDashboard }) {
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {data.engagements.map((row) => {
         const color = clientColor(row.clientSlug)
         const pct =

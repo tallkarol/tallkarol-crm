@@ -251,7 +251,7 @@ export default async function PaidAdsPage({
         )}
       </Card>
 
-      <div className="mt-3 grid gap-3 lg:grid-cols-2">
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-2">
         <Card title="Paid — Ads vs Analytics" note={totals.ga4Paid > 0 ? "paid sessions" : "all sessions"}>
           <div className="grid grid-cols-2 gap-px border-t border-line">
             <div className="px-5 py-4">

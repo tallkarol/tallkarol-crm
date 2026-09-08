@@ -24,7 +24,7 @@ export function ColorGrid({
           <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-3">
             {group.label}
           </h2>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {group.rows.map((row) => (
               <ColorRow
                 key={row.slug}

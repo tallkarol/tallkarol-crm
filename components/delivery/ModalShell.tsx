@@ -65,7 +65,7 @@ export function ModalStrip({
   cells: { label: string; value: ReactNode; caption?: string; tone?: "amber" | "green" }[]
 }) {
   return (
-    <div className="grid border-y border-line bg-well sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-[minmax(0,1fr)] border-y border-line bg-well sm:grid-cols-2 lg:grid-cols-4">
       {cells.map((cell) => (
         <div
           key={cell.label}

@@ -125,7 +125,7 @@ export default async function InvoiceDetailPage({
               review the numbers, then Print / PDF and mark sent
             </span>
           </h2>
-          <form action={updateInvoiceDetails.bind(null, invoice.id)} className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <form action={updateInvoiceDetails.bind(null, invoice.id)} className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <label className="block text-sm">
               <span className="text-xs font-medium text-ink-3">Invoice #</span>
               <input name="number" defaultValue={invoice.number} required className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2 text-sm tabular-nums focus:border-tk-teal" />

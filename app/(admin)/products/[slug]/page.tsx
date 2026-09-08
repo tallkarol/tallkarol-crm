@@ -125,7 +125,7 @@ export default async function ProductDetailPage({
         ))}
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Stat
           label="Open tasks"
           value={String(open.length)}
@@ -150,7 +150,7 @@ export default async function ProductDetailPage({
         />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[1.7fr_1fr]">
         <Card>
           <div className="flex items-center justify-between px-5 pb-1 pt-4">
             <h2 className="text-[13px] font-bold text-tk-onyx">Open tasks</h2>

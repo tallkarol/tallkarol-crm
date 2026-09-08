@@ -15,7 +15,7 @@ export function AddPinForm({ board }: { board: string }) {
           await addPin(formData)
           form.current?.reset()
         }}
-        className="grid gap-3 sm:grid-cols-[1fr_12rem_auto] sm:items-end"
+        className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-[1fr_12rem_auto] sm:items-end"
       >
         <input type="hidden" name="board" value={board} />
         <label className="block text-sm">

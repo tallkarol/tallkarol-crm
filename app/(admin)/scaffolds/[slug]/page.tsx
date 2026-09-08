@@ -76,7 +76,7 @@ export default function ScaffoldPage({
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-3">
           Commands
         </h2>
-        <div className="mt-2.5 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-2.5 grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {scaffold.commands.map((row) => (
             <Card radius="xl" className="px-4 py-3" key={row.cmd}>
               <code className="rounded bg-well px-1.5 py-0.5 font-mono text-xs font-semibold text-tk-onyx">
@@ -92,7 +92,7 @@ export default function ScaffoldPage({
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-3">
           Playbook
         </h2>
-        <div className="mt-2.5 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-2.5 grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {scaffold.playbook.map((section) => (
             <Card className="p-5" key={section.title}>
               <p className="text-[14px] font-semibold text-tk-onyx">

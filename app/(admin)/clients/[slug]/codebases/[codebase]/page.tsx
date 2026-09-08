@@ -73,7 +73,7 @@ export default async function CodebasePage({
       </nav>
 
       {doc ? (
-        <div className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
+        <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[1.7fr_1fr]">
           <div className="min-w-0">
             {kind === "spec" ? (
               <SpecSheet data={doc.data as Record<string, unknown>} />

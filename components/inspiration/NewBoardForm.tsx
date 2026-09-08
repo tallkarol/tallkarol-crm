@@ -6,7 +6,7 @@ export function NewBoardForm() {
     <Card className="p-4">
       <form
         action={addBoard}
-        className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end"
+        className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-[1fr_auto] sm:items-end"
       >
         <label className="block text-sm">
           <span className="text-xs font-medium text-ink-3">New board</span>

@@ -152,7 +152,7 @@ export default async function RevenuePage({
         <PeekRouter peek={searchParams.peek} closeHref={ROUTES.revenue} />
       ) : null}
 
-      <div className="mt-8 grid gap-3 lg:grid-cols-3">
+      <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-3">
         <HorizonPanel horizon={monthHorizon} />
         <HorizonPanel horizon={quarterHorizon} />
         <HorizonPanel horizon={yearHorizon} note={yearNote} />
@@ -212,13 +212,13 @@ export default async function RevenuePage({
         />
       </div>
 
-      <div className="mt-3 grid gap-3 xl:grid-cols-3">
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 xl:grid-cols-3">
         <RateBars rows={model.clients} />
         <MixPanel title="Work mix" slices={model.mix} />
         <MixPanel title="Cash mix" slices={model.cashMix} />
       </div>
 
-      <div className="mt-6 grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-3 xl:grid-cols-[1.15fr_0.85fr]">
         <YearRunway
           year={kpis.yearKey}
           months={model.runway}

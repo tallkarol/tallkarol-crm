@@ -151,7 +151,7 @@ export default async function RetainerDetailPage({
         doneLabel={`Done · ${now.toLocaleDateString("en-US", { month: "short" })}`}
       />
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="px-5 py-4">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">
             {now.toLocaleDateString("en-US", { month: "long" })} logged
@@ -191,7 +191,7 @@ export default async function RetainerDetailPage({
         />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[1.7fr_1fr]">
         <div className="flex min-w-0 flex-col gap-4">
           <Card>
             <div className="flex items-center justify-between px-5 pb-1 pt-4">

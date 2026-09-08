@@ -42,7 +42,7 @@ export function SearchMultiples({ points }: { points: DailyPoint[] }) {
   const imprLast = impressions[n - 1] ?? 0
 
   return (
-    <div className="grid gap-4 px-5 py-4 sm:grid-cols-2">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 px-5 py-4 sm:grid-cols-2">
       <Mini title="Clicks · daily" end={`${fmtInt(clicksPerDay)} last day`}>
         <svg viewBox={`0 -4 ${W} ${H + 10}`} className="mt-1.5 block w-full" aria-hidden>
           <line x1="0" y1={H} x2={W} y2={H} stroke={CHART.grid} strokeWidth="1" />

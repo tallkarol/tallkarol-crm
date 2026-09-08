@@ -24,7 +24,7 @@ export default async function ClientPortalsPage() {
         the link and their email holds a grant. Preview shows exactly what they&rsquo;d see.
       </p>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2">
         {clients.map((client) => {
           const members = grants.filter((g) => g.clientId === client.id)
           return (

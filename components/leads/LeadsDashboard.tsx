@@ -192,7 +192,7 @@ export function LeadsDashboard({ leads: initial }: { leads: LeadListItem[] }) {
         })}
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <Card className="overflow-hidden">
           <div className="border-b border-line px-4 py-3">
             <h2 className="text-sm font-semibold text-tk-onyx">
@@ -403,7 +403,7 @@ function LeadWorkspace({
       {lead.formLines.length > 0 || lead.projectTypes.length > 0 ? (
         <Card className="p-5">
           <h3 className="text-sm font-semibold text-tk-onyx">What they sent</h3>
-          <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+          <dl className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2">
             {lead.projectTypes.length > 0 ? (
               <div>
                 <dt className="text-xs text-ink-3">Project types</dt>
@@ -428,7 +428,7 @@ function LeadWorkspace({
           <h3 className="text-sm font-semibold text-tk-onyx">Meeting</h3>
         </div>
         <form
-          className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr]"
+          className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-[1fr_1fr]"
           onSubmit={(e) => {
             e.preventDefault()
             const form = e.currentTarget
@@ -496,7 +496,7 @@ function LeadWorkspace({
           <Mail className="size-4 text-tk-teal" aria-hidden />
           <h3 className="text-sm font-semibold text-tk-onyx">Email templates</h3>
         </div>
-        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+        <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2">
           {EMAIL_TEMPLATES.map((template) => (
             <li key={template.id}>
               <TemplateCard
@@ -512,7 +512,7 @@ function LeadWorkspace({
           <FileText className="size-4 text-tk-teal" aria-hidden />
           <h3 className="text-sm font-semibold text-tk-onyx">One-sheets</h3>
         </div>
-        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+        <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2">
           {ONESHEET_TEMPLATES.map((template) => (
             <li key={template.id}>
               <TemplateCard

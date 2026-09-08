@@ -124,7 +124,7 @@ export function ClockPanel({
             No active retainers or open projects yet. Add one and it shows up here.
           </p>
         ) : (
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {shown.map((target) => {
               const key = targetKey(target)
               const isCurrent = running.some(

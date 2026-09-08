@@ -475,7 +475,7 @@ export default async function DashboardPage({
       ) : null}
       <LeftOffBoard payload={leftoff} waiting={waitingQueue} />
 
-      <div className="mt-6 grid min-w-0 gap-3.5 xl:grid-cols-[minmax(0,8fr)_minmax(300px,4fr)]">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] min-w-0 gap-3.5 xl:grid-cols-[minmax(0,8fr)_minmax(300px,4fr)]">
         <div className="grid min-w-0 content-start gap-3.5">
           <div className="tk-rise min-w-0" style={rise(1)}>
             <NeedsAttention groups={groups} more={more} />

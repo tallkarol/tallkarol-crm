@@ -85,7 +85,7 @@ export function MixPanel({
       <div className="border-b border-line px-5 py-3.5">
         <h2 className="text-sm font-semibold text-tk-onyx">{title}</h2>
       </div>
-      <div className="grid items-center gap-4 px-5 py-4 sm:grid-cols-[auto_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-4 px-5 py-4 sm:grid-cols-[auto_1fr]">
         <Donut slices={slices} total={total} />
         <ul className="space-y-2">
           {slices.map((slice) => {

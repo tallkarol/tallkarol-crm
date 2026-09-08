@@ -66,7 +66,7 @@ export default async function SlinksPage() {
 
       <section className="rounded-xl border border-line bg-tk-white p-4">
         <h2 className="font-['Inter_Tight',sans-serif] text-[13px] font-semibold text-tk-onyx">New slink</h2>
-        <form action={createSlinkAction} className="mt-3 grid gap-3 sm:grid-cols-[2fr_1fr_auto]">
+        <form action={createSlinkAction} className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-[2fr_1fr_auto]">
           <input
             name="title"
             required

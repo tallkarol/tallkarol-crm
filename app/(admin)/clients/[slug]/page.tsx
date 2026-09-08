@@ -341,7 +341,7 @@ export default async function ClientDetailPage({
       </div>
 
       {/* ------------------------------------------------------- two column */}
-      <div className="mt-7 grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_290px]">
+      <div className="mt-7 grid grid-cols-[minmax(0,1fr)] items-start gap-7 lg:grid-cols-[minmax(0,1fr)_290px]">
         <div className="min-w-0">
           {/* ------------------------------------------------------- now */}
           <Block id="now" title="Now" action={<Link href={ROUTES.tasks} className="text-xs font-semibold text-tk-teal hover:underline">All tasks →</Link>}>

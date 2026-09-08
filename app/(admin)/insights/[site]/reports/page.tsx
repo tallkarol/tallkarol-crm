@@ -43,7 +43,7 @@ export default async function InsightsReportsPage({
     }))
 
   return (
-    <div className="grid gap-3 xl:grid-cols-12">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-3 xl:grid-cols-12">
       <div className="xl:col-span-7">
         {archives.length === 0 ? (
           <TkCard surface="well" className="border-dashed px-6 py-10 text-center">

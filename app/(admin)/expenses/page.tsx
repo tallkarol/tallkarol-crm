@@ -38,7 +38,7 @@ export default async function ExpensesPage() {
     <>
       <PageHeader title="Expenses" />
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-3">
+      <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-3">
         <SummaryCard label={`${year} total`} value={formatMoney(ytdCents)} sub={plural(ytd.length, "expense")} />
         <SummaryCard
           label="Mapped to client work"
@@ -62,7 +62,7 @@ export default async function ExpensesPage() {
 
       <Card className="mt-6 p-5">
         <h2 className="text-sm font-semibold text-tk-onyx">Add an expense</h2>
-        <form action={addExpense} className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+        <form action={addExpense} className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 lg:grid-cols-6">
           <label className="block text-sm">
             <span className="text-xs font-medium text-ink-3">Date</span>
             <input name="occurredOn" type="date" required className="mt-1 w-full rounded-lg border border-line bg-well px-3 py-2 text-sm focus:border-tk-teal" />

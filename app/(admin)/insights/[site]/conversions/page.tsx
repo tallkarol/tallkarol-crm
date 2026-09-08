@@ -62,7 +62,7 @@ export default async function InsightsConversionsPage({
         />
       </Card>
 
-      <div className="mt-3 grid gap-3 xl:grid-cols-12">
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 xl:grid-cols-12">
         <Card title="Inquiries in this window" className="xl:col-span-8">
           {crm.recent.length === 0 ? (
             <p className="px-5 py-6 text-sm text-ink-3">

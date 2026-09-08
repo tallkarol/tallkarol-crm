@@ -517,7 +517,7 @@ export function HivemindGraph({ graph }: { graph: HiveGraph }) {
         </div>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
         {/* The map */}
         <Card radius="xl" className="relative overflow-hidden">
           <svg

@@ -127,7 +127,7 @@ export default async function ProjectDetailPage({
         </div>
       ) : null}
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Stat
           label="Fee"
           value={totalKnown ? formatMoney(totalKnown) : "TBD"}
@@ -164,7 +164,7 @@ export default async function ProjectDetailPage({
         />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[1.7fr_1fr]">
         <div className="flex min-w-0 flex-col gap-4">
           <Card>
             <div className="flex items-center justify-between px-5 pb-1 pt-4">

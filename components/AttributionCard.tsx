@@ -33,7 +33,7 @@ export function AttributionCard({ attribution }: { attribution: Attribution }) {
   return (
     <Card className="mt-4 p-5">
       <h2 className="text-sm font-semibold text-tk-onyx">How they got here</h2>
-      <div className="mt-4 grid gap-6 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-6 sm:grid-cols-2">
         <TouchRows touch={attribution.first} title="First touch" />
         <TouchRows touch={attribution.last} title="Last touch" />
       </div>

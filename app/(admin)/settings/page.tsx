@@ -20,7 +20,7 @@ export default async function SettingsPage() {
           Targets for invoiced revenue. The dashboard shows progress against
           them — leave one blank to unset it.
         </p>
-        <form action={saveGoals} className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+        <form action={saveGoals} className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-[1fr_1fr_auto]">
           <label className="block text-sm">
             <span className="text-xs font-medium text-ink-3">Monthly goal ($)</span>
             <MoneyInput

@@ -43,7 +43,7 @@ export default async function InsightsTrafficPage({
         the last fetch
       </p>
 
-      <div className="mt-4 grid gap-3 xl:grid-cols-2">
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 xl:grid-cols-2">
         <Card
           title="Channels"
           right={<CsvLink slug={site.slug} table="channels" />}
@@ -105,7 +105,7 @@ export default async function InsightsTrafficPage({
         </div>
       </Card>
 
-      <div className="mt-3 grid gap-3 xl:grid-cols-3">
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 xl:grid-cols-3">
         <Card title="Devices" right={<CsvLink slug={site.slug} table="devices" />}>
           <MeterList rows={ga4.devices} />
         </Card>
