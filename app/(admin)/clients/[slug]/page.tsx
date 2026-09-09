@@ -645,15 +645,15 @@ export default async function ClientDetailPage({
                 </div>
                 {recentInvoices.length > 0 ? (
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[540px] border-collapse text-left">
+                    <table className="w-full border-collapse text-left sm:min-w-[540px]">
                       <thead>
                         <tr className="border-b border-line text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-3">
-                          <th className="px-5 py-2.5 font-bold">Invoice</th>
-                          <th className="px-3 py-2.5 font-bold">Issued</th>
-                          <th className="px-3 py-2.5 font-bold">For</th>
-                          <th className="px-3 py-2.5 text-right font-bold">Hours</th>
+                          <th className="px-3 py-2.5 font-bold sm:px-5">Invoice</th>
+                          <th className="hidden px-3 py-2.5 font-bold sm:table-cell">Issued</th>
+                          <th className="hidden px-3 py-2.5 font-bold sm:table-cell">For</th>
+                          <th className="hidden px-3 py-2.5 text-right font-bold sm:table-cell">Hours</th>
                           <th className="px-3 py-2.5 text-right font-bold">Amount</th>
-                          <th className="px-5 py-2.5 font-bold">Status</th>
+                          <th className="px-3 py-2.5 font-bold sm:px-5">Status</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -672,13 +672,13 @@ export default async function ClientDetailPage({
                                   {invoice.number}
                                 </Link>
                               </td>
-                              <td className="px-3 py-2.5 tabular-nums text-ink-3">
+                              <td className="hidden px-3 py-2.5 tabular-nums text-ink-3 sm:table-cell">
                                 {formatDay(invoice.issuedOn)}
                               </td>
-                              <td className="max-w-[220px] truncate px-3 py-2.5 text-ink-3">
+                              <td className="hidden max-w-[220px] truncate px-3 py-2.5 text-ink-3 sm:table-cell">
                                 {invoice.description || "—"}
                               </td>
-                              <td className="px-3 py-2.5 text-right tabular-nums text-ink-3">
+                              <td className="hidden px-3 py-2.5 text-right tabular-nums text-ink-3 sm:table-cell">
                                 {invoice.hours ? formatHours(invoice.hours) : "—"}
                               </td>
                               <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-tk-onyx">
