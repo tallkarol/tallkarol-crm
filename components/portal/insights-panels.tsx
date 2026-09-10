@@ -71,8 +71,8 @@ function ScoreRow({ label, scores }: { label: string; scores: PageSpeedScores })
     { name: "SEO", score: scores.seo },
   ]
   return (
-    <div className="grid grid-cols-[4.5rem_repeat(4,1fr)] items-center gap-2 px-5 py-3">
-      <p className="text-xs font-medium capitalize text-tk-onyx">{label}</p>
+    <div className="grid grid-cols-[repeat(4,minmax(0,1fr))] items-center gap-2 px-5 py-3 sm:grid-cols-[4.5rem_repeat(4,minmax(0,1fr))]">
+      <p className="col-span-4 text-xs font-medium capitalize text-tk-onyx sm:col-span-1">{label}</p>
       {cells.map((cell) => (
         <div key={cell.name} className="text-center">
           <p
@@ -478,12 +478,12 @@ function PortalInsightsBody({
           className="mt-3.5"
         >
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] border-collapse text-xs">
+            <table className="w-full border-collapse text-xs sm:min-w-[560px]">
               <thead>
                 <tr className="border-b border-tk-slate/12 text-left text-[10px] font-bold uppercase tracking-wide text-tk-slate/55">
                   <th className="px-5 py-2 font-bold">Campaign</th>
-                  <th className="px-3 py-2 text-right font-bold">Impressions</th>
-                  <th className="px-3 py-2 text-right font-bold">Clicks</th>
+                  <th className="hidden px-3 py-2 text-right font-bold sm:table-cell">Impressions</th>
+                  <th className="hidden px-3 py-2 text-right font-bold sm:table-cell">Clicks</th>
                   <th className="px-3 py-2 text-right font-bold">Spend</th>
                   <th className="px-5 py-2 text-right font-bold">Conversions</th>
                 </tr>
@@ -491,7 +491,7 @@ function PortalInsightsBody({
               <tbody>
                 {snapshot.ads.campaigns.map((c) => (
                   <tr key={c.id} className="border-b border-tk-slate/[.06] last:border-0">
-                    <td className="max-w-[22rem] truncate px-5 py-2 font-medium text-tk-onyx" title={c.name}>
+                    <td className="max-w-[9rem] truncate px-5 py-2 font-medium text-tk-onyx sm:max-w-[22rem]" title={c.name}>
                       {c.name}
                       {c.status && c.status !== "ENABLED" ? (
                         <span className="ml-2 text-[10px] font-semibold uppercase text-tk-slate/50">
@@ -499,8 +499,8 @@ function PortalInsightsBody({
                         </span>
                       ) : null}
                     </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">{fmtInt(c.impressions)}</td>
-                    <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">{fmtInt(c.clicks)}</td>
+                    <td className="hidden px-3 py-2 text-right tabular-nums text-tk-onyx sm:table-cell">{fmtInt(c.impressions)}</td>
+                    <td className="hidden px-3 py-2 text-right tabular-nums text-tk-onyx sm:table-cell">{fmtInt(c.clicks)}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-tk-onyx">{fmtMoney(c.spend, currency)}</td>
                     <td className="px-5 py-2 text-right tabular-nums text-tk-onyx">{fmtConv(c.conversions)}</td>
                   </tr>
