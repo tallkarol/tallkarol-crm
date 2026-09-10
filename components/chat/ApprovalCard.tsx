@@ -24,6 +24,7 @@ const VERB: Record<string, string> = {
   inbox_to_task: "Make a task",
   dismiss_leftoff: "Dismiss it",
   complete_task: "Complete the task",
+  reschedule_task: "Reschedule it",
 }
 
 const TAG: Record<ChatToolCall["status"], { label: string; className: string }> = {

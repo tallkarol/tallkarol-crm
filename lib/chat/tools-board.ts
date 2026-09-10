@@ -8,7 +8,7 @@ import { dismissNote, loadLeftOff } from "@/lib/leftoff-data"
 import { listTasks } from "@/lib/tasks"
 import { completeTask } from "@/lib/task-complete"
 import { loadWaiting } from "@/lib/waiting-data"
-import { range, str, type ToolSpec } from "@/lib/chat/tool-helpers"
+import { ISO_DAY, range, str, type ToolSpec } from "@/lib/chat/tool-helpers"
 
 function emails(args: Record<string, unknown>, key: string): string[] {
   const value = args[key]
@@ -338,6 +338,58 @@ export const completeTaskTool: ToolSpec = {
   },
 }
 
+export const rescheduleTaskTool: ToolSpec = {
+  name: "reschedule_task",
+  description:
+    "Change a task's due date. Previewed. Pass the task id from list_tasks. Omit dueOn (or pass an empty string) to clear the due date.",
+  mutating: true,
+  parameters: {
+    type: "object",
+    properties: {
+      taskId: { type: "string" },
+      dueOn: { type: "string", description: "YYYY-MM-DD. Omit to clear the due date." },
+    },
+    required: ["taskId"],
+  },
+  async preview(args) {
+    const id = str(args, "taskId")
+    const dueOn = str(args, "dueOn")
+    const task = id ? await db.query.tasks.findFirst({ where: eq(tasks.id, id) }) : null
+    if (task && dueOn && !ISO_DAY.test(dueOn)) {
+      return {
+        title: "Reschedule task",
+        fields: [{ label: "Task", value: task.title }],
+        note: "That due date is not valid. Use YYYY-MM-DD.",
+      }
+    }
+    return {
+      title: "Reschedule task",
+      fields: [
+        { label: "Task", value: task?.title ?? id ?? "—" },
+        { label: "Due now", value: task?.dueOn ?? "—" },
+        { label: "Due after", value: dueOn ?? "cleared" },
+      ],
+      note: task ? undefined : "No task with that id.",
+    }
+  },
+  async run(args) {
+    const id = str(args, "taskId")
+    if (!id) throw new Error("`taskId` is required.")
+    const task = await db.query.tasks.findFirst({ where: eq(tasks.id, id) })
+    if (!task) throw new Error("No task with that id.")
+
+    const dueOn = str(args, "dueOn")
+    if (dueOn && !ISO_DAY.test(dueOn)) throw new Error("`dueOn` must be YYYY-MM-DD.")
+
+    await db
+      .update(tasks)
+      .set({ dueOn: dueOn ?? null, updatedAt: new Date() })
+      .where(eq(tasks.id, id))
+
+    return { taskId: id, title: task.title, dueOn: dueOn ?? null }
+  },
+}
+
 export const BOARD_TOOLS: readonly ToolSpec[] = [
   listLeftOffTool,
   listWaitingTool,
@@ -346,4 +398,5 @@ export const BOARD_TOOLS: readonly ToolSpec[] = [
   createCalendarEventTool,
   dismissLeftOffTool,
   completeTaskTool,
+  rescheduleTaskTool,
 ]
