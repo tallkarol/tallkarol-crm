@@ -4,6 +4,7 @@ import { db } from "@/db"
 import { chatMessages, chatThreads } from "@/db/schema"
 import { asc } from "drizzle-orm"
 import { modelFor, type ModelKey } from "@/lib/chat/models"
+import { PERSONAS } from "@/lib/chat/personas"
 import { parseCommand } from "@/lib/chat/skills"
 import { solveBranch, taskBrief } from "@/lib/chat/task-brief"
 import { loadTaskBrief } from "@/lib/chat/task-thread"
@@ -78,12 +79,13 @@ export async function POST(request: Request) {
    * is named here so the card and `git branch` agree. Null means the task
    * was deleted under the thread, and the worker says so instead of guessing.
    */
+  const thread = await db.query.chatThreads.findFirst({
+    where: eq(chatThreads.id, turn.threadId),
+    columns: { taskId: true, agent: true, pack: true },
+  })
+
   let task: TaskContext | null = null
   if (turn.jobType === "task") {
-    const thread = await db.query.chatThreads.findFirst({
-      where: eq(chatThreads.id, turn.threadId),
-      columns: { taskId: true },
-    })
     const loaded = thread?.taskId ? await loadTaskBrief(thread.taskId) : null
     task = loaded
       ? {
@@ -99,9 +101,20 @@ export async function POST(request: Request) {
       : null
   }
 
+  /**
+   * A thread addressed to a desk carries the desk and its pack ref. The
+   * worker owns the files — it reads `personas/<name>/` and the pack on the
+   * Mac and inlines them; the CRM only says who and which.
+   */
+  const desk = thread?.agent ? PERSONAS[thread.agent] : null
+  const persona = desk
+    ? { name: desk.name, label: desk.label, pack: thread?.pack || null }
+    : null
+
   return NextResponse.json({
     command,
     task,
+    persona,
     turn: {
       id: turn.id,
       threadId: turn.threadId,

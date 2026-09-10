@@ -107,6 +107,9 @@ if (!brief.includes("CRM: /tasks/0b8f3c1e")) fail("brief lost the CRM link")
 if (LADDERS.task.rungs.length !== 1 || LADDERS.task.maxEscalations !== 0) {
   fail("task ladder grew a rung without a detector to justify it")
 }
+if (LADDERS.persona.rungs.length !== 1 || LADDERS.persona.maxEscalations !== 0) {
+  fail("persona ladder grew a rung without a detector to justify it")
+}
 if (solveBranch("0b8f3c1e-5d2a-4f61-9c0e-7a3b2d1e0f9a") !== "solve/0b8f3c1e") {
   fail("solveBranch is not solve/<first 8 of the task id>")
 }

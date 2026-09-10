@@ -42,6 +42,7 @@ export type SkillDoc = {
 
 /** Foundation first, then the order a request moves through the lanes. */
 const LANE_ORDER = [
+  "lane:desks",
   "lane:foundation",
   "lane:planning",
   "lane:build",
@@ -66,6 +67,18 @@ const COPY: Record<string, Copy> = {
     tagline: "Become a client's PM for this thread.",
     forms: [{ text: "/client <slug>" }, { text: "/client", run: true }],
     gate: read("Read-only. Sets context for every turn after it."),
+  },
+  "command:as": {
+    tagline: "Address this thread to a desk — coach, pm, dreamer, a client manager, a product owner.",
+    forms: [
+      { text: "@coach <what's on your mind>" },
+      { text: "@pm <what matters this week>" },
+      { text: "@dreamer <the idea>" },
+      { text: "@client-manager <client slug> <the question>" },
+      { text: "@product-owner <product slug> <the question>" },
+      { text: "/as <persona> [pack slug]" },
+    ],
+    gate: read("Every turn after it runs as that persona, with its files and pack in the prompt. CRM tools only."),
   },
   "command:lessons": {
     tagline: "Repeated mistakes into workspace rules.",

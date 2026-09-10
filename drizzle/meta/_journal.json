@@ -386,6 +386,13 @@
       "when": 1788968087255,
       "tag": "0054_chat_task",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1789050355599,
+      "tag": "0055_chat_persona",
+      "breakpoints": true
     }
   ]
 }

@@ -64,6 +64,19 @@ const SOLVE_DIR = process.env.CHAT_WORKER_SOLVE_DIR || join(homedir(), ".daedalu
  */
 const REPOS_CONF = join(homedir(), ".daedalus", "leftoff-repos.conf")
 
+/**
+ * Where a desk persona's files live — `personas/<name>/PERSONA.md`,
+ * `memory.md`, `questions.md`, `examples.md` and `_shared/HOUSE.md` —
+ * normally beside commands/ and skills/ under CHAT_WORKER_SKILLS
+ * (~/.claude/personas → daedalus-hive-mind/personas). The agent body comes
+ * from `agents/<name>.md` in the same place. Same grant as a skill turn:
+ * without CHAT_WORKER_SKILLS a persona turn is refused.
+ */
+const PERSONAS_DIR = process.env.CHAT_WORKER_PERSONAS || (SKILLS ? join(SKILLS, "personas") : "")
+/** The packs a desk may load. `me` is a separate private repo, read by the coach alone. */
+const PACKS_DIR = process.env.DAEDALUS_CLIENT_PACKS || join(homedir(), "Work", "daedalus-client-packs")
+const ME_DIR = process.env.DAEDALUS_ME || join(homedir(), "Work", "daedalus-me")
+
 /** A task turn gets what a skill turn gets: it has code to read, run and change. */
 const SOLVE_TOOLS: ToolName[] = SKILL_TOOLS
 /** Where there is no worktree to protect Karol's copy, edit stays off. */
@@ -108,6 +121,9 @@ type TaskContext = {
   product: { slug: string; name: string } | null
 }
 
+/** A thread addressed to a desk: who, and which pack it pinned (`clients/x`, `products/y`, `me`). */
+type PersonaContext = { name: string; label: string; pack: string | null }
+
 type Claim = {
   turn: QueuedTurn | null
   messages?: { role: string; agent: string; body: string; at: string }[]
@@ -116,6 +132,8 @@ type Claim = {
   command?: { name: string; args: string } | null
   /** Set on a `task` turn. Null there means the task was deleted under the thread. */
   task?: TaskContext | null
+  /** Set when the thread is addressed to a desk persona. */
+  persona?: PersonaContext | null
 }
 
 /**
@@ -584,6 +602,103 @@ function skillPrompt(claim: Claim, command: { name: string; args: string }): str
   ].join("\n")
 }
 
+/* ---------- a desk persona's files ---------- */
+
+function readIf(path: string): string {
+  try {
+    return readFileSync(path, "utf8").trim()
+  } catch {
+    return ""
+  }
+}
+
+function stripFrontmatter(text: string): string {
+  return text.replace(/^---[\s\S]*?\n---\n?/, "").trim()
+}
+
+/**
+ * The pack a desk pinned, as prompt sections. A client pack is CLIENT.md,
+ * claims.md and the client manager's relationship.md when it exists; a
+ * product pack is PRODUCT.md, decisions.md and claims.md; `me` is ME.md and
+ * the newest journal entries. A ref the disk does not have becomes a line
+ * telling the persona so — it asks, rather than inventing a client.
+ */
+function packSections(ref: string | null): { title: string; text: string }[] {
+  if (!ref) {
+    return [
+      {
+        title: "pack",
+        text: "No pack is pinned to this thread. If your LOADS slot names one, ask Karol which and tell him `@<you> <slug>` pins it. Do not guess a client or a product.",
+      },
+    ]
+  }
+  const missing = (path: string) => [
+    { title: `pack: ${ref}`, text: `Not found at ${path}. Say so in one line and ask Karol; do not proceed on assumed facts.` },
+  ]
+  if (ref === "me") {
+    const me = readIf(join(ME_DIR, "ME.md"))
+    if (!me) return missing(join(ME_DIR, "ME.md"))
+    const journal = join(ME_DIR, "journal")
+    let entries: string[] = []
+    try {
+      entries = readdirSync(journal)
+        .filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f))
+        .sort()
+        .slice(-5)
+    } catch {
+      entries = []
+    }
+    return [
+      { title: "pack: me — ME.md", text: me },
+      ...entries.map((f) => ({ title: `journal/${f}`, text: readIf(join(journal, f)) })),
+    ]
+  }
+  const [kind, slug] = ref.split("/")
+  const dir = join(PACKS_DIR, kind, slug ?? "")
+  const main = kind === "products" ? "PRODUCT.md" : "CLIENT.md"
+  const body = readIf(join(dir, main))
+  if (!body) return missing(join(dir, main))
+  const extras = kind === "products" ? ["decisions.md", "claims.md"] : ["claims.md", "relationship.md"]
+  return [
+    { title: `pack: ${ref} — ${main}`, text: body },
+    ...extras
+      .map((f) => ({ title: `${ref} — ${f}`, text: readIf(join(dir, f)) }))
+      .filter((s) => s.text),
+  ]
+}
+
+/**
+ * A persona turn's prompt is the same reading order `/as` uses in Claude
+ * Code — house, agent, persona, memory, questions, examples, then the pack —
+ * inlined, because a desk gets the CRM tools and nothing else: no shell, no
+ * file reads. The files are the definition; the prompt only says how they
+ * apply here.
+ */
+function personaPrompt(claim: Claim, persona: PersonaContext): string {
+  const dir = join(PERSONAS_DIR, persona.name)
+  const sections = [
+    { title: "house", text: readIf(join(PERSONAS_DIR, "_shared", "HOUSE.md")) },
+    { title: "your role", text: stripFrontmatter(readIf(join(SKILLS, "agents", `${persona.name}.md`))) },
+    { title: "persona", text: readIf(join(dir, "PERSONA.md")) },
+    { title: "memory", text: readIf(join(dir, "memory.md")) },
+    { title: "open questions", text: readIf(join(dir, "questions.md")) },
+    { title: "examples", text: readIf(join(dir, "examples.md")) },
+    ...packSections(persona.pack),
+  ]
+  return [
+    `You are ${persona.label}, one of Karol's desk personas, answering in the Tall Karol CRM chat. The files below define who you are and what he expects; they bind you.`,
+    "",
+    "On this turn you have the CRM tools and nothing else — no shell, no file reads beyond what is inlined here. Anything that needs code changed goes through Solve in chat on a task; say so. Tools whose description says PROPOSES ONLY park the write for Karol's approval — say what is waiting, in one line, and do not claim it is done.",
+    "",
+    "Reply the way your persona's HOW WE TALK says. Anything you cannot settle from these files and the conversation goes under a final heading `Questions for Karol`. Never write or restate your own memory; rules enter it only through Karol.",
+    "",
+    ...sections.flatMap((s) => [`--- ${s.title} ---`, "", s.text || "(empty)", ""]),
+    "--- conversation so far ---",
+    "",
+    transcript(claim),
+  ].join("\n")
+}
+
 function buildPrompt(claim: Claim): string {
   return [
     "You are Karol's assistant inside the Tall Karol CRM.",
@@ -668,6 +783,30 @@ async function runTurn(claim: Claim) {
     }
   }
 
+  /**
+   * A persona turn inlines files from this Mac — the persona's, and a pack
+   * that may be private — so it stands behind the same grant a skill turn
+   * does, and is refused the same way when the files are not there.
+   */
+  const persona =
+    !command && !task && turn.jobType !== "skill" && turn.jobType !== "task"
+      ? claim.persona ?? null
+      : null
+  if (persona) {
+    const refusal = !SKILLS || !PERSONAS_DIR
+      ? "This worker was started without CHAT_WORKER_SKILLS, so desk personas are off — a persona turn reads its files from this Mac. Set it (normally ~/.claude) and restart the worker."
+      : !existsSync(join(PERSONAS_DIR, persona.name, "PERSONA.md"))
+        ? `No persona files for ${persona.name} under ${PERSONAS_DIR}.`
+        : !existsSync(join(SKILLS, "agents", `${persona.name}.md`))
+          ? `No agent file for ${persona.name} under ${join(SKILLS, "agents")}.`
+          : null
+    if (refusal) {
+      console.error(`[${label}] refused: ${refusal}`)
+      await crm(`/api/chat/turns/${turn.id}`, { error: refusal }).catch(() => {})
+      return
+    }
+  }
+
   try {
     /**
      * `tools: ["mcp"]` is deliberate and load-bearing for a chat turn: it
@@ -699,6 +838,10 @@ async function runTurn(claim: Claim) {
       cwd = where.kind === "worktree" || where.kind === "readonly" ? where.cwd : CWD
       agent = "Solver"
       console.log(`[${label}] task → ${describe(where)}`)
+    } else if (persona) {
+      prompt = personaPrompt(claim, persona)
+      agent = persona.label
+      console.log(`[${label}] persona → ${persona.name}${persona.pack ? ` (${persona.pack})` : ""}`)
     }
 
     const result = await Agent.prompt(prompt, {

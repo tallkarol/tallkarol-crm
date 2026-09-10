@@ -234,6 +234,9 @@ npm run chat:worker
 | `CHAT_WORKER_IDLE_MS` | Poll interval when the queue is empty. Default 2500. |
 | `CHAT_WORKER_SKILLS` | Directory holding `commands/<name>.md` and `skills/<name>/SKILL.md` — normally `~/.claude`. **Unset, skill turns AND task turns are refused.** |
 | `CHAT_WORKER_SOLVE_DIR` | Where task turns cut their worktrees. Default `~/.daedalus/solve`. |
+| `CHAT_WORKER_PERSONAS` | The hive mind's `personas/` directory. Default `$CHAT_WORKER_SKILLS/personas` (`~/.claude/personas`). Persona turns need it and the `agents/` sibling. |
+| `DAEDALUS_CLIENT_PACKS` | The packs repo a desk may load (`clients/<slug>`, `products/<slug>`). Default `~/Work/daedalus-client-packs`. |
+| `DAEDALUS_ME` | Karol's private `me` pack, read by the coach alone. Default `~/Work/daedalus-me`. |
 
 ### Skill turns
 
@@ -300,6 +303,43 @@ branch, and removing the worktree afterwards, is his.
 
 Same trust boundary as skill turns: without `CHAT_WORKER_SKILLS` a task
 turn is refused with a plain error. The CRM cannot switch it on.
+
+### Persona threads
+
+A thread can be addressed to one of the hive mind's **desks** — `@coach`,
+`@pm`, `@dreamer`, `@client-manager zemvelo`, `@product-owner momentum`,
+`@developer`, `@designer`, `@marketer`, `@copywriter` — or with
+`/as <persona> [slug]`, which is the same grammar the plugin's `/as` command
+uses in Claude Code. `lib/chat/personas.ts` is the roster the chat knows:
+the desk's label, the ladder its turns run on, the kind of pack it may pin,
+and whether its threads are private. WHO the desk is lives in the plugin
+(`agents/<name>.md`, `personas/<name>/`) and is never copied here.
+
+`send()` re-points the thread: `chat_threads.agent` is the desk,
+`chat_threads.pack` is `clients/<slug>`, `products/<slug>` or `me`, and
+`private` is set for the coach. The word after the name pins a pack only
+when the CRM knows the slug (the `clients` or `products` table, or `me`);
+otherwise it is the first word of the message. Switching desks keeps the
+pack when the new desk loads the same kind (pm → client manager keeps the
+client), the coach always has `me`, anything else starts unpinned and the
+desk asks. The thread's title is the message without the address.
+
+Every turn in the thread runs on the desk's ladder — `persona` (Grok 4.6
+High) for most, `writing` for the copywriter, `architecture` for the
+product owner — with `jobFor()` giving an address the first say, a
+`/command` the second, a task the third. The claim carries
+`persona: { name, label, pack }`; the worker reads
+`personas/_shared/HOUSE.md`, `agents/<name>.md`, the persona's four files
+and the pack's files from the Mac and inlines them, in the order `/as`
+reads them, then runs with `tools: ["mcp"]` — a desk talks with the CRM
+tools; a build goes through Solve in chat. The reply's speaker is the
+desk's label. Same trust boundary as skill turns: without
+`CHAT_WORKER_SKILLS` (and the `personas/` and `agents/` links beside it)
+the turn is refused with a plain error.
+
+`private` threads are for the coach: the `me` pack is inlined on the Mac
+and never stored, but the replies are rows like any other, so the flag is
+what keeps them out of any shared or portal view that ever lists threads.
 
 ### launchd keeps it up
 
@@ -378,9 +418,13 @@ that moved between server and client would be a hydration error.
 - **Streaming.** The page polls every three seconds while a turn is in flight.
   Adequate for work that takes tens of seconds; a stream can come later without
   changing the contract.
-- **Agents as people.** One assistant, plus the `/command` that answered a
-  skill turn. `chat_messages.agent` carries the speaker name so a roster and
-  group threads do not need a migration.
+- **Group threads and handoffs.** A thread has one desk at a time; a desk
+  that says "this is the copywriter's" leaves Karol to re-address the thread
+  or open another. A `route_to` that opens a linked thread with a brief, and
+  a roster in the rail, are the next steps. `/train <persona>` — the
+  persona's threads distilled into `memory.md` after Karol approves — is a
+  plugin lane, not a CRM one; the CRM's part is a thumbs-down that lands a
+  `chat_feedback` row for it to read.
 - **Voice and attachments.** In the mockup, not in the build. The composer
   deliberately has no attach or dictate buttons until they do something.
 - **Structured skill results.** A skill's picklist (inspector findings, a

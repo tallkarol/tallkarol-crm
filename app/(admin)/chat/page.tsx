@@ -12,6 +12,7 @@ import type {
 import { getSessionUser } from "@/lib/auth"
 import { budgetState } from "@/lib/chat/budget"
 import { CHAT_ZONE, modelChain } from "@/lib/chat/format"
+import { PERSONAS, describePack } from "@/lib/chat/personas"
 import {
   listArchivedThreads,
   listThreads,
@@ -145,6 +146,16 @@ export default async function ChatPage({
         task={
           detail?.thread.task
             ? { id: detail.thread.task.id, title: detail.thread.task.title }
+            : null
+        }
+        persona={
+          detail?.thread.agent && PERSONAS[detail.thread.agent]
+            ? {
+                name: detail.thread.agent,
+                label: PERSONAS[detail.thread.agent].label,
+                pack: describePack(detail.thread.pack),
+                private: detail.thread.private,
+              }
             : null
         }
         messages={messages}

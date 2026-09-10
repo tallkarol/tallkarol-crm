@@ -186,6 +186,7 @@ export type JobType =
   | "report"
   | "skill"
   | "task"
+  | "persona"
 
 export type Ladder = {
   job: JobType
@@ -335,6 +336,23 @@ export const LADDERS: Record<JobType, Ladder> = {
     detector: "",
     maxEscalations: 0,
     note: "Read, shell and edit in a worktree of the client's repo; the reply is a report, not a claim of done.",
+  },
+  /**
+   * A thread addressed to a desk persona (`@coach`, `@client-manager zemvelo`).
+   * The worker inlines the persona's files and its pack into the prompt and
+   * hands over the CRM tools only — a desk talks, it does not get a shell; a
+   * build still goes through Solve in chat. Above the chat rung because a
+   * desk is judged on judgment, and on the Cursor pool because every message
+   * in the thread runs here. Two desks override this in lib/chat/personas.ts:
+   * the copywriter runs on `writing`, the product owner on `architecture`.
+   */
+  persona: {
+    job: "persona",
+    label: "A desk persona",
+    rungs: ["grok-4.6-high"],
+    detector: "",
+    maxEscalations: 0,
+    note: "The persona's files and pack in the prompt, CRM tools only; no detector, a desk that is unsure asks.",
   },
 }
 

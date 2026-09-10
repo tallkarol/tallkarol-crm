@@ -5,6 +5,8 @@ import {
   chatThreads,
   chatToolCalls,
   chatTurns,
+  clients,
+  products,
 } from "@/db/schema"
 import type { ChatToolCall, ChatTurn } from "@/db/schema"
 import { budgetState, gate } from "@/lib/chat/budget"
@@ -17,6 +19,7 @@ import {
   type ModelKey,
   type TokenUsage,
 } from "@/lib/chat/models"
+import { PERSONAS, parseMention, type PersonaSpec } from "@/lib/chat/personas"
 import { parseCommand } from "@/lib/chat/skills"
 import { toolByName, type ToolContext } from "@/lib/chat/tools"
 
@@ -70,16 +73,58 @@ export function classify(text: string): JobType {
 /**
  * Which ladder a message in a thread belongs on.
  *
- * A /command still wins — it is a procedure, whichever thread it lands in. A
+ * An address (`@coach …`, `/as product-owner momentum …`) wins outright: the
+ * thread now belongs to that desk and the message runs on the desk's ladder.
+ * A /command wins next — it is a procedure, whichever thread it lands in. A
  * thread born from a task solves: every message in it runs on the `task`
  * ladder, with the worktree and the toolset that come with it, so "try the
- * other approach" cannot fall back to a chat model with no shell. Everything
- * else is classified by what it says.
+ * other approach" cannot fall back to a chat model with no shell. A thread
+ * addressed to a desk stays with it. Everything else is classified by what
+ * it says.
  */
-export function jobFor(text: string, taskId: string | null): JobType {
+export function jobFor(
+  text: string,
+  thread: { taskId: string | null; agent: string }
+): JobType {
+  const mention = parseMention(text)
+  if (mention) return mention.persona.job
   if (parseCommand(text)) return "skill"
-  if (taskId) return "task"
+  if (thread.taskId) return "task"
+  if (thread.agent) return PERSONAS[thread.agent]?.job ?? "persona"
   return classify(text)
+}
+
+/**
+ * The word after a desk's name pins a pack when it names one the CRM knows —
+ * a client slug, a product slug, or `me`. Otherwise it is just the first
+ * word of the message: `@pm what matters this week` pins nothing.
+ */
+async function resolvePack(
+  persona: PersonaSpec,
+  word: string | null
+): Promise<{ pack: string; clientId: string | null } | null> {
+  if (!persona.pack || !word) return null
+  const slug = word.toLowerCase()
+  if (persona.pack === "me") return slug === "me" ? { pack: "me", clientId: null } : null
+  if (persona.pack === "client") {
+    const client = await db.query.clients.findFirst({
+      where: eq(clients.slug, slug),
+      columns: { id: true },
+    })
+    return client ? { pack: `clients/${slug}`, clientId: client.id } : null
+  }
+  const product = await db.query.products.findFirst({
+    where: eq(products.slug, slug),
+    columns: { id: true },
+  })
+  return product ? { pack: `products/${slug}`, clientId: null } : null
+}
+
+function packKind(ref: string): PersonaSpec["pack"] {
+  if (ref === "me") return "me"
+  if (ref.startsWith("clients/")) return "client"
+  if (ref.startsWith("products/")) return "product"
+  return null
 }
 
 export type Routing = {
@@ -117,18 +162,23 @@ export async function route(
 export async function ensureThread(
   userId: string,
   threadId?: string | null
-): Promise<{ id: string; taskId: string | null }> {
+): Promise<{ id: string; taskId: string | null; agent: string; pack: string }> {
   if (threadId) {
     const existing = await db.query.chatThreads.findFirst({
       where: and(eq(chatThreads.id, threadId), eq(chatThreads.userId, userId)),
-      columns: { id: true, taskId: true },
+      columns: { id: true, taskId: true, agent: true, pack: true },
     })
     if (existing) return existing
   }
   const [row] = await db
     .insert(chatThreads)
     .values({ userId, title: "" })
-    .returning({ id: chatThreads.id, taskId: chatThreads.taskId })
+    .returning({
+      id: chatThreads.id,
+      taskId: chatThreads.taskId,
+      agent: chatThreads.agent,
+      pack: chatThreads.pack,
+    })
   return row
 }
 
@@ -157,7 +207,42 @@ export async function send(input: {
 
   const thread = await ensureThread(input.userId, input.threadId)
   const threadId = thread.id
-  const job = jobFor(text, thread.taskId)
+
+  /**
+   * An address re-points the thread. The pack stays when the new desk loads
+   * the same kind (pm → client-manager keeps `clients/x`); the coach always
+   * has `me`; anything else starts unpinned and the desk asks. The message
+   * itself is stored as typed — the worker sees the address too.
+   */
+  const mention = parseMention(text)
+  let title = text
+  if (mention) {
+    const { persona } = mention
+    const resolved = await resolvePack(persona, mention.slug)
+    const pack =
+      resolved?.pack ??
+      (persona.pack === "me"
+        ? "me"
+        : packKind(thread.pack) === persona.pack
+          ? thread.pack
+          : "")
+    await db
+      .update(chatThreads)
+      .set({
+        agent: persona.name,
+        pack,
+        private: persona.private ?? false,
+        ...(resolved?.clientId ? { clientId: resolved.clientId } : {}),
+      })
+      .where(eq(chatThreads.id, threadId))
+    thread.agent = persona.name
+    thread.pack = pack
+    // A word that did not pin a pack was the start of the sentence.
+    const said = resolved ? mention.rest : [mention.slug, mention.rest].filter(Boolean).join(" ")
+    title = said || `${persona.label}${pack ? ` · ${pack}` : ""}`
+  }
+
+  const job = jobFor(text, thread)
   const routing = await route(job, 0)
   const spec = modelFor(routing.model)
 
@@ -185,7 +270,7 @@ export async function send(input: {
     .update(chatThreads)
     .set({
       lastMessageAt: new Date(),
-      title: sql`case when ${chatThreads.title} = '' then ${titleFrom(text)} else ${chatThreads.title} end`,
+      title: sql`case when ${chatThreads.title} = '' then ${titleFrom(title)} else ${chatThreads.title} end`,
       // A thread you are talking in is not archived, whatever it was before.
       archivedAt: null,
     })

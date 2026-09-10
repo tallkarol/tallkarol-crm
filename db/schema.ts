@@ -3080,6 +3080,12 @@ export const chatThreads = pgTable(
     }),
     /** The task this thread was opened from. Set, every message in it solves. */
     taskId: uuid("task_id").references(() => tasks.id, { onDelete: "set null" }),
+    /** The persona the thread is addressed to — `coach`, `client-manager`. Empty: the plain assistant. */
+    agent: text("agent").notNull().default(""),
+    /** The pack the persona loads: `clients/<slug>`, `products/<slug>`, `me`, or empty. */
+    pack: text("pack").notNull().default(""),
+    /** Never surfaces in a shared or portal view. Set for the coach's threads. */
+    private: boolean("private").notNull().default(false),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true })
       .notNull()

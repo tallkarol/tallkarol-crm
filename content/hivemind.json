@@ -1,5 +1,5 @@
 {
-  "scannedAt": "2026-09-04T02:53:04.324Z",
+  "scannedAt": "2026-09-10T14:31:16.027Z",
   "plugin": {
     "name": "daedalus-hive-mind",
     "version": "0.14.0",
@@ -7,12 +7,12 @@
   },
   "counts": {
     "root": 1,
-    "lane": 7,
-    "agent": 9,
-    "skill": 22,
-    "reference": 12,
-    "script": 29,
-    "command": 17,
+    "lane": 8,
+    "agent": 18,
+    "skill": 23,
+    "reference": 15,
+    "script": 32,
+    "command": 19,
     "routine": 7,
     "pipeline": 1
   },
@@ -27,6 +27,14 @@
         "plugin": "daedalus-hive-mind",
         "version": "0.14.0"
       }
+    },
+    {
+      "id": "lane:desks",
+      "label": "Desks",
+      "kind": "lane",
+      "lane": "lane:desks",
+      "blurb": "Who Karol talks to: each desk has a stance, a memory that grows through /train, and an edge to the specialists it dispatches.",
+      "source": "README.md"
     },
     {
       "id": "lane:build",
@@ -93,7 +101,34 @@
       "source": "agents/caretaker.md",
       "meta": {
         "tools": "inherits the session's tools",
-        "model": "sonnet"
+        "model": "sonnet",
+        "persona": "yes"
+      }
+    },
+    {
+      "id": "agent:client-manager",
+      "label": "client-manager",
+      "kind": "agent",
+      "lane": "lane:desks",
+      "blurb": "The account desk for one client — the persona Karol keeps open beside him while working with that client.",
+      "source": "agents/client-manager.md",
+      "meta": {
+        "tools": "inherits the session's tools",
+        "model": "sonnet",
+        "persona": "yes"
+      }
+    },
+    {
+      "id": "agent:coach",
+      "label": "coach",
+      "kind": "agent",
+      "lane": "lane:desks",
+      "blurb": "Karol's personal life coach — the one persona about him rather than the business.",
+      "source": "agents/coach.md",
+      "meta": {
+        "tools": "inherits the session's tools",
+        "model": "sonnet",
+        "persona": "yes"
       }
     },
     {
@@ -105,7 +140,21 @@
       "source": "agents/content-runner.md",
       "meta": {
         "tools": "Read, Grep, Glob, Edit, Write, Bash",
-        "model": "inherit"
+        "model": "inherit",
+        "persona": "yes"
+      }
+    },
+    {
+      "id": "agent:copywriter",
+      "label": "copywriter",
+      "kind": "agent",
+      "lane": "lane:desks",
+      "blurb": "The copywriter desk — the words.",
+      "source": "agents/copywriter.md",
+      "meta": {
+        "tools": "inherits the session's tools",
+        "model": "sonnet",
+        "persona": "yes"
       }
     },
     {
@@ -117,7 +166,34 @@
       "source": "agents/db-specialist.md",
       "meta": {
         "tools": "Read, Grep, Glob, Edit, Write, Bash",
-        "model": "inherit"
+        "model": "inherit",
+        "persona": "yes"
+      }
+    },
+    {
+      "id": "agent:designer",
+      "label": "designer",
+      "kind": "agent",
+      "lane": "lane:desks",
+      "blurb": "The designer desk — tokens, critique, Figma.",
+      "source": "agents/designer.md",
+      "meta": {
+        "tools": "inherits the session's tools",
+        "model": "sonnet",
+        "persona": "yes"
+      }
+    },
+    {
+      "id": "agent:developer",
+      "label": "developer",
+      "kind": "agent",
+      "lane": "lane:desks",
+      "blurb": "The developer desk — picks the stack and builds.",
+      "source": "agents/developer.md",
+      "meta": {
+        "tools": "inherits the session's tools",
+        "model": "sonnet",
+        "persona": "yes"
       }
     },
     {
@@ -129,7 +205,21 @@
       "source": "agents/docent.md",
       "meta": {
         "tools": "inherits the session's tools",
-        "model": "sonnet"
+        "model": "sonnet",
+        "persona": "yes"
+      }
+    },
+    {
+      "id": "agent:dreamer",
+      "label": "dreamer",
+      "kind": "agent",
+      "lane": "lane:desks",
+      "blurb": "The ideation desk — takes an idea, a photo, a link or a half-sentence and works it through structured brainstorms, one-question-at-a-time Q/A loops and moodboards until there is something a…",
+      "source": "agents/dreamer.md",
+      "meta": {
+        "tools": "inherits the session's tools",
+        "model": "sonnet",
+        "persona": "yes"
       }
     },
     {
@@ -141,7 +231,47 @@
       "source": "agents/inspector.md",
       "meta": {
         "tools": "Read, Grep, Glob, Bash, Edit, Write",
-        "model": "fable"
+        "model": "fable",
+        "persona": "yes"
+      }
+    },
+    {
+      "id": "agent:marketer",
+      "label": "marketer",
+      "kind": "agent",
+      "lane": "lane:desks",
+      "blurb": "The marketer desk — demand to briefs to campaigns.",
+      "source": "agents/marketer.md",
+      "meta": {
+        "tools": "inherits the session's tools",
+        "model": "sonnet",
+        "persona": "yes"
+      }
+    },
+    {
+      "id": "agent:pm",
+      "label": "pm",
+      "kind": "agent",
+      "lane": "lane:desks",
+      "blurb": "The PM desk — Karol's project manager across every client and product.",
+      "source": "agents/pm.md",
+      "meta": {
+        "tools": "inherits the session's tools",
+        "model": "sonnet",
+        "persona": "yes"
+      }
+    },
+    {
+      "id": "agent:product-owner",
+      "label": "product-owner",
+      "kind": "agent",
+      "lane": "lane:desks",
+      "blurb": "The product desk for one of Karol's own products — transient (WordPress migration plugin), spectramotus (physical picture frames with a SaaS behind them), momentum (AI habit-building app),…",
+      "source": "agents/product-owner.md",
+      "meta": {
+        "tools": "inherits the session's tools",
+        "model": "opus",
+        "persona": "yes"
       }
     },
     {
@@ -153,7 +283,8 @@
       "source": "agents/purser.md",
       "meta": {
         "tools": "inherits the session's tools",
-        "model": "sonnet"
+        "model": "sonnet",
+        "persona": "yes"
       }
     },
     {
@@ -165,7 +296,8 @@
       "source": "agents/qa.md",
       "meta": {
         "tools": "Read, Grep, Glob, Bash, Edit",
-        "model": "sonnet"
+        "model": "sonnet",
+        "persona": "yes"
       }
     },
     {
@@ -177,7 +309,8 @@
       "source": "agents/security-reviewer.md",
       "meta": {
         "tools": "Read, Grep, Glob",
-        "model": "inherit"
+        "model": "inherit",
+        "persona": "yes"
       }
     },
     {
@@ -189,7 +322,8 @@
       "source": "agents/ux-builder.md",
       "meta": {
         "tools": "Read, Grep, Glob, Edit, Write, Bash",
-        "model": "sonnet"
+        "model": "sonnet",
+        "persona": "yes"
       }
     },
     {
@@ -345,6 +479,14 @@
       "source": "skills/inspector/scripts/inspector.py"
     },
     {
+      "id": "reference:inspector/example-report-tallkarol.md",
+      "label": "example-report-tallkarol.md",
+      "kind": "reference",
+      "lane": "lane:build",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/inspector/references/example-report-tallkarol.md"
+    },
+    {
       "id": "reference:inspector/slop-catalog.md",
       "label": "slop-catalog.md",
       "kind": "reference",
@@ -490,6 +632,44 @@
       "lane": "lane:foundation",
       "blurb": "Reference the skill reads before acting.",
       "source": "skills/lessons/references/example-rules-tallkarol.json"
+    },
+    {
+      "id": "skill:link-audit",
+      "label": "link-audit",
+      "kind": "skill",
+      "blurb": "Dead links, 404s and invalid redirects across every page of a site — crawls the sitemap and the link graph, checks every internal/external link, image and redirect trail, and enriches with…",
+      "source": "skills/link-audit/SKILL.md"
+    },
+    {
+      "id": "script:link-audit/link-audit.py",
+      "label": "link-audit.py",
+      "kind": "script",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/link-audit/scripts/link-audit.py"
+    },
+    {
+      "id": "script:link-audit/link_audit",
+      "label": "link_audit/",
+      "kind": "script",
+      "blurb": "A package of companion code the skill calls into.",
+      "source": "skills/link-audit/scripts/link_audit",
+      "meta": {
+        "contents": "5 files"
+      }
+    },
+    {
+      "id": "reference:link-audit/report-fonts.html",
+      "label": "report-fonts.html",
+      "kind": "reference",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/link-audit/references/report-fonts.html"
+    },
+    {
+      "id": "reference:link-audit/report.css",
+      "label": "report.css",
+      "kind": "reference",
+      "blurb": "Reference the skill reads before acting.",
+      "source": "skills/link-audit/references/report.css"
     },
     {
       "id": "skill:log-session",
@@ -642,6 +822,14 @@
       "source": "skills/timeclock/scripts/cursor-hook.sh"
     },
     {
+      "id": "script:timeclock/gate.py",
+      "label": "gate.py",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/timeclock/scripts/gate.py"
+    },
+    {
       "id": "script:timeclock/meter-hook.sh",
       "label": "meter-hook.sh",
       "kind": "script",
@@ -704,6 +892,17 @@
       "lane": "lane:care",
       "blurb": "PM playbook for WebsiteCare — Karol's recurring site-maintenance product.",
       "source": "skills/website-care/SKILL.md"
+    },
+    {
+      "id": "command:as",
+      "label": "/as",
+      "kind": "command",
+      "lane": "lane:foundation",
+      "blurb": "Become one of the personas for this session — pm, coach, dreamer, client-manager <slug>, product-owner <slug>, developer, designer, marketer, copywriter",
+      "source": "commands/as.md",
+      "meta": {
+        "arguments": "<persona> [pack slug] — e.g. \"coach\", \"product-owner momentum\", \"client-manager zemvelo\". No argument lists the roster."
+      }
     },
     {
       "id": "command:blueprint",
@@ -835,6 +1034,16 @@
       "source": "commands/lessons.md",
       "meta": {
         "arguments": "[path] [--client <slug>] [--since 90d] | show <id> | status — e.g. \"\", \"~/Work/tallkarol\", \"--client gdi --root ~/Local\\ Sites/gdi-multi-site-wp\", \"show c02\", \"status\""
+      }
+    },
+    {
+      "id": "command:link-audit",
+      "label": "/link-audit",
+      "kind": "command",
+      "blurb": "Dead-link, 404 and invalid-redirect audit of a site, enriched with Search Console traffic when available → one HTML report stored in the CRM",
+      "source": "commands/link-audit.md",
+      "meta": {
+        "arguments": "<url> [--scope /path] [--gsc-property \"sc-domain:example.com\"] [--client S] [--codebase C] [--push] — e.g. \"https://zemvelo.com --scope /blog --push\""
       }
     },
     {
@@ -993,6 +1202,11 @@
     },
     {
       "source": "root",
+      "target": "lane:desks",
+      "rel": "contains"
+    },
+    {
+      "source": "root",
       "target": "lane:build",
       "rel": "contains"
     },
@@ -1032,8 +1246,23 @@
       "rel": "contains"
     },
     {
+      "source": "lane:desks",
+      "target": "agent:client-manager",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:desks",
+      "target": "agent:coach",
+      "rel": "contains"
+    },
+    {
       "source": "lane:content",
       "target": "agent:content-runner",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:desks",
+      "target": "agent:copywriter",
       "rel": "contains"
     },
     {
@@ -1042,13 +1271,43 @@
       "rel": "contains"
     },
     {
+      "source": "lane:desks",
+      "target": "agent:designer",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:desks",
+      "target": "agent:developer",
+      "rel": "contains"
+    },
+    {
       "source": "lane:delivery",
       "target": "agent:docent",
       "rel": "contains"
     },
     {
+      "source": "lane:desks",
+      "target": "agent:dreamer",
+      "rel": "contains"
+    },
+    {
       "source": "lane:build",
       "target": "agent:inspector",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:desks",
+      "target": "agent:marketer",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:desks",
+      "target": "agent:pm",
+      "rel": "contains"
+    },
+    {
+      "source": "lane:desks",
+      "target": "agent:product-owner",
       "rel": "contains"
     },
     {
@@ -1168,6 +1427,11 @@
     },
     {
       "source": "skill:inspector",
+      "target": "reference:inspector/example-report-tallkarol.md",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:inspector",
       "target": "reference:inspector/slop-catalog.md",
       "rel": "contains"
     },
@@ -1254,6 +1518,26 @@
     {
       "source": "skill:lessons",
       "target": "reference:lessons/example-rules-tallkarol.json",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:link-audit",
+      "target": "script:link-audit/link-audit.py",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:link-audit",
+      "target": "script:link-audit/link_audit",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:link-audit",
+      "target": "reference:link-audit/report-fonts.html",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:link-audit",
+      "target": "reference:link-audit/report.css",
       "rel": "contains"
     },
     {
@@ -1348,6 +1632,11 @@
     },
     {
       "source": "skill:timeclock",
+      "target": "script:timeclock/gate.py",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
       "target": "script:timeclock/meter-hook.sh",
       "rel": "contains"
     },
@@ -1407,13 +1696,53 @@
       "rel": "loads"
     },
     {
+      "source": "agent:copywriter",
+      "target": "skill:blogo",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:copywriter",
+      "target": "skill:casestudio",
+      "rel": "loads"
+    },
+    {
       "source": "agent:db-specialist",
       "target": "skill:client-pack",
       "rel": "loads"
     },
     {
+      "source": "agent:designer",
+      "target": "skill:design-system",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:designer",
+      "target": "skill:styleguide",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:developer",
+      "target": "skill:team-charter",
+      "rel": "loads"
+    },
+    {
       "source": "agent:docent",
       "target": "skill:client-pack",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:marketer",
+      "target": "skill:demand-scout",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:marketer",
+      "target": "skill:scout",
+      "rel": "loads"
+    },
+    {
+      "source": "agent:pm",
+      "target": "skill:team-charter",
       "rel": "loads"
     },
     {
@@ -1479,6 +1808,16 @@
     {
       "source": "skill:launch-audit",
       "target": "skill:browser-check",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:link-audit",
+      "target": "skill:timeclock",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:link-audit",
+      "target": "skill:launch-audit",
       "rel": "loads"
     },
     {
@@ -1559,6 +1898,11 @@
     {
       "source": "skill:team-charter",
       "target": "agent:inspector",
+      "rel": "loads"
+    },
+    {
+      "source": "command:as",
+      "target": "skill:client-pack",
       "rel": "loads"
     },
     {
@@ -1654,6 +1998,11 @@
     {
       "source": "command:lessons",
       "target": "skill:lessons",
+      "rel": "loads"
+    },
+    {
+      "source": "command:link-audit",
+      "target": "skill:link-audit",
       "rel": "loads"
     },
     {

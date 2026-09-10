@@ -20,6 +20,7 @@ import {
   FileText,
   Inbox,
   ListChecks,
+  Lock,
   PanelLeft,
   Pencil,
   Pin,
@@ -27,7 +28,9 @@ import {
   Sparkles,
   TrendingUp,
   Unplug,
+  UserRound,
 } from "lucide-react"
+import { DESKS } from "@/lib/chat/personas"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { archiveThread, renameThread, sendMessage } from "@/lib/chat/actions"
@@ -69,6 +72,7 @@ export function ChatView({
   title,
   archived,
   task,
+  persona,
   messages,
   pending,
   stats,
@@ -81,6 +85,8 @@ export function ChatView({
   archived: boolean
   /** Set when the thread was opened from a task — it solves, and links back. */
   task: { id: string; title: string } | null
+  /** Set when the thread is addressed to a desk persona. */
+  persona: PersonaPill | null
   messages: ChatMessageView[]
   pending: PendingView | null
   stats: ThreadStats
@@ -134,6 +140,7 @@ export function ChatView({
         title={title}
         archived={archived}
         task={task}
+        persona={persona}
         stats={stats}
         worker={worker}
         firstAt={messages[0]?.createdAt ?? null}
@@ -173,11 +180,14 @@ export function ChatView({
 
 /* ---------- header ---------- */
 
+type PersonaPill = { name: string; label: string; pack: string | null; private: boolean }
+
 function Header({
   threadId,
   title,
   archived,
   task,
+  persona,
   stats,
   worker,
   firstAt,
@@ -187,6 +197,7 @@ function Header({
   title: string
   archived: boolean
   task: { id: string; title: string } | null
+  persona: PersonaPill | null
   stats: ThreadStats
   worker: WorkerStatus
   firstAt: string | null
@@ -296,6 +307,29 @@ function Header({
                     <ListChecks className="size-3 shrink-0" aria-hidden />
                     <span className="truncate">Task · {task.title}</span>
                   </Link>
+                  <Sep />
+                </>
+              ) : null}
+              {persona ? (
+                <>
+                  <span
+                    title={
+                      persona.private
+                        ? `Addressed to ${persona.label}. Private — never in a shared view.`
+                        : `Addressed to ${persona.label}. @name switches desks.`
+                    }
+                    className="inline-flex min-w-0 max-w-[50%] items-center gap-1 font-semibold text-tk-onyx"
+                  >
+                    {persona.private ? (
+                      <Lock className="size-3 shrink-0" aria-hidden />
+                    ) : (
+                      <UserRound className="size-3 shrink-0" aria-hidden />
+                    )}
+                    <span className="truncate">
+                      {persona.label}
+                      {persona.pack ? ` · ${persona.pack}` : ""}
+                    </span>
+                  </span>
                   <Sep />
                 </>
               ) : null}
@@ -542,6 +576,25 @@ function EmptyThread({
           starters={CLIENT_STARTERS}
           onPick={start}
         />
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 font-ui text-[11px] font-semibold text-ink-3">Talk to</span>
+          {DESKS.map((desk) => (
+            <button
+              key={desk.name}
+              type="button"
+              title={desk.tagline}
+              onClick={() =>
+                requestCompose({
+                  text: `@${desk.name} ${desk.pack && desk.pack !== "me" ? "[slug] " : ""}`,
+                })
+              }
+              className="h-7 rounded-full border border-line bg-card px-2.5 font-mono text-xs text-accent-ink hover:border-line-strong"
+            >
+              @{desk.name}
+            </button>
+          ))}
+        </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="mr-1 font-ui text-[11px] font-semibold text-ink-3">Skills</span>

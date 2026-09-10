@@ -314,6 +314,53 @@ async function main() {
   await db.delete(tasks).where(eq(tasks.id, tmpTask))
   check("task thread cleaned up", (await threadForTask(tmpTask)) === null)
 
+  /* --- a thread addressed to a desk --- */
+  const coach = await send({ userId: admin.id, text: "@coach how am I doing this week" })
+  await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, coach.threadId))
+  const addressed = await db.query.chatThreads.findFirst({ where: eq(chatThreads.id, coach.threadId) })
+  check(
+    "@coach addresses the thread, pins me, marks it private",
+    addressed?.agent === "coach" && addressed.pack === "me" && addressed.private === true
+  )
+  check("a desk runs on the persona ladder", coach.turn.jobType === "persona", coach.turn.jobType)
+  check("the address is not the title", addressed?.title === "how am I doing this week", addressed?.title)
+  const handed = await send({
+    userId: admin.id,
+    threadId: coach.threadId,
+    text: `@client-manager ${slug} what did we promise them`,
+  })
+  await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, coach.threadId))
+  const switched = await db.query.chatThreads.findFirst({ where: eq(chatThreads.id, coach.threadId) })
+  check(
+    "switching desks pins the client pack and drops private",
+    switched?.agent === "client-manager" &&
+      switched.pack === `clients/${slug}` &&
+      switched.clientId === (client?.id ?? null) &&
+      switched.private === false,
+    `${switched?.agent} ${switched?.pack}`
+  )
+  check("still on the persona ladder", handed.turn.jobType === "persona", handed.turn.jobType)
+  const plain = await send({ userId: admin.id, threadId: coach.threadId, text: "and what is due?" })
+  await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, coach.threadId))
+  check("the thread keeps its desk", plain.turn.jobType === "persona", plain.turn.jobType)
+  const po = await send({
+    userId: admin.id,
+    threadId: coach.threadId,
+    text: "/as product-owner nosuchproduct what comes next",
+  })
+  await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, coach.threadId))
+  const unpinned = await db.query.chatThreads.findFirst({ where: eq(chatThreads.id, coach.threadId) })
+  check(
+    "an unknown slug leaves a different-kind desk unpinned",
+    unpinned?.agent === "product-owner" && unpinned.pack === "",
+    `${unpinned?.agent} "${unpinned?.pack}"`
+  )
+  check("the product owner runs on architecture", po.turn.jobType === "architecture", po.turn.jobType)
+  const cmd2 = await send({ userId: admin.id, threadId: coach.threadId, text: "/clock status" })
+  await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, coach.threadId))
+  check("a /command still wins inside a desk thread", cmd2.turn.jobType === "skill", cmd2.turn.jobType)
+  await db.delete(chatThreads).where(eq(chatThreads.id, coach.threadId))
+
   /* --- budget --- */
   const budget = await budgetState()
   check(

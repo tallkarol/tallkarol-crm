@@ -123,6 +123,17 @@ const LANES: {
   members: string[]
 }[] = [
   {
+    id: "lane:desks",
+    label: "Desks",
+    blurb:
+      "Who Karol talks to: each desk has a stance, a memory that grows through /train, and an edge to the specialists it dispatches.",
+    members: [
+      "pm", "coach", "dreamer", "client-manager", "product-owner",
+      "developer", "designer", "marketer", "copywriter",
+      "as",
+    ],
+  },
+  {
     id: "lane:build",
     label: "Build",
     blurb:
@@ -360,6 +371,10 @@ for (const file of files(join(ROOT, "agents"), ".md")) {
   const name = fm.name ?? basename(file, ".md")
   agentNames.add(name)
   const lane = laneOf.get(name)
+  // An agent with a personas/<name>/ directory is someone Karol talks to,
+  // with a memory; the chat's roster (lib/chat/personas.ts) decides which
+  // of those are desks it addresses.
+  const persona = existsSync(join(ROOT, "personas", name, "PERSONA.md"))
   addNode({
     id: `agent:${name}`,
     label: name,
@@ -370,6 +385,7 @@ for (const file of files(join(ROOT, "agents"), ".md")) {
     meta: {
       ...(fm.tools ? { tools: fm.tools } : { tools: "inherits the session's tools" }),
       ...(fm.model ? { model: fm.model } : {}),
+      ...(persona ? { persona: "yes" } : {}),
     },
   })
   if (lane) addLink(lane, `agent:${name}`, "contains")
