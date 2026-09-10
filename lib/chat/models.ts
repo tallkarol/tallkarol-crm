@@ -185,6 +185,7 @@ export type JobType =
   | "writing"
   | "report"
   | "skill"
+  | "task"
 
 export type Ladder = {
   job: JobType
@@ -319,6 +320,21 @@ export const LADDERS: Record<JobType, Ladder> = {
     detector: "",
     maxEscalations: 0,
     note: "Follows a SKILL.md with read and shell; not a chat answer.",
+  },
+  /**
+   * A CRM task taken into chat. The worker cuts a worktree of the client's
+   * repo and hands the model read, shell and edit — the same grant a skill
+   * turn gets — and the reply is a report of what was found, changed and
+   * verified. No detector: the project's own checks run inside the turn, and
+   * a solve that fell short says so in prose.
+   */
+  task: {
+    job: "task",
+    label: "Solve a CRM task",
+    rungs: ["grok-4.6-high"],
+    detector: "",
+    maxEscalations: 0,
+    note: "Read, shell and edit in a worktree of the client's repo; the reply is a report, not a claim of done.",
   },
 }
 

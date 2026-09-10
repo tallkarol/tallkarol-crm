@@ -9,6 +9,7 @@ import {
   useTransition,
   type CSSProperties,
 } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   Activity,
@@ -67,6 +68,7 @@ export function ChatView({
   threadId,
   title,
   archived,
+  task,
   messages,
   pending,
   stats,
@@ -77,6 +79,8 @@ export function ChatView({
   threadId: string | null
   title: string
   archived: boolean
+  /** Set when the thread was opened from a task — it solves, and links back. */
+  task: { id: string; title: string } | null
   messages: ChatMessageView[]
   pending: PendingView | null
   stats: ThreadStats
@@ -129,6 +133,7 @@ export function ChatView({
         threadId={threadId}
         title={title}
         archived={archived}
+        task={task}
         stats={stats}
         worker={worker}
         firstAt={messages[0]?.createdAt ?? null}
@@ -172,6 +177,7 @@ function Header({
   threadId,
   title,
   archived,
+  task,
   stats,
   worker,
   firstAt,
@@ -180,6 +186,7 @@ function Header({
   threadId: string | null
   title: string
   archived: boolean
+  task: { id: string; title: string } | null
   stats: ThreadStats
   worker: WorkerStatus
   firstAt: string | null
@@ -276,6 +283,19 @@ function Header({
                   <span className="rounded-full bg-well px-1.5 py-px text-[10px] font-bold uppercase tracking-[0.06em] text-ink-3 ring-1 ring-line">
                     Archived
                   </span>
+                  <Sep />
+                </>
+              ) : null}
+              {task ? (
+                <>
+                  <Link
+                    href={ROUTES.task(task.id)}
+                    title={task.title}
+                    className="inline-flex min-w-0 max-w-[50%] items-center gap-1 font-semibold text-tk-teal hover:underline"
+                  >
+                    <ListChecks className="size-3 shrink-0" aria-hidden />
+                    <span className="truncate">Task · {task.title}</span>
+                  </Link>
                   <Sep />
                 </>
               ) : null}

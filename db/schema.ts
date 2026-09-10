@@ -3078,6 +3078,8 @@ export const chatThreads = pgTable(
     clientId: uuid("client_id").references(() => clients.id, {
       onDelete: "set null",
     }),
+    /** The task this thread was opened from. Set, every message in it solves. */
+    taskId: uuid("task_id").references(() => tasks.id, { onDelete: "set null" }),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true })
       .notNull()
@@ -3088,6 +3090,7 @@ export const chatThreads = pgTable(
   },
   (table) => ({
     byUser: index("chat_threads_user_idx").on(table.userId, table.lastMessageAt),
+    byTask: index("chat_threads_task_idx").on(table.taskId),
   })
 )
 
@@ -3213,6 +3216,7 @@ export const chatThreadsRelations = relations(chatThreads, ({ one, many }) => ({
     fields: [chatThreads.clientId],
     references: [clients.id],
   }),
+  task: one(tasks, { fields: [chatThreads.taskId], references: [tasks.id] }),
   messages: many(chatMessages),
   turns: many(chatTurns),
   toolCalls: many(chatToolCalls),

@@ -67,6 +67,21 @@ export function classify(text: string): JobType {
   return "chat"
 }
 
+/**
+ * Which ladder a message in a thread belongs on.
+ *
+ * A /command still wins — it is a procedure, whichever thread it lands in. A
+ * thread born from a task solves: every message in it runs on the `task`
+ * ladder, with the worktree and the toolset that come with it, so "try the
+ * other approach" cannot fall back to a chat model with no shell. Everything
+ * else is classified by what it says.
+ */
+export function jobFor(text: string, taskId: string | null): JobType {
+  if (parseCommand(text)) return "skill"
+  if (taskId) return "task"
+  return classify(text)
+}
+
 export type Routing = {
   job: JobType
   rung: number
@@ -102,18 +117,19 @@ export async function route(
 export async function ensureThread(
   userId: string,
   threadId?: string | null
-): Promise<string> {
+): Promise<{ id: string; taskId: string | null }> {
   if (threadId) {
     const existing = await db.query.chatThreads.findFirst({
       where: and(eq(chatThreads.id, threadId), eq(chatThreads.userId, userId)),
+      columns: { id: true, taskId: true },
     })
-    if (existing) return existing.id
+    if (existing) return existing
   }
   const [row] = await db
     .insert(chatThreads)
     .values({ userId, title: "" })
-    .returning({ id: chatThreads.id })
-  return row.id
+    .returning({ id: chatThreads.id, taskId: chatThreads.taskId })
+  return row
 }
 
 /** First thing said becomes the thread's name, trimmed to something listable. */
@@ -139,8 +155,9 @@ export async function send(input: {
   const text = input.text.trim()
   if (!text) throw new Error("Nothing to send.")
 
-  const threadId = await ensureThread(input.userId, input.threadId)
-  const job = classify(text)
+  const thread = await ensureThread(input.userId, input.threadId)
+  const threadId = thread.id
+  const job = jobFor(text, thread.taskId)
   const routing = await route(job, 0)
   const spec = modelFor(routing.model)
 
@@ -549,6 +566,7 @@ export async function setThreadArchived(
 export async function threadDetail(userId: string, threadId: string) {
   const thread = await db.query.chatThreads.findFirst({
     where: and(eq(chatThreads.id, threadId), eq(chatThreads.userId, userId)),
+    with: { task: { columns: { id: true, title: true } } },
   })
   if (!thread) return null
 

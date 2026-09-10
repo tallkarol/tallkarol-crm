@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm"
 import { db } from "@/db"
-import { chatThreads, clients, users } from "@/db/schema"
+import { chatThreads, chatTurns, clients, tasks, users } from "@/db/schema"
 import { budgetState, formatCents } from "@/lib/chat/budget"
 import { classify } from "@/lib/chat/turns"
 import {
@@ -13,7 +13,9 @@ import {
   send,
   threadDetail,
 } from "@/lib/chat/turns"
+import { startTaskThread, threadForTask } from "@/lib/chat/task-thread"
 import { PERSONAL_CALENDAR_ID, pickCalendarSource } from "@/lib/calendar-write"
+import { insertTaskRow } from "@/lib/task-insert"
 
 /**
  * The chat spine, against a real database.
@@ -198,6 +200,31 @@ async function main() {
     task.status === "pending" && Array.isArray((task.preview as { fields?: unknown[] })?.fields)
   )
 
+  const rescheduleScratch = await insertTaskRow(db, {
+    title: "smoke test — delete me",
+    userId: admin.id,
+    target: {
+      clientId: client?.id ?? null,
+      projectId: null,
+      productId: null,
+      retainerId: null,
+      deliverableId: null,
+    },
+    source: "manual",
+  })
+  const reschedule = await invokeTool({
+    userId: admin.id,
+    turnId: first.turn.id,
+    name: "reschedule_task",
+    args: { taskId: rescheduleScratch, dueOn: "2026-12-25" },
+  })
+  check("reschedule_task parked as pending", reschedule.status === "pending")
+  check(
+    "reschedule preview shows the new due date",
+    reschedule.status === "pending" && JSON.stringify(reschedule.preview).includes("2026-12-25")
+  )
+  await db.delete(tasks).where(eq(tasks.id, rescheduleScratch))
+
   /* --- completing prices the turn --- */
   const done = await completeTurn({
     turnId: first.turn.id,
@@ -242,6 +269,50 @@ async function main() {
 
   const spent = await escalate(promoted!.id, "still failing")
   check("ladder refuses to climb past its last rung", spent === null)
+  // The promoted turn is a real queued row on an Other-pool model. A live
+  // worker polls this database; park it before one spends Opus on a smoke test.
+  await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, threadId))
+
+  /* --- a task taken into chat --- */
+  const tmpTask = await insertTaskRow(db, {
+    title: "smoke solve — delete me",
+    userId: admin.id,
+    target: {
+      clientId: client?.id ?? null,
+      projectId: null,
+      productId: null,
+      retainerId: null,
+      deliverableId: null,
+    },
+    notes: "Throwaway row from check:chat:db.",
+    source: "manual",
+  })
+  const started = await startTaskThread(admin.id, tmpTask)
+  // Park the turn before a live worker can claim it and cut a worktree for a smoke test.
+  await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, started.threadId))
+  const taskThread = await threadDetail(admin.id, started.threadId)
+  check("task thread remembers its task", taskThread?.thread.taskId === tmpTask)
+  check(
+    "task thread scoped to the task's client",
+    (taskThread?.thread.clientId ?? null) === (client?.id ?? null)
+  )
+  check("first message is the brief", taskThread?.messages[0]?.body.startsWith("Solve: ") === true)
+  check("thread titled from the brief", taskThread?.thread.title.startsWith("Solve: ") === true)
+  check("first turn runs on the task ladder", taskThread?.turns[0]?.jobType === "task", taskThread?.turns[0]?.jobType)
+  check("task ladder's rung", taskThread?.turns[0]?.model === "grok-4.6-high", taskThread?.turns[0]?.model)
+  const again = await startTaskThread(admin.id, tmpTask)
+  check("second click lands in the same thread", again.threadId === started.threadId && !again.created)
+  const followUp = await send({ userId: admin.id, threadId: started.threadId, text: "try the other approach" })
+  check("follow-up stays on the task ladder", followUp.turn.jobType === "task", followUp.turn.jobType)
+  const cmd = await send({ userId: admin.id, threadId: started.threadId, text: "/clock status" })
+  check("a /command still wins inside a task thread", cmd.turn.jobType === "skill", cmd.turn.jobType)
+  await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, started.threadId))
+  const state = await threadForTask(tmpTask)
+  check("card reads the thread back", state?.threadId === started.threadId && state.latest !== null && !state.replied)
+  check("plain thread untouched by the rule", first.turn.jobType === "chat")
+  await db.delete(chatThreads).where(eq(chatThreads.taskId, tmpTask))
+  await db.delete(tasks).where(eq(tasks.id, tmpTask))
+  check("task thread cleaned up", (await threadForTask(tmpTask)) === null)
 
   /* --- budget --- */
   const budget = await budgetState()

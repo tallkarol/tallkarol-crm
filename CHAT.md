@@ -33,7 +33,7 @@ with no server-side runner. Same shape, same reasons.
 
 | Table | Holds |
 |---|---|
-| `chat_threads` | A conversation. Titled from its first line. |
+| `chat_threads` | A conversation. Titled from its first line. `task_id` set when it was opened from a task. |
 | `chat_messages` | What was said. `role` is user / assistant / tool / system. |
 | `chat_turns` | One attempt at answering, **and** its billing record. |
 | `chat_tool_calls` | What the assistant did or wants to do. |
@@ -148,6 +148,7 @@ never writes SQL and cannot reach anything not on this list.
 | `inbox_to_task` | `makeInboxTask` | **yes** |
 | `dismiss_leftoff` | `dismissNote` | **yes** |
 | `complete_task` | `completeTask` | **yes** |
+| `reschedule_task` | direct `tasks` update | **yes** |
 | `log_time` | `logAgentTime` (`lib/punches.ts`) | **yes** |
 | `create_task` | `resolveTaskTarget` + `insertTaskRow` | **yes** |
 | `refresh_insights` | `refreshInsightsAction` | **yes** |
@@ -231,7 +232,8 @@ npm run chat:worker
 | `CHAT_WORKER_NAME` | Shows in `chat_turns.claimedBy`. Defaults to `mac-<pid>`. |
 | `CHAT_WORKER_REPO` | Repo the agent runs against, for jobs that touch code. |
 | `CHAT_WORKER_IDLE_MS` | Poll interval when the queue is empty. Default 2500. |
-| `CHAT_WORKER_SKILLS` | Directory holding `commands/<name>.md` and `skills/<name>/SKILL.md` — normally `~/.claude`. **Unset, skill turns are refused.** |
+| `CHAT_WORKER_SKILLS` | Directory holding `commands/<name>.md` and `skills/<name>/SKILL.md` — normally `~/.claude`. **Unset, skill turns AND task turns are refused.** |
+| `CHAT_WORKER_SOLVE_DIR` | Where task turns cut their worktrees. Default `~/.daedalus/solve`. |
 
 ### Skill turns
 
@@ -258,6 +260,46 @@ changing it — launchd reads its own copy.
 Nothing about the worker is deployed. Railway runs the CRM; the queue simply
 sits until a Mac is awake, which is also the honest failure mode — a turn
 queued at 2am answers when Karol opens the laptop.
+
+### Task threads
+
+A task card's **Solve in chat** opens a thread with `chat_threads.task_id`
+set and posts the task as the first message — title, where it belongs,
+due, notes, checklist, punch-list item, CRM link (`lib/chat/task-brief.ts`,
+pure; `lib/chat/task-thread.ts`, the db side). One live thread per task: a
+second click lands in the same one, an archived thread means start over.
+
+The thread, not the message, decides the ladder. `send()` asks `jobFor()`:
+a `/command` still wins, a thread with a task runs every message as a `task`
+job, everything else is classified by what it says. So "try the other
+approach" inside a task thread does not fall back to a chat model with no
+shell. The `task` ladder is one rung, Grok 4.6 High, no detector — like
+`skill`, and for the same reason: the project's own checks run inside the
+turn, and a solve that fell short says so in prose.
+
+The claim carries `task` — the brief re-read from the table on every claim,
+the client, project and product, and the branch name `solve/<first 8 of the
+task id>`. On the Mac the worker maps the client's slug to a working copy
+through `~/.daedalus/leftoff-repos.conf`, the same file the left-off board
+and the meter read (a Local by Flywheel site is listed there but is not a
+repo, so its themes and plugins under `wp-content` are the candidates). One
+match: the worker cuts a git worktree of it under `CHAT_WORKER_SOLVE_DIR` on
+the solve branch, from the checkout's HEAD, symlinks `node_modules` in when
+the checkout has one, and runs the model there with the skill toolset —
+read, shell, grep, glob, ls, edit. The checkout itself is never touched:
+another session may be mid-edit in it. Several matches: the project's name
+narrows them, then anything Karol named in the thread; still several, the
+model gets the list and asks. A match that is not a git repo runs in place
+with edit off. No match: CRM tools only, and the reply says how to map one.
+
+The prompt's rules: edit only inside the worktree, commit on the branch,
+never push, never touch `main`, run the project's checks before claiming
+anything, do not mark the task done. The reply comes back as **Solver**
+under four headings — Found, Changed, Verified, Left for Karol. Merging the
+branch, and removing the worktree afterwards, is his.
+
+Same trust boundary as skill turns: without `CHAT_WORKER_SKILLS` a task
+turn is refused with a plain error. The CRM cannot switch it on.
 
 ### launchd keeps it up
 
@@ -344,6 +386,7 @@ that moved between server and client would be a hydration error.
 - **Structured skill results.** A skill's picklist (inspector findings, a
   punch list) arrives as prose. A card with checkboxes needs the skill to
   return structured output the CRM can render; nothing does yet.
-- **Repo work.** The worker can run code jobs, but the `code_tested` / `debug`
-  ladders have no runner wiring the detector back yet — the escalation path
-  exists and is tested, nothing calls it automatically.
+- **Repo work with detectors.** Task threads are the one runner that touches
+  code, and they run single-rung. The `code_tested` / `debug` ladders still
+  have nothing wiring a detector back — the escalation path exists and is
+  tested, nothing calls it automatically.

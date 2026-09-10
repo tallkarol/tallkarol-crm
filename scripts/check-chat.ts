@@ -7,6 +7,7 @@ import {
   laddersAreSound,
   type ModelKey,
 } from "@/lib/chat/models"
+import { BRIEF_PREFIX, TITLE_MAX, solveBranch, taskBrief } from "@/lib/chat/task-brief"
 
 /**
  * Guards the routing table.
@@ -33,7 +34,7 @@ if (unsound.length === 0) console.log("✓ every ladder pair beats going straigh
 
 /* 2. Dominated models must not appear in any CODE ladder. Writing is exempt:
       prose is not scored by CursorBench and the ranking does not apply. */
-const codeJobs = new Set(["trivial_edit", "build_fix", "code_tested", "debug"])
+const codeJobs = new Set(["trivial_edit", "build_fix", "code_tested", "debug", "task"])
 for (const ladder of Object.values(LADDERS)) {
   if (!codeJobs.has(ladder.job)) continue
   for (const rung of ladder.rungs) {
@@ -70,6 +71,46 @@ for (const ladder of Object.values(LADDERS)) {
     fail(`${ladder.job}: escalates with no detector to justify it.`)
   }
 }
+
+/* 5. The task brief's first line IS the thread title, so it has to fit the
+      title cut; the rest has to say only what the task actually has. */
+const brief = taskBrief({
+  id: "0b8f3c1e-5d2a-4f61-9c0e-7a3b2d1e0f9a",
+  title: "x".repeat(200),
+  notes: "   ",
+  labels: [],
+  dueOn: null,
+  priority: 1,
+  boardStage: "queue",
+  status: "open",
+  cadence: "none",
+  source: "manual",
+  client: null,
+  project: null,
+  product: null,
+  retainer: null,
+  deliverable: null,
+  checklist: [
+    { title: "first", done: true },
+    { title: "second", done: false },
+  ],
+  punchlist: null,
+  url: "/tasks/0b8f3c1e-5d2a-4f61-9c0e-7a3b2d1e0f9a",
+})
+const [head] = brief.split("\n")
+if (!head.startsWith(BRIEF_PREFIX)) fail(`brief does not open with "${BRIEF_PREFIX}"`)
+if (head.length > TITLE_MAX) fail(`brief's first line is ${head.length} chars; the title cut is ${TITLE_MAX}`)
+if (!brief.includes("Client: none (house task)")) fail("brief hides that the task has no client")
+if (!brief.includes("[x] first") || !brief.includes("[ ] second")) fail("brief drops the checklist marks")
+if (brief.includes("Notes:")) fail("brief prints an empty Notes section")
+if (!brief.includes("CRM: /tasks/0b8f3c1e")) fail("brief lost the CRM link")
+if (LADDERS.task.rungs.length !== 1 || LADDERS.task.maxEscalations !== 0) {
+  fail("task ladder grew a rung without a detector to justify it")
+}
+if (solveBranch("0b8f3c1e-5d2a-4f61-9c0e-7a3b2d1e0f9a") !== "solve/0b8f3c1e") {
+  fail("solveBranch is not solve/<first 8 of the task id>")
+}
+console.log("✓ task brief fits the title cut and says only what the task has")
 
 /* Report the economics so a change to the table is legible in the diff. */
 console.log("\nLadder economics (CursorBench 3.2 dollars per task)\n")

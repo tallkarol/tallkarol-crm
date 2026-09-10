@@ -142,6 +142,11 @@ export default async function ChatPage({
         threadId={threadId}
         title={detail?.thread.title || "Untitled"}
         archived={detail?.thread.archivedAt != null}
+        task={
+          detail?.thread.task
+            ? { id: detail.thread.task.id, title: detail.thread.task.title }
+            : null
+        }
         messages={messages}
         pending={pending}
         stats={stats}

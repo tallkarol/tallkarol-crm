@@ -7,10 +7,13 @@ import {
   PickButtons,
   PrimaryAction,
 } from "@/components/peek/controls"
+import { SolveInChat, type SolveState } from "@/components/tasks/SolveInChat"
 import { TaskChecklist } from "@/components/tasks/TaskChecklist"
 import { TaskTargetPicker } from "@/components/tasks/TaskTargetPicker"
 import { db } from "@/db"
 import { clients, deliverables, products, projects, tasks } from "@/db/schema"
+import { solveTaskAction } from "@/lib/chat/task-actions"
+import { threadForTask, type TaskThreadState } from "@/lib/chat/task-thread"
 import { clientColor } from "@/lib/client-colors"
 import { ROUTES } from "@/lib/nav"
 import { punchlistForTask } from "@/lib/punchlists"
@@ -52,6 +55,21 @@ const SOURCE_NOTE: Record<string, string> = {
   punchlist: "An item on a punch list",
 }
 
+/** Where the agent is with the task's chat thread, from the thread's newest turn. */
+function solveState(thread: TaskThreadState | null): SolveState | null {
+  if (!thread) return null
+  const status = thread.latest?.status ?? null
+  const shape: Pick<SolveState, "label" | "tone"> =
+    status === "running"
+      ? { label: "Working", tone: "teal" }
+      : status === "failed"
+        ? { label: "Failed", tone: "bad" }
+        : status === "done"
+          ? { label: "Replied", tone: "teal" }
+          : { label: "Queued", tone: "neutral" }
+  return { threadId: thread.threadId, archived: thread.archived, ...shape }
+}
+
 export async function TaskDetailBody({ id }: { id: string }) {
   const task = await db.query.tasks.findFirst({
     where: eq(tasks.id, id),
@@ -60,7 +78,7 @@ export async function TaskDetailBody({ id }: { id: string }) {
   if (!task) return null
   const onList = task.source === "punchlist" ? await punchlistForTask(task.id) : null
 
-  const [clientRows, projectRows, productRows, deliverableRows, items, history] =
+  const [clientRows, projectRows, productRows, deliverableRows, items, history, solve] =
     await Promise.all([
       db.query.clients.findMany({ orderBy: [asc(clients.name)] }),
       db
@@ -86,6 +104,7 @@ export async function TaskDetailBody({ id }: { id: string }) {
         .orderBy(asc(deliverables.sort)),
       taskChecklist(task.id),
       task.cadence !== "none" ? completionHistory(task.id, 8) : Promise.resolve([]),
+      threadForTask(task.id),
     ])
 
   const due = dueLabel(task.dueOn)
@@ -151,6 +170,7 @@ export async function TaskDetailBody({ id }: { id: string }) {
             doneLabel={done ? "Reopened" : "Done ✓"}
             action={setTaskStatusAction.bind(null, task.id, !done)}
           />
+          <SolveInChat action={solveTaskAction.bind(null, task.id)} state={solveState(solve)} />
           {done ? <p className="text-xs font-semibold text-tk-teal">Done ✓</p> : null}
         </div>
       </div>

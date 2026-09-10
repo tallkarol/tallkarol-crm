@@ -61,6 +61,7 @@ export type NavSection = {
 export const ROUTES = {
   home: "/",
   chat: "/chat",
+  chatThread: (id: string) => `/chat?thread=${id}`,
   inbox: "/inbox",
   inquiries: "/inquiries",
   pipeline: "/pipeline",
@@ -72,6 +73,7 @@ export const ROUTES = {
   leads: "/leads",
   calendar: "/calendar",
   tasks: "/tasks",
+  task: (id: string) => `/tasks/${id}`,
   activity: "/activity",
   emails: "/emails",
   proposals: "/proposals",

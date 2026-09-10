@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server"
 import { eq } from "drizzle-orm"
 import { db } from "@/db"
-import { chatMessages } from "@/db/schema"
+import { chatMessages, chatThreads } from "@/db/schema"
 import { asc } from "drizzle-orm"
 import { modelFor, type ModelKey } from "@/lib/chat/models"
 import { parseCommand } from "@/lib/chat/skills"
+import { solveBranch, taskBrief } from "@/lib/chat/task-brief"
+import { loadTaskBrief } from "@/lib/chat/task-thread"
 import { claimTurn, markRunning } from "@/lib/chat/turns"
 import { toolSchemas } from "@/lib/chat/tools"
 import {
@@ -15,6 +17,18 @@ import {
 } from "@/lib/time-api"
 
 export const dynamic = "force-dynamic"
+
+/** What a task turn carries: the task as it is now, and what the worker maps to a repo. */
+type TaskContext = {
+  id: string
+  title: string
+  url: string
+  brief: string
+  branch: string
+  client: { slug: string; name: string } | null
+  project: { slug: string; name: string } | null
+  product: { slug: string; name: string } | null
+}
 
 /**
  * The worker's door.
@@ -56,8 +70,38 @@ export async function POST(request: Request) {
   const command =
     turn.jobType === "skill" && asked ? parseCommand(asked.body) : null
 
+  /**
+   * A task turn carries the task as it is NOW — title, notes, checklist,
+   * where it belongs — re-read on every claim rather than trusted to the
+   * thread's first message, so a checklist ticked since still reaches the
+   * worker. The client slug is what the worker maps to a repo; the branch
+   * is named here so the card and `git branch` agree. Null means the task
+   * was deleted under the thread, and the worker says so instead of guessing.
+   */
+  let task: TaskContext | null = null
+  if (turn.jobType === "task") {
+    const thread = await db.query.chatThreads.findFirst({
+      where: eq(chatThreads.id, turn.threadId),
+      columns: { taskId: true },
+    })
+    const loaded = thread?.taskId ? await loadTaskBrief(thread.taskId) : null
+    task = loaded
+      ? {
+          id: loaded.id,
+          title: loaded.title,
+          url: loaded.url,
+          brief: taskBrief(loaded),
+          branch: solveBranch(loaded.id),
+          client: loaded.client,
+          project: loaded.project,
+          product: loaded.product,
+        }
+      : null
+  }
+
   return NextResponse.json({
     command,
+    task,
     turn: {
       id: turn.id,
       threadId: turn.threadId,
