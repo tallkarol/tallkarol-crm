@@ -742,11 +742,11 @@ export function LeftOffBoard({
         className="absolute inset-0 grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden bg-canvas motion-safe:animate-[tk-modal-in_.2s_ease-out]"
       >
         {/* -------------------------------------------------------- header */}
-        <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-card px-3 py-2.5 md:min-w-0 md:flex-nowrap md:overflow-hidden md:px-5 md:py-3 md:[&>*]:shrink-0">
+        <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-card px-3 py-2.5 lg:min-w-0 lg:flex-nowrap lg:overflow-hidden lg:px-5 lg:py-3 lg:[&>*]:shrink-0">
           {payload && payload.counts.blocked > 0 ? (
-            <span aria-hidden className="order-1 size-2.5 rounded-full bg-bad motion-safe:animate-pulse md:order-none" />
+            <span aria-hidden className="order-1 size-2.5 rounded-full bg-bad motion-safe:animate-pulse lg:order-none" />
           ) : null}
-          <div className="order-2 flex min-w-0 flex-1 items-baseline gap-2 md:order-none md:flex-none">
+          <div className="order-2 flex min-w-0 flex-1 items-baseline gap-2 lg:order-none lg:flex-none">
             <h2
               id={titleId}
               className="whitespace-nowrap font-display text-[17px] font-semibold leading-tight tracking-tight text-tk-onyx"
@@ -761,7 +761,7 @@ export function LeftOffBoard({
           <div
             role="group"
             aria-label="View"
-            className="order-4 flex w-full items-center gap-0.5 overflow-x-auto rounded-lg border border-line bg-well p-0.5 [scrollbar-width:none] md:order-none md:ml-3 md:w-auto md:overflow-visible [&::-webkit-scrollbar]:hidden"
+            className="order-4 flex w-full items-center gap-0.5 overflow-x-auto rounded-lg border border-line bg-well p-0.5 [scrollbar-width:none] lg:order-none lg:ml-3 lg:w-auto lg:overflow-visible [&::-webkit-scrollbar]:hidden"
           >
             {VIEWS.map((v, i) => {
               const n =
@@ -801,9 +801,9 @@ export function LeftOffBoard({
             })}
           </div>
 
-          <div className="hidden md:ml-auto md:block" />
+          <div className="hidden lg:ml-auto lg:block" />
 
-          <label className="relative order-5 flex h-7 flex-1 items-center md:order-none md:w-40 md:flex-none xl:w-52">
+          <label className="relative order-5 flex h-7 flex-1 items-center lg:order-none lg:w-40 lg:flex-none xl:w-52">
             <Search aria-hidden className="pointer-events-none absolute left-2.5 size-3.5 text-ink-3" />
             <input
               ref={filterRef}
@@ -826,7 +826,7 @@ export function LeftOffBoard({
               elevation="none"
               // Shrinkable and scrollable: seven clients must not be able to
               // widen the header past the dialog.
-              className="hidden min-w-0 shrink items-center gap-0.5 overflow-x-auto p-0.5 [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden"
+              className="order-6 hidden min-w-0 shrink items-center gap-0.5 overflow-x-auto p-0.5 [scrollbar-width:none] md:flex lg:order-none [&::-webkit-scrollbar]:hidden"
               role="group"
               aria-label="Filter by client"
             >
@@ -862,7 +862,7 @@ export function LeftOffBoard({
             onClick={closeBoard}
             aria-label="Close the board"
             className={cn(
-              "order-3 flex h-7 items-center gap-1.5 rounded-lg border border-line bg-card pl-2 pr-1.5 text-ink-3 transition-colors duration-[120ms] hover:bg-well hover:text-tk-onyx md:order-none",
+              "order-3 flex h-7 items-center gap-1.5 rounded-lg border border-line bg-card pl-2 pr-1.5 text-ink-3 transition-colors duration-[120ms] hover:bg-well hover:text-tk-onyx lg:order-none",
               FOCUS
             )}
           >
@@ -879,13 +879,28 @@ export function LeftOffBoard({
           one that does not. Code and Admin keep the full width for their
           lanes and let the drawer take a slice only when it has something in
           it.
+
+          All of that is `lg:` and none of it is `md:`, deliberately. The board
+          is a full-bleed dialog, so its width is the viewport's: at an iPad
+          portrait's 834 the six-lane grid resolved to 81/81/81/164/164/164 and
+          rendered 63px rows with the titles wrapped to "Nee…" / "Wai…". One
+          rule instead — below 1024 the board is the stacked list with the
+          drawer as a full-screen overlay, at 1024 and up it is this board — so
+          tablet portrait gets the phone layout that already works and tablet
+          landscape (1194) gets the real thing. Every `md:` removed here was
+          part of that one switch — the header included, which overflowed its
+          834 by 177px and had scrolled itself that far, parking the title at
+          x=-135 — and they only make sense moved together. The one `md:` left
+          in this file is the client-filter group: a tablet has room for it, so
+          it stays from `md:` and takes `order-6` to wrap to the end of the
+          header rather than jumping ahead of the title.
         */}
         <div
           className={cn(
             "grid min-h-0 grid-cols-[minmax(0,1fr)]",
             view === "morning"
-              ? "md:grid-cols-[minmax(0,520px)_minmax(0,1fr)]"
-              : selection && "md:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,470px)]"
+              ? "lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)]"
+              : selection && "lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] xl:grid-cols-[minmax(0,1fr)_minmax(0,470px)]"
           )}
         >
         {view === "morning" ? (
@@ -903,7 +918,7 @@ export function LeftOffBoard({
         ) : view === "admin" ? (
           <div
             ref={bodyRef}
-            className="flex min-h-0 flex-col gap-3 overflow-y-auto px-3 py-3 md:grid md:grid-cols-[repeat(3,minmax(0,1fr))_repeat(3,minmax(0,164px))] md:overflow-hidden md:px-5 md:py-4"
+            className="flex min-h-0 flex-col gap-3 overflow-y-auto px-3 py-3 lg:grid lg:grid-cols-[repeat(3,minmax(0,1fr))_repeat(3,minmax(0,164px))] lg:overflow-hidden lg:px-5 lg:py-4"
           >
             {ADMIN_LANES.map((lane) => (
               <AdminLane
@@ -922,7 +937,7 @@ export function LeftOffBoard({
             // Three lanes take the width; the three read-only ones are rails.
             // Every track is minmax(0,…) so the grid shrinks instead of
             // scrolling — the whole point of the layout.
-            className="flex min-h-0 flex-col gap-3 overflow-y-auto px-3 py-3 md:grid md:grid-cols-[repeat(3,minmax(0,1fr))_repeat(3,minmax(0,164px))] md:overflow-hidden md:px-5 md:py-4"
+            className="flex min-h-0 flex-col gap-3 overflow-y-auto px-3 py-3 lg:grid lg:grid-cols-[repeat(3,minmax(0,1fr))_repeat(3,minmax(0,164px))] lg:overflow-hidden lg:px-5 lg:py-4"
           >
             {CODE_LANES.map((lane) => (
               <Lane
@@ -952,7 +967,7 @@ export function LeftOffBoard({
         ) : view === "morning" ? (
           <aside
             aria-label="Details"
-            className="hidden border-l border-line bg-card md:grid md:place-items-center"
+            className="hidden border-l border-line bg-card lg:grid lg:place-items-center"
           >
             <p className="max-w-[26ch] px-6 text-center text-[12.5px] leading-relaxed text-ink-3">
               Pick a row — or press <kbd className="rounded border border-line px-1 font-ui text-[10px] font-bold">j</kbd>{" "}
@@ -1061,7 +1076,7 @@ function Lane({
 }) {
   const headingId = useId()
   return (
-    <section aria-labelledby={headingId} className="grid min-w-0 shrink-0 grid-rows-[auto_auto] gap-2 md:min-h-0 md:grid-rows-[auto_minmax(0,1fr)]">
+    <section aria-labelledby={headingId} className="grid min-w-0 shrink-0 grid-rows-[auto_auto] gap-2 lg:min-h-0 lg:grid-rows-[auto_minmax(0,1fr)]">
       <div className="flex min-w-0 items-center gap-2 px-0.5">
         <span
           aria-hidden
@@ -1080,8 +1095,8 @@ function Lane({
       </div>
       <div
         className={cn(
-          "flex min-w-0 flex-col gap-2 rounded-[14px] border p-2 md:min-h-[132px] md:overflow-y-auto [&>*]:min-w-0",
-          notes.length === 0 && "hidden md:flex",
+          "flex min-w-0 flex-col gap-2 rounded-[14px] border p-2 lg:min-h-[132px] lg:overflow-y-auto [&>*]:min-w-0",
+          notes.length === 0 && "hidden lg:flex",
           TONE_WELL[lane.tone],
           lane.dashedWell && "border-dashed bg-transparent"
         )}
@@ -1107,7 +1122,7 @@ function Lane({
 function LaneEmpty({ lane }: { lane: Pick<LaneConfig, "emptyIcon" | "emptyTitle" | "emptyBody"> }) {
   const Icon = lane.emptyIcon
   return (
-    <div className="m-auto hidden justify-items-center gap-1 px-3 py-6 text-center md:grid">
+    <div className="m-auto hidden justify-items-center gap-1 px-3 py-6 text-center lg:grid">
       <Icon className="mb-0.5 size-4 text-ink-3" aria-hidden />
       <p className="font-ui text-[12px] font-bold text-tk-onyx">{lane.emptyTitle}</p>
       <p className="max-w-[30ch] text-[11px] leading-relaxed text-ink-3">{lane.emptyBody}</p>
@@ -1268,7 +1283,7 @@ function AdminLane({
   const headingId = useId()
   const hidden = Math.max(total - items.length, 0)
   return (
-    <section aria-labelledby={headingId} className="grid min-w-0 shrink-0 grid-rows-[auto_auto] gap-2 md:min-h-0 md:grid-rows-[auto_minmax(0,1fr)]">
+    <section aria-labelledby={headingId} className="grid min-w-0 shrink-0 grid-rows-[auto_auto] gap-2 lg:min-h-0 lg:grid-rows-[auto_minmax(0,1fr)]">
       <div className="flex min-w-0 items-center gap-2 px-0.5">
         <span aria-hidden className={cn("size-[7px] shrink-0 rounded-full", TONE_DOT[lane.tone])} />
         <h3 id={headingId} className="truncate font-ui text-[12px] font-extrabold tracking-tight text-tk-onyx">
@@ -1280,8 +1295,8 @@ function AdminLane({
       </div>
       <div
         className={cn(
-          "flex min-w-0 flex-col gap-2 rounded-[14px] border p-2 md:min-h-[132px] md:overflow-y-auto [&>*]:min-w-0",
-          items.length === 0 && "hidden md:flex",
+          "flex min-w-0 flex-col gap-2 rounded-[14px] border p-2 lg:min-h-[132px] lg:overflow-y-auto [&>*]:min-w-0",
+          items.length === 0 && "hidden lg:flex",
           TONE_WELL[lane.tone]
         )}
       >
@@ -1627,7 +1642,7 @@ function Drawer({
       aria-label="Details"
       className={cn(
         "fixed inset-0 z-10 grid grid-rows-[auto_minmax(0,1fr)_auto] bg-card",
-        "md:relative md:inset-auto md:border-l md:border-line"
+        "lg:relative lg:inset-auto lg:border-l lg:border-line"
       )}
     >
       {selection.kind === "waiting" ? (
