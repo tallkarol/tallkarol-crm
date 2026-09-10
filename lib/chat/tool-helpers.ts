@@ -23,6 +23,13 @@ export type ToolSpec = {
   name: string
   description: string
   mutating: boolean
+  /**
+   * Who performs an approved write. Default `crm`: `run()` executes here,
+   * under Karol's user. `worker`: the row parks at `approved` and the Mac
+   * claims it through /api/chat/pack-writes — for writes whose target lives
+   * on the Mac (pack files). `run()` is never called for those.
+   */
+  executor?: "crm" | "worker"
   parameters: Record<string, unknown>
   preview?: (args: Record<string, unknown>, ctx: ToolContext) => Promise<ToolPreview>
   run: (args: Record<string, unknown>, ctx: ToolContext) => Promise<unknown>

@@ -4,6 +4,7 @@ import { clients, projects } from "@/db/schema"
 import { BOARD_TOOLS } from "@/lib/chat/tools-board"
 import { INBOX_TOOLS } from "@/lib/chat/tools-inbox"
 import { INSPIRATION_TOOLS } from "@/lib/chat/tools-inspiration"
+import { PACK_TOOLS } from "@/lib/chat/tools-packs"
 import {
   hoursLabel,
   ISO_DAY,
@@ -324,6 +325,7 @@ export const TOOLS: readonly ToolSpec[] = [
   ...INBOX_TOOLS,
   ...BOARD_TOOLS,
   ...INSPIRATION_TOOLS,
+  ...PACK_TOOLS,
   logTime,
   createTask,
   refreshInsights,

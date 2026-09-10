@@ -149,6 +149,7 @@ never writes SQL and cannot reach anything not on this list.
 | `dismiss_leftoff` | `dismissNote` | **yes** |
 | `complete_task` | `completeTask` | **yes** |
 | `reschedule_task` | direct `tasks` update | **yes** |
+| `propose_pack_line` | `pack-lines.ts`, written by the **worker** on the Mac | **yes** |
 | `log_time` | `logAgentTime` (`lib/punches.ts`) | **yes** |
 | `create_task` | `resolveTaskTarget` + `insertTaskRow` | **yes** |
 | `refresh_insights` | `refreshInsightsAction` | **yes** |
@@ -173,6 +174,41 @@ agent never sends mail.
 The preview is built by the same tool that performs the write, from the same
 arguments, so the card cannot describe one time entry and file another.
 
+**One exception, stated precisely.** A write whose target lives on the Mac —
+a line in a pack file — cannot run in the CRM, because the CRM has no pack
+files; and it cannot run before approval, because nothing does. So a tool
+may declare `executor: "worker"`: it previews here like any other, parks at
+`pending`, and on Confirm moves to `approved` instead of running. The worker
+claims it through `POST /api/chat/pack-writes` (compare-and-swap, the queue's
+idiom), renders the identical row with the same pure functions
+(`lib/chat/pack-lines.ts`), appends it to `relationship.md`, `decisions.md`
+or `journal/YYYY-MM-DD.md`, commits that one file — never `add -A`, never a
+push — and reports `{file, commit}` or `{error}` to
+`POST /api/chat/pack-writes/[id]`. The rule holds in both directions: CRM
+tables are written by the CRM under Karol's user; pack files are written by
+the Mac after Karol approved; the worker still holds no database credential.
+The target pack is the thread's, read from `chat_threads` when the line is
+proposed — a desk cannot aim a line at another pack, and only the rows the
+persona contracts name are reachable (the client manager's relationship
+rows, the product owner's decisions, the coach's journal). A target the desk
+may not write fails as a visible row on the card. **The card pins the desk
+and the pack** (its Desk and Pack fields); the claim hands the worker those,
+never the thread's current address — re-addressing the thread after
+approving cannot move the line to another client.
+
+On the Mac the write is honest about git: "already landed" is decided
+against `HEAD`, not the working copy, so a worker that died between the
+write and the commit leaves a line to commit, not a line to skip; a file
+that is already dirty in the packs tree is refused, never swept into the
+desk's commit; anything that fails after the write is rolled back (bytes
+restored, a file this attempt created removed, the index reset), so a
+failed card really means nothing on disk; a per-repo lock
+(`.git/crm-pack-write.lock`) keeps two workers from dropping each other's
+lines, and `HEAD` is checked for the marker after the commit. The settle
+report names its worker and is refused (409) from any other. The row
+carries `<!-- crm:<idempotency key> -->`, so a retried write finds its own
+marker and changes nothing.
+
 `chat_tool_calls.idempotencyKey` travels into the domain write — into
 `logAgentTime`'s `clientRequestId`, into the task's `refId`, into the
 Google event's `tk_ref` — so confirming twice, or a retry after a dropped
@@ -194,6 +230,8 @@ All on device-token auth (`authenticateTimeRequest`), same as `/api/time/*`.
 | `POST /api/chat/queue` | **worker.** Claims the oldest queued turn, returns thread + tools + model. |
 | `POST /api/chat/turns/[id]` | **worker.** Posts the reply, or an error (with a `detector` to escalate). |
 | `POST /api/chat/approvals/[id]` | confirm or reject a parked write. |
+| `POST /api/chat/pack-writes` | **worker.** Claims the oldest approved pack line (a claim older than five minutes with no outcome is claimable again). |
+| `POST /api/chat/pack-writes/[id]` | **worker.** Reports `{file, commit, changed}` or `{error}` for a claimed pack line. |
 | `POST /api/chat/worker` | **worker.** Heartbeat only. Separate from `queue` so a busy worker can say it is alive without claiming more work. |
 
 The browser does not use these — `lib/chat/actions.ts` holds server actions that

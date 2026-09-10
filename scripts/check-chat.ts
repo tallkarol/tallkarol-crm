@@ -7,6 +7,7 @@ import {
   laddersAreSound,
   type ModelKey,
 } from "@/lib/chat/models"
+import { allowed, insertLine, renderLine } from "@/lib/chat/pack-lines"
 import { BRIEF_PREFIX, TITLE_MAX, solveBranch, taskBrief } from "@/lib/chat/task-brief"
 
 /**
@@ -114,6 +115,121 @@ if (solveBranch("0b8f3c1e-5d2a-4f61-9c0e-7a3b2d1e0f9a") !== "solve/0b8f3c1e") {
   fail("solveBranch is not solve/<first 8 of the task id>")
 }
 console.log("✓ task brief fits the title cut and says only what the task has")
+
+/* 6. A pack line lands where the template says, once, and nowhere the desk
+      may not write. The fixtures are the packs repo's own templates. */
+const REL = [
+  "# Zemvelo — relationship",
+  "",
+  "## PRIORITIES",
+  "",
+  "| Since | Priority | Source |",
+  "|---|---|---|",
+  "| | | |",
+  "",
+  "## PEOPLE",
+  "",
+  "| Name | Role | How they work with Karol |",
+  "|---|---|---|",
+  "| | | |",
+  "",
+  "## PROMISES",
+  "",
+  "What Karol said he would do.",
+  "",
+  "| Date | Promise | Due | Status | Source |",
+  "|---|---|---|---|---|",
+  "| | | | | |",
+  "",
+  "## HISTORY",
+  "",
+  "Dated lines: meetings, decisions, turning points. One line each.",
+  "",
+  "- YYYY-MM-DD —",
+  "",
+  "## PREFERENCES",
+  "",
+  "How they like to be communicated with.",
+  "",
+  "## OPEN",
+  "",
+  "What is unresolved between us, one line each, dated.",
+  "",
+].join("\n")
+const DEC = [
+  "# Momentum — decisions",
+  "",
+  "Newest first.",
+  "",
+  "| Date | Decision | Why | Rules out | Source |",
+  "|---|---|---|---|---|",
+  "| | | | | |",
+  "",
+].join("\n")
+const META = { date: "2026-09-10", source: "chat:17bf15c4", marker: "<!-- crm:k1 -->" }
+
+const promise = renderLine("promise", { promise: "send the proposal", due: "2026-09-12" }, META)
+const withPromise = insertLine(REL, promise, META.marker)
+const promisesBlock = withPromise.text.split("## PROMISES")[1].split("## HISTORY")[0]
+if (!withPromise.changed || !promisesBlock.includes("| 2026-09-10 | send the proposal | 2026-09-12 | open | chat:17bf15c4 <!-- crm:k1 --> |")) {
+  fail("a promise row did not land in the PROMISES table")
+}
+if (promisesBlock.includes("| | | | | |")) fail("the PROMISES placeholder row survived the first real row")
+if (!withPromise.text.split("## PEOPLE")[1].split("## PROMISES")[0].includes("| | | |")) {
+  fail("landing a promise touched the PEOPLE placeholder")
+}
+const again = insertLine(withPromise.text, promise, META.marker)
+if (again.changed || again.text !== withPromise.text) fail("a second insert with the same marker was not a no-op")
+
+const d1 = renderLine("decision", { decision: "free tier stays", why: "acquisition" }, { ...META, marker: "<!-- crm:d1 -->" })
+const d2 = renderLine("decision", { decision: "no annual plan yet", why: "churn unknown", rulesOut: "annual pricing" }, { ...META, marker: "<!-- crm:d2 -->" })
+const decided = insertLine(insertLine(DEC, d1, "<!-- crm:d1 -->").text, d2, "<!-- crm:d2 -->").text
+const rows = decided.split("\n").filter((l) => l.startsWith("| 2026"))
+if (rows.length !== 2 || !rows[0].includes("no annual plan yet") || !rows[1].includes("free tier stays")) {
+  fail("decisions do not land newest-first under the separator")
+}
+if (decided.includes("| | | | | |")) fail("the decisions placeholder row survived")
+
+const history = renderLine("history", { line: "kickoff call, they want the launch before the trade show" }, { ...META, marker: "<!-- crm:h1 -->" })
+const withHistory = insertLine(withPromise.text, history, "<!-- crm:h1 -->").text
+const historyBlock = withHistory.split("## HISTORY")[1].split("## PREFERENCES")[0]
+if (!historyBlock.includes("- 2026-09-10 — kickoff call, they want the launch before the trade show <!-- crm:h1 -->")) {
+  fail("a history line did not land under HISTORY")
+}
+if (historyBlock.includes("YYYY-MM-DD —")) fail("the HISTORY placeholder survived")
+if (!/<!-- crm:h1 -->\n\n## PREFERENCES/.test(withHistory)) fail("the blank line before the next heading was lost")
+
+const open = renderLine("open", { line: "who owns the DNS" }, { ...META, marker: "<!-- crm:o1 -->" })
+const withOpen = insertLine(withHistory, open, "<!-- crm:o1 -->").text
+if (!/one line each, dated\.\n\n- 2026-09-10 — who owns the DNS <!-- crm:o1 -->\n$/.test(withOpen)) {
+  fail("an OPEN line under prose did not keep one blank line before the list")
+}
+
+const journal = renderLine("journal", { line: "wants to run three mornings a week" }, META)
+const fresh = insertLine("", journal, META.marker).text
+if (fresh !== "# 2026-09-10\n\n- wants to run three mornings a week <!-- crm:k1 -->\n") fail("a first journal line did not create the day's file")
+const second = insertLine(fresh, renderLine("journal", { line: "second" }, { ...META, marker: "<!-- crm:k2 -->" }), "<!-- crm:k2 -->").text
+if (!second.endsWith("- second <!-- crm:k2 -->\n") || !second.startsWith("# 2026-09-10")) fail("a second journal line did not append")
+if (journal.file !== "journal/2026-09-10.md") fail(`journal file is ${journal.file}`)
+
+let threw = false
+try {
+  insertLine("# nothing here\n", promise, META.marker)
+} catch {
+  threw = true
+}
+if (!threw) fail("a missing section was guessed instead of refused")
+
+if (!allowed("coach", "me", "journal")) fail("coach may not journal in me")
+if (allowed("coach", "clients/zemvelo", "journal")) fail("coach could write a client pack")
+if (allowed("client-manager", "clients/zemvelo", "decision")) fail("client manager could write a decision")
+if (!allowed("client-manager", "clients/zemvelo", "promise")) fail("client manager may not promise")
+if (!allowed("product-owner", "products/momentum", "decision")) fail("product owner may not decide")
+if (allowed("pm", "clients/zemvelo", "history")) fail("pm can write a pack line in v1")
+if (renderLine("person", { name: "Ola | ops", role: "ops" }, META).markdown.split(/(?<!\\)\|/).length !== 5) {
+  fail("a pipe in a cell broke the table")
+}
+console.log("✓ pack lines land under the right heading, once, and only for the desk that owns them")
 
 /* Report the economics so a change to the table is legible in the diff. */
 console.log("\nLadder economics (CursorBench 3.2 dollars per task)\n")

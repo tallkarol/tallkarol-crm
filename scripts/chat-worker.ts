@@ -1,9 +1,29 @@
 import { spawnSync } from "node:child_process"
-import { existsSync, mkdirSync, readFileSync, readdirSync, symlinkSync } from "node:fs"
+import {
+  closeSync,
+  existsSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  symlinkSync,
+  unlinkSync,
+  writeFileSync,
+  writeSync,
+} from "node:fs"
 import { homedir } from "node:os"
 import { basename, dirname, join, resolve } from "node:path"
 import { Agent, CursorAgentError } from "@cursor/sdk"
 import type { SDKCustomTool, SDKJsonValue, ToolName } from "@cursor/sdk"
+import {
+  PACK_LINE_TARGETS,
+  allowed,
+  insertLine,
+  marker,
+  renderLine,
+  type PackLineTarget,
+} from "@/lib/chat/pack-lines"
 import { BRIEF_PREFIX } from "@/lib/chat/task-brief"
 import { loadLocalEnv } from "@/lib/load-env"
 
@@ -617,13 +637,15 @@ function stripFrontmatter(text: string): string {
 }
 
 /**
- * The pack a desk pinned, as prompt sections. A client pack is CLIENT.md,
- * claims.md and the client manager's relationship.md when it exists; a
- * product pack is PRODUCT.md, decisions.md and claims.md; `me` is ME.md and
- * the newest journal entries. A ref the disk does not have becomes a line
- * telling the persona so — it asks, rather than inventing a client.
+ * The pack a desk pinned, as prompt sections. A client pack is CLIENT.md
+ * and claims.md — plus the client manager's relationship.md, which only the
+ * client manager and the pm read (bosses read down, the SCHEMA's readers);
+ * a product pack is PRODUCT.md and claims.md, plus decisions.md for the
+ * product owner and the pm; `me` is ME.md and the newest journal entries.
+ * A ref the disk does not have becomes a line telling the persona so — it
+ * asks, rather than inventing a client.
  */
-function packSections(ref: string | null): { title: string; text: string }[] {
+function packSections(ref: string | null, persona: string): { title: string; text: string }[] {
   if (!ref) {
     return [
       {
@@ -658,7 +680,11 @@ function packSections(ref: string | null): { title: string; text: string }[] {
   const main = kind === "products" ? "PRODUCT.md" : "CLIENT.md"
   const body = readIf(join(dir, main))
   if (!body) return missing(join(dir, main))
-  const extras = kind === "products" ? ["decisions.md", "claims.md"] : ["claims.md", "relationship.md"]
+  const boss = persona === "pm"
+  const extras =
+    kind === "products"
+      ? ["claims.md", ...(boss || persona === "product-owner" ? ["decisions.md"] : [])]
+      : ["claims.md", ...(boss || persona === "client-manager" ? ["relationship.md"] : [])]
   return [
     { title: `pack: ${ref} — ${main}`, text: body },
     ...extras
@@ -683,7 +709,7 @@ function personaPrompt(claim: Claim, persona: PersonaContext): string {
     { title: "memory", text: readIf(join(dir, "memory.md")) },
     { title: "open questions", text: readIf(join(dir, "questions.md")) },
     { title: "examples", text: readIf(join(dir, "examples.md")) },
-    ...packSections(persona.pack),
+    ...packSections(persona.pack, persona.name),
   ]
   return [
     `You are ${persona.label}, one of Karol's desk personas, answering in the Tall Karol CRM chat. The files below define who you are and what he expects; they bind you.`,
@@ -697,6 +723,188 @@ function personaPrompt(claim: Claim, persona: PersonaContext): string {
     "",
     transcript(claim),
   ].join("\n")
+}
+
+/* ---------- landing an approved pack line ---------- */
+
+/** What /api/chat/pack-writes hands over. */
+type PackWrite = {
+  id: string
+  threadId: string
+  agent: string
+  pack: string
+  args: Record<string, unknown>
+  idempotencyKey: string
+  preview: { fields?: { label: string; value: string }[] } | null
+}
+
+/** Where a pack ref lives on this Mac: the repo to commit in, the pack dir, the path inside the repo. */
+function packPlace(ref: string): { repo: string; dir: string; rel: string } | null {
+  if (ref === "me") return { repo: ME_DIR, dir: ME_DIR, rel: "" }
+  const [kind, slug] = ref.split("/")
+  if ((kind !== "clients" && kind !== "products") || !slug) return null
+  return { repo: PACKS_DIR, dir: join(PACKS_DIR, kind, slug), rel: `${kind}/${slug}` }
+}
+
+/** A client pack's relationship.md starts from the template the first time a row lands. */
+function scaffoldRelationship(dir: string): void {
+  const target = join(dir, "relationship.md")
+  if (existsSync(target)) return
+  const template = readIf(join(PACKS_DIR, "_template", "relationship.md"))
+  if (!template) throw new Error(`No _template/relationship.md under ${PACKS_DIR} to scaffold from.`)
+  const front = readIf(join(dir, "CLIENT.md"))
+  const name = /^name:\s*(.+)$/m.exec(front)?.[1]?.trim() || basename(dir)
+  writeFileSync(target, template.replace(/<name>/g, name))
+}
+
+/**
+ * One writer per repo at a time. Two workers landing lines in the same file
+ * would each read the same bytes and the second would drop the first; the
+ * row's compare-and-swap protects the table, this protects the file. A lock
+ * older than a minute belongs to a dead worker and is taken over.
+ */
+async function withRepoLock<T>(repo: string, fn: () => Promise<T>): Promise<T> {
+  const lock = join(repo, ".git", "crm-pack-write.lock")
+  for (let attempt = 0; attempt < 40; attempt++) {
+    let fd: number | null = null
+    try {
+      fd = openSync(lock, "wx")
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err
+      try {
+        if (Date.now() - statSync(lock).mtimeMs > 60_000) {
+          unlinkSync(lock)
+          continue
+        }
+      } catch {
+        continue
+      }
+      await new Promise((r) => setTimeout(r, 250))
+      continue
+    }
+    try {
+      writeSync(fd, String(process.pid))
+      closeSync(fd)
+      return await fn()
+    } finally {
+      try {
+        unlinkSync(lock)
+      } catch {
+        // Already gone — a stale-lock takeover by another worker; nothing to do.
+      }
+    }
+  }
+  throw new Error(`${repo} is locked by another pack write (.git/crm-pack-write.lock).`)
+}
+
+/**
+ * The write the card previewed, done here because the packs live here. The
+ * row is rendered from the same arguments with the same functions the CRM
+ * used, dated by the card, landed in the desk and pack THE CARD PINNED — the
+ * thread may have been re-addressed since — and marked with the idempotency
+ * key. "Already landed" is decided against HEAD, not the working copy: a
+ * crash between the write and the commit leaves a line to commit, not a
+ * line to skip. Anything that fails after the write is rolled back — the
+ * bytes restored, a file this attempt created removed, the index reset — so
+ * a failed card really means nothing on disk. One file is added and
+ * committed; the packs tree may carry someone else's edits, so a file that
+ * is already dirty is refused, never swept into the desk's commit, and
+ * nothing is ever pushed.
+ */
+async function landPackLine(w: PackWrite): Promise<void> {
+  const label = w.id.slice(0, 8)
+  const report = (body: Record<string, unknown>) =>
+    crm(`/api/chat/pack-writes/${w.id}`, { worker: NAME, ...body }).catch((err) =>
+      console.error(`[write ${label}] report failed: ${err instanceof Error ? err.message : String(err)}`)
+    )
+  try {
+    const target = String(w.args.target ?? "").trim() as PackLineTarget
+    if (!PACK_LINE_TARGETS.includes(target)) throw new Error(`Unknown target "${target}".`)
+    if (!w.agent || !w.pack) throw new Error("The card did not pin a desk and a pack; refusing to guess one.")
+    if (!allowed(w.agent, w.pack, target)) {
+      throw new Error(`${w.agent} may not write ${target} to ${w.pack}.`)
+    }
+    const place = packPlace(w.pack)
+    if (!place || !existsSync(place.dir)) throw new Error(`Pack ${w.pack} is not on this Mac (${place?.dir ?? "no path"}).`)
+    if (!existsSync(join(place.repo, ".git"))) throw new Error(`${place.repo} is not a git repository.`)
+
+    const date =
+      w.preview?.fields?.find((f) => f.label === "Date")?.value ??
+      new Date().toISOString().slice(0, 10)
+    const mark = marker(w.idempotencyKey)
+    const line = renderLine(target, w.args, { date, source: `chat:${w.threadId.slice(0, 8)}`, marker: mark })
+    const rel = place.rel ? `${place.rel}/${line.file}` : line.file
+    console.log(`[write ${label}] claimed ${w.pack} ${target} → ${rel}`)
+
+    const outcome = await withRepoLock(place.repo, async () => {
+      const inHead = git(["show", `HEAD:${rel}`], place.repo)
+      if (inHead.ok && inHead.out.includes(mark)) {
+        const hash = git(["log", "-1", "--format=%h", `-S${mark}`, "--", rel], place.repo).out
+        return { file: rel, commit: hash, changed: false }
+      }
+
+      const path = join(place.dir, line.file)
+      const existed = existsSync(path)
+      const raw = existed ? readFileSync(path, "utf8") : null
+      const tracked = git(["ls-files", "--error-unmatch", "--", rel], place.repo).ok
+      // A crashed attempt wrote the line and died before committing: commit it, do not insert twice.
+      const resume = raw !== null && raw.includes(mark)
+      if (!resume) {
+        if (tracked && !git(["diff", "--quiet", "HEAD", "--", rel], place.repo).ok) {
+          throw new Error(`${rel} has uncommitted changes in ${place.repo}; commit or stash them first.`)
+        }
+        if (!tracked && existed) {
+          throw new Error(`${rel} exists but is not tracked in ${place.repo}; add or remove it first.`)
+        }
+      }
+
+      let wrote = false
+      try {
+        if (!resume) {
+          if (line.file === "relationship.md" && !existed) scaffoldRelationship(place.dir)
+          mkdirSync(dirname(path), { recursive: true })
+          const before = existsSync(path) ? readFileSync(path, "utf8") : ""
+          const { text } = insertLine(before, line, mark)
+          writeFileSync(path, text.endsWith("\n") ? text : `${text}\n`)
+          wrote = true
+        }
+        const added = git(["add", "--", rel], place.repo)
+        if (!added.ok) throw new Error(`git add ${rel}: ${added.err || added.out}`)
+        const subject = `${w.agent}: ${line.file} — ${line.markdown.replace(mark, "").replace(/\s+/g, " ").trim().slice(0, 60)}`
+        const committed = git(["commit", "-q", "-m", subject, "--", rel], place.repo)
+        if (!committed.ok) throw new Error(`git commit: ${committed.err || committed.out}`)
+        const check = git(["show", `HEAD:${rel}`], place.repo)
+        if (!check.ok || !check.out.includes(mark)) {
+          throw new Error(`committed ${rel} but HEAD does not carry the line — another writer changed the file.`)
+        }
+        return { file: rel, commit: git(["rev-parse", "--short", "HEAD"], place.repo).out, changed: true }
+      } catch (err) {
+        if (wrote) {
+          git(["reset", "-q", "--", rel], place.repo)
+          if (existed && raw !== null) writeFileSync(path, raw)
+          else {
+            try {
+              unlinkSync(path)
+            } catch {
+              // Never written — nothing to remove.
+            }
+          }
+        }
+        throw err
+      }
+    })
+
+    console.log(
+      outcome.changed
+        ? `[write ${label}] landed ${rel} @ ${outcome.commit}`
+        : `[write ${label}] already in HEAD ${rel} @ ${outcome.commit || "?"}`
+    )
+    await report(outcome)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error(`[write ${label}] failed: ${message}`)
+    await report({ error: message })
+  }
 }
 
 function buildPrompt(claim: Claim): string {
@@ -928,6 +1136,15 @@ async function loop() {
   startHeartbeat()
   for (;;) {
     try {
+      // Approved pack lines first, drained: a write takes under a second, a
+      // turn takes a minute, and the next turn's prompt reads the pack from
+      // disk — so the line Karol just approved must be there before the
+      // reply he sends right after.
+      const pending = (await crm("/api/chat/pack-writes", { worker: NAME })) as { write: PackWrite | null }
+      if (pending.write) {
+        await landPackLine(pending.write)
+        continue
+      }
       const claim = (await crm("/api/chat/queue", { worker: NAME })) as Claim
       if (claim.turn) {
         await runTurn(claim)

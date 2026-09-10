@@ -25,6 +25,7 @@ const VERB: Record<string, string> = {
   dismiss_leftoff: "Dismiss it",
   complete_task: "Complete the task",
   reschedule_task: "Reschedule it",
+  propose_pack_line: "Write it to the pack",
 }
 
 const TAG: Record<ChatToolCall["status"], { label: string; className: string }> = {
@@ -147,24 +148,51 @@ export function ApprovalCard({ call }: { call: ChatToolCall }) {
         </div>
       ) : (
         <div className="flex items-center gap-2 border-t border-line px-3.5 py-2.5 font-ui text-xs font-medium text-ink-2">
-          {call.status === "ran" ? (
+          {call.status === "ran" || call.status === "approved" ? (
             <Check className="size-3.5 text-good" aria-hidden />
           ) : (
             <X className="size-3.5 text-ink-3" aria-hidden />
           )}
           <span>
             {call.status === "ran"
-              ? `Done${call.decidedAt ? ` · ${timeLabel(call.decidedAt)}` : ""}`
-              : call.status === "rejected"
-                ? "Discarded. Nothing was written."
-                : call.status === "failed"
-                  ? "The write failed. Nothing landed."
-                  : tag.label}
+              ? landedLabel(call)
+              : call.status === "approved"
+                ? approvedLabel(call)
+                : call.status === "rejected"
+                  ? "Discarded. Nothing was written."
+                  : call.status === "failed"
+                    ? "The write failed. Nothing landed."
+                    : tag.label}
           </span>
         </div>
       )}
     </Card>
   )
+}
+
+/** An approved pack line is either waiting for a Mac or held by one — say which, so a hung claim is visible. */
+function approvedLabel(call: ChatToolCall): string {
+  const claim =
+    call.result && typeof call.result === "object"
+      ? (call.result as { claimedBy?: string; claimedAt?: string })
+      : null
+  if (claim?.claimedBy) {
+    return `Claimed by ${claim.claimedBy}${claim.claimedAt ? ` · ${timeLabel(new Date(claim.claimedAt))}` : ""} — writing it`
+  }
+  return "Approved — waiting for the Mac to write it"
+}
+
+/** A pack line reports the file and the commit it landed in; every other write just says done. */
+function landedLabel(call: ChatToolCall): string {
+  const landed =
+    call.result && typeof call.result === "object"
+      ? (call.result as { file?: string; commit?: string; changed?: boolean })
+      : null
+  if (landed?.file) {
+    if (landed.changed === false) return `Already in ${landed.file}`
+    return `Landed in ${landed.file}${landed.commit ? ` · ${landed.commit}` : ""}`
+  }
+  return `Done${call.decidedAt ? ` · ${timeLabel(call.decidedAt)}` : ""}`
 }
 
 function FieldRow({ label, value }: { label: string; value: string }) {

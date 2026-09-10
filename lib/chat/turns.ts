@@ -359,7 +359,19 @@ export async function invokeTool(input: {
       threadId: turn.threadId,
       idempotencyKey: row.idempotencyKey,
     }
-    const preview = spec.preview ? await spec.preview(input.args, ctx) : null
+    // A preview that refuses — wrong target, no pack, a missing cell — is a
+    // failed row the model can read and correct, not a 500 in the worker.
+    let preview = null
+    try {
+      preview = spec.preview ? await spec.preview(input.args, ctx) : null
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      await db
+        .update(chatToolCalls)
+        .set({ status: "failed", error: message.slice(0, 2000) })
+        .where(eq(chatToolCalls.id, row.id))
+      return { status: "failed", error: message }
+    }
     await db
       .update(chatToolCalls)
       .set({ preview })
@@ -536,6 +548,21 @@ export async function decideToolCall(input: {
 
   const spec = toolByName(call.name)
   if (!spec) return { ok: false, error: `No tool named ${call.name}.` }
+
+  /**
+   * A write whose target lives on the Mac parks at `approved` and waits for
+   * the worker to claim it (/api/chat/pack-writes). `run()` never executes
+   * here — the CRM has no pack files to write, and the worker has no
+   * database to write; each side does the half it holds.
+   */
+  if (spec.executor === "worker") {
+    const [approved] = await db
+      .update(chatToolCalls)
+      .set({ status: "approved", decidedAt: new Date() })
+      .where(eq(chatToolCalls.id, call.id))
+      .returning()
+    return { ok: true, call: approved, result: null }
+  }
 
   const ctx: ToolContext = {
     userId: input.userId,

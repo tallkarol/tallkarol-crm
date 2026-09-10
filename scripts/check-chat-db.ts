@@ -324,6 +324,32 @@ async function main() {
   )
   check("a desk runs on the persona ladder", coach.turn.jobType === "persona", coach.turn.jobType)
   check("the address is not the title", addressed?.title === "how am I doing this week", addressed?.title)
+
+  /* --- a pack line parks for the Mac; it is rejected here, never approved --- */
+  const journal = await invokeTool({
+    userId: admin.id,
+    turnId: coach.turn.id,
+    name: "propose_pack_line",
+    args: { target: "journal", line: "smoke test — delete me" },
+  })
+  check("propose_pack_line parks as pending", journal.status === "pending", JSON.stringify(journal).slice(0, 160))
+  check(
+    "the card names the journal file and the row",
+    journal.status === "pending" &&
+      JSON.stringify(journal.preview).includes("journal/") &&
+      JSON.stringify(journal.preview).includes("smoke test — delete me")
+  )
+  const wrong = await invokeTool({
+    userId: admin.id,
+    turnId: coach.turn.id,
+    name: "propose_pack_line",
+    args: { target: "decision", decision: "x", why: "y" },
+  })
+  check("a target the desk may not write fails visibly", wrong.status === "failed", JSON.stringify(wrong).slice(0, 160))
+  const coachDetail = await threadDetail(admin.id, coach.threadId)
+  const parked = (coachDetail?.calls ?? []).find((c) => c.status === "pending")
+  const settled = parked ? await decideToolCall({ userId: admin.id, callId: parked.id, approve: false }) : null
+  check("rejected before the Mac could land it", settled?.ok === true && settled.call.status === "rejected")
   const handed = await send({
     userId: admin.id,
     threadId: coach.threadId,
