@@ -10,6 +10,7 @@ import {
   escalate,
   failTurn,
   invokeTool,
+  latestThreadFor,
   send,
   threadDetail,
 } from "@/lib/chat/turns"
@@ -439,6 +440,30 @@ async function main() {
     `${unpinned?.agent} "${unpinned?.pack}"`
   )
   check("the product owner runs on judgment", po.turn.jobType === "judgment", po.turn.jobType)
+  /* --- the dock addresses a desk without the grammar, and continues its latest thread --- */
+  const docked = await send({
+    userId: admin.id,
+    text: "what's due before the call?",
+    desk: { agent: "client-manager", pack: `clients/${slug}` },
+  })
+  await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, docked.threadId))
+  const dockedThread = await db.query.chatThreads.findFirst({ where: eq(chatThreads.id, docked.threadId) })
+  check(
+    "the dock's send pins desk, pack and client",
+    dockedThread?.agent === "client-manager" && dockedThread.pack === `clients/${slug}` && dockedThread.clientId === (client?.id ?? null) && dockedThread.title === "what's due before the call?",
+    `${dockedThread?.agent} ${dockedThread?.pack}`
+  )
+  const latest = await latestThreadFor(admin.id, "client-manager", `clients/${slug}`)
+  check("latestThreadFor finds the dock's thread", latest?.id === docked.threadId)
+  let wrongKind = false
+  try {
+    await send({ userId: admin.id, threadId: docked.threadId, text: "x", desk: { agent: "product-owner", pack: `clients/${slug}` } })
+  } catch {
+    wrongKind = true
+  }
+  check("a desk cannot be pinned to a pack of the wrong kind", wrongKind)
+  await db.delete(chatThreads).where(eq(chatThreads.id, docked.threadId))
+
   const cmd2 = await send({ userId: admin.id, threadId: coach.threadId, text: "/clock status" })
   await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, coach.threadId))
   check("a /command still wins inside a desk thread", cmd2.turn.jobType === "skill", cmd2.turn.jobType)

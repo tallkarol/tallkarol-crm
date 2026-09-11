@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { getSessionUser } from "@/lib/auth"
 import { HIDE_MONEY_COOKIE } from "@/lib/money-privacy"
+import { setDockSettings } from "@/lib/chat/dock-settings"
 import { setGoals } from "@/lib/goals"
 import { ROUTES } from "@/lib/nav"
 import { isTheme, THEME_COOKIE } from "@/lib/theme"
@@ -12,6 +13,13 @@ function parseDollars(raw: FormDataEntryValue | null): number | null {
   const n = Number(String(raw ?? "").replace(/[$,]/g, "").trim())
   if (!Number.isFinite(n) || n <= 0) return null
   return Math.round(n * 100)
+}
+
+/** How the desk dock opens a desk: continue its latest thread, or start new. */
+export async function saveDock(formData: FormData) {
+  const open = formData.get("open") === "new" ? "new" : "continue"
+  await setDockSettings({ open })
+  revalidatePath(ROUTES.settings)
 }
 
 export async function saveGoals(formData: FormData) {

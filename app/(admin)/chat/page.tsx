@@ -13,6 +13,7 @@ import { getSessionUser } from "@/lib/auth"
 import { budgetState } from "@/lib/chat/budget"
 import { CHAT_ZONE, modelChain } from "@/lib/chat/format"
 import { PERSONAS, describePack } from "@/lib/chat/personas"
+import { messageViews, pendingView } from "@/lib/chat/views"
 import {
   listArchivedThreads,
   listThreads,
@@ -64,40 +65,8 @@ export default async function ChatPage({
    * one question and several attempts. The assistant message that closed a
    * chain carries it too, so the ladder reads as a footnote under the reply.
    */
-  const messages: ChatMessageView[] = (detail?.messages ?? []).map((message) => {
-    const produced = message.turnId ? turns.find((t) => t.id === message.turnId) : null
-    const chain =
-      message.role === "user"
-        ? turns.filter((t) => t.messageId === message.id)
-        : produced
-          ? turns.filter((t) => t.messageId === produced.messageId)
-          : []
-    return {
-      id: message.id,
-      role: message.role,
-      agent: message.agent,
-      body: message.body,
-      createdAt: message.createdAt.toISOString(),
-      turnId: message.turnId,
-      chain,
-      calls: message.turnId ? calls.filter((c) => c.turnId === message.turnId) : [],
-      feedback: (detail?.feedback ?? [])
-        .filter((f) => f.messageId === message.id)
-        .map((f) => ({ kind: f.kind as "down" | "example" | "note", note: f.note })),
-    }
-  })
-
-  const inFlight = turns.find(
-    (t) => t.status === "queued" || t.status === "claimed" || t.status === "running"
-  )
-  const pending: PendingView | null = inFlight
-    ? {
-        model: inFlight.model,
-        claimedBy: inFlight.claimedBy,
-        since: (inFlight.startedAt ?? inFlight.claimedAt ?? inFlight.createdAt).toISOString(),
-        status: inFlight.status as PendingView["status"],
-      }
-    : null
+  const messages: ChatMessageView[] = detail ? messageViews(detail) : []
+  const pending: PendingView | null = detail ? pendingView(detail) : null
 
   const stats: ThreadStats = {
     turns: turns.length,

@@ -425,6 +425,23 @@ pack carried when the kinds match, `from_thread_id` pointing back — and
 the desk answers there. A conversation travels with a brief; work products
 never do.
 
+### The dock
+
+The nine desks sit on the right edge of every page (`components/chat/
+DeskDock.tsx`, mounted in `AppShell`). The page decides which one is up
+front and which pack it pins — `lib/chat/desk-context.ts`: a client's page
+fronts the client manager on that client, a product's page the product
+owner, the boards the dreamer, reports and insights the marketer, codebase
+docs the developer, the dashboard the pm; the coach is never a default;
+`/chat` hides the dock. A dot on a monogram means a card is parked in that
+desk's threads. Opening a desk shows a panel: its latest thread on that
+pack or a fresh one (Settings → Desk dock; `new thread` in the panel
+forces fresh), what it remembers as *Last time* (the newest digest on that
+pack), the same rows, cards and feedback the chat page renders through
+`lib/chat/views.ts`, and a composer that is already addressed — `send()`
+takes `desk: { agent, pack }` and pins the thread without the typed
+grammar. Under 1024px the dock is a button and the panel a sheet.
+
 ### launchd keeps it up
 
 Remembering to start the worker is the whole failure: a message queued with

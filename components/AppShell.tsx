@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react"
 import { BrandMark } from "@/components/BrandMark"
+import { DeskDock } from "@/components/chat/DeskDock"
 import { SidebarNav, type NavBadge } from "@/components/SidebarNav"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { logoutAction } from "@/lib/actions"
@@ -173,24 +174,28 @@ export function AppShell({
           </button>
         </header>
 
-        <main
-          id="main"
-          className={cn(
-            "relative min-w-0 flex-1",
-            fullBleed
-              ? "flex min-h-0 flex-col overflow-hidden"
-              : "tk-main-scroll overflow-x-hidden overflow-y-auto"
-          )}
-        >
-          {/* Full-bleed canvas — pages cap their own prose/form widths. */}
-          <div
-            className={
-              fullBleed ? "flex min-h-0 flex-1 flex-col" : "w-full px-5 py-8 sm:px-8"
-            }
+        {/* The page and, on the right edge, the desk dock — a panel when a desk is open. */}
+        <div className="flex min-h-0 min-w-0 flex-1">
+          <main
+            id="main"
+            className={cn(
+              "relative min-w-0 flex-1",
+              fullBleed
+                ? "flex min-h-0 flex-col overflow-hidden"
+                : "tk-main-scroll overflow-x-hidden overflow-y-auto"
+            )}
           >
-            {children}
-          </div>
-        </main>
+            {/* Full-bleed canvas — pages cap their own prose/form widths. */}
+            <div
+              className={
+                fullBleed ? "flex min-h-0 flex-1 flex-col" : "w-full px-5 py-8 sm:px-8"
+              }
+            >
+              {children}
+            </div>
+          </main>
+          <DeskDock />
+        </div>
       </div>
 
       {menuOpen ? (

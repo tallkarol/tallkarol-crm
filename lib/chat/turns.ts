@@ -206,6 +206,12 @@ export async function send(input: {
   as?: string
   /** The thread this one was handed from (`route_to`). */
   fromThreadId?: string
+  /**
+   * Address the thread to a desk without the typed grammar — the dock's way.
+   * `pack` is `clients/<slug>`, `products/<slug>`, `me` or "" and must be a
+   * kind the desk loads; the coach always gets `me`.
+   */
+  desk?: { agent: string; pack: string }
 }): Promise<SendResult> {
   const text = input.text.trim()
   if (!text) throw new Error("Nothing to send.")
@@ -248,6 +254,38 @@ export async function send(input: {
     // A word that did not pin a pack was the start of the sentence.
     const said = resolved ? mention.rest : [mention.slug, mention.rest].filter(Boolean).join(" ")
     title = said || `${persona.label}${pack ? ` · ${pack}` : ""}`
+  } else if (input.desk) {
+    const persona = PERSONAS[input.desk.agent]
+    if (!persona) throw new Error(`No desk named "${input.desk.agent}".`)
+    const wanted = persona.pack === "me" ? "me" : input.desk.pack
+    let pack = ""
+    let clientId: string | null = null
+    if (wanted) {
+      if (packKind(wanted) !== persona.pack) throw new Error(`${persona.label} does not load ${wanted}.`)
+      const slug = wanted.split("/")[1] ?? ""
+      if (persona.pack === "client") {
+        const client = await db.query.clients.findFirst({ where: eq(clients.slug, slug), columns: { id: true } })
+        if (!client) throw new Error(`No client with slug ${slug}.`)
+        clientId = client.id
+      } else if (persona.pack === "product") {
+        const product = await db.query.products.findFirst({ where: eq(products.slug, slug), columns: { id: true } })
+        if (!product) throw new Error(`No product with slug ${slug}.`)
+      }
+      pack = wanted
+    }
+    if (thread.agent !== persona.name || thread.pack !== pack) {
+      await db
+        .update(chatThreads)
+        .set({
+          agent: persona.name,
+          pack,
+          private: persona.private ?? false,
+          ...(clientId ? { clientId } : {}),
+        })
+        .where(eq(chatThreads.id, threadId))
+      thread.agent = persona.name
+      thread.pack = pack
+    }
   }
 
   const job = jobFor(text, thread)
@@ -647,6 +685,37 @@ export async function renameThread(userId: string, threadId: string, title: stri
     .returning({ id: chatThreads.id })
   if (!row) throw new Error("Not your thread.")
   return clean
+}
+
+/** The desk's newest live thread on a pack — what the dock continues. Task threads are their own thing. */
+export async function latestThreadFor(userId: string, agent: string, pack: string) {
+  return db.query.chatThreads.findFirst({
+    where: and(
+      eq(chatThreads.userId, userId),
+      eq(chatThreads.agent, agent),
+      eq(chatThreads.pack, pack),
+      isNull(chatThreads.archivedAt),
+      isNull(chatThreads.taskId)
+    ),
+    orderBy: [desc(chatThreads.lastMessageAt)],
+  })
+}
+
+/** The desk's newest digest on a pack, archived or not — "last time" before Karol types. */
+export async function latestDigestFor(userId: string, agent: string, pack: string) {
+  const row = await db.query.chatThreads.findFirst({
+    where: and(
+      eq(chatThreads.userId, userId),
+      eq(chatThreads.agent, agent),
+      eq(chatThreads.pack, pack),
+      sql`${chatThreads.digest} <> ''`
+    ),
+    orderBy: [desc(chatThreads.lastMessageAt)],
+    columns: { id: true, title: true, lastMessageAt: true, digest: true },
+  })
+  return row
+    ? { threadId: row.id, title: row.title, at: row.lastMessageAt.toISOString(), digest: row.digest }
+    : null
 }
 
 export async function listThreads(userId: string, limit = 30) {

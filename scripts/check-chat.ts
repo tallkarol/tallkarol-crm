@@ -7,6 +7,7 @@ import {
   laddersAreSound,
   type ModelKey,
 } from "@/lib/chat/models"
+import { deskFor, monogram } from "@/lib/chat/desk-context"
 import { allowed, insertLine, renderLine } from "@/lib/chat/pack-lines"
 import { BRIEF_PREFIX, TITLE_MAX, solveBranch, taskBrief } from "@/lib/chat/task-brief"
 
@@ -230,6 +231,18 @@ if (renderLine("person", { name: "Ola | ops", role: "ops" }, META).markdown.spli
   fail("a pipe in a cell broke the table")
 }
 console.log("✓ pack lines land under the right heading, once, and only for the desk that owns them")
+
+/* 7. The dock fronts the right desk on the right page, and never the coach. */
+const front = (path: string) => JSON.stringify(deskFor(path))
+if (front("/clients/zemvelo") !== JSON.stringify({ agent: "client-manager", pack: "clients/zemvelo" })) fail("a client page does not front the client manager")
+if (front("/clients/zemvelo/codebases/site") !== JSON.stringify({ agent: "developer", pack: "clients/zemvelo" })) fail("codebase docs do not front the developer")
+if (front("/products/momentum") !== JSON.stringify({ agent: "product-owner", pack: "products/momentum" })) fail("a product page does not front the product owner")
+if (front("/inspiration") !== JSON.stringify({ agent: "dreamer", pack: "" })) fail("the boards do not front the dreamer")
+if (front("/") !== JSON.stringify({ agent: "pm", pack: "" })) fail("the dashboard does not front the pm")
+if (deskFor("/chat") !== null || deskFor("/settings") !== null) fail("the dock fronts a desk on /chat or /settings")
+if (Object.values(["/", "/clients/x", "/products/y", "/inspiration", "/reports"]).some((p) => deskFor(p)?.agent === "coach")) fail("the coach is a default somewhere")
+if (monogram("client-manager") !== "CM" || monogram("pm") !== "PM" || monogram("coach") !== "CO") fail("monograms are off")
+console.log("✓ the dock fronts the right desk per page")
 
 /* Report the economics so a change to the table is legible in the diff. */
 console.log("\nLadder economics (CursorBench 3.2 dollars per task)\n")
