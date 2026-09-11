@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server"
-import { eq } from "drizzle-orm"
+import { and, asc, desc, eq, ne } from "drizzle-orm"
 import { db } from "@/db"
 import { chatMessages, chatThreads } from "@/db/schema"
-import { asc } from "drizzle-orm"
 import { modelFor, type ModelKey } from "@/lib/chat/models"
 import { PERSONAS } from "@/lib/chat/personas"
 import { parseCommand } from "@/lib/chat/skills"
@@ -111,10 +110,33 @@ export async function POST(request: Request) {
     ? { name: desk.name, label: desk.label, pack: thread?.pack || null }
     : null
 
+  /**
+   * Continuity: the same desk's last five digested threads on the same pack,
+   * newest first, so the coach knows what Karol committed to last week and
+   * the client manager knows Tuesday's Next: on Thursday. The digests are
+   * written by the worker once a thread goes quiet (see /api/chat/digests).
+   */
+  const recent = desk
+    ? (
+        await db.query.chatThreads.findMany({
+          where: and(
+            eq(chatThreads.agent, desk.name),
+            eq(chatThreads.pack, thread?.pack ?? ""),
+            ne(chatThreads.id, turn.threadId),
+            ne(chatThreads.digest, "")
+          ),
+          orderBy: [desc(chatThreads.lastMessageAt)],
+          limit: 5,
+          columns: { id: true, title: true, lastMessageAt: true, digest: true },
+        })
+      ).map((t) => ({ id: t.id, title: t.title, at: t.lastMessageAt.toISOString().slice(0, 10), digest: t.digest }))
+    : []
+
   return NextResponse.json({
     command,
     task,
     persona,
+    recent,
     turn: {
       id: turn.id,
       threadId: turn.threadId,

@@ -438,7 +438,7 @@ async function main() {
     unpinned?.agent === "product-owner" && unpinned.pack === "",
     `${unpinned?.agent} "${unpinned?.pack}"`
   )
-  check("the product owner runs on architecture", po.turn.jobType === "architecture", po.turn.jobType)
+  check("the product owner runs on judgment", po.turn.jobType === "judgment", po.turn.jobType)
   const cmd2 = await send({ userId: admin.id, threadId: coach.threadId, text: "/clock status" })
   await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, coach.threadId))
   check("a /command still wins inside a desk thread", cmd2.turn.jobType === "skill", cmd2.turn.jobType)

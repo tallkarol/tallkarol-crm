@@ -75,10 +75,14 @@ adjacent pair and fails the build on a rung that loses money.
 | `skill` | Grok 4.6 High | — |
 | `task` | Grok 4.6 High | — |
 | `persona` | Grok 4.6 High | — |
+| `judgment` | Opus 5 High | — |
 
-A thread addressed to a desk runs on `persona`, except the coach (`writing`
-— judged on judgment about a person, not on code) and the product owner
-(`architecture`); `lib/chat/personas.ts` is the dial.
+A thread addressed to a desk runs on `persona` — pm, client manager,
+developer, marketer: frequent, tool-heavy, factual, on the allowance. The
+desks judged on getting close on the first answer run on the Other pool:
+coach, copywriter and dreamer on `writing` (Fable 5.1 High), product owner
+and designer on `judgment` (Opus 5 High). `lib/chat/personas.ts` is the
+dial.
 
 `skill` is any message that starts with a `/command` the hive mind knows
 (`lib/chat/skills.ts` reads the names from the committed scan). It is not a

@@ -187,6 +187,7 @@ export type JobType =
   | "skill"
   | "task"
   | "persona"
+  | "judgment"
 
 export type Ladder = {
   job: JobType
@@ -353,6 +354,20 @@ export const LADDERS: Record<JobType, Ladder> = {
     detector: "",
     maxEscalations: 0,
     note: "The persona's files and pack in the prompt, CRM tools only; no detector, a desk that is unsure asks.",
+  },
+  /**
+   * The desks judged on getting close on the first answer — the product
+   * owner's roadmap call, the designer's critique against tokens and floors.
+   * Opus 5 High: the family's judgment at a third of Max's price; the
+   * CursorBench ranking that dominates it is about code, and none of this is.
+   */
+  judgment: {
+    job: "judgment",
+    label: "A desk judged on judgment",
+    rungs: ["opus-5-high"],
+    detector: "",
+    maxEscalations: 0,
+    note: "Few messages, each one a call Karol acts on; a cheap first pass proves nothing here.",
   },
 }
 
