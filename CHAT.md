@@ -386,11 +386,6 @@ the turn is refused with a plain error.
 and never stored, but the replies are rows like any other, so the flag is
 what keeps them out of any shared or portal view that ever lists threads.
 
-### launchd keeps it up
-
-Remembering to start the worker is the whole failure: a message queued with
-nothing attached is answered in sixteen seconds or in twenty minutes depending
-only on whether a terminal happened to be open. So launchd owns it —
 ### What a desk remembers
 
 Three things, none of them a model remembering on its own.
@@ -426,6 +421,11 @@ pack carried when the kinds match, `from_thread_id` pointing back — and
 the desk answers there. A conversation travels with a brief; work products
 never do.
 
+### launchd keeps it up
+
+Remembering to start the worker is the whole failure: a message queued with
+nothing attached is answered in sixteen seconds or in twenty minutes depending
+only on whether a terminal happened to be open. So launchd owns it —
 `RunAtLoad` at login, `KeepAlive` if it dies.
 
 ```sh

@@ -3086,12 +3086,12 @@ export const chatThreads = pgTable(
     pack: text("pack").notNull().default(""),
     /** Never surfaces in a shared or portal view. Set for the coach's threads. */
     private: boolean("private").notNull().default(false),
-    archivedAt: timestamp("archived_at", { withTimezone: true }),
     /** A paragraph the worker wrote once the thread went quiet — what the same desk's next thread should know. */
     digest: text("digest").notNull().default(""),
     digestedAt: timestamp("digested_at", { withTimezone: true }),
     /** The thread this one was handed from (`route_to`). */
     fromThreadId: uuid("from_thread_id"),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -3102,11 +3102,10 @@ export const chatThreads = pgTable(
   (table) => ({
     byUser: index("chat_threads_user_idx").on(table.userId, table.lastMessageAt),
     byTask: index("chat_threads_task_idx").on(table.taskId),
-  })
     byDesk: index("chat_threads_desk_idx").on(table.agent, table.pack, table.lastMessageAt),
+  })
 )
 
-export const chatMessages = pgTable(
 /**
  * What Karol said about a reply: it was wrong (and why), keep it as an
  * example, or a remark. The persona's `/train` lane reads these — the
@@ -3140,6 +3139,7 @@ export const chatFeedback = pgTable(
 
 export type ChatFeedback = typeof chatFeedback.$inferSelect
 
+export const chatMessages = pgTable(
   "chat_messages",
   {
     id: uuid("id").defaultRandom().primaryKey(),
