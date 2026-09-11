@@ -6,11 +6,11 @@ type Db = PostgresJsDatabase<typeof schema>
 
 declare global {
   // eslint-disable-next-line no-var
-  var __tk_crm_db_v21: Db | undefined
+  var __tk_crm_db_v22: Db | undefined
 }
 
 export function getDb(): Db {
-  if (global.__tk_crm_db_v21) return global.__tk_crm_db_v21
+  if (global.__tk_crm_db_v22) return global.__tk_crm_db_v22
 
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {
@@ -35,9 +35,12 @@ export function getDb(): Db {
     max_lifetime: 60 * 30,
   })
   const db = drizzle(client, { schema })
-  if (process.env.NODE_ENV !== "production") {
-    global.__tk_crm_db_v21 = db
-  }
+  // Cache in EVERY environment. `db` below is a proxy that calls getDb() on
+  // each property access, so without this production opened a fresh pool per
+  // `db.query…` — none of them ever closed — until Postgres answered
+  // `too many clients already` and every page 500'd. Dev needs the global too:
+  // it is what survives HMR (bump the name when the schema changes).
+  global.__tk_crm_db_v22 = db
   return db
 }
 
