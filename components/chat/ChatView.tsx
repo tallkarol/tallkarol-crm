@@ -508,22 +508,29 @@ function Thinking({ pending }: { pending: PendingView }) {
 }
 
 /**
- * Queued, but nothing is listening.
+ * Queued, but no heartbeat.
  *
- * Without this the page shows the dots forever and the honest answer — the
- * worker on the Mac is not running — is invisible. The question is not
- * lost: it stays queued and the worker picks it up the moment it starts.
+ * Without this the page shows the dots forever and the honest answer is
+ * invisible. What the page knows is only that no beat has reached THIS
+ * database for twenty seconds — not whether a process exists on the Mac. On
+ * Sep 11, 2026 the worker ran the whole time while its CRM (the dev server it
+ * was pointed at) served a compile-error page to every route, so the copy
+ * names both causes. The question is not lost: it stays queued and is
+ * claimed the moment a beat returns.
  */
 function Stranded({ worker }: { worker: WorkerStatus }) {
   return (
     <div className="ml-8 flex max-w-[36rem] items-start gap-2.5 rounded-xl bg-warn-soft px-3 py-2.5 text-xs leading-[1.45] text-warn">
       <Unplug className="mt-0.5 size-3.5 shrink-0" aria-hidden />
       <div>
-        <p className="font-ui font-bold">No worker attached. Nothing is running this.</p>
+        <p className="font-ui font-bold">
+          No heartbeat from the worker{worker.secondsAgo != null ? ` for ${ago(worker.secondsAgo)}` : ""}.
+        </p>
         <p className="mt-1">
-          Your question is queued and answers the moment the worker is back.
-          Start it on the Mac with <code className="font-mono">npm run chat:worker</code>.
-          {worker.secondsAgo != null ? ` Last seen ${ago(worker.secondsAgo)} ago.` : ""}
+          Your question is queued and answers the moment a beat arrives. Either nothing is running on the
+          Mac — start it with <code className="font-mono">npm run chat:worker</code> — or the worker is up
+          but the CRM it talks to is not answering; its log is{" "}
+          <code className="font-mono">~/Library/Logs/tallkarol/chat-worker.log</code>.
         </p>
       </div>
     </div>
