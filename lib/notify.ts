@@ -25,6 +25,7 @@ export type NotificationKind =
   | "flag.warn"
   | "ops.monitor"
   | "punchlist.test"
+  | "meetingnotes.ready"
   | "leftoff.return"
   | "leftoff.briefing"
   | "slink.opened"
@@ -49,6 +50,7 @@ export const NOTIFICATION_KINDS: KindSpec[] = [
   { kind: "flag.warn", title: "Worth a look", summary: "The Delivery ledger raised a warning.", defaultOn: false, ignoresQuietHours: false },
   { kind: "ops.monitor", title: "Monitor raised a ticket", summary: "A client app's scheduled job missed its window.", defaultOn: true, ignoresQuietHours: true },
   { kind: "punchlist.test", title: "Test requested", summary: "A punch-list item is waiting for an agent to run its test.", defaultOn: true, ignoresQuietHours: false },
+  { kind: "meetingnotes.ready", title: "Meeting notes ready", summary: "A recording was transcribed and its notes are waiting for review.", defaultOn: true, ignoresQuietHours: false },
   // Fired locally by the Mac app when you come back after being away — the
   // CRM only carries the switch so it can be turned off with the others.
   { kind: "leftoff.return", title: "Back at the desk", summary: "What was parked while you were away.", defaultOn: true, ignoresQuietHours: false },

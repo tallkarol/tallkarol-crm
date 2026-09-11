@@ -20,6 +20,7 @@ import {
   pgEnum,
 } from "drizzle-orm/pg-core"
 import type { ContractTerms } from "@/lib/contract"
+import type { MeetingAnalysis, MeetingLevels, TranscriptSegment } from "@/lib/meeting-note"
 
 export const userRoleEnum = pgEnum("user_role", ["admin", "customer"])
 export const inquiryStatusEnum = pgEnum("inquiry_status", [
@@ -3486,3 +3487,160 @@ export const inspirationPinsRelations = relations(
 
 export type InspirationBoard = typeof inspirationBoards.$inferSelect
 export type InspirationPin = typeof inspirationPins.$inferSelect
+
+/* ------------------------------------------------------------------
+   Meeting notes — a recording (or an imported / pasted transcript), its
+   transcript, the notes the CRM wrote from it, and the items proposed.
+
+   Not "meetings": that word already means calendar events proposed as time
+   entries (`calendar_events`, `time_entries.source = 'meeting'`). Audio and
+   Whisper live on the Mac (scripts/meeting-worker.ts); this holds text only.
+   Statuses are text + `canTransition()` in lib/meeting-note.ts, not enums —
+   the machine will change and ALTER TYPE is a migration each time.
+------------------------------------------------------------------ */
+
+export const meetingNotes = pgTable(
+  "meeting_notes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    clientId: uuid("client_id").references(() => clients.id, { onDelete: "set null" }),
+    projectId: uuid("project_id").references(() => projects.id, { onDelete: "set null" }),
+    calendarEventId: uuid("calendar_event_id").references(() => calendarEvents.id, {
+      onDelete: "set null",
+    }),
+    /** The punch Start opened (source 'recorder'). Adopted punches are not owned. */
+    punchId: uuid("punch_id").references(() => timePunches.id, { onDelete: "set null" }),
+    ownsPunch: boolean("owns_punch").notNull().default(false),
+    title: text("title").notNull().default(""),
+    /** requested · recording · stopping · recorded · review · filed · discarded · failed */
+    status: text("status").notNull().default("requested"),
+    /** live · import · paste */
+    source: text("source").notNull().default("live"),
+    /** The client's zone at creation — what a time said in the meeting means. */
+    timeZone: text("time_zone").notNull().default(""),
+    /** The Mac that claimed it; transcription is affine to it (the WAVs are there). */
+    worker: text("worker").notNull().default(""),
+    heartbeatAt: timestamp("heartbeat_at", { withTimezone: true }),
+    levels: jsonb("levels").$type<MeetingLevels | null>(),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    durationSec: integer("duration_sec").notNull().default(0),
+    /** Mac-local, informational. The CRM never reads it. */
+    recordingPath: text("recording_path").notNull().default(""),
+    /** ["mic", "system"] — which tracks the helper captured. */
+    tracks: jsonb("tracks").$type<string[]>().notNull().default([]),
+    /** pending · queued · running · done · failed */
+    transcriptStatus: text("transcript_status").notNull().default("pending"),
+    transcriptError: text("transcript_error").notNull().default(""),
+    transcriptAttempts: integer("transcript_attempts").notNull().default(0),
+    transcriptModel: text("transcript_model").notNull().default(""),
+    language: text("language").notNull().default(""),
+    segments: jsonb("segments").$type<TranscriptSegment[]>().notNull().default([]),
+    /** Derived from `segments` by the route that saves them — one writer, so they cannot disagree. */
+    transcriptText: text("transcript_text").notNull().default(""),
+    /** pending · queued · running · done · failed */
+    analysisStatus: text("analysis_status").notNull().default("pending"),
+    analysisError: text("analysis_error").notNull().default(""),
+    analysisModel: text("analysis_model").notNull().default(""),
+    analysisUsage: jsonb("analysis_usage").$type<Record<string, number>>().notNull().default({}),
+    summary: text("summary").notNull().default(""),
+    analysis: jsonb("analysis")
+      .$type<MeetingAnalysis>()
+      .notNull()
+      .default({ attendees: [], topics: [], decisions: [], questions: [] }),
+    /** "Others" → "Rebecca", per note. Keys are the track speakers. */
+    speakerNames: jsonb("speaker_names").$type<Record<string, string>>().notNull().default({}),
+    /** Browser-generated on Start so a retry returns the same row. */
+    clientRequestId: text("client_request_id"),
+    filedAt: timestamp("filed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    /** One live recording per person — the Mac records one meeting at a time, and this kills double-click. */
+    live: uniqueIndex("meeting_notes_live_idx")
+      .on(table.userId)
+      .where(sql`${table.status} in ('requested', 'recording', 'stopping')`),
+    request: uniqueIndex("meeting_notes_request_idx")
+      .on(table.userId, table.clientRequestId)
+      .where(sql`${table.clientRequestId} is not null`),
+    recent: index("meeting_notes_recent_idx").on(table.userId, table.startedAt.desc()),
+    byClient: index("meeting_notes_client_idx")
+      .on(table.clientId)
+      .where(sql`${table.clientId} is not null`),
+    transcribing: index("meeting_notes_transcript_idx")
+      .on(table.transcriptStatus)
+      .where(sql`${table.transcriptStatus} in ('queued', 'running')`),
+  })
+)
+
+export const meetingNoteItems = pgTable(
+  "meeting_note_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    noteId: uuid("note_id")
+      .notNull()
+      .references(() => meetingNotes.id, { onDelete: "cascade" }),
+    /** task · event · decision · question · note */
+    kind: text("kind").notNull().default("task"),
+    sort: integer("sort").notNull().default(0),
+    title: text("title").notNull(),
+    detail: text("detail").notNull().default(""),
+    /** Verbatim from one transcript segment — the receipt. */
+    quote: text("quote").notNull().default(""),
+    segmentIndex: integer("segment_index"),
+    owner: text("owner").notNull().default(""),
+    dueOn: date("due_on"),
+    /** Wall clock in `timeZone`: YYYY-MM-DDTHH:mm, or YYYY-MM-DD for all day. */
+    startsAt: text("starts_at").notNull().default(""),
+    endsAt: text("ends_at").notNull().default(""),
+    timeZone: text("time_zone").notNull().default(""),
+    /** proposed · accepted · dismissed */
+    state: text("state").notNull().default("proposed"),
+    taskId: uuid("task_id").references(() => tasks.id, { onDelete: "set null" }),
+    /** The Google event id when the item was filed as an event. */
+    calendarRef: text("calendar_ref").notNull().default(""),
+    calendarUrl: text("calendar_url").notNull().default(""),
+    error: text("error").notNull().default(""),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    byNote: index("meeting_note_items_note_idx").on(table.noteId, table.sort),
+    byTask: index("meeting_note_items_task_idx")
+      .on(table.taskId)
+      .where(sql`${table.taskId} is not null`),
+  })
+)
+
+export const meetingNotesRelations = relations(meetingNotes, ({ one, many }) => ({
+  user: one(users, { fields: [meetingNotes.userId], references: [users.id] }),
+  client: one(clients, { fields: [meetingNotes.clientId], references: [clients.id] }),
+  project: one(projects, { fields: [meetingNotes.projectId], references: [projects.id] }),
+  calendarEvent: one(calendarEvents, {
+    fields: [meetingNotes.calendarEventId],
+    references: [calendarEvents.id],
+  }),
+  punch: one(timePunches, { fields: [meetingNotes.punchId], references: [timePunches.id] }),
+  items: many(meetingNoteItems),
+}))
+
+export const meetingNoteItemsRelations = relations(meetingNoteItems, ({ one }) => ({
+  note: one(meetingNotes, { fields: [meetingNoteItems.noteId], references: [meetingNotes.id] }),
+  task: one(tasks, { fields: [meetingNoteItems.taskId], references: [tasks.id] }),
+}))
+
+export type MeetingNote = typeof meetingNotes.$inferSelect
+export type MeetingNoteItem = typeof meetingNoteItems.$inferSelect

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The meeting worker, kept alive by launchd.
+
+  A Start pressed in the CRM is claimed by this process within a couple of
+  seconds — or not at all. A worker that is not running means the Record
+  panel says "nobody is recording" after twenty seconds and the request fails
+  after ninety. So launchd owns it: RunAtLoad at login, KeepAlive if it dies.
+  It is separate from the chat worker on purpose: a two-minute model turn
+  there must never delay a recording here.
+
+  Install:   cp scripts/com.tallkarol.meeting-worker.plist ~/Library/LaunchAgents/
+             launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tallkarol.meeting-worker.plist
+  Stop:      launchctl bootout gui/$(id -u)/com.tallkarol.meeting-worker
+  Status:    launchctl print gui/$(id -u)/com.tallkarol.meeting-worker | head
+  Log:       tail -f ~/Library/Logs/tallkarol/meeting-worker.log
+
+  Permissions (Microphone, System Audio Recording) are granted to the
+  TKAudioTap helper the first time it runs from a Terminal — see
+  npm run meeting:doctor. launchd cannot show those prompts itself.
+
+  Copy this file into ~/Library/LaunchAgents/ after editing it — launchd reads
+  its own copy, not this one.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tallkarol.meeting-worker</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/npm</string>
+        <string>run</string>
+        <string>meeting:worker</string>
+    </array>
+
+    <!-- The worker reads .env.local relative to the working directory. -->
+    <key>WorkingDirectory</key>
+    <string>/Users/karolbuczek/Work/tallkarol/crm</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <!-- launchd starts with a bare PATH; node, npm and ffmpeg live in Homebrew. -->
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <!-- The CRM this Mac records for. The deployed one, not a dev server:
+             a recording started on the phone must land here. -->
+        <key>CRM_URL</key>
+        <string>https://crm.tallkarol.com</string>
+        <!-- Stable across restarts: transcription is affine to the Mac holding the audio. -->
+        <key>MEETING_WORKER_NAME</key>
+        <string>karol-mbp</string>
+        <!-- Where recordings live until a week after upload. -->
+        <key>MEETING_WORKER_DIR</key>
+        <string>/Users/karolbuczek/.daedalus/meetings</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- If it dies on startup (missing token), fail slowly instead of spinning. -->
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+
+    <key>StandardOutPath</key>
+    <string>/Users/karolbuczek/Library/Logs/tallkarol/meeting-worker.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/karolbuczek/Library/Logs/tallkarol/meeting-worker.log</string>
+</dict>
+</plist>

@@ -7,6 +7,7 @@ import { ClockPopover, type ClockClient } from "@/components/dashboard/ClockPopo
 import { CommandPalette, type PaletteEntry } from "@/components/dashboard/CommandPalette"
 import { LEFTOFF_OPEN_EVENT } from "@/components/dashboard/LeftOffBoard"
 import { NewPopover, type NewClient } from "@/components/dashboard/NewPopover"
+import { RecordPopover } from "@/components/dashboard/RecordPopover"
 import { ToolButton } from "@/components/dashboard/ToolButton"
 import { cn } from "@/lib/cn"
 import type { PunchView } from "@/lib/punches"
@@ -133,6 +134,7 @@ export function HomeHeader({
       <div className="flex items-center gap-2">
         <CommandPalette entries={palette} />
         <ClockPopover clients={clients} running={running} />
+        <RecordPopover clients={clients} />
         {leftOff ? (
           <ToolButton
             label={`Where I left off — ${leftOff.blocked} need a yes, ${leftOff.working} working, ${leftOff.parked} parked, ${leftOff.done} done today`}

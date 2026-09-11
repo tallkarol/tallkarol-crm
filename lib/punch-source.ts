@@ -10,6 +10,7 @@ export function sourceLabel(source: string) {
   if (source === "api") return "API"
   if (source === "meeting") return "Calendar"
   if (source === "agent") return "Agent"
+  if (source === "recorder") return "Recorder"
   if (source === "clock") return "Clock"
   return "Manual"
 }

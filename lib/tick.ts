@@ -3,6 +3,7 @@ import { sweepMonitors } from "@/lib/monitors"
 import { notify } from "@/lib/notify"
 import { sweepNotifications } from "@/lib/notification-sweep"
 import { staleQueuedRuns } from "@/lib/punchlists"
+import { sweepMeetingNotes } from "@/lib/meeting-notes"
 import { sendBriefing, sweepSessionNotes } from "@/lib/leftoff-data"
 import { localHourMinute } from "@/lib/leftoff"
 import { workspaceTimezone } from "@/lib/timezone"
@@ -61,6 +62,13 @@ export async function tick(now = new Date()) {
     if (sent === "sent") nudged += 1
   }
 
+  // Meeting notes: a Start nobody claimed, a recorder that stopped beating,
+  // a transcription that never came back — failed or requeued, never stuck.
+  const meetings = await sweepMeetingNotes(now).catch((err) => {
+    console.error("meeting-notes sweep failed:", err)
+    return { staleRequests: 0, lostRecorders: 0, requeued: 0, abandoned: 0 }
+  })
+
   // Where-I-left-off notes: presume a silent chat gone after a day, purge
   // hidden rows after two weeks. Pinned and hand-written notes are kept.
   const leftoff = await sweepSessionNotes(now).catch((err) => {
@@ -82,5 +90,5 @@ export async function tick(now = new Date()) {
     console.error("briefing failed:", err)
   }
 
-  return { reopened, sweep, notifications, nudged, leftoff, briefing }
+  return { reopened, sweep, notifications, nudged, leftoff, briefing, meetings }
 }

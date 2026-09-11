@@ -40,9 +40,14 @@ six.
 - **A project is optional. A summary is not, when there is no project.**
   Approval returns 422 with an explanation otherwise: the invoice line has to
   explain itself, and when no project name does that, the summary must.
-- **One timer per person**, enforced by a partial unique index on
-  `time_punches (user_id) where status = 'running'` — a double tap cannot
-  corrupt state.
+- **Several timers may run at once** (migration 0044 dropped the one-running
+  index) — a build for one client while another's ticket gets answered. What
+  is still refused is the same client + project twice; a double tap is a 409
+  with the running punch, not a second clock.
+- **A recording opens a punch too.** Start on the Record panel with a client
+  clocks in with `source = 'recorder'`; Stop clocks out; the punch waits in
+  Review like any other and the meeting note can approve it with its summary.
+  See MEETING-NOTES.md.
 - **Suspicious punches are flagged, never auto-approved.** Over 8 hours,
   crossing midnight, or still running since yesterday: bulk approve skips them
   until the end time is fixed.

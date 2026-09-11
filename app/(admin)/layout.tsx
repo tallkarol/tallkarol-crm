@@ -14,6 +14,7 @@ import { readThemeCookie } from "@/lib/theme-server"
 import { loadUnread } from "@/lib/unread-data"
 import { worstTone } from "@/lib/unread"
 import { runningPunches } from "@/lib/punches"
+import { liveRecording } from "@/lib/meeting-notes"
 
 export const metadata = rootMetadata
 export const viewport = rootViewport
@@ -38,12 +39,13 @@ export default async function AdminLayout({
   // One read behind every badge and behind the dashboard's Unread card, so a
   // badge can never disagree with the card or the page it points at. The call
   // is request-cached, so the dashboard shares this one rather than repeating it.
-  const [unread, catalog, colors, running] = await Promise.all([
+  const [unread, catalog, colors, running, recording] = await Promise.all([
     loadUnread(),
     studiosWithProducts(),
     // Fills the map `clientColor()` reads, for this request's server render.
     hydrateClientColors(),
     runningPunches(user.id),
+    liveRecording(user.id),
   ])
 
   const badges = {
@@ -104,7 +106,7 @@ export default async function AdminLayout({
       {children}
     </AppShell>
     {/* Outside the shell so no overflow or transform on an ancestor can trap it. */}
-    <FloatingClock initial={running} />
+    <FloatingClock initial={running} initialRecording={recording} />
     </RootHtml>
   )
 }

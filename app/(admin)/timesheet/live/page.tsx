@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ClockPanel } from "@/components/timesheet/ClockPanel"
+import { RecordPanel } from "@/components/meeting-notes/RecordPanel"
+import { calendarNow, liveRecording, recorderStatus } from "@/lib/meeting-notes"
 import { sourceLabel } from "@/lib/punch-source"
 import { getSessionUser } from "@/lib/auth"
 import { ROUTES } from "@/lib/nav"
@@ -23,16 +25,21 @@ export default async function ClockPage() {
   const user = await getSessionUser()
   if (!user) redirect("/login")
 
-  const [running, targets, today, recent] = await Promise.all([
+  const [running, targets, today, recent, live, suggestion, recorder] = await Promise.all([
     runningPunches(user.id),
     punchTargets(user.id),
     todayTotals(user.id),
     recentPunches(user.id, 12),
+    liveRecording(user.id),
+    calendarNow(),
+    recorderStatus(),
   ])
 
   return (
     <div className="mt-6 flex flex-col gap-6">
       <ClockPanel running={running} targets={targets} today={today} />
+
+      <RecordPanel live={live} targets={targets} suggestion={suggestion} recorder={recorder} />
 
       <section>
         <div className="flex flex-wrap items-center justify-between gap-2">

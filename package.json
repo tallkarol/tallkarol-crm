@@ -62,6 +62,12 @@
     "check:theme": "tsx scripts/check-theme.ts",
     "check:theme:update": "tsx scripts/check-theme.ts --update",
     "check:slink:db": "tsx scripts/check-slink-db.ts",
+    "check:meeting-notes": "tsx scripts/check-meeting-notes.ts",
+    "check:meeting-notes:db": "tsx --env-file-if-exists=.env.local scripts/check-meeting-notes-db.ts",
+    "meeting:worker": "tsx --env-file-if-exists=.env.local scripts/meeting-worker.ts",
+    "meeting:import": "tsx --env-file-if-exists=.env.local scripts/meeting-worker.ts import",
+    "meeting:doctor": "tsx --env-file-if-exists=.env.local scripts/meeting-doctor.ts",
+    "meeting:build-helper": "bash scripts/audio-tap/build.sh",
     "prebuild": "npm run check:theme"
   },
   "dependencies": {

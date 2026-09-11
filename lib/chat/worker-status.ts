@@ -16,6 +16,7 @@ import { appSettings } from "@/db/schema"
  * declare a busy worker dead in the middle of the job it was doing.
  */
 
+/** The chat worker's row. The meeting worker beats under `meeting_worker`; same shape, same staleness. */
 const KEY = "chat_worker"
 
 /** Four missed beats at the worker's five-second timer. */
@@ -30,20 +31,20 @@ export type WorkerStatus = {
   secondsAgo: number | null
 }
 
-export async function recordWorkerSeen(name: string) {
+export async function recordWorkerSeen(name: string, key: string = KEY) {
   const value = { name, lastSeenAt: new Date().toISOString() }
   await db
     .insert(appSettings)
-    .values({ key: KEY, value, updatedAt: new Date() })
+    .values({ key, value, updatedAt: new Date() })
     .onConflictDoUpdate({
       target: appSettings.key,
       set: { value, updatedAt: new Date() },
     })
 }
 
-export async function workerStatus(): Promise<WorkerStatus> {
+export async function workerStatus(key: string = KEY): Promise<WorkerStatus> {
   const row = await db.query.appSettings.findFirst({
-    where: eq(appSettings.key, KEY),
+    where: eq(appSettings.key, key),
   })
   const value = (row?.value ?? {}) as { name?: unknown; lastSeenAt?: unknown }
 

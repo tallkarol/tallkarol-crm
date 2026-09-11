@@ -36,6 +36,8 @@ import { getInsightsContext } from "@/lib/insights/queries"
 import { siteSupportsInternalTraffic } from "@/lib/internal-traffic"
 import { ROUTES } from "@/lib/nav"
 import { punchlistsFor } from "@/lib/punchlists"
+import { notesForClient } from "@/lib/meeting-notes"
+import { MeetingNoteList } from "@/components/meeting-notes/MeetingNoteList"
 import { tasksFor, taskTargets } from "@/lib/tasks"
 import { currentMonth } from "@/lib/timesheet"
 import { Card as TkCard } from "@/components/ui/Card"
@@ -92,7 +94,7 @@ export default async function ClientDetailPage({
 
   const { client } = hub
   const adsSites = hub.sites.filter((site) => Boolean(site.adsCustomerId))
-  const [clientTasks, targets, brainstorm, adsViews, clientPunchlists] = await Promise.all([
+  const [clientTasks, targets, brainstorm, adsViews, clientPunchlists, clientMeetingNotes] = await Promise.all([
     tasksFor({ clientId: client.id }),
     taskTargets(),
     db.query.brainstormNotes.findMany({
@@ -106,6 +108,7 @@ export default async function ClientDetailPage({
       })
     ),
     punchlistsFor({ clientId: client.id }),
+    notesForClient(client.id),
   ])
   const openTasks = clientTasks.filter((t) => t.status === "open")
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
@@ -170,6 +173,7 @@ export default async function ClientDetailPage({
       ? { id: "worksheets", label: "Worksheets" }
       : null,
     clientPunchlists.length > 0 ? { id: "punchlists", label: "Punch lists" } : null,
+    clientMeetingNotes.length > 0 ? { id: "meeting-notes", label: "Meeting notes" } : null,
   ].filter((item): item is { id: string; label: string } => item != null)
 
   return (
@@ -1030,6 +1034,21 @@ export default async function ClientDetailPage({
           {clientPunchlists.length > 0 ? (
             <Block id="punchlists" title="Punch lists">
               <PunchlistList rows={clientPunchlists} peekBase={ROUTES.client(client.slug)} />
+            </Block>
+          ) : null}
+
+          {/* ------------------------------------------------ meeting notes */}
+          {clientMeetingNotes.length > 0 ? (
+            <Block
+              id="meeting-notes"
+              title="Meeting notes"
+              action={
+                <Link href={ROUTES.meetingNotes} className="text-xs font-semibold text-tk-teal hover:underline">
+                  All notes
+                </Link>
+              }
+            >
+              <MeetingNoteList rows={clientMeetingNotes} />
             </Block>
           ) : null}
         </div>

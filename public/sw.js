@@ -5,7 +5,7 @@
  * the clock installable and to keep its own chrome — icons, manifest — instant.
  */
 
-const SHELL = "tk-shell-v4"
+const SHELL = "tk-shell-v5"
 const SHELL_FILES = [
   "/manifest.webmanifest",
   "/icons/tk-192.png",

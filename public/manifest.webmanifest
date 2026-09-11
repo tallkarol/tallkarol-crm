@@ -46,6 +46,17 @@
       ]
     },
     {
+      "name": "Record a meeting",
+      "short_name": "Record",
+      "url": "/timesheet/live#record",
+      "icons": [
+        {
+          "src": "/icons/clock-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
       "name": "Review punches",
       "short_name": "Review",
       "url": "/timesheet/review"
@@ -54,6 +65,11 @@
       "name": "Tickets",
       "short_name": "Tickets",
       "url": "/support"
+    },
+    {
+      "name": "Meeting notes",
+      "short_name": "Notes",
+      "url": "/meeting-notes"
     }
   ]
 }

@@ -46,3 +46,6 @@ gcp-*.json
 /.next-smoke/
 /.next-review/
 /.next-wait/
+
+# The audio helper is built locally (npm run meeting:build-helper)
+scripts/audio-tap/build/

@@ -464,6 +464,13 @@ launchd reads its own copy in `~/Library/LaunchAgents`, so edits to the file in
 `scripts/` do nothing until it is copied over and re-bootstrapped. The plist
 carries `CRM_URL`; point it at the deployed CRM to serve that instead of dev.
 
+A second agent, `com.tallkarol.meeting-worker` (`scripts/meeting-worker.ts`),
+runs beside this one and never shares its process: a two-minute model turn
+here must not delay a recording there. It heartbeats under
+`app_settings.meeting_worker` through the same `worker-status.ts`, and both
+use `scripts/worker-http.ts` for the token, the timeout and the beat. See
+MEETING-NOTES.md.
+
 ### Telling "thinking" from "nobody is listening"
 
 `lib/chat/worker-status.ts` keeps a heartbeat in `app_settings` under
