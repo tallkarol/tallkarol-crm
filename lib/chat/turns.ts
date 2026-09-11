@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm"
 import { db } from "@/db"
 import {
+  chatFeedback,
   chatMessages,
   chatThreads,
   chatToolCalls,
@@ -201,12 +202,19 @@ export async function send(input: {
   userId: string
   threadId?: string | null
   text: string
+  /** Who the message shows as — "Karol" unless a desk handed it over. */
+  as?: string
+  /** The thread this one was handed from (`route_to`). */
+  fromThreadId?: string
 }): Promise<SendResult> {
   const text = input.text.trim()
   if (!text) throw new Error("Nothing to send.")
 
   const thread = await ensureThread(input.userId, input.threadId)
   const threadId = thread.id
+  if (input.fromThreadId && !input.threadId) {
+    await db.update(chatThreads).set({ fromThreadId: input.fromThreadId }).where(eq(chatThreads.id, threadId))
+  }
 
   /**
    * An address re-points the thread. The pack stays when the new desk loads
@@ -248,7 +256,7 @@ export async function send(input: {
 
   const [message] = await db
     .insert(chatMessages)
-    .values({ threadId, role: "user", agent: "Karol", body: text })
+    .values({ threadId, role: "user", agent: input.as?.trim().slice(0, 60) || "Karol", body: text })
     .returning()
 
   const [turn] = await db
@@ -682,7 +690,7 @@ export async function threadDetail(userId: string, threadId: string) {
   })
   if (!thread) return null
 
-  const [messages, turns, calls] = await Promise.all([
+  const [messages, turns, calls, feedback] = await Promise.all([
     db.query.chatMessages.findMany({
       where: eq(chatMessages.threadId, threadId),
       orderBy: [asc(chatMessages.createdAt)],
@@ -695,7 +703,11 @@ export async function threadDetail(userId: string, threadId: string) {
       where: eq(chatToolCalls.threadId, threadId),
       orderBy: [asc(chatToolCalls.createdAt)],
     }),
+    db.query.chatFeedback.findMany({
+      where: eq(chatFeedback.threadId, threadId),
+      orderBy: [asc(chatFeedback.createdAt)],
+    }),
   ])
 
-  return { thread, messages, turns, calls }
+  return { thread, messages, turns, calls, feedback }
 }

@@ -45,7 +45,8 @@ export const PERSONAS: Record<string, PersonaSpec> = {
     name: "coach",
     label: "Coach",
     kind: "desk",
-    job: "persona",
+    // Judged on judgment about a person, not on code — the writing rung.
+    job: "writing",
     pack: "me",
     tagline: "Goals, habits, the week, career. Personal — never the business.",
     private: true,

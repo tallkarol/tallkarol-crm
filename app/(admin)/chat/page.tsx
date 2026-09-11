@@ -81,6 +81,9 @@ export default async function ChatPage({
       turnId: message.turnId,
       chain,
       calls: message.turnId ? calls.filter((c) => c.turnId === message.turnId) : [],
+      feedback: (detail?.feedback ?? [])
+        .filter((f) => f.messageId === message.id)
+        .map((f) => ({ kind: f.kind as "down" | "example" | "note", note: f.note })),
     }
   })
 
@@ -105,6 +108,7 @@ export default async function ChatPage({
   const rows: ThreadRow[] = [...threads, ...archivedThreads].map((thread) => ({
     id: thread.id,
     title: thread.title || "Untitled",
+    agent: thread.agent,
     lastMessageAt: thread.lastMessageAt.toISOString(),
     needsYou: pendingIds.has(thread.id),
     archived: thread.archivedAt !== null,

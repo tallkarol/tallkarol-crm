@@ -1,7 +1,10 @@
 "use client"
 
-import { Check, Sparkles, Terminal, X } from "lucide-react"
+import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+import { Bookmark, Check, Sparkles, Terminal, ThumbsDown, X } from "lucide-react"
 import { cn } from "@/lib/cn"
+import { giveFeedback } from "@/lib/chat/actions"
 import { modelLabel, modelPool, resultCount, timeLabel } from "@/lib/chat/format"
 import { parseCommand } from "@/lib/chat/skills"
 import { ApprovalCard } from "@/components/chat/ApprovalCard"
@@ -119,6 +122,119 @@ export function Message({ message }: { message: ChatMessageView }) {
       ))}
 
       {message.chain.length ? <LadderTrace turns={message.chain} /> : null}
+
+      {message.agent !== "Assistant" && !skill ? <Feedback message={message} /> : null}
+    </div>
+  )
+}
+
+/**
+ * What Karol thought of a desk's reply — the cheapest signal `/train` gets.
+ * Quiet until hovered, like the timestamp; once given it stays as a chip so
+ * the thread reads as a record. "Not right" asks for one line on why.
+ */
+function Feedback({ message }: { message: ChatMessageView }) {
+  const router = useRouter()
+  const [busy, startTransition] = useTransition()
+  const [asking, setAsking] = useState(false)
+  const [note, setNote] = useState("")
+  const [error, setError] = useState<string | null>(null)
+
+  const given = message.feedback
+  const down = given.find((f) => f.kind === "down")
+  const example = given.find((f) => f.kind === "example")
+
+  function give(kind: "down" | "example", text = "") {
+    setError(null)
+    startTransition(async () => {
+      const result = await giveFeedback({ messageId: message.id, kind, note: text })
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      setAsking(false)
+      setNote("")
+      router.refresh()
+    })
+  }
+
+  return (
+    <div className="group/fb flex flex-wrap items-center gap-1.5 pl-8">
+      {down ? (
+        <span
+          className="inline-flex h-6 items-center gap-1.5 rounded-lg border border-line bg-bad-soft px-2 font-ui text-[11px] text-bad"
+          title={down.note || undefined}
+        >
+          <ThumbsDown className="size-3" aria-hidden />
+          Not right{down.note ? ` · ${down.note.slice(0, 80)}${down.note.length > 80 ? "…" : ""}` : ""}
+        </span>
+      ) : null}
+      {example ? (
+        <span className="inline-flex h-6 items-center gap-1.5 rounded-lg border border-line bg-good-soft px-2 font-ui text-[11px] text-good">
+          <Bookmark className="size-3" aria-hidden />
+          Kept as example
+        </span>
+      ) : null}
+
+      {asking ? (
+        <form
+          className="flex w-full max-w-[36rem] items-center gap-1.5"
+          onSubmit={(e) => {
+            e.preventDefault()
+            give("down", note)
+          }}
+        >
+          <input
+            autoFocus
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="What was wrong? One line."
+            aria-label="What was wrong"
+            maxLength={2000}
+            className="h-7 min-w-0 flex-1 rounded-md border border-line bg-card px-2 text-[12px] text-tk-onyx outline-none focus:border-line-strong"
+          />
+          <button
+            type="submit"
+            disabled={busy}
+            className="h-7 rounded-md bg-accent px-2.5 font-ui text-[11px] font-semibold text-on-accent disabled:opacity-60"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={() => setAsking(false)}
+            className="h-7 rounded-md px-2 font-ui text-[11px] text-ink-3 hover:text-tk-onyx"
+          >
+            Cancel
+          </button>
+        </form>
+      ) : (
+        <span className="flex items-center gap-1 opacity-0 transition-opacity group-hover/fb:opacity-100 group-focus-within/fb:opacity-100 motion-reduce:transition-none">
+          {!down ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setAsking(true)}
+              className="inline-flex h-6 items-center gap-1 rounded-md px-1.5 font-ui text-[11px] text-ink-3 hover:bg-well hover:text-tk-onyx"
+            >
+              <ThumbsDown className="size-3" aria-hidden />
+              Not right
+            </button>
+          ) : null}
+          {!example ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => give("example")}
+              className="inline-flex h-6 items-center gap-1 rounded-md px-1.5 font-ui text-[11px] text-ink-3 hover:bg-well hover:text-tk-onyx"
+            >
+              <Bookmark className="size-3" aria-hidden />
+              Keep as example
+            </button>
+          ) : null}
+        </span>
+      )}
+      {error ? <span className="font-ui text-[11px] text-bad">{error}</span> : null}
     </div>
   )
 }

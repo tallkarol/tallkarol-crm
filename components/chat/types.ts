@@ -16,6 +16,8 @@ export type ChatMessageView = {
    */
   chain: ChatTurn[]
   calls: ChatToolCall[]
+  /** What Karol said about this reply, if anything. */
+  feedback: { kind: "down" | "example" | "note"; note: string }[]
 }
 
 /** A turn somebody is still running, for the thinking row. */
@@ -37,6 +39,8 @@ export type ThreadStats = {
 export type ThreadRow = {
   id: string
   title: string
+  /** The desk the thread is addressed to, or "". */
+  agent: string
   lastMessageAt: string
   /** A write is parked for Karol in this thread. */
   needsYou: boolean

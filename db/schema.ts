@@ -3087,6 +3087,11 @@ export const chatThreads = pgTable(
     /** Never surfaces in a shared or portal view. Set for the coach's threads. */
     private: boolean("private").notNull().default(false),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
+    /** A paragraph the worker wrote once the thread went quiet — what the same desk's next thread should know. */
+    digest: text("digest").notNull().default(""),
+    digestedAt: timestamp("digested_at", { withTimezone: true }),
+    /** The thread this one was handed from (`route_to`). */
+    fromThreadId: uuid("from_thread_id"),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -3098,9 +3103,43 @@ export const chatThreads = pgTable(
     byUser: index("chat_threads_user_idx").on(table.userId, table.lastMessageAt),
     byTask: index("chat_threads_task_idx").on(table.taskId),
   })
+    byDesk: index("chat_threads_desk_idx").on(table.agent, table.pack, table.lastMessageAt),
 )
 
 export const chatMessages = pgTable(
+/**
+ * What Karol said about a reply: it was wrong (and why), keep it as an
+ * example, or a remark. The persona's `/train` lane reads these — the
+ * cheapest, highest-signal grist there is. `agent` and `pack` are copied
+ * from the thread at the time, so a thread re-addressed later still files
+ * the feedback under the desk that produced the reply.
+ */
+export const chatFeedback = pgTable(
+  "chat_feedback",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    threadId: uuid("thread_id")
+      .notNull()
+      .references(() => chatThreads.id, { onDelete: "cascade" }),
+    messageId: uuid("message_id").references(() => chatMessages.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    agent: text("agent").notNull().default(""),
+    pack: text("pack").notNull().default(""),
+    /** down | example | note */
+    kind: text("kind").notNull(),
+    note: text("note").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byAgent: index("chat_feedback_agent_idx").on(table.agent, table.createdAt),
+    byThread: index("chat_feedback_thread_idx").on(table.threadId),
+  })
+)
+
+export type ChatFeedback = typeof chatFeedback.$inferSelect
+
   "chat_messages",
   {
     id: uuid("id").defaultRandom().primaryKey(),

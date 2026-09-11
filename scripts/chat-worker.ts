@@ -154,6 +154,18 @@ type Claim = {
   task?: TaskContext | null
   /** Set when the thread is addressed to a desk persona. */
   persona?: PersonaContext | null
+  /** The same desk's last digested threads on the same pack, newest first. */
+  recent?: { id: string; title: string; at: string; digest: string }[]
+}
+
+/** A quiet desk thread the CRM wants digested. */
+type DigestJob = {
+  id: string
+  agent: string
+  pack: string
+  title: string
+  lastMessageAt: string
+  messages: { role: string; agent: string; body: string; at: string }[]
 }
 
 /**
@@ -702,6 +714,7 @@ function packSections(ref: string | null, persona: string): { title: string; tex
  */
 function personaPrompt(claim: Claim, persona: PersonaContext): string {
   const dir = join(PERSONAS_DIR, persona.name)
+  const recent = (claim.recent ?? []).map((t) => `• ${t.at} — ${t.title}: ${t.digest}`).join("\n")
   const sections = [
     { title: "house", text: readIf(join(PERSONAS_DIR, "_shared", "HOUSE.md")) },
     { title: "your role", text: stripFrontmatter(readIf(join(SKILLS, "agents", `${persona.name}.md`))) },
@@ -709,6 +722,12 @@ function personaPrompt(claim: Claim, persona: PersonaContext): string {
     { title: "memory", text: readIf(join(dir, "memory.md")) },
     { title: "open questions", text: readIf(join(dir, "questions.md")) },
     { title: "examples", text: readIf(join(dir, "examples.md")) },
+    {
+      title: `your recent threads${persona.pack ? ` on ${persona.pack}` : ""}`,
+      text: recent
+        ? `Your own earlier conversations with Karol, newest first — continuity, not evidence. A client fact still comes only from claims.md; anything durable here that is not yet in the pack goes through propose_pack_line or under Questions for Karol. Older is staler: today's message and the pack win over an old thread.\n\n${recent}`
+        : "(none yet)",
+    },
     ...packSections(persona.pack, persona.name),
   ]
   return [
@@ -905,6 +924,62 @@ async function landPackLine(w: PackWrite): Promise<void> {
     console.error(`[write ${label}] failed: ${message}`)
     await report({ error: message })
   }
+}
+
+/* ---------- digesting a quiet desk thread ---------- */
+
+/** Threads a digest just failed on, with when — skipped for half an hour. */
+const digestSkips = new Map<string, number>()
+const DIGEST_SKIP_MS = 30 * 60_000
+
+/**
+ * A paragraph for the same desk's next conversation, written on the
+ * cheapest rung once a thread has been quiet for twenty minutes. Not a
+ * chat turn — no ledger row, no tools, no reply — so the cost shows only
+ * here in the log. What it must carry: what Karol asked, what was decided or
+ * committed, what is pending on him, what stayed open.
+ */
+async function digestThread(job: DigestJob): Promise<void> {
+  const label = job.id.slice(0, 8)
+  const transcriptText = job.messages
+    .map((m) => `${m.role === "user" ? "Karol" : job.agent}: ${m.body}`)
+    .join("\n\n")
+  const prompt = [
+    `Write a digest of this conversation between Karol and his ${job.agent} desk, for that desk's NEXT conversation with him. Four to six plain sentences, no preamble, no headings, no bullet points. Cover, in this order: what Karol asked or brought; what was decided or what he committed to, in his words where he gave them; what is still pending on him (a parked approval, a question he did not answer); what stayed open. Dates absolute. Nothing that is not in the conversation.`,
+    "",
+    `Thread: ${job.title} (last message ${job.lastMessageAt.slice(0, 10)})`,
+    "",
+    transcriptText,
+  ].join("\n")
+  try {
+    const result = await Agent.prompt(prompt, {
+      apiKey: API_KEY,
+      model: { id: "composer-2.5" },
+      tools: ["mcp"],
+      name: `digest ${label}`,
+      idempotencyKey: `digest-${job.id}-${job.lastMessageAt}`,
+      local: { cwd: CWD, settingSources: [], customTools: {} },
+    })
+    if (result.status !== "finished" || !result.result?.trim()) {
+      throw new Error(result.error?.message ?? `run ${result.status}`)
+    }
+    await crm(`/api/chat/digests/${job.id}`, { digest: result.result.trim() })
+    console.log(`[digest ${label}] ${job.agent}${job.pack ? ` (${job.pack})` : ""} — ${result.result.trim().slice(0, 80)}…`)
+  } catch (err) {
+    digestSkips.set(job.id, Date.now())
+    console.error(`[digest ${label}] failed: ${err instanceof Error ? err.message : String(err)}`)
+  }
+}
+
+async function nextDigest(): Promise<DigestJob | null> {
+  const skip: string[] = []
+  digestSkips.forEach((at, id) => {
+    if (Date.now() - at > DIGEST_SKIP_MS) digestSkips.delete(id)
+    else skip.push(id)
+  })
+  const query = skip.length ? `?skip=${skip.join(",")}` : ""
+  const res = (await crm(`/api/chat/digests${query}`, { worker: NAME })) as { thread: DigestJob | null }
+  return res.thread
 }
 
 function buildPrompt(claim: Claim): string {
@@ -1148,6 +1223,12 @@ async function loop() {
       const claim = (await crm("/api/chat/queue", { worker: NAME })) as Claim
       if (claim.turn) {
         await runTurn(claim)
+        continue
+      }
+      // Nothing to answer, nothing to land: digest a thread that went quiet.
+      const job = await nextDigest()
+      if (job) {
+        await digestThread(job)
         continue
       }
     } catch (err) {

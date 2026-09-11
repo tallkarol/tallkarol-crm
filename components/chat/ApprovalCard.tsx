@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Check, X } from "lucide-react"
+import { Check, Wrench, X } from "lucide-react"
 import { cn } from "@/lib/cn"
-import { decideApproval } from "@/lib/chat/actions"
+import { decideApproval, triageFailedCall } from "@/lib/chat/actions"
 import { timeLabel } from "@/lib/chat/format"
 import type { ChatToolCall } from "@/db/schema"
 import type { ToolPreview } from "@/lib/chat/tools"
@@ -26,6 +26,7 @@ const VERB: Record<string, string> = {
   complete_task: "Complete the task",
   reschedule_task: "Reschedule it",
   propose_pack_line: "Write it to the pack",
+  route_to: "Hand it over",
 }
 
 const TAG: Record<ChatToolCall["status"], { label: string; className: string }> = {
@@ -60,6 +61,16 @@ export function ApprovalCard({ call }: { call: ChatToolCall }) {
       const result = await decideApproval({ callId: call.id, approve })
       if (!result.ok) setError(result.error)
       else router.refresh()
+    })
+  }
+
+  // A failed write → a task on the board and a solve thread, in one click.
+  function triage() {
+    setError(null)
+    startTransition(async () => {
+      const result = await triageFailedCall({ callId: call.id })
+      if (!result.ok) setError(result.error)
+      else router.push(`/chat?thread=${result.threadId}`)
     })
   }
 
@@ -164,6 +175,18 @@ export function ApprovalCard({ call }: { call: ChatToolCall }) {
                     ? "The write failed. Nothing landed."
                     : tag.label}
           </span>
+          {call.status === "failed" ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={triage}
+              title="File a task under tallkarol with the tool, arguments and error, and open a solve thread on it"
+              className="ml-auto inline-flex h-[26px] items-center gap-1.5 rounded-[8px] border border-line px-2.5 font-ui text-[11px] font-semibold text-ink-2 outline-accent-ink hover:border-line-strong hover:text-tk-onyx disabled:opacity-60"
+            >
+              <Wrench className="size-3" aria-hidden />
+              File it and solve
+            </button>
+          ) : null}
         </div>
       )}
     </Card>

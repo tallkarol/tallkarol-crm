@@ -6,6 +6,7 @@ import { BookOpen, ChevronRight, MessagesSquare, Plus, Search } from "lucide-rea
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { dayBucket, listStamp, type DayBucket } from "@/lib/chat/format"
+import { PERSONAS } from "@/lib/chat/personas"
 import { SKILL_DOCS } from "@/lib/chat/skills"
 import { BudgetMeters } from "@/components/chat/BudgetMeters"
 import { SkillsDocs } from "@/components/chat/SkillsDocs"
@@ -43,6 +44,7 @@ export function ChatSidebar({
 }) {
   const [tab, setTab] = useState<Tab>("threads")
   const [q, setQ] = useState("")
+  const [desk, setDesk] = useState("")
   const [archivedOpen, setArchivedOpen] = useState(false)
 
   // Land on an archived thread (a link, a restore) and its group is open.
@@ -71,11 +73,14 @@ export function ChatSidebar({
 
   const at = new Date(now)
   const needle = q.trim().toLowerCase()
-  const visible = needle
+  const searched = needle
     ? threads.filter((t) => t.title.toLowerCase().includes(needle))
     : threads
+  const visible = desk ? searched.filter((t) => t.agent === desk) : searched
   const active = visible.filter((t) => !t.archived)
   const archived = visible.filter((t) => t.archived)
+  // The desks that actually have threads, in roster order — a filter, not a roster.
+  const desks = Object.keys(PERSONAS).filter((name) => threads.some((t) => t.agent === name))
 
   const counts = {
     command: SKILL_DOCS.filter((d) => d.kind === "command").length,
@@ -119,6 +124,19 @@ export function ChatSidebar({
           </Link>
 
           <SearchBox value={q} onChange={setQ} placeholder="Search threads" />
+
+          {desks.length ? (
+            <div className="mx-3 mb-1.5 flex flex-wrap gap-1" role="group" aria-label="Filter by desk">
+              <DeskChip on={desk === ""} onClick={() => setDesk("")}>
+                All
+              </DeskChip>
+              {desks.map((name) => (
+                <DeskChip key={name} on={desk === name} onClick={() => setDesk(desk === name ? "" : name)}>
+                  {PERSONAS[name].label}
+                </DeskChip>
+              ))}
+            </div>
+          ) : null}
 
           <div className="tk-main-scroll min-h-0 flex-1 overflow-y-auto px-2 pb-2">
             {threads.length === 0 ? (
@@ -247,9 +265,41 @@ function ThreadLink({
             <span aria-hidden>·</span>
           </>
         ) : null}
+        {thread.agent && PERSONAS[thread.agent] ? (
+          <>
+            <span className="font-semibold text-ink-2">{PERSONAS[thread.agent].label}</span>
+            <span aria-hidden>·</span>
+          </>
+        ) : null}
         <span>{listStamp(thread.lastMessageAt, now)}</span>
       </span>
     </Link>
+  )
+}
+
+function DeskChip({
+  on,
+  onClick,
+  children,
+}: {
+  on: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={on}
+      onClick={onClick}
+      className={cn(
+        "h-6 rounded-full border px-2 font-ui text-[11px] font-semibold",
+        on
+          ? "border-transparent bg-accent-soft text-accent-ink"
+          : "border-line bg-card text-ink-2 hover:border-line-strong hover:text-tk-onyx"
+      )}
+    >
+      {children}
+    </button>
   )
 }
 

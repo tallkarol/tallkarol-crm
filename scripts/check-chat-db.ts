@@ -13,6 +13,7 @@ import {
   send,
   threadDetail,
 } from "@/lib/chat/turns"
+import { leaveFeedback } from "@/lib/chat/feedback"
 import { startTaskThread, threadForTask } from "@/lib/chat/task-thread"
 import { PERSONAL_CALENDAR_ID, pickCalendarSource } from "@/lib/calendar-write"
 import { insertTaskRow } from "@/lib/task-insert"
@@ -170,6 +171,25 @@ async function main() {
       : JSON.stringify(peek)
   )
 
+  /* --- a site name has to become a slug, and a wrong slug fails before the card --- */
+  const siteList = await invokeTool({ userId: admin.id, turnId: first.turn.id, name: "list_sites", args: {} })
+  check(
+    "list_sites ran",
+    siteList.status === "ran",
+    siteList.status === "ran" ? `${(siteList.result as { sites: unknown[] }).sites.length} sites` : JSON.stringify(siteList)
+  )
+  const wrongSite = await invokeTool({
+    userId: admin.id,
+    turnId: first.turn.id,
+    name: "refresh_insights",
+    args: { siteSlug: "my-custom-manufacturer" },
+  })
+  check(
+    "an unknown site slug fails before approval, with a suggestion",
+    wrongSite.status === "failed" && /did you mean|list_sites/.test(JSON.stringify(wrongSite)),
+    JSON.stringify(wrongSite).slice(0, 160)
+  )
+
   /* --- a write parks, it does not run --- */
   const task = await invokeTool({
     userId: admin.id,
@@ -322,7 +342,7 @@ async function main() {
     "@coach addresses the thread, pins me, marks it private",
     addressed?.agent === "coach" && addressed.pack === "me" && addressed.private === true
   )
-  check("a desk runs on the persona ladder", coach.turn.jobType === "persona", coach.turn.jobType)
+  check("the coach runs on the writing ladder", coach.turn.jobType === "writing", coach.turn.jobType)
   check("the address is not the title", addressed?.title === "how am I doing this week", addressed?.title)
 
   /* --- a pack line parks for the Mac; it is rejected here, never approved --- */
@@ -350,6 +370,27 @@ async function main() {
   const parked = (coachDetail?.calls ?? []).find((c) => c.status === "pending")
   const settled = parked ? await decideToolCall({ userId: admin.id, callId: parked.id, approve: false }) : null
   check("rejected before the Mac could land it", settled?.ok === true && settled.call.status === "rejected")
+
+  /* --- feedback lands on the reply, filed under the desk --- */
+  const replied = await completeTurn({ turnId: coach.turn.id, body: "Thin week. Say no if Monday still stands.", agent: "Coach" })
+  const fb = await leaveFeedback({ userId: admin.id, messageId: replied.messageId, kind: "down", note: "smoke — too terse" })
+  check("feedback carries the desk and pack", fb.agent === "coach" && fb.pack === "me" && fb.kind === "down")
+  let refusedUser = false
+  try {
+    await leaveFeedback({ userId: admin.id, messageId: coach.messageId, kind: "example", note: "" })
+  } catch {
+    refusedUser = true
+  }
+  check("feedback on Karol's own message is refused", refusedUser)
+
+  /* --- a handoff only along an edge --- */
+  const noEdge = await invokeTool({
+    userId: admin.id,
+    turnId: coach.turn.id,
+    name: "route_to",
+    args: { desk: "copywriter", brief: "smoke — delete me" },
+  })
+  check("coach cannot hand to anyone", noEdge.status === "failed", JSON.stringify(noEdge).slice(0, 120))
   const handed = await send({
     userId: admin.id,
     threadId: coach.threadId,
@@ -366,6 +407,22 @@ async function main() {
     `${switched?.agent} ${switched?.pack}`
   )
   check("still on the persona ladder", handed.turn.jobType === "persona", handed.turn.jobType)
+  const toPm = await invokeTool({
+    userId: admin.id,
+    turnId: handed.turn.id,
+    name: "route_to",
+    args: { desk: "pm", brief: "smoke — they need a build by the 20th; delete me" },
+  })
+  check("client manager hands to the pm, parked", toPm.status === "pending", JSON.stringify(toPm).slice(0, 160))
+  check(
+    "the handoff card carries the pack",
+    toPm.status === "pending" && JSON.stringify(toPm.preview).includes(`${slug} (client)`)
+  )
+  const handoffCall = (await threadDetail(admin.id, coach.threadId))?.calls.find((c) => c.name === "route_to" && c.status === "pending")
+  if (handoffCall) {
+    const dropped = await decideToolCall({ userId: admin.id, callId: handoffCall.id, approve: false })
+    check("handoff rejected, no thread opened", dropped.ok && dropped.call.status === "rejected")
+  }
   const plain = await send({ userId: admin.id, threadId: coach.threadId, text: "and what is due?" })
   await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, coach.threadId))
   check("the thread keeps its desk", plain.turn.jobType === "persona", plain.turn.jobType)

@@ -73,6 +73,12 @@ adjacent pair and fails the build on a rung that loses money.
 | `writing` | Fable 5.1 High | — |
 | `report` | Composer 2.5 → Grok 4.6 High | section schema |
 | `skill` | Grok 4.6 High | — |
+| `task` | Grok 4.6 High | — |
+| `persona` | Grok 4.6 High | — |
+
+A thread addressed to a desk runs on `persona`, except the coach (`writing`
+— judged on judgment about a person, not on code) and the product owner
+(`architecture`); `lib/chat/personas.ts` is the dial.
 
 `skill` is any message that starts with a `/command` the hive mind knows
 (`lib/chat/skills.ts` reads the names from the committed scan). It is not a
@@ -150,6 +156,7 @@ never writes SQL and cannot reach anything not on this list.
 | `complete_task` | `completeTask` | **yes** |
 | `reschedule_task` | direct `tasks` update | **yes** |
 | `propose_pack_line` | `pack-lines.ts`, written by the **worker** on the Mac | **yes** |
+| `route_to` | `send()` — a new thread addressed to another desk, the brief as its first message | **yes** |
 | `log_time` | `logAgentTime` (`lib/punches.ts`) | **yes** |
 | `create_task` | `resolveTaskTarget` + `insertTaskRow` | **yes** |
 | `refresh_insights` | `refreshInsightsAction` | **yes** |
@@ -384,6 +391,41 @@ what keeps them out of any shared or portal view that ever lists threads.
 Remembering to start the worker is the whole failure: a message queued with
 nothing attached is answered in sixteen seconds or in twenty minutes depending
 only on whether a terminal happened to be open. So launchd owns it —
+### What a desk remembers
+
+Three things, none of them a model remembering on its own.
+
+**Feedback.** Under every desk reply: *Not right* (asks for one line on why)
+and *Keep as example*. Each becomes a `chat_feedback` row carrying the desk
+and pack of the thread at the time and the reply it was about. The plugin's
+`/train <persona>` reads them through `GET /api/chat/feedback` and turns
+them — with corrections, rejected writes and unanswered *Questions for
+Karol* from `GET /api/chat/threads` — into rules and examples Karol
+approves into the persona's `memory.md` / `examples.md`. Nothing in the
+CRM changes a persona; the files live in the plugin.
+
+**Digests.** When a desk thread has been quiet for twenty minutes, the
+worker — with nothing to answer and nothing to land — asks
+`POST /api/chat/digests` for one, writes a four-to-six-sentence digest on
+Composer 2.5 (what Karol asked, what was decided or committed, what is
+pending on him, what stayed open) and stores it on the thread. A thread is
+digested again after every new message. The claim then carries the same
+desk's last five digests on the same pack (`recent`), inlined under
+*your recent threads* with the rubric that they are continuity, not
+evidence — so the coach knows last week's commitment and the client
+manager knows Tuesday's *Next:* on Thursday. A digest run is not a chat
+turn: no ledger row, no tools, no reply; it shows only in the worker log.
+
+**Handoffs.** `route_to` lets a desk hand the conversation to another desk
+with a brief, along the org chart's edges only (pm and dreamer reach any
+desk; an account desk reaches the pm; the product owner briefs developer,
+designer and marketer; the marketer briefs the copywriter). Previewed like
+every write; on Confirm `send()` opens a new thread addressed to that desk
+— the brief as its first message, shown as from the handing desk, the
+pack carried when the kinds match, `from_thread_id` pointing back — and
+the desk answers there. A conversation travels with a brief; work products
+never do.
+
 `RunAtLoad` at login, `KeepAlive` if it dies.
 
 ```sh
@@ -456,13 +498,9 @@ that moved between server and client would be a hydration error.
 - **Streaming.** The page polls every three seconds while a turn is in flight.
   Adequate for work that takes tens of seconds; a stream can come later without
   changing the contract.
-- **Group threads and handoffs.** A thread has one desk at a time; a desk
-  that says "this is the copywriter's" leaves Karol to re-address the thread
-  or open another. A `route_to` that opens a linked thread with a brief, and
-  a roster in the rail, are the next steps. `/train <persona>` — the
-  persona's threads distilled into `memory.md` after Karol approves — is a
-  plugin lane, not a CRM one; the CRM's part is a thumbs-down that lands a
-  `chat_feedback` row for it to read.
+- **Group threads.** A thread has one desk at a time; `route_to` opens a
+  new one rather than adding a second voice. A roster in the rail is a
+  filter over threads that exist, not a directory.
 - **Voice and attachments.** In the mockup, not in the build. The composer
   deliberately has no attach or dictate buttons until they do something.
 - **Structured skill results.** A skill's picklist (inspector findings, a

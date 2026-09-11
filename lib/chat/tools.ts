@@ -1,9 +1,10 @@
 import { asc, eq } from "drizzle-orm"
 import { db } from "@/db"
-import { clients, projects } from "@/db/schema"
+import { clients, projects, sites } from "@/db/schema"
 import { BOARD_TOOLS } from "@/lib/chat/tools-board"
 import { INBOX_TOOLS } from "@/lib/chat/tools-inbox"
 import { INSPIRATION_TOOLS } from "@/lib/chat/tools-inspiration"
+import { DESK_TOOLS } from "@/lib/chat/tools-desk"
 import { PACK_TOOLS } from "@/lib/chat/tools-packs"
 import {
   hoursLabel,
@@ -292,20 +293,71 @@ const createTask: ToolSpec = {
   },
 }
 
+const listSites: ToolSpec = {
+  name: "list_sites",
+  description:
+    "The sites the CRM measures, with their slugs and clients. Call this first when a site name has to become a slug — refresh_insights takes the slug exactly as listed here.",
+  mutating: false,
+  parameters: { type: "object", properties: {} },
+  async run() {
+    const rows = await db.query.sites.findMany({
+      orderBy: [asc(sites.sort), asc(sites.name)],
+      with: { client: { columns: { slug: true, name: true } } },
+    })
+    return {
+      sites: rows.map((s) => ({
+        slug: s.slug,
+        name: s.name,
+        origin: s.origin,
+        client: s.client?.slug ?? null,
+        searchConsole: Boolean(s.gscSiteUrl),
+        ga4: Boolean(s.measurementId),
+      })),
+    }
+  },
+}
+
+/** `my-custom-manufacturer` → the slug it most likely meant, or null. */
+async function nearestSite(slug: string) {
+  const rows = await db.query.sites.findMany({ columns: { slug: true, name: true } })
+  const key = slug.toLowerCase().replace(/[^a-z0-9]/g, "")
+  const hit = rows.find(
+    (s) =>
+      s.slug.replace(/[^a-z0-9]/g, "") === key ||
+      s.name.toLowerCase().replace(/[^a-z0-9]/g, "") === key
+  )
+  return { rows, hit: hit ?? null }
+}
+
 const refreshInsights: ToolSpec = {
   name: "refresh_insights",
   description:
-    "Pull fresh analytics for a site. Confirmed first because it calls Google and Vercel and can take a while.",
+    "Pull fresh analytics for a site. Takes the site's slug as list_sites gives it — call list_sites first when you only have a name. Confirmed first because it calls Google and Vercel and can take a while.",
   mutating: true,
   parameters: {
     type: "object",
-    properties: { siteSlug: { type: "string" } },
+    properties: { siteSlug: { type: "string", description: "A slug from list_sites." } },
     required: ["siteSlug"],
   },
   async preview(args) {
+    const slug = str(args, "siteSlug") ?? ""
+    const site = slug ? await db.query.sites.findFirst({ where: eq(sites.slug, slug) }) : null
+    if (!site) {
+      // Refuse here, before Karol sees a card, and say what it was probably meant to be.
+      const { rows, hit } = await nearestSite(slug)
+      const known = rows.map((s) => s.slug).join(", ") || "none"
+      throw new Error(
+        hit
+          ? `No site with slug "${slug}" — did you mean "${hit.slug}" (${hit.name})? Call again with that slug.`
+          : `No site with slug "${slug}". Sites: ${known}. Call list_sites and use a slug from it.`
+      )
+    }
     return {
       title: "Refresh insights",
-      fields: [{ label: "Site", value: str(args, "siteSlug") ?? "—" }],
+      fields: [
+        { label: "Site", value: `${site.name} (${site.slug})` },
+        { label: "Origin", value: site.origin || "—" },
+      ],
       note: "Calls Search Console, GA4, Ads and Vercel, then rewrites the cached snapshot.",
     }
   },
@@ -322,10 +374,12 @@ export const TOOLS: readonly ToolSpec[] = [
   searchWorkHistory,
   searchPastSessions,
   listClients,
+  listSites,
   ...INBOX_TOOLS,
   ...BOARD_TOOLS,
   ...INSPIRATION_TOOLS,
   ...PACK_TOOLS,
+  ...DESK_TOOLS,
   logTime,
   createTask,
   refreshInsights,
@@ -333,6 +387,16 @@ export const TOOLS: readonly ToolSpec[] = [
 
 export function toolByName(name: string): ToolSpec | undefined {
   return TOOLS.find((tool) => tool.name === name)
+}
+
+/** Where a tool is defined — the first file a solver should open when it failed. */
+export function toolSource(name: string): string {
+  if (INBOX_TOOLS.some((t) => t.name === name)) return "lib/chat/tools-inbox.ts"
+  if (BOARD_TOOLS.some((t) => t.name === name)) return "lib/chat/tools-board.ts"
+  if (INSPIRATION_TOOLS.some((t) => t.name === name)) return "lib/chat/tools-inspiration.ts"
+  if (PACK_TOOLS.some((t) => t.name === name)) return "lib/chat/tools-packs.ts"
+  if (DESK_TOOLS.some((t) => t.name === name)) return "lib/chat/tools-desk.ts"
+  return "lib/chat/tools.ts"
 }
 
 /** The tool list as the worker hands it to the model. */
