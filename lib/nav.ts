@@ -45,6 +45,7 @@ export type NavIconName =
   | "slinks"
   | "scaffolds"
   | "hivemind"
+  | "usage"
 
 export type NavLink = {
   href: string
@@ -89,6 +90,7 @@ export const ROUTES = {
   timesheetSheets: "/timesheet/sheets",
   timesheetEntries: "/timesheet/entries",
   timesheetSessions: "/timesheet/sessions",
+  usage: "/usage",
   timesheetMeetings: "/timesheet/review?tab=meetings",
   attribution: "/settings/attribution",
   insights: "/insights",
@@ -151,6 +153,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
           { href: ROUTES.timesheetSheets, label: "Sheets", icon: "sheets" },
           { href: ROUTES.timesheetEntries, label: "Ledger", icon: "ledger" },
           { href: ROUTES.timesheetSessions, label: "Sessions", icon: "sessions" },
+          { href: ROUTES.usage, label: "Usage", icon: "usage" },
         ],
       },
     ],

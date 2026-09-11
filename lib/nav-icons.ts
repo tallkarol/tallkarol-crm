@@ -43,6 +43,7 @@ import {
   UserCog,
   Users,
   Wallet,
+  Gauge,
 } from "lucide-react"
 import type { NavIconName } from "@/lib/nav"
 
@@ -73,6 +74,7 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   sheets: Table2,
   ledger: Rows3,
   sessions: History,
+  usage: Gauge,
   devices: Smartphone,
   attribution: Route,
   analytics: LineChart,

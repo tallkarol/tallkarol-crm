@@ -1,5 +1,7 @@
 import { relations, sql } from "drizzle-orm"
 import {
+  bigint,
+  bigserial,
   boolean,
   customType,
   date,
@@ -7,7 +9,9 @@ import {
   integer,
   numeric,
   pgTable,
+  serial,
   smallint,
+  unique,
   uniqueIndex,
   uuid,
   text,
@@ -2369,8 +2373,11 @@ export const agentSessions = pgTable(
     /** Invoice voice — lowercase, terse, comma-joined outcomes. A draft Karol edits. */
     summary: text("summary").notNull().default(""),
     highlights: jsonb("highlights").$type<string[]>().notNull().default([]),
-    tokensIn: integer("tokens_in").notNull().default(0),
-    tokensOut: integer("tokens_out").notNull().default(0),
+    /** Session totals as the summarizer pushed them. bigint: the largest
+        (inflated, pre-dedupe) session held 722M. /usage never reads these —
+        it sums agent_turns; SessionPeek still does. */
+    tokensIn: bigint("tokens_in", { mode: "number" }).notNull().default(0),
+    tokensOut: bigint("tokens_out", { mode: "number" }).notNull().default(0),
     /** Raw metered hours for the conversation — working data, never billed as-is. */
     meterHours: numeric("meter_hours", { precision: 6, scale: 2 }).notNull().default("0"),
     model: text("model").notNull().default(""),
@@ -2389,6 +2396,95 @@ export const agentSessions = pgTable(
     ),
   })
 )
+
+/* ------------------------------------------------------------------ */
+/* usage — where the agent work went, and how close a cap is           */
+/* ------------------------------------------------------------------ */
+
+/**
+ * One row per metered turn on the Mac (agent_meter in daedalus-hive-mind):
+ * a Claude Code or Cursor turn, or a subagent run, with the usage its
+ * transcript carried. Same grain as chat_turns. NULL means unknown — every
+ * Cursor row, and a Claude row whose transcript is gone; 0 is a real zero.
+ * No cost column: nothing here has a bill (Claude Max is a plan, Cursor's
+ * IDE dollars have no source). `meter_ref` is "<host>:<agent_meter.id>",
+ * so a re-push merges (coalesce) instead of duplicating.
+ */
+export const agentTurns = pgTable(
+  "agent_turns",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    meterRef: text("meter_ref").notNull().unique(),
+    /** Joins agent_sessions.session_ref; no FK — unassigned sessions never reach that table. */
+    sessionRef: text("session_ref").notNull(),
+    /** claude | cursor */
+    surface: text("surface").notNull().default("claude"),
+    /** turn | subagent */
+    kind: text("kind").notNull().default("turn"),
+    agentId: text("agent_id"),
+    clientId: uuid("client_id").references(() => clients.id, { onDelete: "set null" }),
+    /** What the Mac resolved, kept even when no CRM client matches. */
+    clientSlug: text("client_slug"),
+    cwd: text("cwd").notNull().default(""),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    endedAt: timestamp("ended_at", { withTimezone: true }).notNull(),
+    seconds: integer("seconds").notNull().default(0),
+    model: text("model"),
+    effort: text("effort"),
+    /** skill:<name> | agent:<subagent type> | NULL */
+    lane: text("lane"),
+    /** API requests, one per requestId. */
+    requests: integer("requests"),
+    inputTokens: bigint("input_tokens", { mode: "number" }),
+    cacheWriteTokens: bigint("cache_write_tokens", { mode: "number" }),
+    cacheReadTokens: bigint("cache_read_tokens", { mode: "number" }),
+    outputTokens: bigint("output_tokens", { mode: "number" }),
+    thinkingTokens: bigint("thinking_tokens", { mode: "number" }),
+    /** hook | backfill | recompute */
+    origin: text("origin").notNull().default("hook"),
+    deviceId: uuid("device_id").references(() => deviceTokens.id, { onDelete: "set null" }),
+    pushedAt: timestamp("pushed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byStarted: index("agent_turns_started_idx").on(table.startedAt),
+    byClient: index("agent_turns_client_idx").on(table.clientId, table.startedAt),
+    bySession: index("agent_turns_session_idx").on(table.sessionRef),
+  })
+)
+
+/**
+ * One reading of a cap or a bill, stored verbatim: the CLI/API JSON, or the
+ * fields Karol typed from a dashboard. The page reads only the newest row
+ * per source and prints its age, so a missing reading is a missing tile,
+ * never a zero. A manual row and a polled row have the same shape.
+ */
+export const usageSnapshots = pgTable(
+  "usage_snapshots",
+  {
+    id: serial("id").primaryKey(),
+    /** railway | claude_max | cursor_dashboard | vercel | resend | dataforseo */
+    source: text("source").notNull(),
+    /** cli | api | manual */
+    basis: text("basis").notNull().default("manual"),
+    /** The moment the reading is for. */
+    observedAt: timestamp("observed_at", { withTimezone: true }).notNull(),
+    periodStart: date("period_start"),
+    periodEnd: date("period_end"),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
+    /** Where it came from: "railway usage --json", "typed from /usage". */
+    note: text("note").notNull().default(""),
+    deviceId: uuid("device_id").references(() => deviceTokens.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    /** A table constraint, as the migration declares it — the ON CONFLICT target. */
+    oneReading: unique("usage_snapshots_source_observed_unique").on(table.source, table.observedAt),
+    bySource: index("usage_snapshots_source_idx").on(table.source, table.observedAt),
+  })
+)
+
+export type AgentTurn = typeof agentTurns.$inferSelect
+export type UsageSnapshot = typeof usageSnapshots.$inferSelect
 
 /**
  * Which sessions a billable entry paid for, and how much of it each one
