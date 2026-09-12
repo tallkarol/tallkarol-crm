@@ -178,3 +178,45 @@ curl -H "Authorization: Bearer $WIDGET_TOKEN" https://crm.tallkarol.com/api/widg
 2. `POST /api/ingest` with Bearer secret and a sample body → row appears in inbox
 3. Submit the live contact form → email + CRM row
 4. `npm run smartsheet:sync -- --status` on the cron service → a recent run, `ok`
+
+## 9. Migrations — the high-water mark
+
+The pre-deploy runs `npm run db:migrate`, and drizzle's migrator does **not**
+track which migrations ran. It reads one number — the newest `created_at` in
+`drizzle.__drizzle_migrations` — and applies a journal entry only when that
+entry's `when` is greater than it (`pg-core/dialect.js`). It is a high-water
+mark, not a set of applied tags.
+
+So a migration whose `when` lands at or below the mark is skipped. Not
+retried, not warned about: skipped, on every deploy from then on, while
+`migrate()` exits 0 and the deploy goes green. The health check proves
+nothing here — it deliberately touches no database.
+
+That is the Sep 11–12 outage. `0056_meeting_notes` was dropped from the
+journal to get past a broken entry; the deploy that followed carried the mark
+up to `0058`'s `1789139000000`; and when 0056 came back with its original
+`when` of `1789051000000` it was already under the mark. The tables were
+never created, `AdminLayout` calls `liveRecording()` on every admin page, and
+every page — the PWA shell with them — answered `relation "meeting_notes"
+does not exist`.
+
+Two rules follow.
+
+**Never renumber or re-date a journal entry to make it run again.** Lowering
+the mark re-runs everything above it; reusing an old `when` runs nothing.
+Re-add the schema as a *new* migration with a `when` above the mark, written
+so it is a no-op where the objects already exist — `0059_meeting_notes_repair`
+is the worked example, down to recording 0056 as applied, since drizzle never
+will.
+
+**Trust the check, not the exit code.** `db/migrate.ts` now verifies, after
+migrating, that every journal entry has a row in `drizzle.__drizzle_migrations`
+and fails the pre-deploy if one does not:
+
+```
+1 migration(s) in the journal never ran:
+  - 0056_meeting_notes (when 1789051000000)
+```
+
+A deploy that stops here has caught the fault. A deploy that ships a missing
+table has not.
