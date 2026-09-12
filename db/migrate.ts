@@ -46,14 +46,23 @@ async function verifyNothingSkipped(client: postgres.Sql) {
   if (skipped.length > 0) {
     const mark = Math.max(0, ...Array.from(applied))
     const lines = skipped.map((e) => `  - ${e.tag} (when ${e.when})`).join("\n")
-    throw new Error(
+    const report =
       `${skipped.length} migration(s) in the journal never ran:\n${lines}\n\n` +
-        `The applied high-water mark is ${mark}. Drizzle skips anything at or ` +
-        `below it, silently. Do not lower the mark and do not renumber the ` +
-        `entry — re-add the schema as a new, idempotent migration whose ` +
-        `\`when\` is above ${mark}, the way 0059_meeting_notes_repair re-adds ` +
-        `0056.`
-    )
+      `The applied high-water mark is ${mark}. Drizzle skips anything at or ` +
+      `below it, silently. Do not lower the mark and do not renumber the ` +
+      `entry — re-add the schema as a new, idempotent migration whose ` +
+      `\`when\` is above ${mark}, the way 0059_meeting_notes_repair re-adds ` +
+      `0056.`
+
+    // The escape hatch exists because this check runs in the pre-deploy, and
+    // a check that can wedge a deploy is a second outage waiting to happen.
+    // It is for getting a site back up with a known-incomplete schema, not
+    // for living with one: the deploy still prints everything it found.
+    if (process.env.MIGRATE_ALLOW_SKIPPED === "1") {
+      console.warn(`\nWARNING — MIGRATE_ALLOW_SKIPPED=1, deploying anyway.\n${report}\n`)
+      return
+    }
+    throw new Error(report)
   }
 
   console.log(`Verified ${journal.entries.length} migrations applied.`)

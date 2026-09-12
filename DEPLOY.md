@@ -220,3 +220,10 @@ and fails the pre-deploy if one does not:
 
 A deploy that stops here has caught the fault. A deploy that ships a missing
 table has not.
+
+The one exception is an outage. A check that runs in the pre-deploy can wedge
+a deploy, and being unable to ship during an incident is its own failure, so
+`MIGRATE_ALLOW_SKIPPED=1` downgrades it to a warning and lets the deploy
+through — still printing every entry it found missing. Use it to get back up
+with a schema you know is incomplete, then take the variable off. Leaving it
+set turns the check back into the silence it was written to end.
