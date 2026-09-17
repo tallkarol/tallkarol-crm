@@ -1,7 +1,7 @@
 "use client"
 
-import { useRef, useState, useTransition } from "react"
-import { copyToClipboard } from "@/components/support/CopyButton"
+import { useEffect, useRef, useState, useTransition } from "react"
+import { copyToClipboard, copyWhenReady } from "@/components/support/CopyButton"
 import { clientColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { VAULT_KIND_LABEL, VAULT_KINDS, type VaultEntryView } from "@/lib/vault"
@@ -13,6 +13,8 @@ import {
 
 type ClientOption = { id: string; name: string }
 
+type CopyTarget = "user" | "secret"
+
 export function VaultRow({
   entry,
   clients,
@@ -22,36 +24,58 @@ export function VaultRow({
 }) {
   const [editing, setEditing] = useState(false)
   const [secret, setSecret] = useState<string | null>(null)
-  const [copyState, setCopyState] = useState<"idle" | "done" | "error">("idle")
+  const [copyState, setCopyState] = useState<{
+    target: CopyTarget
+    state: "done" | "error"
+  } | null>(null)
   const [pending, startTransition] = useTransition()
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const secretRequest = useRef<Promise<string | null> | null>(null)
 
-  const loadSecret = async () => {
-    if (secret != null) return secret
-    const result = await revealVaultSecret(entry.id)
-    if (!result.ok) return null
-    setSecret(result.secret)
-    return result.secret
+  useEffect(() => () => {
+    if (copyTimer.current) clearTimeout(copyTimer.current)
+  }, [])
+
+  const flash = (target: CopyTarget, state: "done" | "error") => {
+    setCopyState({ target, state })
+    if (copyTimer.current) clearTimeout(copyTimer.current)
+    copyTimer.current = setTimeout(() => setCopyState(null), 1600)
   }
 
-  const copySecret = async () => {
-    const value = await loadSecret()
-    if (value == null || value === "") {
-      setCopyState("error")
-    } else {
-      const ok = await copyToClipboard(value)
-      setCopyState(ok ? "done" : "error")
+  const chipState = (target: CopyTarget) =>
+    copyState?.target === target ? copyState.state : "idle"
+
+  /**
+   * One request per row, shared by copy and reveal. It deliberately does not
+   * touch `secret` state — copying a password should not also put it on screen.
+   * A failed load is not cached, so the next click retries.
+   */
+  const loadSecret = () => {
+    if (secret != null) return Promise.resolve(secret)
+    if (!secretRequest.current) {
+      secretRequest.current = revealVaultSecret(entry.id)
+        .then((result) => (result.ok && result.secret ? result.secret : null))
+        .catch(() => null)
+        .then((value) => {
+          if (value == null) secretRequest.current = null
+          return value
+        })
     }
-    if (copyTimer.current) clearTimeout(copyTimer.current)
-    copyTimer.current = setTimeout(() => setCopyState("idle"), 1600)
+    return secretRequest.current
+  }
+
+  const copySecret = () => {
+    // No await before this call — see copyWhenReady. Awaiting the server action
+    // first spends the click's user gesture and the browser refuses the write.
+    void copyWhenReady(loadSecret()).then((ok) =>
+      flash("secret", ok ? "done" : "error")
+    )
   }
 
   const copyUsername = async () => {
     if (!entry.username) return
     const ok = await copyToClipboard(entry.username)
-    setCopyState(ok ? "done" : "error")
-    if (copyTimer.current) clearTimeout(copyTimer.current)
-    copyTimer.current = setTimeout(() => setCopyState("idle"), 1600)
+    flash("user", ok ? "done" : "error")
   }
 
   if (editing) {
@@ -63,6 +87,8 @@ export function VaultRow({
               await updateVaultEntry(formData)
               setEditing(false)
               setSecret(null)
+              // The stored secret may have just changed — drop the cached one.
+              secretRequest.current = null
             })
           }}
           className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 lg:grid-cols-6"
@@ -191,9 +217,13 @@ export function VaultRow({
           <button
             type="button"
             onClick={copyUsername}
-            className={chipClass(copyState === "done")}
+            className={chipClass(chipState("user") === "done")}
           >
-            {copyState === "done" ? "copied" : "user"}
+            {chipState("user") === "done"
+              ? "copied"
+              : chipState("user") === "error"
+                ? "failed"
+                : "user"}
           </button>
         ) : null}
         {entry.hasSecret ? (
@@ -201,11 +231,11 @@ export function VaultRow({
             <button
               type="button"
               onClick={copySecret}
-              className={chipClass(copyState === "done")}
+              className={chipClass(chipState("secret") === "done")}
             >
-              {copyState === "done"
+              {chipState("secret") === "done"
                 ? "copied"
-                : copyState === "error"
+                : chipState("secret") === "error"
                   ? "failed"
                   : "copy"}
             </button>
@@ -217,7 +247,10 @@ export function VaultRow({
                   return
                 }
                 startTransition(() => {
-                  void loadSecret()
+                  void loadSecret().then((value) => {
+                    if (value == null) flash("secret", "error")
+                    else setSecret(value)
+                  })
                 })
               }}
               className={chipClass(false)}

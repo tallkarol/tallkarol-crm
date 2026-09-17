@@ -4,10 +4,25 @@ import { db } from "@/db"
 import { vaultEntries } from "@/db/schema"
 import { asVaultKind, type VaultEntryView } from "@/lib/vault"
 
+/**
+ * VAULT_SECRET only, and loudly.
+ *
+ * This used to fall back to SESSION_SECRET, which looks harmless until the two
+ * environments disagree about whether VAULT_SECRET exists. Production had only
+ * SESSION_SECRET while the laptop had VAULT_SECRET, and both point at the same
+ * database — so every entry written from localhost was sealed with a key
+ * production did not have. Nothing errored at write time and nothing errored at
+ * read time either: the GCM tag check just failed, revealVaultSecret returned
+ * { ok: false }, and the UI said "failed" for every row in the vault.
+ *
+ * A key that is absent is a deployment fault, not something to paper over with
+ * a different key. Tying the vault to SESSION_SECRET is also its own trap —
+ * rotating the session secret to sign everyone out would shred the vault.
+ */
 function vaultKey() {
-  const raw = process.env.VAULT_SECRET || process.env.SESSION_SECRET
+  const raw = process.env.VAULT_SECRET
   if (!raw) {
-    throw new Error("VAULT_SECRET or SESSION_SECRET is required to use the vault")
+    throw new Error("VAULT_SECRET is required to use the vault")
   }
   return createHash("sha256").update(raw).digest()
 }

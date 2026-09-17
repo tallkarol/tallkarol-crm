@@ -28,6 +28,37 @@ export async function copyToClipboard(text: string) {
   }
 }
 
+/**
+ * Copy a value that still has to be fetched.
+ *
+ * The clipboard write has to *start* inside the click that asked for it. Await
+ * a server action first and the user gesture is spent: Safari refuses outright,
+ * Firefox refuses past five seconds, and the execCommand fallback needs the
+ * same gesture so it cannot rescue it. `ClipboardItem` takes a promise, so the
+ * browser holds the clipboard open and waits for the value on our behalf.
+ *
+ * Call this synchronously from the handler — nothing may be awaited before it.
+ */
+export async function copyWhenReady(pending: Promise<string | null>) {
+  if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
+    try {
+      const item = new ClipboardItem({
+        "text/plain": pending.then((text) => {
+          if (!text) throw new Error("nothing to copy")
+          return new Blob([text], { type: "text/plain" })
+        }),
+      })
+      await navigator.clipboard.write([item])
+      return true
+    } catch {
+      // Some browsers refuse a promise-backed item; try the plain path below.
+    }
+  }
+  const text = await pending
+  if (!text) return false
+  return copyToClipboard(text)
+}
+
 export function CopyButton({
   text,
   label = "copy",
