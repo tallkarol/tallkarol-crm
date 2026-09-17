@@ -77,7 +77,7 @@ export function RecordPopover({ clients }: { clients: ClockClient[] }) {
   }
 
   return (
-    <ToolButton label={live ? `Recording: ${live.title || live.client?.name || "meeting"}` : "Record a meeting"} icon={<Mic />} dot={Boolean(live)}>
+    <ToolButton label={live ? `Recording: ${live.title || live.client?.name || "meeting"}` : "Record a meeting"} icon={<Mic />} dot={Boolean(live)} track="home.record">
       {(close) => (
         <div className="grid gap-3">
           <div className="flex items-center gap-2 font-ui">
@@ -176,6 +176,7 @@ export function RecordPopover({ clients }: { clients: ClockClient[] }) {
               <button
                 type="button"
                 disabled={pending || live.status === "stopping"}
+                data-track="home.record.stop"
                 onClick={() => end(close)}
                 className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-tk-tomato px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95 disabled:opacity-60"
               >
@@ -186,6 +187,7 @@ export function RecordPopover({ clients }: { clients: ClockClient[] }) {
               <button
                 type="button"
                 disabled={pending}
+                data-track="home.record.start"
                 onClick={() => begin(close)}
                 className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95 disabled:opacity-60"
               >

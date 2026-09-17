@@ -11,6 +11,7 @@ import {
 } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { ROUTES } from "@/lib/nav"
+import { tracked } from "@/lib/activity/tracked"
 
 /**
  * The mutations the delivery ledger and its modal own. Project, fee and
@@ -35,7 +36,7 @@ const WORKSTREAM_STAGES: WorkstreamStage[] = [
   "live",
 ]
 
-export async function setWorkstreamStageAction(
+export const setWorkstreamStageAction = tracked("delivery.setWorkstreamStageAction", async function setWorkstreamStageAction(
   id: string,
   stage: WorkstreamStage
 ): Promise<Result> {
@@ -60,9 +61,9 @@ export async function setWorkstreamStageAction(
 
   touch([ROUTES.delivery, ROUTES.projects, ROUTES.home])
   return { ok: true }
-}
+})
 
-export async function addWorkstreamAction(projectId: string, title: string): Promise<Result> {
+export const addWorkstreamAction = tracked("delivery.addWorkstreamAction", async function addWorkstreamAction(projectId: string, title: string): Promise<Result> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
   const trimmed = title.trim().slice(0, 200)
@@ -71,11 +72,11 @@ export async function addWorkstreamAction(projectId: string, title: string): Pro
   await db.insert(workstreams).values({ projectId, title: trimmed })
   touch([ROUTES.delivery, ROUTES.projects, ROUTES.home])
   return { ok: true }
-}
+})
 
 const RETAINER_STATUSES: RetainerStatus[] = ["active", "paused", "ended"]
 
-export async function setRetainerStatusAction(
+export const setRetainerStatusAction = tracked("delivery.setRetainerStatusAction", async function setRetainerStatusAction(
   id: string,
   status: RetainerStatus
 ): Promise<Result> {
@@ -92,9 +93,9 @@ export async function setRetainerStatusAction(
 
   touch([ROUTES.delivery, ROUTES.retainers, ROUTES.retainer(row.slug), ROUTES.home])
   return { ok: true }
-}
+})
 
-export async function setRetainerNotesAction(id: string, notes: string): Promise<Result> {
+export const setRetainerNotesAction = tracked("delivery.setRetainerNotesAction", async function setRetainerNotesAction(id: string, notes: string): Promise<Result> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
   const [row] = await db
@@ -106,4 +107,4 @@ export async function setRetainerNotesAction(id: string, notes: string): Promise
 
   touch([ROUTES.delivery, ROUTES.retainers, ROUTES.retainer(row.slug)])
   return { ok: true }
-}
+})

@@ -118,12 +118,10 @@ export function StatusMenu({
         {(close) => (
           <>
             {options.map((opt) => (
-              <MenuOption
-                key={opt.value}
-                checked={opt.value === active}
-                label={opt.label}
-                onSelect={() => pick(opt.value, close)}
-              />
+              // `contents` keeps the menu's layout; the span only names the choice for /activity.
+              <span key={opt.value} className="contents" data-track="delivery.status" data-track-value={opt.value} data-track-from={active}>
+                <MenuOption checked={opt.value === active} label={opt.label} onSelect={() => pick(opt.value, close)} />
+              </span>
             ))}
           </>
         )}

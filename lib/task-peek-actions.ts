@@ -6,6 +6,7 @@ import {
   setTaskStage,
   updateTask,
 } from "@/lib/task-actions"
+import { tracked } from "@/lib/activity/tracked"
 
 /**
  * Single-value setters, shaped for the peek controls.
@@ -17,46 +18,46 @@ import {
 
 type Result = { ok: boolean; error?: string }
 
-export async function setTaskTitleAction(id: string, title: string): Promise<Result> {
+export const setTaskTitleAction = tracked("taskPeek.setTaskTitleAction", async function setTaskTitleAction(id: string, title: string): Promise<Result> {
   return updateTask(id, { title })
-}
+})
 
-export async function setTaskNotesAction(id: string, notes: string): Promise<Result> {
+export const setTaskNotesAction = tracked("taskPeek.setTaskNotesAction", async function setTaskNotesAction(id: string, notes: string): Promise<Result> {
   return updateTask(id, { notes })
-}
+})
 
-export async function setTaskDueAction(
+export const setTaskDueAction = tracked("taskPeek.setTaskDueAction", async function setTaskDueAction(
   id: string,
   dueOn: string | null
 ): Promise<Result> {
   return updateTask(id, { dueOn })
-}
+})
 
-export async function setTaskSnoozeAction(
+export const setTaskSnoozeAction = tracked("taskPeek.setTaskSnoozeAction", async function setTaskSnoozeAction(
   id: string,
   snoozedUntil: string | null
 ): Promise<Result> {
   return updateTask(id, { snoozedUntil })
-}
+})
 
-export async function setTaskCadenceAction(
+export const setTaskCadenceAction = tracked("taskPeek.setTaskCadenceAction", async function setTaskCadenceAction(
   id: string,
   cadence: string
 ): Promise<Result> {
   return updateTask(id, { cadence: cadence as Cadence })
-}
+})
 
-export async function setTaskPriorityAction(
+export const setTaskPriorityAction = tracked("taskPeek.setTaskPriorityAction", async function setTaskPriorityAction(
   id: string,
   priority: string
 ): Promise<Result> {
   return updateTask(id, { priority: Number(priority) })
-}
+})
 
-export async function setTaskStageAction(id: string, stage: string): Promise<Result> {
+export const setTaskStageAction = tracked("taskPeek.setTaskStageAction", async function setTaskStageAction(id: string, stage: string): Promise<Result> {
   return setTaskStage(id, stage)
-}
+})
 
-export async function setTaskStatusAction(id: string, done: boolean): Promise<Result> {
+export const setTaskStatusAction = tracked("taskPeek.setTaskStatusAction", async function setTaskStatusAction(id: string, done: boolean): Promise<Result> {
   return setTaskDone(id, done)
-}
+})

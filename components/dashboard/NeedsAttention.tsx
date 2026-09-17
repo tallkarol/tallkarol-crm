@@ -320,6 +320,7 @@ function FilterChip({
     <button
       type="button"
       aria-pressed={active}
+      data-track="home.attention.filter"
       onClick={onClick}
       className={cn(
         "inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 font-ui text-xs font-semibold transition-colors",
@@ -605,6 +606,7 @@ function CompleteButton({
   return (
     <button
       type="button"
+      data-track="home.attention.complete"
       onClick={onClick}
       disabled={completing}
       aria-label={`Mark ${title} done`}
@@ -661,6 +663,8 @@ function LayoutButton({
   return (
     <button
       type="button"
+      data-track="home.attention.layout"
+      data-track-value={icon}
       onClick={onClick}
       aria-pressed={active}
       aria-label={label}

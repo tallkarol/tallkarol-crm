@@ -231,6 +231,7 @@ export function FloatingClock({
         type="button"
         aria-label="Move the clock. Arrow keys nudge it; Home puts it back."
         title="Drag to move"
+        data-track="clock.float.move"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -291,6 +292,7 @@ function RunningPill({
         disabled={busy}
         aria-label={`Clock out of ${name}`}
         title={busy ? "Stopping…" : "Clock out"}
+        data-track="clock.float.stop"
         onClick={() => {
           onError(null)
           startTransition(async () => {
@@ -353,6 +355,7 @@ function RecordingPill({
         type="button"
         disabled={busy || stopping}
         aria-label={starting ? "Cancel the recording" : `Stop recording ${name}`}
+        data-track="clock.float.stopRecording"
         title={stopping ? "Finishing…" : starting ? "Cancel" : "Stop recording"}
         onClick={() => {
           onError(null)

@@ -9,7 +9,7 @@ import { ROUTES } from "@/lib/nav"
 import { formatStamp } from "@/lib/support"
 import { Card } from "@/components/ui/Card"
 
-export const metadata = { title: "Activity" }
+export const metadata = { title: "Logs" }
 export const dynamic = "force-dynamic"
 
 const LIMIT = 200

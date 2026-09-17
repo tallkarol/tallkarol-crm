@@ -74,7 +74,7 @@ export function NewPopover({ clients }: { clients: NewClient[] }) {
   const current = KINDS.find((k) => k.id === kind)!
 
   return (
-    <ToolButton label="New" icon={<Plus />} primary width={380}>
+    <ToolButton label="New" icon={<Plus />} primary width={380} track="home.new">
       {(close) => (
         <div className="grid gap-3">
           <div className="flex items-center gap-2 font-ui">
@@ -88,6 +88,9 @@ export function NewPopover({ clients }: { clients: NewClient[] }) {
                 type="button"
                 role="tab"
                 aria-selected={kind === id}
+                data-track="home.new.kind"
+                data-track-value={id}
+                data-track-from={kind}
                 onClick={() => setKind(id)}
                 className={cn(
                   "inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 font-ui text-xs font-semibold transition-colors",
@@ -108,6 +111,7 @@ export function NewPopover({ clients }: { clients: NewClient[] }) {
                 <FieldLabel>Task</FieldLabel>
                 <input
                   data-autofocus
+                  data-track="home.new.title"
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -165,6 +169,7 @@ export function NewPopover({ clients }: { clients: NewClient[] }) {
                 <button
                   type="button"
                   disabled={pending || !title.trim()}
+                  data-track="home.new.task"
                   onClick={() => submit(close)}
                   className="h-8 whitespace-nowrap rounded-lg bg-accent px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95 disabled:opacity-60"
                 >

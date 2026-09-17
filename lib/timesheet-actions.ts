@@ -15,6 +15,7 @@ import {
   sumHours,
 } from "@/lib/timesheet"
 import { formatMoneyRaw } from "@/lib/work"
+import { tracked } from "@/lib/activity/tracked"
 
 export type TimeEntryInput = {
   id?: string
@@ -39,7 +40,7 @@ function isIsoDay(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value)
 }
 
-export async function saveTimeEntry(
+export const saveTimeEntry = tracked("timesheet.saveTimeEntry", async function saveTimeEntry(
   input: TimeEntryInput
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const user = await getSessionUser()
@@ -101,9 +102,9 @@ export async function saveTimeEntry(
     .returning({ id: timeEntries.id })
   revalidateWork()
   return { ok: true, id: created.id }
-}
+})
 
-export async function deleteTimeEntry(
+export const deleteTimeEntry = tracked("timesheet.deleteTimeEntry", async function deleteTimeEntry(
   id: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const user = await getSessionUser()
@@ -111,9 +112,9 @@ export async function deleteTimeEntry(
   await db.delete(timeEntries).where(eq(timeEntries.id, id))
   revalidateWork()
   return { ok: true }
-}
+})
 
-export async function createInvoiceFromTimesheet(input: {
+export const createInvoiceFromTimesheet = tracked("timesheet.createInvoiceFromTimesheet", async function createInvoiceFromTimesheet(input: {
   clientId: string
   month: string
 }): Promise<{ ok: true; number: string } | { ok: false; error: string }> {
@@ -200,4 +201,4 @@ export async function createInvoiceFromTimesheet(input: {
 
   revalidateWork()
   return { ok: true, number }
-}
+})

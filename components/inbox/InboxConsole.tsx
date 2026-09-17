@@ -164,6 +164,9 @@ export function InboxConsole({ data }: { data: InboxData }) {
               <button
                 key={item.id}
                 type="button"
+                data-track="inbox.lens"
+                data-track-value={item.id}
+                data-track-from={lens}
                 onClick={() => setQuery({ lens: item.id === "unread" ? null : item.id, item: null })}
                 className={cn(
                   "flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12.5px]",
@@ -187,6 +190,8 @@ export function InboxConsole({ data }: { data: InboxData }) {
               <button
                 key={k}
                 type="button"
+                data-track="inbox.kind"
+                data-track-value={k}
                 onClick={() => setQuery({ kind: on ? null : k, item: null })}
                 className={cn(
                   "flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12.5px]",
@@ -212,6 +217,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
                   <button
                     key={c.slug}
                     type="button"
+                    data-track="inbox.client"
                     onClick={() => setQuery({ client: on ? null : c.slug, item: null })}
                     className={cn(
                       "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12.5px]",
@@ -249,6 +255,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
                     <button
                       key={item.key}
                       type="button"
+                      data-track="inbox.item"
                       onClick={() => {
                         setQuery({ item: item.key })
                         if (item.state === "unread") run(() => markReadAction(item.key))
@@ -354,6 +361,8 @@ function Workspace({
           <button
             type="button"
             disabled={busy}
+            data-track="inbox.triage"
+            data-track-value="ticket"
             onClick={() => onRun(() => mailToTicketAction(item.id))}
             className="inline-flex h-[26px] items-center rounded-full bg-warn px-3 text-[11.5px] font-semibold text-canvas hover:brightness-110 disabled:opacity-50"
           >
@@ -386,6 +395,8 @@ function Workspace({
         <button
           type="button"
           disabled={busy}
+          data-track="inbox.triage"
+          data-track-value="task"
           onClick={() => {
             setTaskTitle(item.title)
             setComposing(true)
@@ -422,6 +433,8 @@ function Workspace({
           <button
             type="button"
             disabled={busy}
+            data-track="inbox.triage"
+            data-track-value="restore"
             onClick={() => onRun(() => unarchiveAction(item.key))}
             className={btn}
           >
@@ -431,6 +444,8 @@ function Workspace({
           <button
             type="button"
             disabled={busy}
+            data-track="inbox.triage"
+            data-track-value="archive"
             onClick={() => onRun(() => archiveAction(item.key))}
             className={btn}
           >
@@ -443,6 +458,7 @@ function Workspace({
         <div className="flex items-center gap-1.5 border-b border-line px-3 py-2">
           <input
             autoFocus
+            data-track="inbox.task.title"
             value={taskTitle}
             onChange={(e) => setTaskTitle(e.target.value)}
             onKeyDown={(e) => {
@@ -458,6 +474,7 @@ function Workspace({
           <button
             type="button"
             disabled={busy}
+            data-track="inbox.task.save"
             onClick={() => {
               setComposing(false)
               onRun(() => makeTaskAction(item.key, taskTitle, null))

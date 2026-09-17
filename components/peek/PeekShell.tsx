@@ -24,7 +24,7 @@ export function PeekShell({
   children: ReactNode
 }) {
   return (
-    <div className="fixed inset-0 z-[75]" role="dialog" aria-modal="true" aria-label={eyebrow}>
+    <div className="fixed inset-0 z-[75]" role="dialog" aria-modal="true" aria-label={eyebrow} data-nav="peek">
       <PeekEsc closeHref={closeHref} />
       <Link
         href={closeHref}

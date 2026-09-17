@@ -8,6 +8,7 @@ import { sendBriefing, sweepSessionNotes } from "@/lib/leftoff-data"
 import { localHourMinute } from "@/lib/leftoff"
 import { workspaceTimezone } from "@/lib/timezone"
 import { ROUTES } from "@/lib/nav"
+import { rollupActivity } from "@/lib/activity/rollup"
 
 /**
  * The clock work nothing else does.
@@ -90,5 +91,12 @@ export async function tick(now = new Date()) {
     console.error("briefing failed:", err)
   }
 
-  return { reopened, sweep, notifications, nudged, leftoff, briefing, meetings }
+  // Activity retention: raw events older than 90 days fold into daily rows.
+  // A no-op until a whole day has aged out.
+  const activity = await rollupActivity(now).catch((err) => {
+    console.error("activity rollup failed:", err)
+    return { rolled: 0, deleted: 0 }
+  })
+
+  return { reopened, sweep, notifications, nudged, leftoff, briefing, meetings, activity }
 }

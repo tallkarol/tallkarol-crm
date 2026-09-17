@@ -62,7 +62,7 @@ export function ClockPopover({
   }
 
   return (
-    <ToolButton label={live ? `Running: ${live.clientName}` : "Clock in"} icon={<Clock />} dot={Boolean(live)}>
+    <ToolButton label={live ? `Running: ${live.clientName}` : "Clock in"} icon={<Clock />} dot={Boolean(live)} track="home.clock">
       {(close) => (
         <div className="grid gap-3">
           <div className="flex items-center gap-2 font-ui">
@@ -158,6 +158,7 @@ export function ClockPopover({
               <button
                 type="button"
                 disabled={pending}
+                data-track="home.clock.stop"
                 onClick={() => end(close)}
                 className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-tk-tomato px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95 disabled:opacity-60"
               >
@@ -168,6 +169,7 @@ export function ClockPopover({
               <button
                 type="button"
                 disabled={pending || (!clientId && clients.length > 0)}
+                data-track="home.clock.start"
                 onClick={() => begin(close)}
                 className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-3 font-ui text-xs font-semibold text-tk-linen hover:brightness-95 disabled:opacity-60"
               >

@@ -136,6 +136,7 @@ export function ClockPanel({
                 <li key={key}>
                   <button
                     type="button"
+                    data-track="timesheet.clock.start"
                     onClick={() => begin(target)}
                     disabled={busy || isCurrent}
                     className={cn(
@@ -210,6 +211,7 @@ function RunningBand({
       </div>
       <button
         type="button"
+        data-track="timesheet.clock.stop"
         onClick={onStop}
         disabled={busy}
         className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-well px-4 py-2 text-xs font-bold text-tk-teal disabled:opacity-60"

@@ -16,6 +16,7 @@ import {
   updatePunch,
   type PunchView,
 } from "@/lib/punches"
+import { tracked } from "@/lib/activity/tracked"
 
 type Result<T = undefined> =
   | ({ ok: true } & (T extends undefined ? {} : { data: T }))
@@ -31,7 +32,7 @@ function revalidateTime() {
   revalidatePath("/retainers")
 }
 
-export async function startPunch(input: {
+export const startPunch = tracked("punch.startPunch", async function startPunch(input: {
   clientId?: string | null
   projectId?: string | null
   note?: string
@@ -53,16 +54,20 @@ export async function startPunch(input: {
   }
   revalidateTime()
   return { ok: true, data: result.data.punch }
-}
+})
 
-/** What is running right now — the floating clock polls this. */
+/**
+ * What is running right now — the floating clock polls this. Deliberately
+ * not tracked(): a background poll on every page is not something anyone
+ * waits for, and it would drown the actions that are (ACTIVITY.md).
+ */
 export async function runningNow(): Promise<PunchView[]> {
   const user = await getSessionUser()
   if (!user) return []
   return runningPunches(user.id)
 }
 
-export async function stopPunch(input: {
+export const stopPunch = tracked("punch.stopPunch", async function stopPunch(input: {
   punchId?: string
   note?: string
 } = {}): Promise<Result<PunchView>> {
@@ -77,9 +82,9 @@ export async function stopPunch(input: {
   if (!result.ok) return { ok: false, error: result.error }
   revalidateTime()
   return { ok: true, data: result.data }
-}
+})
 
-export async function approvePunchEntry(input: {
+export const approvePunchEntry = tracked("punch.approvePunchEntry", async function approvePunchEntry(input: {
   punchId: string
   summary?: string
   hours?: number
@@ -100,9 +105,9 @@ export async function approvePunchEntry(input: {
   if (!result.ok) return { ok: false, error: result.error }
   revalidateTime()
   return { ok: true, data: { timeEntryId: result.data.timeEntryId } }
-}
+})
 
-export async function editPunch(input: {
+export const editPunch = tracked("punch.editPunch", async function editPunch(input: {
   punchId: string
   note?: string
   clientId?: string | null
@@ -117,9 +122,9 @@ export async function editPunch(input: {
   if (!result.ok) return { ok: false, error: result.error }
   revalidateTime()
   return { ok: true, data: result.data }
-}
+})
 
-export async function dropPunch(punchId: string): Promise<Result> {
+export const dropPunch = tracked("punch.dropPunch", async function dropPunch(punchId: string): Promise<Result> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
 
@@ -127,9 +132,9 @@ export async function dropPunch(punchId: string): Promise<Result> {
   if (!result.ok) return { ok: false, error: result.error }
   revalidateTime()
   return { ok: true }
-}
+})
 
-export async function createDeviceToken(
+export const createDeviceToken = tracked("punch.createDeviceToken", async function createDeviceToken(
   name: string
 ): Promise<Result<{ id: string; name: string; token: string }>> {
   const user = await getSessionUser()
@@ -137,17 +142,17 @@ export async function createDeviceToken(
   const issued = await issueDeviceToken(user.id, name)
   revalidatePath("/settings/integrations/devices")
   return { ok: true, data: issued }
-}
+})
 
-export async function killDeviceToken(id: string): Promise<Result> {
+export const killDeviceToken = tracked("punch.killDeviceToken", async function killDeviceToken(id: string): Promise<Result> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
   await revokeDeviceToken(user.id, id)
   revalidatePath("/settings/integrations/devices")
   return { ok: true }
-}
+})
 
-export async function saveWorkspaceTimezone(timezone: string): Promise<Result> {
+export const saveWorkspaceTimezone = tracked("punch.saveWorkspaceTimezone", async function saveWorkspaceTimezone(timezone: string): Promise<Result> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
   const clean = timezone.trim()
@@ -161,4 +166,4 @@ export async function saveWorkspaceTimezone(timezone: string): Promise<Result> {
   revalidateTime()
   revalidatePath("/settings/integrations/devices")
   return { ok: true }
-}
+})

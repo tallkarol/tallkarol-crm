@@ -57,7 +57,7 @@ export function CommandPalette({ entries }: { entries: PaletteEntry[] }) {
 
   return (
     <>
-      <ToolButton label="Search or jump to… (⌘K)" icon={<Search />} onClick={() => setOpen(true)} />
+      <ToolButton label="Search or jump to… (⌘K)" icon={<Search />} onClick={() => setOpen(true)} track="home.palette" />
       {open ? <PaletteDialog entries={entries} onClose={() => setOpen(false)} /> : null}
     </>
   )
@@ -135,7 +135,7 @@ function PaletteDialog({
   let lastKind: PaletteEntry["kind"] | null = null
 
   return (
-    <div className="fixed inset-0 z-[66]" role="dialog" aria-modal="true" aria-label="Search or jump to">
+    <div className="fixed inset-0 z-[66]" role="dialog" aria-modal="true" aria-label="Search or jump to" data-nav="palette">
       <button
         type="button"
         aria-label="Close"

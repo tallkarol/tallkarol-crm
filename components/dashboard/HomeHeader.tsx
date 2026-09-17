@@ -109,14 +109,14 @@ export function HomeHeader({
               )
               if (pill.board) {
                 return (
-                  <button key={pill.label} type="button" onClick={openBoard} className={className}>
+                  <button key={pill.label} type="button" onClick={openBoard} className={className} data-track="home.pill">
                     {body}
                   </button>
                 )
               }
               if (pill.href) {
                 return (
-                  <Link key={pill.label} href={pill.href} className={className}>
+                  <Link key={pill.label} href={pill.href} className={className} data-track="home.pill">
                     {body}
                   </Link>
                 )
@@ -142,6 +142,7 @@ export function HomeHeader({
             badge={leftOff.blocked}
             dot={leftOff.blocked === 0 && leftOff.working > 0}
             onClick={openBoard}
+            track="home.leftoff"
           />
         ) : null}
         <NewPopover clients={clients} />

@@ -18,6 +18,7 @@ export function ToolButton({
   primary,
   onClick,
   width = 360,
+  track,
   children,
 }: {
   label: string
@@ -29,6 +30,8 @@ export function ToolButton({
   primary?: boolean
   onClick?: () => void
   width?: number
+  /** Names the button on /activity (see ACTIVITY.md). */
+  track?: string
   children?: (close: () => void) => ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -62,6 +65,7 @@ export function ToolButton({
       <button
         type="button"
         data-trigger
+        data-track={track}
         onClick={() => (children ? setOpen((o) => !o) : onClick?.())}
         aria-label={label}
         title={label}

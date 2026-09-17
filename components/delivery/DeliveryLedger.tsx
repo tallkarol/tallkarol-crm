@@ -136,6 +136,7 @@ function Row({ row, openHref }: { row: DeliveryRow; openHref: string }) {
       <Link
         href={openHref}
         scroll={false}
+        data-track="delivery.row.open"
         className="flex min-w-0 items-baseline gap-2 py-2 pl-2.5 focus-visible:underline sm:min-w-[220px] sm:shrink-0"
       >
         <span className="text-[10.5px] font-bold uppercase tracking-[0.05em] text-ink-3">
@@ -207,6 +208,7 @@ function Row({ row, openHref }: { row: DeliveryRow; openHref: string }) {
         href={openHref}
         scroll={false}
         aria-label={`Open ${row.clientName} ${row.name}`}
+        data-track="delivery.row.chevron"
         className="hidden shrink-0 rounded px-1 text-[15px] leading-none tracking-[1px] text-ink-3 hover:text-tk-teal sm:inline"
       >
         ⋯

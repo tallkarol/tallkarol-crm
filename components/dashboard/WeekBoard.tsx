@@ -439,13 +439,13 @@ export function WeekBoard({
           {start ? rangeLabel(start) : " "}
         </span>
         <Card surface="well" radius="lg" elevation="none" className="ml-0.5 inline-flex items-center gap-0.5 p-0.5" role="group" aria-label="Move the window">
-          <button type="button" aria-label="Previous five days" onClick={goPrev} className={segBtn}>
+          <button type="button" aria-label="Previous five days" onClick={goPrev} className={segBtn} data-track="home.week.prev">
             <ChevronLeft className="size-3.5" aria-hidden />
           </button>
-          <button type="button" aria-label="Jump to today" onClick={goToday} className={segBtn}>
+          <button type="button" aria-label="Jump to today" onClick={goToday} className={segBtn} data-track="home.week.today">
             Today
           </button>
-          <button type="button" aria-label="Next five days" onClick={goNext} className={segBtn}>
+          <button type="button" aria-label="Next five days" onClick={goNext} className={segBtn} data-track="home.week.next">
             <ChevronRight className="size-3.5" aria-hidden />
           </button>
         </Card>
@@ -472,6 +472,7 @@ export function WeekBoard({
                 key={source.id}
                 type="button"
                 aria-pressed={!isHidden}
+                data-track="home.week.source"
                 onClick={() => toggleHidden(source.id)}
                 style={{ "--c": source.color } as CSSProperties}
                 className={cn(
@@ -561,6 +562,8 @@ export function WeekBoard({
                             key={meeting.id}
                             type="button"
                             title={movable ? meeting.title || meeting.source : readOnlyTitle(source)}
+                            data-track="home.week.meeting"
+                            data-track-value={movable ? "movable" : "read-only"}
                             onPointerDown={(event) =>
                               onCardPointerDown(event, meeting, index)
                             }
@@ -610,6 +613,7 @@ export function WeekBoard({
           {toast.undo ? (
             <button
               type="button"
+              data-track="home.week.undo"
               onClick={() => {
                 toast.undo?.()
                 setToast(null)

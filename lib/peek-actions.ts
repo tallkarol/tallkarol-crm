@@ -17,6 +17,7 @@ import {
 import { getSessionUser } from "@/lib/auth"
 import { ROUTES } from "@/lib/nav"
 import { writeTrackerRowBack } from "@/lib/smartsheet-tracker"
+import { tracked } from "@/lib/activity/tracked"
 
 /**
  * Mutations behind the dashboard peek cards. Every card action lands here:
@@ -30,7 +31,7 @@ function touch(paths: string[]) {
 
 const INVOICE_STATUSES: InvoiceStatus[] = ["draft", "sent", "paid"]
 
-export async function setInvoiceStatusAction(id: string, status: InvoiceStatus) {
+export const setInvoiceStatusAction = tracked("peek.setInvoiceStatusAction", async function setInvoiceStatusAction(id: string, status: InvoiceStatus) {
   const user = await getSessionUser()
   if (!user) return { ok: false as const, error: "Sign in first." }
   if (!INVOICE_STATUSES.includes(status)) {
@@ -44,9 +45,9 @@ export async function setInvoiceStatusAction(id: string, status: InvoiceStatus) 
   if (!row) return { ok: false as const, error: "Invoice not found." }
   touch([ROUTES.home, ROUTES.invoices, ROUTES.invoice(row.number), ROUTES.revenue])
   return { ok: true as const }
-}
+})
 
-export async function setInvoiceNotesAction(id: string, notes: string) {
+export const setInvoiceNotesAction = tracked("peek.setInvoiceNotesAction", async function setInvoiceNotesAction(id: string, notes: string) {
   const user = await getSessionUser()
   if (!user) return { ok: false as const, error: "Sign in first." }
   const [row] = await db
@@ -57,7 +58,7 @@ export async function setInvoiceNotesAction(id: string, notes: string) {
   if (!row) return { ok: false as const, error: "Invoice not found." }
   touch([ROUTES.home, ROUTES.invoices, ROUTES.invoice(row.number)])
   return { ok: true as const }
-}
+})
 
 const DELIVERABLE_STATUSES: DeliverableStatus[] = [
   "pending",
@@ -66,7 +67,7 @@ const DELIVERABLE_STATUSES: DeliverableStatus[] = [
   "paid",
 ]
 
-export async function setDeliverableStatusAction(
+export const setDeliverableStatusAction = tracked("peek.setDeliverableStatusAction", async function setDeliverableStatusAction(
   id: string,
   status: DeliverableStatus
 ) {
@@ -86,7 +87,7 @@ export async function setDeliverableStatusAction(
   })
   touch([ROUTES.home, ROUTES.delivery, ROUTES.projects, project ? ROUTES.project(project.slug) : ROUTES.projects])
   return { ok: true as const }
-}
+})
 
 const PROJECT_STATUSES: ProjectStatus[] = [
   "not_started",
@@ -97,7 +98,7 @@ const PROJECT_STATUSES: ProjectStatus[] = [
 ]
 const FEE_STATUSES: FeeStatus[] = ["agreed", "deposit_paid", "paid"]
 
-export async function setProjectStatusAction(id: string, status: ProjectStatus) {
+export const setProjectStatusAction = tracked("peek.setProjectStatusAction", async function setProjectStatusAction(id: string, status: ProjectStatus) {
   const user = await getSessionUser()
   if (!user) return { ok: false as const, error: "Sign in first." }
   if (!PROJECT_STATUSES.includes(status)) {
@@ -120,9 +121,9 @@ export async function setProjectStatusAction(id: string, status: ProjectStatus) 
     return { ok: false as const, error: `Saved here — Smartsheet write failed: ${sheet.error}` }
   }
   return { ok: true as const }
-}
+})
 
-export async function setProjectFeeStatusAction(id: string, status: FeeStatus) {
+export const setProjectFeeStatusAction = tracked("peek.setProjectFeeStatusAction", async function setProjectFeeStatusAction(id: string, status: FeeStatus) {
   const user = await getSessionUser()
   if (!user) return { ok: false as const, error: "Sign in first." }
   if (!FEE_STATUSES.includes(status)) {
@@ -136,9 +137,9 @@ export async function setProjectFeeStatusAction(id: string, status: FeeStatus) {
   if (!row) return { ok: false as const, error: "Project not found." }
   touch([ROUTES.home, ROUTES.delivery, ROUTES.projects, ROUTES.project(row.slug)])
   return { ok: true as const }
-}
+})
 
-export async function setProjectNotesAction(id: string, notes: string) {
+export const setProjectNotesAction = tracked("peek.setProjectNotesAction", async function setProjectNotesAction(id: string, notes: string) {
   const user = await getSessionUser()
   if (!user) return { ok: false as const, error: "Sign in first." }
   const [row] = await db
@@ -149,9 +150,9 @@ export async function setProjectNotesAction(id: string, notes: string) {
   if (!row) return { ok: false as const, error: "Project not found." }
   touch([ROUTES.home, ROUTES.delivery, ROUTES.projects, ROUTES.project(row.slug)])
   return { ok: true as const }
-}
+})
 
-export async function setTaskNotesAction(id: string, notes: string) {
+export const setTaskNotesAction = tracked("peek.setTaskNotesAction", async function setTaskNotesAction(id: string, notes: string) {
   const user = await getSessionUser()
   if (!user) return { ok: false as const, error: "Sign in first." }
   const [row] = await db
@@ -162,9 +163,9 @@ export async function setTaskNotesAction(id: string, notes: string) {
   if (!row) return { ok: false as const, error: "Task not found." }
   touch([ROUTES.home, ROUTES.tasks])
   return { ok: true as const }
-}
+})
 
-export async function setTaskTitleAction(id: string, title: string) {
+export const setTaskTitleAction = tracked("peek.setTaskTitleAction", async function setTaskTitleAction(id: string, title: string) {
   const user = await getSessionUser()
   if (!user) return { ok: false as const, error: "Sign in first." }
   const trimmed = title.trim().slice(0, 300)
@@ -177,9 +178,9 @@ export async function setTaskTitleAction(id: string, title: string) {
   if (!row) return { ok: false as const, error: "Task not found." }
   touch([ROUTES.home, ROUTES.tasks])
   return { ok: true as const }
-}
+})
 
-export async function setTaskStatusAction(id: string, done: boolean) {
+export const setTaskStatusAction = tracked("peek.setTaskStatusAction", async function setTaskStatusAction(id: string, done: boolean) {
   const user = await getSessionUser()
   if (!user) return { ok: false as const, error: "Sign in first." }
   const [row] = await db
@@ -190,11 +191,11 @@ export async function setTaskStatusAction(id: string, done: boolean) {
   if (!row) return { ok: false as const, error: "Task not found." }
   touch([ROUTES.home, ROUTES.tasks])
   return { ok: true as const }
-}
+})
 
 const CADENCES: Cadence[] = ["none", "weekly", "monthly"]
 
-export async function setTaskCadenceAction(id: string, cadence: Cadence) {
+export const setTaskCadenceAction = tracked("peek.setTaskCadenceAction", async function setTaskCadenceAction(id: string, cadence: Cadence) {
   const user = await getSessionUser()
   if (!user) return { ok: false as const, error: "Sign in first." }
   if (!CADENCES.includes(cadence)) {
@@ -208,9 +209,9 @@ export async function setTaskCadenceAction(id: string, cadence: Cadence) {
   if (!row) return { ok: false as const, error: "Task not found." }
   touch([ROUTES.home, ROUTES.tasks])
   return { ok: true as const }
-}
+})
 
-export async function setTaskDueAction(id: string, dueOn: string | null) {
+export const setTaskDueAction = tracked("peek.setTaskDueAction", async function setTaskDueAction(id: string, dueOn: string | null) {
   const user = await getSessionUser()
   if (!user) return { ok: false as const, error: "Sign in first." }
   if (dueOn !== null && !/^\d{4}-\d{2}-\d{2}$/.test(dueOn)) {
@@ -224,4 +225,4 @@ export async function setTaskDueAction(id: string, dueOn: string | null) {
   if (!row) return { ok: false as const, error: "Task not found." }
   touch([ROUTES.home, ROUTES.tasks])
   return { ok: true as const }
-}
+})

@@ -176,6 +176,7 @@ export function PunchQueue({
                 <button
                   type="button"
                   disabled={busy != null}
+                  data-track="timesheet.review.approveDay"
                   onClick={() => approveDay(items)}
                   className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-50"
                 >
@@ -250,6 +251,7 @@ export function PunchQueue({
                         />
                         {clientProjects.length > 0 ? (
                           <select
+                            data-track="timesheet.review.project"
                             value={draft.projectId ?? ""}
                             onChange={(event) =>
                               patch(punch.id, {
@@ -300,6 +302,7 @@ export function PunchQueue({
                       <button
                         type="button"
                         disabled={busy != null || Boolean(blocker)}
+                        data-track="timesheet.review.approve"
                         onClick={() => approve(punch)}
                         title={blocker ?? undefined}
                         className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-tk-linen disabled:opacity-40"
@@ -309,6 +312,7 @@ export function PunchQueue({
                       <button
                         type="button"
                         disabled={busy != null}
+                        data-track="timesheet.review.discard"
                         onClick={() => discard(punch)}
                         className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-ink-3 hover:border-line-strong disabled:opacity-50"
                       >
@@ -353,6 +357,7 @@ function EndTimeFix({
       <button
         type="button"
         disabled={disabled || !value}
+        data-track="timesheet.review.editTime"
         onClick={() => onSave(new Date(value).toISOString())}
         className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal disabled:opacity-50"
       >

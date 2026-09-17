@@ -11,6 +11,7 @@ import {
 } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { hoursToString } from "@/lib/timesheet"
+import { tracked } from "@/lib/activity/tracked"
 
 type Result = { ok: true } | { ok: false; error: string }
 
@@ -26,7 +27,7 @@ function revalidateAll() {
  * browser so the entry lands on the day the meeting actually happened for the
  * person looking at it.
  */
-export async function logMeeting(input: {
+export const logMeeting = tracked("meetings.logMeeting", async function logMeeting(input: {
   eventId: string
   clientId: string
   occurredOn: string
@@ -88,9 +89,9 @@ export async function logMeeting(input: {
 
   revalidateAll()
   return { ok: true }
-}
+})
 
-export async function dismissMeeting(eventId: string): Promise<Result> {
+export const dismissMeeting = tracked("meetings.dismissMeeting", async function dismissMeeting(eventId: string): Promise<Result> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
 
@@ -100,9 +101,9 @@ export async function dismissMeeting(eventId: string): Promise<Result> {
     .where(eq(calendarEvents.id, eventId))
   revalidateAll()
   return { ok: true }
-}
+})
 
-export async function setClientDomains(
+export const setClientDomains = tracked("meetings.setClientDomains", async function setClientDomains(
   slug: string,
   domains: string
 ): Promise<Result> {
@@ -125,7 +126,7 @@ export async function setClientDomains(
     .where(eq(clients.id, client.id))
   revalidateAll()
   return { ok: true }
-}
+})
 
 function normalizeDomain(raw: string) {
   return raw
@@ -137,7 +138,7 @@ function normalizeDomain(raw: string) {
 }
 
 /** Append a domain to a client — additive, so existing mappings survive. */
-export async function assignDomainToClient(
+export const assignDomainToClient = tracked("meetings.assignDomainToClient", async function assignDomainToClient(
   domain: string,
   slug: string
 ): Promise<Result> {
@@ -168,12 +169,12 @@ export async function assignDomainToClient(
   }
   revalidateAll()
   return { ok: true }
-}
+})
 
 /** Mark a domain as never-a-client so it stops appearing in triage. */
-export async function ignoreDomain(
+export const ignoreDomain = tracked("meetings.ignoreDomain", async function ignoreDomain(
   domain: string,
-  note = ""
+  note: string = ""
 ): Promise<Result> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
@@ -187,4 +188,4 @@ export async function ignoreDomain(
     .onConflictDoNothing()
   revalidateAll()
   return { ok: true }
-}
+})

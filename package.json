@@ -33,6 +33,7 @@
     "client:tz": "tsx scripts/client-tz.ts",
     "db:dry-run": "tsx scripts/migrate-dry-run.ts",
     "check:punch": "tsx scripts/check-punch.ts",
+    "check:punch:db": "tsx --env-file-if-exists=.env.local scripts/check-punch-edit-db.ts",
     "icons": "python3 scripts/make-icons.py",
     "check:tasks": "tsx scripts/check-tasks.ts",
     "check:attention": "tsx scripts/check-attention.ts",
@@ -55,6 +56,7 @@
     "hivemind:scan": "tsx scripts/hivemind-scan.ts",
     "check:slink": "tsx scripts/check-slink.ts",
     "check:chat": "tsx scripts/check-chat.ts",
+    "check:chat:attachments": "tsx scripts/check-chat-attachments.ts",
     "check:inspiration": "tsx scripts/check-inspiration.ts",
     "check:chat:db": "tsx --env-file-if-exists=.env.local scripts/check-chat-db.ts",
     "check:usage:db": "tsx --env-file-if-exists=.env.local scripts/check-usage-db.ts",
@@ -68,7 +70,10 @@
     "meeting:import": "tsx --env-file-if-exists=.env.local scripts/meeting-worker.ts import",
     "meeting:doctor": "tsx --env-file-if-exists=.env.local scripts/meeting-doctor.ts",
     "meeting:build-helper": "bash scripts/audio-tap/build.sh",
-    "prebuild": "npm run check:theme"
+    "activity:scan": "tsx scripts/activity-scan.ts",
+    "check:activity": "tsx scripts/check-activity.ts",
+    "check:activity:db": "tsx --env-file-if-exists=.env.local scripts/check-activity-db.ts",
+    "prebuild": "npm run check:theme && npm run activity:scan"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

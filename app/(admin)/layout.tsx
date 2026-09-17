@@ -1,7 +1,11 @@
+import { Suspense } from "react"
 import { redirect } from "next/navigation"
 import { RootHtml, rootMetadata, rootViewport } from "@/lib/root-html"
 import "../globals.css"
+import { ActivityProbe } from "@/components/activity/ActivityProbe"
 import { AppShell } from "@/components/AppShell"
+import { probeModules } from "@/lib/activity/modules"
+import { activityFlags } from "@/lib/activity/settings"
 import { FloatingClock } from "@/components/timesheet/FloatingClock"
 import { getSessionUser } from "@/lib/auth"
 import { adminNav, ROUTES } from "@/lib/nav"
@@ -39,13 +43,16 @@ export default async function AdminLayout({
   // One read behind every badge and behind the dashboard's Unread card, so a
   // badge can never disagree with the card or the page it points at. The call
   // is request-cached, so the dashboard shares this one rather than repeating it.
-  const [unread, catalog, colors, running, recording] = await Promise.all([
+  const [unread, catalog, colors, running, recording, activity] = await Promise.all([
     loadUnread(),
     studiosWithProducts(),
     // Fills the map `clientColor()` reads, for this request's server render.
     hydrateClientColors(),
     runningPunches(user.id),
     liveRecording(user.id),
+    // Activity module switches (cached in-process for a minute). A failed read
+    // means no probe on this page, never a failed page.
+    activityFlags().catch(() => null),
   ])
 
   const badges = {
@@ -107,6 +114,12 @@ export default async function AdminLayout({
     </AppShell>
     {/* Outside the shell so no overflow or transform on an ancestor can trap it. */}
     <FloatingClock initial={running} initialRecording={recording} />
+    {/* How the CRM gets used — renders nothing. See ACTIVITY.md. */}
+    {activity ? (
+      <Suspense fallback={null}>
+        <ActivityProbe modules={probeModules(activity)} />
+      </Suspense>
+    ) : null}
     </RootHtml>
   )
 }

@@ -14,6 +14,7 @@ import {
   setListStatus,
 } from "@/lib/punchlists"
 import { setTaskDone, setTaskStage } from "@/lib/task-actions"
+import { tracked } from "@/lib/activity/tracked"
 
 /**
  * Browser-side mutations for punch lists. Single-argument shapes so they can
@@ -31,7 +32,7 @@ function touch(slug?: string) {
 }
 
 /** The state circle: writes the item's task, never the item. */
-export async function setItemStateAction(itemId: string, state: ItemState): Promise<Result> {
+export const setItemStateAction = tracked("punchlist.setItemStateAction", async function setItemStateAction(itemId: string, state: ItemState): Promise<Result> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
   const item = await db.query.punchlistItems.findFirst({
@@ -48,18 +49,18 @@ export async function setItemStateAction(itemId: string, state: ItemState): Prom
   if (!result.ok) return result
   touch(item.punchlist.slug)
   return { ok: true }
-}
+})
 
-export async function acceptDraftAction(id: string, slug: string): Promise<Result> {
+export const acceptDraftAction = tracked("punchlist.acceptDraftAction", async function acceptDraftAction(id: string, slug: string): Promise<Result> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
   const result = await acceptDraft(id, user.id)
   if (!result.ok) return { ok: false, error: result.error }
   touch(slug)
   return { ok: true }
-}
+})
 
-export async function setListStatusAction(
+export const setListStatusAction = tracked("punchlist.setListStatusAction", async function setListStatusAction(
   id: string,
   slug: string,
   status: "open" | "void"
@@ -69,19 +70,19 @@ export async function setListStatusAction(
   await setListStatus(id, status)
   touch(slug)
   return { ok: true }
-}
+})
 
-export async function requestTestAction(itemId: string, slug: string): Promise<Result> {
+export const requestTestAction = tracked("punchlist.requestTestAction", async function requestTestAction(itemId: string, slug: string): Promise<Result> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
   const result = await requestTestRun(itemId, user.id)
   if (!result.ok) return { ok: false, error: result.error }
   touch(slug)
   return { ok: true }
-}
+})
 
 /** `raw` is the JSON text from the editor; empty clears the test. */
-export async function setItemTestAction(
+export const setItemTestAction = tracked("punchlist.setItemTestAction", async function setItemTestAction(
   itemId: string,
   slug: string,
   raw: string
@@ -101,4 +102,4 @@ export async function setItemTestAction(
   if (!result.ok) return { ok: false, error: result.error }
   touch(slug)
   return { ok: true }
-}
+})

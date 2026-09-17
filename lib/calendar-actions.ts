@@ -11,6 +11,7 @@ import { moveGoogleEvent } from "@/lib/calendar-providers"
 import { syncAllCalendars } from "@/lib/calendar-sync"
 import { writeCalendarEvent } from "@/lib/calendar-write"
 import { SOURCE_PALETTE, type UpcomingMeeting } from "@/lib/calendar-types"
+import { tracked } from "@/lib/activity/tracked"
 
 type Result<T = unknown> = ({ ok: true } & T) | { ok: false; error: string }
 
@@ -30,7 +31,7 @@ async function requireAdmin() {
 
 /* ------------------------------------------------------------- managing -- */
 
-export async function addCalendarSource(input: {
+export const addCalendarSource = tracked("calendar.addCalendarSource", async function addCalendarSource(input: {
   kind: CalendarSourceKind
   label: string
   externalId: string
@@ -74,9 +75,9 @@ export async function addCalendarSource(input: {
 
   revalidateCalendar()
   return { ok: true, id: row.id }
-}
+})
 
-export async function updateCalendarSource(
+export const updateCalendarSource = tracked("calendar.updateCalendarSource", async function updateCalendarSource(
   id: string,
   patch: { label?: string; color?: string; enabled?: boolean; writable?: boolean }
 ): Promise<Result> {
@@ -112,20 +113,20 @@ export async function updateCalendarSource(
 
   revalidateCalendar()
   return { ok: true }
-}
+})
 
-export async function deleteCalendarSource(id: string): Promise<Result> {
+export const deleteCalendarSource = tracked("calendar.deleteCalendarSource", async function deleteCalendarSource(id: string): Promise<Result> {
   const denied = await requireAdmin()
   if (denied) return { ok: false, error: denied }
 
   await db.delete(calendarSources).where(eq(calendarSources.id, id))
   revalidateCalendar()
   return { ok: true }
-}
+})
 
 /* ---------------------------------------------------------------- sync --- */
 
-export async function syncCalendars(): Promise<
+export const syncCalendars = tracked("calendar.syncCalendars", async function syncCalendars(): Promise<
   Result<{ synced: number; errors: string[] }>
 > {
   const denied = await requireAdmin()
@@ -134,11 +135,11 @@ export async function syncCalendars(): Promise<
   const { synced, errors } = await syncAllCalendars()
   revalidateCalendar()
   return { ok: true, synced, errors }
-}
+})
 
 /* --------------------------------------------------------------- create -- */
 
-export async function createCalendarEvent(input: {
+export const createCalendarEvent = tracked("calendar.createCalendarEvent", async function createCalendarEvent(input: {
   title: string
   description: string
   location: string
@@ -159,12 +160,12 @@ export async function createCalendarEvent(input: {
   if (!result.ok) return { ok: false, error: result.error }
   revalidateCalendar()
   return { ok: true, url: result.url }
-}
+})
 
 /* ------------------------------------------------------ dashboard week ---- */
 
 /** The dashboard's five-day window, paged by its arrows. ISO bounds. */
-export async function meetingsInWindow(
+export const meetingsInWindow = tracked("calendar.meetingsInWindow", async function meetingsInWindow(
   fromIso: string,
   toIso: string
 ): Promise<Result<{ data: { meetings: UpcomingMeeting[]; sources: MeetingSource[] } }>> {
@@ -177,14 +178,14 @@ export async function meetingsInWindow(
   }
   const { meetings, sources } = await getMeetingsInWindow(from, to)
   return { ok: true, data: { meetings, sources } }
-}
+})
 
 /**
  * Drag an event to another day. The time of day and the length are kept; only
  * the date moves. Written to Google first — if that fails nothing changes
  * locally, so the cache never disagrees with the calendar it mirrors.
  */
-export async function moveMeeting(
+export const moveMeeting = tracked("calendar.moveMeeting", async function moveMeeting(
   id: string,
   dayShift: number
 ): Promise<Result<{ data: { startsAt: string; endsAt: string } }>> {
@@ -228,4 +229,4 @@ export async function moveMeeting(
   revalidatePath("/")
   revalidateCalendar()
   return { ok: true, data: { startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() } }
-}
+})
