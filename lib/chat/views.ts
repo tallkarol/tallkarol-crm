@@ -11,7 +11,14 @@ type Detail = NonNullable<Awaited<ReturnType<typeof threadDetail>>>
  * reply; feedback rides on the reply it was about.
  */
 export function messageViews(detail: Detail): ChatMessageView[] {
-  const { messages, turns, calls, feedback } = detail
+  const { messages, turns, calls, feedback, attachments, thread } = detail
+  const actionsContext = {
+    threadId: thread.id,
+    task: thread.task
+      ? { id: thread.task.id, title: thread.task.title, status: thread.task.status }
+      : null,
+    clientSlug: thread.client?.slug ?? null,
+  }
   return messages.map((message) => {
     const produced = message.turnId ? turns.find((t) => t.id === message.turnId) : null
     const chain =
@@ -27,11 +34,15 @@ export function messageViews(detail: Detail): ChatMessageView[] {
       body: message.body,
       createdAt: message.createdAt.toISOString(),
       turnId: message.turnId,
+      actionsContext,
       chain,
       calls: message.turnId ? calls.filter((c) => c.turnId === message.turnId) : [],
       feedback: feedback
         .filter((f) => f.messageId === message.id)
         .map((f) => ({ kind: f.kind as "down" | "example" | "note", note: f.note })),
+      attachments: attachments
+        .filter((a) => a.messageId === message.id)
+        .map((a) => ({ id: a.id, name: a.name, width: a.width, height: a.height })),
     }
   })
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { and, asc, desc, eq, ne } from "drizzle-orm"
 import { db } from "@/db"
 import { chatMessages, chatThreads } from "@/db/schema"
+import { threadAttachments } from "@/lib/chat/attachment-data"
 import { modelFor, type ModelKey } from "@/lib/chat/models"
 import { PERSONAS } from "@/lib/chat/personas"
 import { parseCommand } from "@/lib/chat/skills"
@@ -57,6 +58,13 @@ export async function POST(request: Request) {
   })
 
   await markRunning(turn.id)
+
+  /**
+   * Screenshots ride on the message they were sent with, as metadata only.
+   * The worker fetches the bytes from /api/chat/attachments/[id] for the
+   * ones it hands the model (lib/chat/attachments.ts `pickImages`).
+   */
+  const attachments = await threadAttachments(turn.threadId)
 
   const spec = modelFor(turn.model as ModelKey)
 
@@ -154,6 +162,9 @@ export async function POST(request: Request) {
       agent: m.agent,
       body: m.body,
       at: m.createdAt.toISOString(),
+      images: attachments
+        .filter((a) => a.messageId === m.id)
+        .map((a) => ({ id: a.id, name: a.name, mime: a.mime, width: a.width, height: a.height })),
     })),
     tools: toolSchemas(),
   })

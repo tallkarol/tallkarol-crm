@@ -177,6 +177,8 @@ export type JobType =
   | "content_edit"
   | "build_fix"
   | "code_tested"
+  | "code_fable"
+  | "code_opus"
   | "debug"
   | "review"
   | "review_critical"
@@ -253,6 +255,27 @@ export const LADDERS: Record<JobType, Ladder> = {
     maxEscalations: 2,
     note: "Raise effort first, change family last — a high-effort failure means the approach was wrong.",
   },
+  /**
+   * Hand-picked from the composer. Auto never classifies here — these exist
+   * so Karol can put Fable or Opus on a coding turn without waiting for
+   * the code_tested ladder to climb.
+   */
+  code_fable: {
+    job: "code_fable",
+    label: "Fable for coding",
+    rungs: ["fable-5.1-max"],
+    detector: "",
+    maxEscalations: 0,
+    note: "Hand-picked. Same family the code_tested ladder ends on.",
+  },
+  code_opus: {
+    job: "code_opus",
+    label: "Opus for coding",
+    rungs: ["opus-5-max"],
+    detector: "",
+    maxEscalations: 0,
+    note: "Hand-picked. Same family the debug ladder ends on.",
+  },
   debug: {
     job: "debug",
     label: "Hard debugging",
@@ -304,10 +327,10 @@ export const LADDERS: Record<JobType, Ladder> = {
   report: {
     job: "report",
     label: "Report assembly",
-    rungs: ["composer-2.5", "grok-4.6-high"],
-    detector: "section schema",
-    maxEscalations: 1,
-    note: "Only the closing narrative goes to a premium model.",
+    rungs: ["opus-5-max"],
+    detector: "",
+    maxEscalations: 0,
+    note: "The assembled report is the product; a cheap first pass proves nothing.",
   },
   /**
    * A `/command` from the hive mind. The worker hands the model the command
@@ -377,6 +400,95 @@ export function modelFor(key: ModelKey): ModelSpec {
 
 export function ladderFor(job: JobType): Ladder {
   return LADDERS[job] ?? LADDERS.chat
+}
+
+/**
+ * Jobs the composer can force. Skill, task and desk jobs stay locked — those
+ * decide the toolset (a command file, a worktree, a pack), not just the model.
+ */
+export const PICKABLE_JOBS = [
+  "chat",
+  "trivial_edit",
+  "content_edit",
+  "build_fix",
+  "code_tested",
+  "code_fable",
+  "code_opus",
+  "debug",
+  "review",
+  "review_critical",
+  "security_review",
+  "architecture",
+  "writing",
+  "report",
+] as const satisfies readonly JobType[]
+
+export type PickableJob = (typeof PICKABLE_JOBS)[number]
+
+/** Auto classifies. Elevate skips the cheap first pass. A job forces that ladder. */
+export type LadderPick = "auto" | "elevate" | PickableJob
+
+export type LadderDecision = {
+  job: JobType
+  rung: number
+  /** When set, `route()` uses this model instead of `ladder.rungs[rung]`. */
+  model?: ModelKey
+}
+
+const LOCKED_JOBS = new Set<JobType>(["skill", "task", "persona", "judgment"])
+
+/**
+ * Single-rung jobs have nowhere to climb. Elevate still has to mean something
+ * — stay on the same job (so the tools stay) and start on a stronger model
+ * in the same family, Cursor pool first.
+ */
+const ELEVATE_MODEL: Partial<Record<JobType, ModelKey>> = {
+  chat: "grok-4.6-high",
+  skill: "grok-4.6-xhigh",
+  task: "grok-4.6-xhigh",
+  persona: "grok-4.6-xhigh",
+  writing: "fable-5.1-max",
+  judgment: "opus-5-max",
+  review: "sol-max",
+}
+
+export function isLadderPick(value: unknown): value is LadderPick {
+  return (
+    value === "auto" ||
+    value === "elevate" ||
+    (typeof value === "string" && (PICKABLE_JOBS as readonly string[]).includes(value))
+  )
+}
+
+export function jobLocked(job: JobType): boolean {
+  return LOCKED_JOBS.has(job)
+}
+
+/**
+ * What Auto would have done, after Karol picked.
+ *
+ * A locked job (slash command, solve thread, desk) keeps its job so the
+ * worker still gets the command / worktree / pack. The pick then only
+ * changes the model. An unlocked thread can switch ladders outright.
+ */
+export function applyLadderPick(autoJob: JobType, pick: LadderPick = "auto"): LadderDecision {
+  if (pick === "auto") return { job: autoJob, rung: 0 }
+
+  if (pick === "elevate") {
+    const ladder = ladderFor(autoJob)
+    if (ladder.rungs.length > 1 && ladder.maxEscalations > 0) {
+      return { job: autoJob, rung: Math.min(ladder.maxEscalations, ladder.rungs.length - 1) }
+    }
+    const model = ELEVATE_MODEL[autoJob]
+    if (model && model !== ladder.rungs[0]) return { job: autoJob, rung: 0, model }
+    return { job: autoJob, rung: 0 }
+  }
+
+  if (jobLocked(autoJob)) {
+    const model = ladderFor(pick).rungs[0]
+    return { job: autoJob, rung: 0, model }
+  }
+  return { job: pick, rung: 0 }
 }
 
 /** The next rung up, or null when the ladder is spent. */

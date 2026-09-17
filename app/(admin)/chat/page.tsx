@@ -3,15 +3,14 @@ import { ChatFrame } from "@/components/chat/ChatFrame"
 import { ChatSidebar } from "@/components/chat/ChatSidebar"
 import { ChatView } from "@/components/chat/ChatView"
 import type {
-  BudgetView,
   ChatMessageView,
   PendingView,
   ThreadRow,
   ThreadStats,
 } from "@/components/chat/types"
 import { getSessionUser } from "@/lib/auth"
-import { budgetState } from "@/lib/chat/budget"
 import { CHAT_ZONE, modelChain } from "@/lib/chat/format"
+import { usageRail } from "@/lib/usage/rail"
 import { PERSONAS, describePack } from "@/lib/chat/personas"
 import { messageViews, pendingView } from "@/lib/chat/views"
 import {
@@ -43,11 +42,11 @@ export default async function ChatPage({
   const user = await getSessionUser()
   if (!user) redirect("/login")
 
-  const [threads, archivedThreads, pendingIds, budget, worker] = await Promise.all([
+  const [threads, archivedThreads, pendingIds, usage, worker] = await Promise.all([
     listThreads(user.id),
     listArchivedThreads(user.id),
     pendingThreadIds(user.id),
-    budgetState(),
+    usageRail(),
     workerStatus(),
   ])
 
@@ -83,22 +82,6 @@ export default async function ChatPage({
     archived: thread.archivedAt !== null,
   }))
 
-  const budgetView: BudgetView = {
-    period: new Intl.DateTimeFormat("en-GB", { month: "long", timeZone: CHAT_ZONE }).format(
-      budget.periodStart
-    ),
-    other: {
-      spentCents: budget.other.spentCents,
-      limitCents: budget.other.limitCents,
-      reserveCents: budget.other.reserveCents,
-      fraction: budget.other.fraction,
-      level: budget.other.level,
-      cutoff: budget.other.cutoff,
-      routineExhausted: budget.other.routineExhausted,
-    },
-    cursor: { spentCents: budget.cursor.spentCents, turns: budget.cursor.turns },
-  }
-
   return (
     <ChatFrame
       routeKey={threadId ?? "new"}
@@ -107,7 +90,7 @@ export default async function ChatPage({
           threads={rows}
           activeId={threadId}
           isNew={isNew || (threadId === null && threads.length === 0)}
-          budget={budgetView}
+          usage={usage}
           now={now.toISOString()}
         />
       }

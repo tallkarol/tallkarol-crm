@@ -1,3 +1,5 @@
+import type { AttachmentView } from "@/lib/chat/attachments"
+import type { ReplyActionContext } from "@/lib/chat/reply-actions"
 import type { ChatToolCall, ChatTurn } from "@/db/schema"
 
 export type ChatMessageView = {
@@ -7,6 +9,8 @@ export type ChatMessageView = {
   body: string
   createdAt: string
   turnId: string | null
+  /** The thread the reply sits in — enough to grow a Mark-done button. */
+  actionsContext: ReplyActionContext
   /**
    * Turns hang off the USER message they answer — an escalation chain has
    * one question and several attempts. An assistant message carries the
@@ -18,6 +22,8 @@ export type ChatMessageView = {
   calls: ChatToolCall[]
   /** What Karol said about this reply, if anything. */
   feedback: { kind: "down" | "example" | "note"; note: string }[]
+  /** Screenshots sent with the message, in paste order. */
+  attachments: AttachmentView[]
 }
 
 /** A turn somebody is still running, for the thinking row. */
@@ -48,17 +54,3 @@ export type ThreadRow = {
   archived: boolean
 }
 
-export type BudgetView = {
-  /** "September" */
-  period: string
-  other: {
-    spentCents: number
-    limitCents: number
-    reserveCents: number
-    fraction: number
-    level: "ok" | "alert" | "warn" | "cutoff"
-    cutoff: boolean
-    routineExhausted: boolean
-  }
-  cursor: { spentCents: number; turns: number }
-}

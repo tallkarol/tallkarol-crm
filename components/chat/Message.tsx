@@ -10,8 +10,11 @@ import { parseCommand } from "@/lib/chat/skills"
 import { ApprovalCard } from "@/components/chat/ApprovalCard"
 import { LadderTrace } from "@/components/chat/LadderTrace"
 import { Prose } from "@/components/chat/Prose"
+import { ReplyActions } from "@/components/chat/ReplyActions"
 import type { ChatMessageView } from "@/components/chat/types"
 import type { ChatToolCall } from "@/db/schema"
+import { stripReplyActions, viaReplyAction } from "@/lib/chat/reply-actions"
+import { attachmentPath } from "@/lib/chat/attachments"
 
 /**
  * One message.
@@ -40,16 +43,19 @@ export function Message({ message }: { message: ChatMessageView }) {
       message.chain.every((t) => t.status === "failed" || t.status === "cancelled")
     return (
       <div className="group flex flex-col items-end gap-1.5">
-        <div className="max-w-[72%] whitespace-pre-wrap rounded-[18px] rounded-br-[6px] bg-accent-soft px-3.5 py-2.5 text-[14.5px] leading-[1.5] text-tk-onyx [overflow-wrap:anywhere]">
-          {command ? (
-            <span className="font-mono text-[13px]">
-              <span className="text-accent-ink">/{command.name}</span>
-              {command.args ? ` ${command.args}` : ""}
-            </span>
-          ) : (
-            message.body
-          )}
-        </div>
+        <Screenshots attachments={message.attachments} />
+        {message.body ? (
+          <div className="max-w-[72%] whitespace-pre-wrap rounded-[18px] rounded-br-[6px] bg-accent-soft px-3.5 py-2.5 text-[14.5px] leading-[1.5] text-tk-onyx [overflow-wrap:anywhere]">
+            {command ? (
+              <span className="font-mono text-[13px]">
+                <span className="text-accent-ink">/{command.name}</span>
+                {command.args ? ` ${command.args}` : ""}
+              </span>
+            ) : (
+              message.body
+            )}
+          </div>
+        ) : null}
         <span className="pr-1 font-ui text-[10.5px] text-ink-3 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none">
           {timeLabel(message.createdAt)}
         </span>
@@ -64,8 +70,9 @@ export function Message({ message }: { message: ChatMessageView }) {
 
   const turn = message.chain.find((t) => t.id === message.turnId) ?? null
   const reads = message.calls.filter((c) => !c.mutating)
-  const writes = message.calls.filter((c) => c.mutating)
+  const writes = message.calls.filter((c) => c.mutating && !viaReplyAction(c.args))
   const skill = message.agent.startsWith("/")
+  const prose = stripReplyActions(message.body)
 
   return (
     <div className="flex flex-col gap-2">
@@ -111,11 +118,18 @@ export function Message({ message }: { message: ChatMessageView }) {
         </div>
       ) : null}
 
-      {message.body.trim() ? (
+      {prose ? (
         <div className="max-w-[66ch] pl-8 text-[14.5px] leading-[1.6] text-tk-onyx">
-          <Prose text={message.body} />
+          <Prose text={prose} />
         </div>
       ) : null}
+
+      <ReplyActions
+        messageId={message.id}
+        body={message.body}
+        context={message.actionsContext}
+        calls={message.calls}
+      />
 
       {writes.map((call) => (
         <ApprovalCard key={call.id} call={call} />
@@ -133,6 +147,41 @@ export function Message({ message }: { message: ChatMessageView }) {
  * Quiet until hovered, like the timestamp; once given it stays as a chip so
  * the thread reads as a record. "Not right" asks for one line on why.
  */
+/**
+ * What Karol pasted, above what he typed. The width and height are the
+ * stored image's, so the box is the right shape before a byte arrives;
+ * a click opens the full image in a tab.
+ */
+function Screenshots({ attachments }: { attachments: ChatMessageView["attachments"] }) {
+  if (attachments.length === 0) return null
+  const one = attachments.length === 1
+  return (
+    <div className="flex max-w-[72%] flex-wrap justify-end gap-1.5">
+      {attachments.map((a) => (
+        <a
+          key={a.id}
+          href={attachmentPath(a.id)}
+          target="_blank"
+          rel="noopener"
+          title={a.name}
+          className="block max-w-full overflow-hidden rounded-[14px] border border-line bg-well outline-accent-ink"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- auth-gated bytes, no optimiser */}
+          <img
+            src={attachmentPath(a.id)}
+            alt={a.name}
+            width={a.width}
+            height={a.height}
+            loading="lazy"
+            decoding="async"
+            className={cn("block h-auto w-auto max-w-full", one ? "max-h-[240px]" : "max-h-[132px]")}
+          />
+        </a>
+      ))}
+    </div>
+  )
+}
+
 function Feedback({ message }: { message: ChatMessageView }) {
   const router = useRouter()
   const [busy, startTransition] = useTransition()

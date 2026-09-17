@@ -3,15 +3,19 @@
 import { useEffect, useRef, useState } from "react"
 import { ArrowUp } from "lucide-react"
 import { cn } from "@/lib/cn"
+import { type LadderPick } from "@/lib/chat/models"
 import { COMMAND_DOCS, firstBlank, type SkillDoc } from "@/lib/chat/skills"
 import { Card } from "@/components/ui/Card"
 import { onCompose } from "@/components/chat/compose-bus"
+import { LadderPicker } from "@/components/chat/LadderPicker"
+import { AttachmentTray, useAttachments } from "@/components/chat/useAttachments"
 
 /**
  * The box.
  *
  * Enter sends, Shift+Enter breaks a line, and a leading `/` opens the
- * palette over the hive mind's commands. Picking one drops that command's
+ * palette over the hive mind's commands. ⌘V with a screenshot on the
+ * clipboard (or a drop) attaches it; a message may be only pictures. Picking one drops that command's
  * first form into the box with its blank selected, so "/clock in <client>"
  * is two keystrokes and a client name.
  *
@@ -24,7 +28,7 @@ export function Composer({
   error,
   autoFocus,
 }: {
-  onSend: (text: string) => void
+  onSend: (text: string, ladder?: LadderPick, attachmentIds?: string[]) => void
   busy: boolean
   error: string | null
   autoFocus?: boolean
@@ -33,7 +37,12 @@ export function Composer({
   const [selected, setSelected] = useState(0)
   /** What the box held when Escape closed the palette; typing on reopens it. */
   const [dismissed, setDismissed] = useState<string | null>(null)
+  /** Auto until Karol picks. Refresh or a new thread remounts this and resets. */
+  const [ladder, setLadder] = useState<LadderPick>("auto")
   const box = useRef<HTMLTextAreaElement>(null)
+  const images = useAttachments()
+  const blocked = busy || images.uploading || images.failed
+  const empty = !text.trim() && images.readyIds.length === 0
 
   const palette = dismissed === text ? null : paletteFor(text)
   const open = palette !== null
@@ -52,14 +61,14 @@ export function Composer({
   useEffect(() => {
     return onCompose((request) => {
       if (request.send) {
-        onSend(request.text)
+        onSend(request.text, ladder)
         return
       }
       insert(request.text)
     })
     // onSend is stable enough: the parent re-creates it only with the thread.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onSend])
+  }, [onSend, ladder])
 
   function insert(value: string) {
     setText(value)
@@ -80,10 +89,11 @@ export function Composer({
   }
 
   function submit() {
-    const value = text.trim()
-    if (!value || busy) return
+    if (empty || blocked) return
+    const ids = images.readyIds
     setText("")
-    onSend(value)
+    images.clear()
+    onSend(text.trim(), ladder, ids)
   }
 
   return (
@@ -138,14 +148,20 @@ export function Composer({
         <Card
           radius="2xl"
           elevation="none"
-          className="relative shadow-hover transition-colors focus-within:border-line-strong"
+          {...images.dropZone}
+          className={cn(
+            "relative shadow-hover transition-colors focus-within:border-line-strong",
+            images.dragging && "border-accent-ink"
+          )}
         >
+          <AttachmentTray items={images.items} onRemove={images.remove} />
           <textarea
             ref={box}
             rows={1}
             value={text}
             placeholder="Ask, run, or log something… type / for skills"
             aria-label="Message"
+            onPaste={images.onPaste}
             onChange={(e) => {
               setText(e.target.value)
               setSelected(0)
@@ -191,17 +207,11 @@ export function Composer({
               </span>
               Skills
             </button>
-            <span
-              className="ml-auto inline-flex h-7 items-center gap-1.5 rounded-lg border border-line px-2.5 font-ui text-[11.5px] font-semibold text-ink-2"
-              title="The ladder picks the model from what you ask. Reads start on Composer; a slash command gets the skill rung."
-            >
-              Auto
-              <span className="font-mono text-[11px] font-medium text-ink-3">ladder</span>
-            </span>
+            <LadderPicker value={ladder} onChange={setLadder} />
             <button
               type="button"
               onClick={submit}
-              disabled={busy || !text.trim()}
+              disabled={blocked || empty}
               aria-label="Send"
               className="ml-1.5 grid size-8 place-items-center rounded-[10px] bg-accent text-on-accent outline-accent-ink transition-transform hover:-translate-y-px disabled:translate-y-0 disabled:opacity-35 motion-reduce:transition-none"
             >
@@ -210,10 +220,9 @@ export function Composer({
           </div>
         </Card>
 
-        <p className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-1 text-[11px] text-ink-3">
-          <span>Reads answer straight away. Writes show a preview and wait for you.</span>
+        <p className="mt-2 flex flex-wrap items-center justify-end gap-x-3 gap-y-1 px-1 text-[11px] text-ink-3">
           <span className="inline-flex items-center gap-1.5">
-            <Kbd>↵</Kbd> send <Kbd>⇧↵</Kbd> newline <Kbd>/</Kbd> skills
+            <Kbd>↵</Kbd> send <Kbd>⇧↵</Kbd> newline <Kbd>/</Kbd> skills <Kbd>⌘V</Kbd> screenshot
           </span>
         </p>
       </div>

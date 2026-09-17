@@ -15,7 +15,16 @@ import {
 import { homedir } from "node:os"
 import { basename, dirname, join, resolve } from "node:path"
 import { Agent, CursorAgentError } from "@cursor/sdk"
-import type { SDKCustomTool, SDKJsonValue, ToolName } from "@cursor/sdk"
+import type {
+  AgentOptions,
+  RunResult,
+  SDKCustomTool,
+  SDKImage,
+  SDKJsonValue,
+  SDKUserMessage,
+  ToolName,
+} from "@cursor/sdk"
+import { imageNote, pickImages } from "@/lib/chat/attachments"
 import {
   PACK_LINE_TARGETS,
   allowed,
@@ -24,6 +33,7 @@ import {
   renderLine,
   type PackLineTarget,
 } from "@/lib/chat/pack-lines"
+import { CRM_ACTIONS_HINT } from "@/lib/chat/reply-actions"
 import { BRIEF_PREFIX } from "@/lib/chat/task-brief"
 import { loadLocalEnv } from "@/lib/load-env"
 
@@ -144,9 +154,12 @@ type TaskContext = {
 /** A thread addressed to a desk: who, and which pack it pinned (`clients/x`, `products/y`, `me`). */
 type PersonaContext = { name: string; label: string; pack: string | null }
 
+/** A screenshot sent with a message — metadata only; the bytes are fetched per image. */
+type ClaimImage = { id: string; name: string; mime: string; width: number; height: number }
+
 type Claim = {
   turn: QueuedTurn | null
-  messages?: { role: string; agent: string; body: string; at: string }[]
+  messages?: { role: string; agent: string; body: string; at: string; images?: ClaimImage[] }[]
   tools?: ToolSchema[]
   /** Set on a `skill` turn: the command the CRM parsed from the message. */
   command?: { name: string; args: string } | null
@@ -229,11 +242,61 @@ function customTools(turn: QueuedTurn, tools: ToolSchema[]) {
   return map
 }
 
+/**
+ * The conversation as text. A message sent with screenshots carries a mark
+ * saying which of the attached images are its own, so "the button on the
+ * left" can be matched to a picture two messages back.
+ */
 function transcript(claim: Claim): string {
+  const sent = pickImages(claim.messages ?? [])
   return (claim.messages ?? [])
     .filter((m) => m.role === "user" || m.role === "assistant")
-    .map((m) => `${m.role === "user" ? "Karol" : "You"}: ${m.body}`)
+    .map((m) => {
+      const said = [m.body, imageNote(m.images, sent)].filter(Boolean).join("\n")
+      return `${m.role === "user" ? "Karol" : "You"}: ${said}`
+    })
     .join("\n\n")
+}
+
+/**
+ * The screenshots a turn carries, in the order `pickImages` numbered them.
+ * A picture the question is about is not optional: one that will not load
+ * fails the turn rather than letting the model answer without it.
+ */
+async function loadImages(claim: Claim): Promise<SDKImage[]> {
+  const meta = new Map((claim.messages ?? []).flatMap((m) => m.images ?? []).map((i) => [i.id, i]))
+  const images: SDKImage[] = []
+  for (const id of pickImages(claim.messages ?? [])) {
+    const response = await fetch(`${CRM}/api/chat/attachments/${id}`, {
+      headers: { authorization: `Bearer ${TOKEN}` },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    })
+    if (!response.ok) {
+      throw new Error(`Could not load screenshot ${id.slice(0, 8)} (${response.status}); nothing was sent to the model.`)
+    }
+    const info = meta.get(id)
+    images.push({
+      data: Buffer.from(await response.arrayBuffer()).toString("base64"),
+      mimeType: info?.mime || response.headers.get("content-type") || "image/png",
+      ...(info?.width && info.height ? { dimension: { width: info.width, height: info.height } } : {}),
+    })
+  }
+  return images
+}
+
+/**
+ * `Agent.prompt` with pictures. `prompt` only takes a string, and inside it
+ * is exactly create → send → wait → dispose, so this is that with the
+ * message the SDK's `send` accepts.
+ */
+async function promptWith(message: string | SDKUserMessage, options: AgentOptions): Promise<RunResult> {
+  const agent = await Agent.create(options)
+  try {
+    const run = await agent.send(message)
+    return await run.wait()
+  } finally {
+    await agent[Symbol.asyncDispose]()
+  }
 }
 
 /* ---------- where a task turn works ---------- */
@@ -595,6 +658,7 @@ function taskPrompt(claim: Claim, task: TaskContext, where: Resolution): string 
     "Changed — the files touched, the branch and the worktree path; or 'nothing'.",
     "Verified — exactly what you ran and what it said.",
     "Left for Karol — what needs his hand, his decision, or a merge.",
+    CRM_ACTIONS_HINT,
     "",
     "--- conversation so far ---",
     "",
@@ -623,6 +687,7 @@ function skillPrompt(claim: Claim, command: { name: string; args: string }): str
     "The CRM tools are available too. Any that PROPOSES ONLY parks the write for Karol's approval — say so in one line and do not claim it is done.",
     "",
     "When finished, reply in Karol's voice: direct, plain, short. State the outcome, and give him any numbered list he has to pick from.",
+    CRM_ACTIONS_HINT,
     "",
     "--- command ---",
     "",
@@ -736,6 +801,7 @@ function personaPrompt(claim: Claim, persona: PersonaContext): string {
     "On this turn you have the CRM tools and nothing else — no shell, no file reads beyond what is inlined here. Anything that needs code changed goes through Solve in chat on a task; say so. Tools whose description says PROPOSES ONLY park the write for Karol's approval — say what is waiting, in one line, and do not claim it is done.",
     "",
     "Reply the way your persona's HOW WE TALK says. Anything you cannot settle from these files and the conversation goes under a final heading `Questions for Karol`. Never write or restate your own memory; rules enter it only through Karol.",
+    CRM_ACTIONS_HINT,
     "",
     ...sections.flatMap((s) => [`--- ${s.title} ---`, "", s.text || "(empty)", ""]),
     "--- conversation so far ---",
@@ -1010,6 +1076,8 @@ function buildPrompt(claim: Claim): string {
     "They return `pending`. When one does, tell Karol exactly what is waiting",
     "for him to confirm, in one line, and do not claim it is done.",
     "",
+    CRM_ACTIONS_HINT,
+    "",
     "Conversation so far:",
     "",
     transcript(claim),
@@ -1127,7 +1195,13 @@ async function runTurn(claim: Claim) {
       console.log(`[${label}] persona → ${persona.name}${persona.pack ? ` (${persona.pack})` : ""}`)
     }
 
-    const result = await Agent.prompt(prompt, {
+    const images = await loadImages(claim)
+    if (images.length > 0) {
+      prompt += `\n\n(${images.length === 1 ? "One image is" : `${images.length} images are`} attached to this message, numbered from 1 in the order given. The [image N attached] marks above say which message each came with.)`
+      console.log(`[${label}] ${images.length} image${images.length === 1 ? "" : "s"} attached`)
+    }
+
+    const result = await promptWith(images.length > 0 ? { text: prompt, images } : prompt, {
       apiKey: API_KEY,
       model: {
         id: turn.model,

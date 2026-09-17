@@ -37,6 +37,7 @@ with no server-side runner. Same shape, same reasons.
 | `chat_messages` | What was said. `role` is user / assistant / tool / system. |
 | `chat_turns` | One attempt at answering, **and** its billing record. |
 | `chat_tool_calls` | What the assistant did or wants to do. |
+| `chat_attachments` | Screenshots pasted into the composer. `message_id` null until sent; bytes in Postgres with a `storage_key` seam, like `ticket_attachments`. |
 
 `chat_turns` is the load-bearing one. It carries the routing decision (`jobType`,
 `model`, `effort`, `pool`, `rung`), the queue state (`status`, `claimedBy`), and
@@ -65,17 +66,29 @@ adjacent pair and fails the build on a rung that loses money.
 | `content_edit` | Composer 2.5 → Grok 4.6 High | terminology and schema validators |
 | `build_fix` | Composer 2.5 → Grok 4.6 High | compiler exit code |
 | `code_tested` | Grok 4.6 Medium → XHigh → Fable 5.1 Max | test suite |
+| `code_fable` | Fable 5.1 Max | — (hand-picked) |
+| `code_opus` | Opus 5 Max | — (hand-picked) |
 | `debug` | Grok 4.6 XHigh → Opus 5 Max | repro still fails |
 | `review` | Grok 4.6 XHigh | — |
 | `review_critical` | GPT-5.6 Sol Max | — |
 | `security_review` | Opus 5 Max | — |
 | `architecture` | Opus 5 Max | — |
 | `writing` | Fable 5.1 High | — |
-| `report` | Composer 2.5 → Grok 4.6 High | section schema |
+| `report` | Opus 5 Max | — |
 | `skill` | Grok 4.6 High | — |
 | `task` | Grok 4.6 High | — |
 | `persona` | Grok 4.6 High | — |
 | `judgment` | Opus 5 High | — |
+
+The composer chip defaults to **Auto ladder**. Elevate starts on the top
+rung of whatever Auto would have picked (or a stronger model when that
+job has only one rung). A named job forces that ladder on a free thread.
+`code_fable` and `code_opus` are hand-picks only — Auto never classifies
+onto them; use the chip when the first pass should be Fable Max or Opus
+Max. A slash command, a solve thread or a desk keeps its own job so the
+toolset does not change — the pick then only moves the model.
+`applyLadderPick()` in `lib/chat/models.ts` is the rule; the chip is
+session state and resets on refresh.
 
 A thread addressed to a desk runs on `persona` — pm, client manager,
 developer, marketer: frequent, tool-heavy, factual, on the allowance. The
@@ -120,6 +133,9 @@ pool and falls back to Grok 4.6 XHigh; escalations may still spend it. Past 90%
 nothing gets it. Left alone, ordinary work drifts onto premium models and the
 escalations that actually need them arrive in week three to an empty allowance.
 
+The chat rail does not print that reserve. It shows the four bars Claude
+and Cursor publish: weekly Fable / other, monthly Grok / Other.
+
 Two caveats, both deliberate:
 
 - **The ledger is a floor, not a bill.** `agent.getUsage()` settles late and does
@@ -162,6 +178,11 @@ never writes SQL and cannot reach anything not on this list.
 | `propose_pack_line` | `pack-lines.ts`, written by the **worker** on the Mac | **yes** |
 | `route_to` | `send()` — a new thread addressed to another desk, the brief as its first message | **yes** |
 | `log_time` | `logAgentTime` (`lib/punches.ts`) | **yes** |
+| `list_punches` | `findPunches` — any state: review, running, approved, discarded | no |
+| `edit_punch` | `revisePunch` — an approved punch's timesheet line follows | **yes** |
+| `split_punch` | `splitPunch` — the second piece goes to Review, or is dropped | **yes** |
+| `drop_punch` | `dropAnyPunch` — an approved punch's line is deleted | **yes** |
+| `approve_punch` | `approvePunch` | **yes** |
 | `create_task` | `resolveTaskTarget` + `insertTaskRow` | **yes** |
 | `refresh_insights` | `refreshInsightsAction` | **yes** |
 
@@ -243,7 +264,13 @@ All on device-token auth (`authenticateTimeRequest`), same as `/api/time/*`.
 | `POST /api/chat/approvals/[id]` | confirm or reject a parked write. |
 | `POST /api/chat/pack-writes` | **worker.** Claims the oldest approved pack line (a claim older than five minutes with no outcome is claimable again). |
 | `POST /api/chat/pack-writes/[id]` | **worker.** Reports `{file, commit, changed}` or `{error}` for a claimed pack line. |
+| `POST /api/chat/digests` | **worker.** A quiet desk thread with no digest yet, with its messages; `?skip=id,id` for ones that just failed. |
+| `POST /api/chat/digests/[id]` | **worker.** Stores the digest. |
+| `GET /api/chat/threads?agent=&pack=&since=&limit=` | **Mac (`/train`).** A desk's threads with messages, tool-call outcomes and digests. |
+| `GET /api/chat/feedback?agent=&since=` | **Mac (`/train`).** What Karol said about a desk's replies, each with the reply. |
+| `GET /api/clients/[slug]/dossier?since=` | **Mac (`/intake client`).** Sessions, mail, tasks, meetings, tickets and commitment-shaped sentences for one client. |
 | `POST /api/chat/worker` | **worker.** Heartbeat only. Separate from `queue` so a busy worker can say it is alive without claiming more work. |
+| `GET /api/chat/attachments/[id]` | **worker.** A sent screenshot's bytes. Admin device token; unsent pastes 404. |
 
 The browser does not use these — `lib/chat/actions.ts` holds server actions that
 call the same functions in `lib/chat/turns.ts`, so a shortcut and the page
@@ -257,7 +284,8 @@ another worker won. The loser takes the next one.
 
 | Command | Touches the DB | What it guards |
 |---|---|---|
-| `npm run check:chat` | no | Ladder arithmetic — every rung pair must clear its break-even, rungs must climb in price, and nothing escalates without a detector. |
+| `npm run check:chat` | no | Ladder arithmetic — every rung pair must clear its break-even, rungs must climb in price, nothing escalates without a detector, and Elevate / a forced job cannot steal a locked job's tools. |
+| `npm run check:chat:attachments` | no | Screenshot rules — PNG/JPEG sniffing from the bytes, size caps, safe file names, which images a turn carries and how the transcript numbers them. |
 | `npm run check:chat:db` | yes | The spine end to end: routing, claiming, both kinds of tool, pricing, approval, the escalation chain. Creates one throwaway thread and deletes it. |
 
 `check:chat:db` rejects the write it proposes rather than confirming it, so it
@@ -325,9 +353,11 @@ The thread, not the message, decides the ladder. `send()` asks `jobFor()`:
 a `/command` still wins, a thread with a task runs every message as a `task`
 job, everything else is classified by what it says. So "try the other
 approach" inside a task thread does not fall back to a chat model with no
-shell. The `task` ladder is one rung, Grok 4.6 High, no detector — like
-`skill`, and for the same reason: the project's own checks run inside the
-turn, and a solve that fell short says so in prose.
+shell. Elevate or a named job from the composer chip can raise the model;
+they cannot change a task (or skill, or desk) off its job. The `task`
+ladder is one rung, Grok 4.6 High, no detector — like `skill`, and for the
+same reason: the project's own checks run inside the turn, and a solve that
+fell short says so in prose.
 
 The claim carries `task` — the brief re-read from the table on every claim,
 the client, project and product, and the branch name `solve/<first 8 of the
@@ -348,7 +378,14 @@ The prompt's rules: edit only inside the worktree, commit on the branch,
 never push, never touch `main`, run the project's checks before claiming
 anything, do not mark the task done. The reply comes back as **Solver**
 under four headings — Found, Changed, Verified, Left for Karol. Merging the
-branch, and removing the worktree afterwards, is his.
+branch, and removing the worktree afterwards, is his. When that close
+recommends something the CRM can do — mark the task done, file a follow-up,
+put a reminder on the calendar, open the workspace — the reply grows a
+button under the prose. A click is the approval. The model is asked to emit
+a `crm-actions` fence so the button is exact; a few phrases in Left for
+Karol ("mark the task when you're happy") still grow one if the fence is
+missing, including when the heading is bolded the way Solver replies
+usually are. `lib/chat/reply-actions.ts` is the parser.
 
 Same trust boundary as skill turns: without `CHAT_WORKER_SKILLS` a task
 turn is refused with a plain error. The CRM cannot switch it on.
@@ -497,7 +534,8 @@ never scrolls away, the thread on the right, only the thread scrolling.
 
 **The rail** has two tabs. *Threads* — grouped Today / Yesterday / Earlier,
 an amber "Needs you" on any thread with a write parked, an Archived group
-folded at the bottom, and the month's budget under the list. Archive is the
+folded at the bottom, and four vendor usage bars under the list (Claude
+weekly Fable / other, Cursor monthly Grok / Other). Archive is the
 box icon in the thread header; it stamps `archivedAt` and nothing else, so
 Restore (same spot, on an archived thread) or simply sending into the
 thread brings it back. Nothing is ever deleted. *Skills* — every command, skill and agent from the
@@ -517,6 +555,45 @@ palette over the commands. The sidebar and the empty-thread starters reach
 the box through a window event (`components/chat/compose-bus.ts`), the same
 idiom as the dashboard's left-off board.
 
+### Screenshots
+
+⌘V with an image on the clipboard, or a drop onto the box, attaches it — in
+`/chat` and in the dock (`components/chat/useAttachments.tsx`). A paste that
+also carries text is left alone: Numbers, Excel and Word put a rendered
+picture beside the text, and the text is what was meant.
+
+1. **The browser shrinks it.** Long edge capped at 2000 px (the models shrink
+   past ~1600 anyway), re-encoded as PNG, or JPEG on white when the PNG is
+   still over 5 MB. So a Retina capture (3024×1964) is stored at 2000×1299.
+2. **It uploads at once** — `POST /chat/attachments`, raw bytes, session auth,
+   a route handler because server actions cap bodies at 1 MB. The server
+   judges the bytes, not the header (`sniffImage`): PNG or JPEG, ≤ 5 MB,
+   ≤ 8000 px a side. The `image/*` Content-Type is required only so a
+   cross-site form cannot post one. The chip shows a spinner until the row
+   exists; Send waits for it, and a failed chip must be removed first.
+3. **Send claims the rows.** `send({ attachmentIds })` checks every id is this
+   user's and unsent *before* writing, then sets `message_id`. A message may
+   be only pictures; a thread that starts that way is titled "Screenshot".
+   Up to six per message. Unsent uploads older than a day are swept on the
+   next upload — that is the only place orphans are made.
+4. **The claim carries metadata, the worker fetches bytes.** Each message in
+   `/api/chat/queue` has `images: [{id, name, mime, width, height}]`. The
+   worker takes the newest six in the thread (`pickImages`), fetches each from
+   `/api/chat/attachments/[id]`, and sends them through `agent.send({ text,
+   images })` — `Agent.prompt` only takes a string, and is create → send →
+   wait → dispose inside, so `promptWith` is that. The transcript marks which
+   message each image came with (`[image 2 attached]`), so a follow-up about
+   "the button on the left" finds the picture two messages back. An image
+   that will not load fails the turn; the model never answers without it.
+
+Every rung sees images. Checked Sep 16, 2026 against a rendered "KESTREL
+5819": Composer 2.5 read it exactly; Grok 4.6 High read "KESTREL 58199".
+Worth knowing before trusting Grok with a screenshot of numbers.
+
+The bubble draws the stored width and height, so the box is the right shape
+before the bytes arrive; a click opens the full image
+(`/chat/attachments/[id]`, owner only).
+
 Every time on the page is formatted in `Europe/Warsaw` on both sides of
 hydration (`lib/chat/format.ts`): the server runs in UTC and a day heading
 that moved between server and client would be a hydration error.
@@ -529,8 +606,11 @@ that moved between server and client would be a hydration error.
 - **Group threads.** A thread has one desk at a time; `route_to` opens a
   new one rather than adding a second voice. A roster in the rail is a
   filter over threads that exist, not a directory.
-- **Voice and attachments.** In the mockup, not in the build. The composer
-  deliberately has no attach or dictate buttons until they do something.
+- **Voice, and files that are not images.** The composer deliberately has no
+  dictate or attach button until they do something; screenshots come in by
+  paste or drop only (see Screenshots).
+- **Tall page captures.** The browser caps the long edge at 2000 px, so a
+  full-page screenshot arrives as a thin strip. Tiling it is not built.
 - **Structured skill results.** A skill's picklist (inspector findings, a
   punch list) arrives as prose. A card with checkboxes needs the skill to
   return structured output the CRM can render; nothing does yet.

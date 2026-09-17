@@ -34,6 +34,7 @@ import { DESKS } from "@/lib/chat/personas"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { archiveThread, renameThread, sendMessage } from "@/lib/chat/actions"
+import { type LadderPick } from "@/lib/chat/models"
 import {
   dayKey,
   dayLabel,
@@ -114,12 +115,12 @@ export function ChatView({
   }, [waiting, router])
 
   const submit = useCallback(
-    (value: string) => {
+    (value: string, ladder?: LadderPick, attachmentIds: string[] = []) => {
       const body = value.trim()
-      if (!body) return
+      if (!body && attachmentIds.length === 0) return
       setError(null)
       startTransition(async () => {
-        const result = await sendMessage({ threadId, text: body })
+        const result = await sendMessage({ threadId, text: body, ladder, attachmentIds })
         if (!result.ok) {
           setError(result.error)
           return
@@ -173,7 +174,13 @@ export function ChatView({
         </div>
       )}
 
-      <Composer onSend={submit} busy={busy} error={error} autoFocus={empty} />
+      <Composer
+        key={threadId ?? "new"}
+        onSend={submit}
+        busy={busy}
+        error={error}
+        autoFocus={empty}
+      />
     </>
   )
 }

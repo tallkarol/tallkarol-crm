@@ -3,11 +3,17 @@
 import { revalidatePath } from "next/cache"
 import { and, eq } from "drizzle-orm"
 import { db } from "@/db"
-import { chatThreads, chatToolCalls, clients } from "@/db/schema"
+import { chatMessages, chatThreads, chatToolCalls, clients } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { leaveFeedback, type FeedbackKind } from "@/lib/chat/feedback"
+import {
+  actionDone,
+  suggestedActions,
+  type ReplyActionContext,
+} from "@/lib/chat/reply-actions"
 import { startTaskThread } from "@/lib/chat/task-thread"
-import { toolSource } from "@/lib/chat/tools"
+import { toolByName, toolSource } from "@/lib/chat/tools"
+import { isLadderPick, type LadderPick } from "@/lib/chat/models"
 import {
   decideToolCall,
   renameThread as rename,
@@ -29,18 +35,23 @@ export type ActionResult<T> =
 export async function sendMessage(input: {
   threadId?: string | null
   text: string
+  ladder?: LadderPick
+  attachmentIds?: string[]
 }): Promise<ActionResult<{ threadId: string; model: string; job: string; notice: string | null }>> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
 
   const text = input.text.trim()
-  if (!text) return { ok: false, error: "Nothing to send." }
+  const attachmentIds = (input.attachmentIds ?? []).filter((id) => typeof id === "string")
+  if (!text && attachmentIds.length === 0) return { ok: false, error: "Nothing to send." }
 
   try {
     const result = await send({
       userId: user.id,
       threadId: input.threadId,
       text,
+      ladder: isLadderPick(input.ladder) ? input.ladder : "auto",
+      attachmentIds,
     })
     revalidatePath("/chat")
     return {
@@ -193,4 +204,94 @@ export async function decideApproval(input: {
 
   if (!outcome.ok) return { ok: false, error: outcome.error }
   return { ok: true, status: outcome.call.status }
+}
+
+/**
+ * A button under Left for Karol. The click is the approval — the same tools
+ * the chat already has, without a second Confirm card for work he just asked
+ * the reply to offer.
+ */
+export async function runReplyAction(input: {
+  messageId: string
+  key: string
+}): Promise<ActionResult<{ href?: string; label: string }>> {
+  const user = await getSessionUser()
+  if (!user) return { ok: false, error: "Sign in first." }
+
+  const message = await db.query.chatMessages.findFirst({
+    where: eq(chatMessages.id, input.messageId),
+  })
+  if (!message || message.role !== "assistant") {
+    return { ok: false, error: "No such reply." }
+  }
+
+  const thread = await db.query.chatThreads.findFirst({
+    where: and(eq(chatThreads.id, message.threadId), eq(chatThreads.userId, user.id)),
+    with: {
+      task: { columns: { id: true, title: true, status: true } },
+      client: { columns: { slug: true } },
+    },
+  })
+  if (!thread) return { ok: false, error: "Not your thread." }
+
+  const context: ReplyActionContext = {
+    threadId: thread.id,
+    task: thread.task,
+    clientSlug: thread.client?.slug ?? null,
+  }
+  const action = suggestedActions(message.body, context).find((a) => a.key === input.key)
+  if (!action) return { ok: false, error: "That action is no longer on this reply." }
+
+  if (action.href) return { ok: true, href: action.href, label: action.label }
+
+  const existing = await db.query.chatToolCalls.findMany({
+    where: eq(chatToolCalls.threadId, thread.id),
+  })
+  if (actionDone(action, existing)) return { ok: true, label: action.label }
+
+  const spec = toolByName(action.kind)
+  if (!spec) return { ok: false, error: `The CRM cannot ${action.kind}.` }
+
+  const [row] = await db
+    .insert(chatToolCalls)
+    .values({
+      threadId: thread.id,
+      turnId: message.turnId,
+      name: spec.name,
+      args: action.args,
+      mutating: spec.mutating,
+      status: "pending",
+    })
+    .returning()
+
+  if (spec.preview) {
+    try {
+      const preview = await spec.preview(action.args, {
+        userId: user.id,
+        threadId: thread.id,
+        idempotencyKey: row.idempotencyKey,
+      })
+      await db.update(chatToolCalls).set({ preview }).where(eq(chatToolCalls.id, row.id))
+    } catch (err) {
+      const error = err instanceof Error ? err.message : String(err)
+      await db
+        .update(chatToolCalls)
+        .set({ status: "failed", error: error.slice(0, 2000) })
+        .where(eq(chatToolCalls.id, row.id))
+      return { ok: false, error }
+    }
+  }
+
+  const outcome = await decideToolCall({
+    userId: user.id,
+    callId: row.id,
+    approve: true,
+  })
+
+  revalidatePath("/chat")
+  revalidatePath("/tasks")
+  revalidatePath("/")
+
+  if (!outcome.ok) return { ok: false, error: outcome.error }
+  return { ok: true, label: action.label }
 }

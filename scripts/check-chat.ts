@@ -2,13 +2,22 @@ import {
   DOMINATED_FOR_CODE,
   LADDERS,
   MODELS,
+  applyLadderPick,
   breakEven,
+  isLadderPick,
+  jobLocked,
   laddered,
   laddersAreSound,
   type ModelKey,
 } from "@/lib/chat/models"
 import { deskFor, monogram } from "@/lib/chat/desk-context"
 import { allowed, insertLine, renderLine } from "@/lib/chat/pack-lines"
+import {
+  actionDone,
+  stripReplyActions,
+  suggestedActions,
+  type ReplyActionContext,
+} from "@/lib/chat/reply-actions"
 import { BRIEF_PREFIX, TITLE_MAX, solveBranch, taskBrief } from "@/lib/chat/task-brief"
 
 /**
@@ -36,7 +45,7 @@ if (unsound.length === 0) console.log("✓ every ladder pair beats going straigh
 
 /* 2. Dominated models must not appear in any CODE ladder. Writing is exempt:
       prose is not scored by CursorBench and the ranking does not apply. */
-const codeJobs = new Set(["trivial_edit", "build_fix", "code_tested", "debug", "task"])
+const codeJobs = new Set(["trivial_edit", "build_fix", "code_tested", "code_fable", "code_opus", "debug", "task"])
 for (const ladder of Object.values(LADDERS)) {
   if (!codeJobs.has(ladder.job)) continue
   for (const rung of ladder.rungs) {
@@ -243,6 +252,165 @@ if (deskFor("/chat") !== null || deskFor("/settings") !== null) fail("the dock f
 if (Object.values(["/", "/clients/x", "/products/y", "/inspiration", "/reports"]).some((p) => deskFor(p)?.agent === "coach")) fail("the coach is a default somewhere")
 if (monogram("client-manager") !== "CM" || monogram("pm") !== "PM" || monogram("coach") !== "CO") fail("monograms are off")
 console.log("✓ the dock fronts the right desk per page")
+
+/* 8. A Left for Karol close grows the buttons the CRM can actually do. */
+{
+  const ctx: ReplyActionContext = {
+    threadId: "th",
+    task: { id: "t1", title: "Pin leftover repos", status: "open" },
+    clientSlug: "tallkarol",
+  }
+  const leftover = [
+    "Found — leftover-repos.conf is a config file.",
+    "",
+    "Changed — nothing.",
+    "",
+    "Verified — the parser.",
+    "",
+    "Left for Karol",
+    "Mark the task when you’re happy. leftover-repos.conf is machine config, not a repo. Other Local Sites (gdi-dev, zemvelo, …) still have the leftover map but no pin file — say if you want those too. fendex / wzgorzenowa still unmapped on purpose.",
+  ].join("\n")
+  const inferred = suggestedActions(leftover, ctx, new Date(2026, 8, 12))
+  if (!inferred.some((a) => a.kind === "complete_task" && a.args.taskId === "t1")) {
+    fail("a 'mark the task when you're happy' close did not offer Mark task done")
+  }
+  if (!inferred.some((a) => a.kind === "create_task" && /Local Sites/i.test(a.args.title))) {
+    fail("a 'say if you want those too' close did not offer a follow-up task")
+  }
+  if (suggestedActions(leftover, { ...ctx, task: { ...ctx.task!, status: "done" } }).some((a) => a.kind === "complete_task")) {
+    fail("a done task still offered Mark task done")
+  }
+  if (suggestedActions(leftover, { ...ctx, task: null }).some((a) => a.kind === "complete_task")) {
+    fail("a thread with no task offered Mark task done")
+  }
+
+  const leftoverBold = [
+    "**Found**",
+    "Local Sites WP checkouts had no pin.",
+    "",
+    "**Verified**",
+    "`client-for.py --explain` on each site.",
+    "",
+    "**Left for Karol**",
+    "Mark the task when you’re happy. leftover-repos.conf is machine config, not a repo. Other Local Sites (gdi-dev, zemvelo, …) still have the leftover map but no pin file — say if you want those too. fendex / wzgorzenowa still unmapped on purpose.",
+  ].join("\n")
+  const fromBold = suggestedActions(leftoverBold, ctx, new Date(2026, 8, 12))
+  if (!fromBold.some((a) => a.kind === "complete_task")) {
+    fail("a **Left for Karol** close did not offer Mark task done")
+  }
+  const followUp = fromBold.find((a) => a.kind === "create_task")
+  if (!followUp || !/Local Sites/i.test(followUp.args.title)) {
+    fail("a bold Left for Karol close did not offer the leftover-maps follow-up")
+  }
+  if (/Verified|client-for/i.test(followUp?.args.notes ?? "")) {
+    fail("the follow-up notes leaked Verified into the button")
+  }
+
+  const fenced = [
+    "Left for Karol",
+    "Merge the branch when you like.",
+    "",
+    "```crm-actions",
+    "complete_task",
+    'create_task title="Pin leftover maps for gdi-dev and zemvelo"',
+    "create_calendar_event title=\"Pin leftover maps\" startsAt=+3d",
+    "open_workspace path=\"/Users/karolbuczek/Work/tallkarol/crm\"",
+    "invent_money amount=12",
+    "```",
+  ].join("\n")
+  const fromFence = suggestedActions(fenced, ctx, new Date(2026, 8, 12))
+  if (fromFence.map((a) => a.kind).join(",") !== "complete_task,create_task,create_calendar_event,open_workspace") {
+    fail(`fence kinds were ${fromFence.map((a) => a.kind).join(",")}`)
+  }
+  if (fromFence[2].args.startsAt !== "2026-09-15") fail(`+3d resolved to ${fromFence[2].args.startsAt}`)
+  if (!fromFence[3].href?.startsWith("cursor://file")) fail("open_workspace did not become a cursor:// href")
+  if (stripReplyActions(fenced).includes("crm-actions") || stripReplyActions(fenced).includes("complete_task")) {
+    fail("the fence leaked into the prose")
+  }
+  if (!stripReplyActions(fenced).includes("Merge the branch when you like.")) {
+    fail("stripping the fence ate the close")
+  }
+  if (!actionDone(fromFence[0], [{ name: "complete_task", status: "ran", args: fromFence[0].args }])) {
+    fail("a ran complete_task was not treated as done")
+  }
+
+  const remind = suggestedActions(
+    "Remind me Friday to chase the warranty fixes.",
+    { threadId: "th", task: null, clientSlug: "artist-house" },
+    new Date(2026, 8, 10) // Thursday
+  )
+  if (
+    !remind.some(
+      (a) => a.kind === "create_calendar_event" && a.args.startsAt === "2026-09-11" && /warranty/i.test(a.args.title)
+    )
+  ) {
+    fail(`a Friday reminder did not land on the calendar: ${JSON.stringify(remind)}`)
+  }
+  console.log("✓ reply action buttons parse from the fence and from Left for Karol")
+}
+
+/* 9. Auto is the default. Elevate climbs. A named job cannot steal a
+      locked job's tools — a solve thread that "forces architecture" still
+      has a worktree; only the model moves. */
+{
+  const auto = applyLadderPick("chat", "auto")
+  if (auto.job !== "chat" || auto.rung !== 0 || auto.model) {
+    fail(`auto chat should stay rung 0: ${JSON.stringify(auto)}`)
+  }
+
+  const elevateChat = applyLadderPick("chat", "elevate")
+  if (elevateChat.job !== "chat" || elevateChat.model !== "grok-4.6-high") {
+    fail(`elevate on chat should keep the job and raise the model: ${JSON.stringify(elevateChat)}`)
+  }
+
+  const elevateDebug = applyLadderPick("debug", "elevate")
+  if (elevateDebug.job !== "debug" || elevateDebug.rung !== 1 || elevateDebug.model) {
+    fail(`elevate on debug should start at the last rung: ${JSON.stringify(elevateDebug)}`)
+  }
+
+  const elevateArch = applyLadderPick("architecture", "elevate")
+  if (elevateArch.job !== "architecture" || elevateArch.rung !== 0 || elevateArch.model) {
+    fail(`elevate on architecture is already at the ceiling: ${JSON.stringify(elevateArch)}`)
+  }
+
+  const forceDebug = applyLadderPick("chat", "debug")
+  if (forceDebug.job !== "debug" || forceDebug.rung !== 0) {
+    fail(`an unlocked thread should switch to the named job: ${JSON.stringify(forceDebug)}`)
+  }
+
+  const lockedTask = applyLadderPick("task", "debug")
+  if (lockedTask.job !== "task" || lockedTask.model !== LADDERS.debug.rungs[0]) {
+    fail(`forcing debug on a solve must keep the task job: ${JSON.stringify(lockedTask)}`)
+  }
+
+  const lockedSkill = applyLadderPick("skill", "architecture")
+  if (lockedSkill.job !== "skill" || lockedSkill.model !== "opus-5-max") {
+    fail(`a slash command must keep the skill job: ${JSON.stringify(lockedSkill)}`)
+  }
+
+  if (!jobLocked("task") || !jobLocked("skill") || !jobLocked("persona") || !jobLocked("judgment")) {
+    fail("a locked job is no longer locked")
+  }
+  if (jobLocked("debug") || jobLocked("chat")) fail("an unlocked job is now locked")
+  if (isLadderPick("task") || isLadderPick("skill") || !isLadderPick("auto") || !isLadderPick("elevate") || !isLadderPick("debug")) {
+    fail("isLadderPick drifted — task/skill must stay unpickable")
+  }
+  if (!isLadderPick("code_fable") || !isLadderPick("code_opus") || !isLadderPick("report")) {
+    fail("the hand-pick coding jobs and report must stay pickable")
+  }
+  if (LADDERS.report.rungs[0] !== "opus-5-max" || LADDERS.report.rungs.length !== 1) {
+    fail(`report assembly must be Opus Max only: ${LADDERS.report.rungs.join(",")}`)
+  }
+  if (LADDERS.code_fable.rungs[0] !== "fable-5.1-max" || LADDERS.code_opus.rungs[0] !== "opus-5-max") {
+    fail("Fable/Opus for coding must start on Max")
+  }
+  const forceFableOnTask = applyLadderPick("task", "code_fable")
+  if (forceFableOnTask.job !== "task" || forceFableOnTask.model !== "fable-5.1-max") {
+    fail(`forcing Fable on a solve must keep the task job: ${JSON.stringify(forceFableOnTask)}`)
+  }
+  if (isLadderPick("nope") || isLadderPick(undefined)) fail("a junk pick was accepted")
+  console.log("✓ Auto / Elevate / a forced job keep locked jobs on their own tools")
+}
 
 /* Report the economics so a change to the table is legible in the diff. */
 console.log("\nLadder economics (CursorBench 3.2 dollars per task)\n")

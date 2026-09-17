@@ -78,6 +78,7 @@ export async function sendToDesk(input: {
   agent: string
   pack: string
   text: string
+  attachmentIds?: string[]
 }): Promise<ActionResult<{ threadId: string }>> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
@@ -87,6 +88,7 @@ export async function sendToDesk(input: {
       threadId: input.threadId,
       text: input.text,
       desk: { agent: input.agent, pack: input.pack },
+      attachmentIds: (input.attachmentIds ?? []).filter((id) => typeof id === "string"),
     })
     revalidatePath("/chat")
     return { ok: true, threadId: result.threadId }

@@ -10,13 +10,18 @@ import {
   products,
 } from "@/db/schema"
 import type { ChatToolCall, ChatTurn } from "@/db/schema"
+import { assertUnsent, attachToMessage, threadAttachments } from "@/lib/chat/attachment-data"
+import { ATTACH, imagesTitle } from "@/lib/chat/attachments"
 import { budgetState, gate } from "@/lib/chat/budget"
 import {
+  applyLadderPick,
+  isLadderPick,
   ladderFor,
   modelFor,
   nextRung,
   priceCents,
   type JobType,
+  type LadderPick,
   type ModelKey,
   type TokenUsage,
 } from "@/lib/chat/models"
@@ -141,10 +146,10 @@ export type Routing = {
 export async function route(
   job: JobType,
   rung = 0,
-  opts: { escalation?: boolean } = {}
+  opts: { escalation?: boolean; model?: ModelKey } = {}
 ): Promise<Routing> {
   const ladder = ladderFor(job)
-  const want = ladder.rungs[rung] ?? ladder.rungs[0]
+  const want = opts.model ?? ladder.rungs[rung] ?? ladder.rungs[0]
   const budget = await budgetState()
   const decision = gate(want, budget, opts)
 
@@ -212,9 +217,26 @@ export async function send(input: {
    * kind the desk loads; the coach always gets `me`.
    */
   desk?: { agent: string; pack: string }
+  /**
+   * Composer pick. Default Auto — `jobFor()` classifies and starts at rung 0.
+   * Elevate / a named job can raise the model; a slash command, a solve
+   * thread and a desk keep their own job so the tools do not change.
+   */
+  ladder?: LadderPick
+  /**
+   * Screenshots uploaded while the message was being typed. A message may be
+   * only pictures; the ids must be this user's and not yet sent, checked
+   * before anything is written.
+   */
+  attachmentIds?: string[]
 }): Promise<SendResult> {
   const text = input.text.trim()
-  if (!text) throw new Error("Nothing to send.")
+  const attachmentIds = Array.from(new Set(input.attachmentIds ?? []))
+  if (!text && attachmentIds.length === 0) throw new Error("Nothing to send.")
+  if (attachmentIds.length > ATTACH.perMessage) {
+    throw new Error(`Up to ${ATTACH.perMessage} images in one message.`)
+  }
+  await assertUnsent(input.userId, attachmentIds)
 
   const thread = await ensureThread(input.userId, input.threadId)
   const threadId = thread.id
@@ -229,7 +251,7 @@ export async function send(input: {
    * itself is stored as typed — the worker sees the address too.
    */
   const mention = parseMention(text)
-  let title = text
+  let title = text || imagesTitle(attachmentIds.length)
   if (mention) {
     const { persona } = mention
     const resolved = await resolvePack(persona, mention.slug)
@@ -288,14 +310,17 @@ export async function send(input: {
     }
   }
 
-  const job = jobFor(text, thread)
-  const routing = await route(job, 0)
+  const autoJob = jobFor(text, thread)
+  const pick = isLadderPick(input.ladder) ? input.ladder : "auto"
+  const decided = applyLadderPick(autoJob, pick)
+  const routing = await route(decided.job, decided.rung, { model: decided.model })
   const spec = modelFor(routing.model)
 
   const [message] = await db
     .insert(chatMessages)
     .values({ threadId, role: "user", agent: input.as?.trim().slice(0, 60) || "Karol", body: text })
     .returning()
+  await attachToMessage(input.userId, attachmentIds, message.id)
 
   const [turn] = await db
     .insert(chatTurns)
@@ -303,7 +328,7 @@ export async function send(input: {
       threadId,
       messageId: message.id,
       status: "queued",
-      jobType: job,
+      jobType: routing.job,
       model: routing.model,
       effort: spec.effort,
       pool: spec.pool,
@@ -755,11 +780,14 @@ export async function setThreadArchived(
 export async function threadDetail(userId: string, threadId: string) {
   const thread = await db.query.chatThreads.findFirst({
     where: and(eq(chatThreads.id, threadId), eq(chatThreads.userId, userId)),
-    with: { task: { columns: { id: true, title: true } } },
+    with: {
+      task: { columns: { id: true, title: true, status: true } },
+      client: { columns: { slug: true } },
+    },
   })
   if (!thread) return null
 
-  const [messages, turns, calls, feedback] = await Promise.all([
+  const [messages, turns, calls, feedback, attachments] = await Promise.all([
     db.query.chatMessages.findMany({
       where: eq(chatMessages.threadId, threadId),
       orderBy: [asc(chatMessages.createdAt)],
@@ -776,7 +804,8 @@ export async function threadDetail(userId: string, threadId: string) {
       where: eq(chatFeedback.threadId, threadId),
       orderBy: [asc(chatFeedback.createdAt)],
     }),
+    threadAttachments(threadId),
   ])
 
-  return { thread, messages, turns, calls, feedback }
+  return { thread, messages, turns, calls, feedback, attachments }
 }

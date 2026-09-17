@@ -8,10 +8,11 @@ import { ROUTES } from "@/lib/nav"
 import { dayBucket, listStamp, type DayBucket } from "@/lib/chat/format"
 import { PERSONAS } from "@/lib/chat/personas"
 import { SKILL_DOCS } from "@/lib/chat/skills"
-import { BudgetMeters } from "@/components/chat/BudgetMeters"
+import { UsageMeters } from "@/components/chat/UsageMeters"
 import { SkillsDocs } from "@/components/chat/SkillsDocs"
 import { onSkillsTab } from "@/components/chat/compose-bus"
-import type { BudgetView, ThreadRow } from "@/components/chat/types"
+import type { ThreadRow } from "@/components/chat/types"
+import type { UsageRailView } from "@/lib/usage/types"
 
 const TAB_KEY = "tk-chat-tab"
 
@@ -32,13 +33,13 @@ export function ChatSidebar({
   threads,
   activeId,
   isNew,
-  budget,
+  usage,
   now,
 }: {
   threads: ThreadRow[]
   activeId: string | null
   isNew: boolean
-  budget: BudgetView
+  usage: UsageRailView
   /** Server time, ISO — the day buckets must agree on both sides of hydration. */
   now: string
 }) {
@@ -204,7 +205,7 @@ export function ChatSidebar({
             ) : null}
           </div>
 
-          <BudgetMeters budget={budget} />
+          <UsageMeters usage={usage} />
         </>
       ) : (
         <>

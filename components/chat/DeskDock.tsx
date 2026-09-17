@@ -12,6 +12,7 @@ import { packKindOf } from "@/lib/chat/pack-lines"
 import { PERSONAS } from "@/lib/chat/personas"
 import { ROUTES } from "@/lib/nav"
 import { Message } from "@/components/chat/Message"
+import { AttachmentTray, useAttachments } from "@/components/chat/useAttachments"
 
 /**
  * The desk dock: the nine desks on the right edge of every page, the page
@@ -91,11 +92,17 @@ export function DeskDock() {
     setSheet(false)
   }
 
-  function submit(text: string) {
+  function submit(text: string, attachmentIds: string[]) {
     if (!open) return
     setError(null)
     startTransition(async () => {
-      const result = await sendToDesk({ threadId: view?.threadId ?? null, agent: open.agent, pack: open.pack, text })
+      const result = await sendToDesk({
+        threadId: view?.threadId ?? null,
+        agent: open.agent,
+        pack: open.pack,
+        text,
+        attachmentIds,
+      })
       if (!result.ok) {
         setError(result.error)
         return
@@ -245,7 +252,7 @@ function Panel({
   error: string | null
   onFresh: () => void
   onClose: () => void
-  onSend: (text: string) => void
+  onSend: (text: string, attachmentIds: string[]) => void
 }) {
   const persona = PERSONAS[agent]
   const foot = useRef<HTMLDivElement>(null)
@@ -345,7 +352,7 @@ function Panel({
   )
 }
 
-/** The box, already addressed — no `@`, no slug. Enter sends, Shift+Enter breaks a line. */
+/** The box, already addressed — no `@`, no slug. Enter sends, Shift+Enter breaks a line, ⌘V attaches a screenshot. */
 function DeskComposer({
   label,
   busy,
@@ -355,10 +362,13 @@ function DeskComposer({
   label: string
   busy: boolean
   error: string | null
-  onSend: (text: string) => void
+  onSend: (text: string, attachmentIds: string[]) => void
 }) {
   const [text, setText] = useState("")
   const box = useRef<HTMLTextAreaElement>(null)
+  const images = useAttachments()
+  const blocked = busy || images.uploading || images.failed
+  const empty = !text.trim() && images.readyIds.length === 0
 
   useEffect(() => {
     const el = box.current
@@ -368,20 +378,29 @@ function DeskComposer({
   }, [text])
 
   function submit() {
-    const value = text.trim()
-    if (!value || busy) return
+    if (empty || blocked) return
+    const ids = images.readyIds
     setText("")
-    onSend(value)
+    images.clear()
+    onSend(text.trim(), ids)
   }
 
   return (
     <div className="border-t border-line px-3 pb-3 pt-2">
       {error ? <p className="mb-2 rounded-lg bg-bad-soft px-3 py-2 text-xs text-bad">{error}</p> : null}
-      <div className="flex items-end gap-2 rounded-[14px] border border-line-strong bg-card px-3 py-2 focus-within:border-accent-ink">
+      <AttachmentTray items={images.items} onRemove={images.remove} size="sm" />
+      <div
+        {...images.dropZone}
+        className={cn(
+          "flex items-end gap-2 rounded-[14px] border border-line-strong bg-card px-3 py-2 focus-within:border-accent-ink",
+          images.dragging && "border-accent-ink"
+        )}
+      >
         <textarea
           ref={box}
           rows={1}
           value={text}
+          onPaste={images.onPaste}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -396,7 +415,7 @@ function DeskComposer({
         <button
           type="button"
           onClick={submit}
-          disabled={busy || !text.trim()}
+          disabled={blocked || empty}
           aria-label="Send"
           className="grid size-7 shrink-0 place-items-center rounded-[9px] bg-accent text-on-accent outline-accent-ink disabled:opacity-35"
         >
