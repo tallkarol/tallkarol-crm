@@ -11,7 +11,10 @@ import {
   punchFlags,
   punchHours,
   punchMinutes,
+  parsePunchTime,
   resolveInstant,
+  revisedHours,
+  splitBlocker,
   wallClockIn,
 } from "../lib/punch"
 
@@ -173,6 +176,41 @@ console.log("\noffline sync — `at` is clamped so a bad device clock cannot dri
       : null,
     "2026-08-27T13:00:00.000Z"
   )
+}
+
+console.log("\nafter the fact — times as Karol says them, splits, re-billed hours")
+{
+  const at = (raw: string, day = "2026-09-16", tz = "Europe/Warsaw") => {
+    const r = parsePunchTime(raw, day, tz)
+    return "at" in r ? r.at.toISOString() : r.error
+  }
+  check("11:48 AM in Warsaw summer", at("11:48 AM"), "2026-09-16T09:48:00.000Z")
+  check("11:48am", at("11:48am"), "2026-09-16T09:48:00.000Z")
+  check("9am", at("9am"), "2026-09-16T07:00:00.000Z")
+  check("9 p.m.", at("9 p.m."), "2026-09-16T19:00:00.000Z")
+  check("12:05 AM is just after midnight", at("12:05 AM"), "2026-09-15T22:05:00.000Z")
+  check("12 PM is noon", at("12 PM"), "2026-09-16T10:00:00.000Z")
+  check("24-hour clock", at("14:05"), "2026-09-16T12:05:00.000Z")
+  check("New York day", at("11:48 AM", "2026-09-16", TZ), "2026-09-16T15:48:00.000Z")
+  check("winter offset", at("11:48 AM", "2026-01-15"), "2026-01-15T10:48:00.000Z")
+  check("zoned instant kept", at("2026-09-16T11:48:00+02:00"), "2026-09-16T09:48:00.000Z")
+  check("local date and time", at("2026-09-14 08:30"), "2026-09-14T06:30:00.000Z")
+  check("13 PM refused", at("13 PM").startsWith('"13 PM" is not'), true)
+  check("25:00 refused", at("25:00").startsWith('"25:00" is not'), true)
+  check("words refused", at("lunch").startsWith('"lunch" is not'), true)
+  check("bad day refused", at("9am", "16/09/2026"), "The day must be YYYY-MM-DD.")
+
+  const s = new Date("2026-09-16T07:00:00Z")
+  const e = new Date("2026-09-16T15:00:00Z")
+  check("split inside", splitBlocker(s, e, new Date("2026-09-16T09:48:00Z")), null)
+  check("split on the edge refused", splitBlocker(s, e, s) !== null, true)
+  check("split past the end refused", splitBlocker(s, e, new Date("2026-09-16T16:00:00Z")) !== null, true)
+  check("running punch cannot split", splitBlocker(s, null, e), "Clock this punch out before splitting it.")
+
+  const cut = new Date("2026-09-16T09:48:00Z")
+  check("explicit hours win", revisedHours({ explicit: 2.345, timesChanged: true, start: s, end: cut, current: 8 }), 2.35)
+  check("moved times re-bill the span", revisedHours({ timesChanged: true, start: s, end: cut, current: 8 }), 2.8)
+  check("untouched times keep a hand-set line", revisedHours({ timesChanged: false, start: s, end: e, current: 7.5 }), 7.5)
 }
 
 console.log(

@@ -16,14 +16,18 @@ import {
   elapsedLabel,
   occurredOnIn,
   parseInstant,
+  parsePunchTime,
   punchFlags,
   punchHours,
   punchMinutes,
   resolveInstant,
+  revisedHours,
+  splitBlocker,
   wallClockIn,
   type PunchFlag,
   type PunchSource,
 } from "@/lib/punch"
+import { sheetLock } from "@/lib/sheets"
 import { workspaceTimezone } from "@/lib/timezone"
 import { hoursToString, invoiceNumberFor } from "@/lib/timesheet"
 
@@ -1052,4 +1056,579 @@ export async function pendingPunchCount(userId?: string) {
         : eq(timePunches.status, "stopped")
     )
   return Number(row?.count ?? 0)
+}
+
+/* ------------------------------------------------------------ after the fact */
+
+/*
+ * Changing punches that already left the review queue — approved ones whose
+ * line is on the timesheet, discarded ones — plus splitting and dropping.
+ * The review screen keeps its narrower updatePunch/discardPunch; these are
+ * what the chat's punch tools call. Every write has a plan* twin that works
+ * the change out without writing it, so the chat's preview card and the
+ * write cannot disagree. See TIMESHEET.md, "After the fact".
+ */
+
+export type PunchLine = {
+  id: string
+  hours: number
+  summary: string
+  occurredOn: string
+  projectId: string | null
+  invoiceNumber: string | null
+}
+
+export type PunchLock = { number: string; status: string }
+
+export type PunchDetail = PunchView & {
+  timeEntryId: string | null
+  /** The billable timesheet line, for an approved punch whose line still exists. */
+  line: PunchLine | null
+  /** The invoice that locks this punch's client-month, when one does. */
+  lockedBy: PunchLock | null
+}
+
+/** The invoice that locks a client-month — the sheet's own rule (`sheetLock`). */
+async function monthLock(
+  clientId: string,
+  month: string,
+  invoiceId: string | null,
+  cache?: Map<string, PunchLock | null>
+): Promise<PunchLock | null> {
+  if (invoiceId) {
+    const own = await db.query.invoices.findFirst({
+      where: eq(invoices.id, invoiceId),
+      columns: { number: true, status: true },
+    })
+    if (own && sheetLock(own).locked) return own
+  }
+  const key = `${clientId}:${month}`
+  if (cache?.has(key)) return cache.get(key) ?? null
+  const rows = await db.query.invoices.findMany({
+    where: and(
+      eq(invoices.clientId, clientId),
+      sql`to_char(${invoices.issuedOn}, 'YYYY-MM') = ${month}`
+    ),
+    columns: { number: true, status: true },
+  })
+  const lock = rows.find((row) => sheetLock(row).locked) ?? null
+  cache?.set(key, lock)
+  return lock
+}
+
+async function withLines(rows: PunchRow[], tz: string): Promise<PunchDetail[]> {
+  const entryIds = rows.map((r) => r.timeEntryId).filter((id): id is string => Boolean(id))
+  const entries = entryIds.length
+    ? await db.query.timeEntries.findMany({ where: inArray(timeEntries.id, entryIds) })
+    : []
+  const invoiceIds = entries.map((e) => e.invoiceId).filter((id): id is string => Boolean(id))
+  const invoiceRows = invoiceIds.length
+    ? await db.query.invoices.findMany({
+        where: inArray(invoices.id, invoiceIds),
+        columns: { id: true, number: true },
+      })
+    : []
+  const cache = new Map<string, PunchLock | null>()
+  const out: PunchDetail[] = []
+  for (const row of rows) {
+    const view = toView(row, tz)
+    const entry = entries.find((e) => e.id === row.timeEntryId) ?? null
+    const month = (entry?.occurredOn ?? view.occurredOn).slice(0, 7)
+    out.push({
+      ...view,
+      timeEntryId: row.timeEntryId,
+      line: entry
+        ? {
+            id: entry.id,
+            hours: Number(entry.hours),
+            summary: entry.summary,
+            occurredOn: entry.occurredOn,
+            projectId: entry.projectId,
+            invoiceNumber: invoiceRows.find((i) => i.id === entry.invoiceId)?.number ?? null,
+          }
+        : null,
+      lockedBy:
+        row.status === "approved" && entry
+          ? await monthLock(entry.clientId, month, entry.invoiceId, cache)
+          : null,
+    })
+  }
+  return out
+}
+
+/** Midnight of a local day, as an instant. */
+function dayStart(day: string, tz: string): Date {
+  const parsed = parsePunchTime("00:00", day, tz)
+  if ("error" in parsed) throw new Error(parsed.error)
+  return parsed.at
+}
+
+function nextDay(day: string): string {
+  const d = new Date(`${day}T12:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + 1)
+  return d.toISOString().slice(0, 10)
+}
+
+/** Punches by status, local day range and client — the chat's list_punches. */
+export async function findPunches(input: {
+  userId: string
+  statuses: TimePunch["status"][]
+  fromDay?: string
+  toDay?: string
+  clientSlug?: string
+  limit?: number
+}): Promise<PunchResult<{ timeZone: string; punches: PunchDetail[] }>> {
+  const tz = await workspaceTimezone()
+  const where = [eq(timePunches.userId, input.userId), inArray(timePunches.status, input.statuses)]
+  if (input.clientSlug) {
+    const client = await db.query.clients.findFirst({ where: eq(clients.slug, input.clientSlug) })
+    if (!client) return { ok: false, status: 404, error: `No client with slug "${input.clientSlug}".` }
+    where.push(eq(timePunches.clientId, client.id))
+  }
+  const day = /^\d{4}-\d{2}-\d{2}$/
+  if (input.fromDay) {
+    if (!day.test(input.fromDay)) return { ok: false, status: 400, error: "`from` must be YYYY-MM-DD." }
+    where.push(gte(timePunches.startedAt, dayStart(input.fromDay, tz)))
+  }
+  if (input.toDay) {
+    if (!day.test(input.toDay)) return { ok: false, status: 400, error: "`to` must be YYYY-MM-DD." }
+    where.push(sql`${timePunches.startedAt} < ${dayStart(nextDay(input.toDay), tz).toISOString()}::timestamptz`)
+  }
+  const rows = (await db.query.timePunches.findMany({
+    where: and(...where),
+    with: withParties,
+    orderBy: [desc(timePunches.startedAt)],
+    limit: Math.min(Math.max(input.limit ?? 40, 1), 100),
+  })) as PunchRow[]
+  return { ok: true, data: { timeZone: tz, punches: await withLines(rows, tz) } }
+}
+
+export async function punchDetail(userId: string, punchId: string): Promise<PunchDetail | null> {
+  const row = (await db.query.timePunches.findFirst({
+    where: and(eq(timePunches.id, punchId), eq(timePunches.userId, userId)),
+    with: withParties,
+  })) as PunchRow | undefined
+  if (!row) return null
+  const [detail] = await withLines([row], await workspaceTimezone())
+  return detail
+}
+
+function lockError(lock: PunchLock) {
+  return `Invoice ${lock.number} (${lock.status}) already covers that month. Send force: true only if Karol wants a billed line changed — the invoice itself is not re-issued.`
+}
+
+/* ---------- revise ---------- */
+
+export type PunchRevision = {
+  userId: string
+  punchId: string
+  startedAt?: Date
+  endedAt?: Date
+  clientId?: string
+  /** null clears the project. */
+  projectId?: string | null
+  note?: string
+  /** Approved punches: what the line bills, when it should differ from the clock span. */
+  hours?: number
+  /** Approved punches: the day the line is filed under. */
+  occurredOn?: string
+  /** A discarded punch goes back to Review. */
+  reopen?: boolean
+  /** Change a line in a month an invoice already locks. */
+  force?: boolean
+}
+
+export type RevisionPlan = {
+  before: PunchDetail
+  status: TimePunch["status"]
+  startedAt: Date
+  endedAt: Date | null
+  clientId: string
+  projectId: string | null
+  note: string
+  /** Set when the approved punch's line changes with it. */
+  line: { hours: number; occurredOn: string; retainerChanges: boolean } | null
+  lock: PunchLock | null
+  warnings: string[]
+}
+
+export async function planRevision(input: PunchRevision): Promise<PunchResult<RevisionPlan>> {
+  const before = await punchDetail(input.userId, input.punchId)
+  if (!before) return { ok: false, status: 404, error: "No punch with that id. Call list_punches for ids." }
+  const tz = await workspaceTimezone()
+  const now = Date.now()
+  const warnings: string[] = []
+
+  const oldStart = new Date(before.startedAt)
+  const oldEnd = before.endedAt ? new Date(before.endedAt) : null
+  const startedAt = input.startedAt ?? oldStart
+  const endedAt = input.endedAt ?? oldEnd
+
+  let status = before.status
+  if (input.reopen) {
+    if (before.status !== "discarded") {
+      return { ok: false, status: 409, error: "Only a discarded punch can be sent back to Review." }
+    }
+    status = "stopped"
+  }
+  if (before.status === "running" && input.endedAt) status = "stopped"
+
+  if (Number.isNaN(startedAt.getTime()) || (endedAt && Number.isNaN(endedAt.getTime()))) {
+    return { ok: false, status: 400, error: "That time is not valid." }
+  }
+  if (endedAt && endedAt.getTime() <= startedAt.getTime()) {
+    return { ok: false, status: 400, error: "The clock-out would be at or before the clock-in." }
+  }
+  if (startedAt.getTime() > now + 60_000 || (endedAt && endedAt.getTime() > now + 60_000)) {
+    return { ok: false, status: 400, error: "That time is in the future." }
+  }
+
+  let clientId = before.clientId
+  let projectId = before.projectId
+  if (input.clientId !== undefined || input.projectId !== undefined) {
+    const clientChanged = input.clientId !== undefined && input.clientId !== before.clientId
+    const wantProject =
+      input.projectId !== undefined ? input.projectId : clientChanged ? null : before.projectId
+    const target = await resolveTarget({ clientId: input.clientId ?? (wantProject ? null : before.clientId), projectId: wantProject })
+    if ("error" in target) return { ok: false, status: 400, error: target.error }
+    clientId = target.clientId
+    projectId = target.projectId
+    if (clientChanged && before.projectId && input.projectId === undefined) {
+      warnings.push("The project was cleared — it belonged to the old client.")
+    }
+  }
+
+  const note = input.note !== undefined ? input.note.trim() : before.note
+  const isLine = before.status === "approved" && before.line !== null
+
+  if ((input.hours !== undefined || input.occurredOn !== undefined) && !isLine) {
+    return {
+      ok: false,
+      status: 400,
+      error: "hours and day only apply to a punch that is already on the timesheet. For one in review, change the clock times, or approve it with those values.",
+    }
+  }
+
+  let line: RevisionPlan["line"] = null
+  let lock: PunchLock | null = null
+  if (isLine && before.line) {
+    if (!endedAt) return { ok: false, status: 409, error: "An approved punch has to keep an end time." }
+    const timesChanged =
+      startedAt.getTime() !== oldStart.getTime() || endedAt.getTime() !== (oldEnd?.getTime() ?? 0)
+    const hours = revisedHours({ explicit: input.hours, timesChanged, start: startedAt, end: endedAt, current: before.line.hours })
+    const startMoved = startedAt.getTime() !== oldStart.getTime()
+    const occurredOn =
+      input.occurredOn ?? (startMoved ? occurredOnIn(startedAt, tz) : before.line.occurredOn)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(occurredOn)) {
+      return { ok: false, status: 400, error: "The day must be YYYY-MM-DD." }
+    }
+    const blocker = approvalBlocker({ clientId, projectId, summary: note, hours })
+    if (blocker) return { ok: false, status: 422, error: blocker }
+
+    lock =
+      before.lockedBy ??
+      (clientId !== before.clientId || occurredOn.slice(0, 7) !== before.line.occurredOn.slice(0, 7)
+        ? await monthLock(clientId, occurredOn.slice(0, 7), null)
+        : null)
+    if (lock && !input.force) return { ok: false, status: 409, error: lockError(lock) }
+    if (lock) warnings.push(`Invoice ${lock.number} is already ${lock.status}; this changes a billed line, and the invoice is not re-issued.`)
+    if (!timesChanged && input.hours === undefined && before.line.hours !== before.hours) {
+      warnings.push(`The line keeps its hand-set ${before.line.hours.toFixed(2)} h.`)
+    }
+    line = { hours, occurredOn, retainerChanges: clientId !== before.clientId }
+  } else if (before.status === "approved") {
+    warnings.push("Its timesheet line was deleted earlier, so only the punch changes.")
+  }
+
+  return {
+    ok: true,
+    data: { before, status, startedAt, endedAt, clientId, projectId, note, line, lock, warnings },
+  }
+}
+
+export async function revisePunch(input: PunchRevision): Promise<PunchResult<{ punch: PunchDetail; warnings: string[] }>> {
+  const planned = await planRevision(input)
+  if (!planned.ok) return planned
+  const plan = planned.data
+  const tz = await workspaceTimezone()
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(timePunches)
+      .set({
+        status: plan.status,
+        startedAt: plan.startedAt,
+        endedAt: plan.endedAt,
+        clientId: plan.clientId,
+        projectId: plan.projectId,
+        note: plan.note,
+      })
+      .where(eq(timePunches.id, plan.before.id))
+
+    if (plan.line && plan.before.line && plan.endedAt) {
+      const retainer = plan.line.retainerChanges ? await activeRetainerFor(plan.clientId) : undefined
+      await tx
+        .update(timeEntries)
+        .set({
+          clientId: plan.clientId,
+          projectId: plan.projectId,
+          ...(retainer !== undefined ? { retainerId: retainer?.id ?? null } : {}),
+          occurredOn: plan.line.occurredOn,
+          startedAt: wallClockIn(plan.startedAt, tz),
+          endedAt: wallClockIn(plan.endedAt, tz),
+          hours: hoursToString(plan.line.hours),
+          summary: plan.note,
+        })
+        .where(eq(timeEntries.id, plan.before.line.id))
+    }
+  })
+
+  const fresh = await punchDetail(input.userId, plan.before.id)
+  if (!fresh) return { ok: false, status: 500, error: "Could not read that punch back." }
+  return { ok: true, data: { punch: fresh, warnings: plan.warnings } }
+}
+
+/* ---------- split ---------- */
+
+export type PunchSplit = {
+  userId: string
+  punchId: string
+  at: Date
+  /** Discard one side: the part before `at`, or the part after it. */
+  drop?: "before" | "after" | null
+  /** The second piece's summary and project; both default to the original's. */
+  secondNote?: string
+  secondProjectId?: string | null
+  /** The chat call's idempotency key — a confirmed split never happens twice. */
+  requestId: string
+  force?: boolean
+}
+
+export type SplitPlan = {
+  before: PunchDetail
+  first: { status: TimePunch["status"]; startedAt: Date; endedAt: Date; hours: number; note: string }
+  second: { status: TimePunch["status"]; startedAt: Date; endedAt: Date; hours: number; note: string; projectId: string | null }
+  /** approved line: "keep" (hours shrink to the first piece), "delete", or null when there is none. */
+  line: { action: "keep"; hours: number } | { action: "delete" } | null
+  lock: PunchLock | null
+  replayOf: string | null
+  warnings: string[]
+}
+
+export async function planSplit(input: PunchSplit): Promise<PunchResult<SplitPlan>> {
+  const before = await punchDetail(input.userId, input.punchId)
+  if (!before) return { ok: false, status: 404, error: "No punch with that id. Call list_punches for ids." }
+  const start = new Date(before.startedAt)
+  const end = before.endedAt ? new Date(before.endedAt) : null
+
+  // This card already split the punch: report that, before judging the cut
+  // against a punch that is now shorter than when the card was drawn.
+  const replay = await db.query.timePunches.findFirst({
+    where: and(eq(timePunches.userId, input.userId), eq(timePunches.clientRequestId, input.requestId)),
+    columns: { id: true },
+  })
+  if (replay) {
+    const other = await punchDetail(input.userId, replay.id)
+    const otherStart = other ? new Date(other.startedAt) : input.at
+    const otherEnd = other?.endedAt ? new Date(other.endedAt) : otherStart
+    return {
+      ok: true,
+      data: {
+        before,
+        first: { status: before.status, startedAt: start, endedAt: end ?? input.at, hours: before.hours, note: before.note },
+        second: {
+          status: other?.status ?? "stopped",
+          startedAt: otherStart,
+          endedAt: otherEnd,
+          hours: other?.hours ?? 0,
+          note: other?.note ?? "",
+          projectId: other?.projectId ?? null,
+        },
+        line: null,
+        lock: null,
+        replayOf: replay.id,
+        warnings: [],
+      },
+    }
+  }
+
+  if (before.status === "running") {
+    return { ok: false, status: 409, error: "That punch is still running. Clock it out (edit_punch with a clockOut) before splitting it." }
+  }
+  const blocker = splitBlocker(start, end, input.at)
+  if (blocker || !end) return { ok: false, status: 400, error: blocker ?? "That punch has no end time." }
+
+  let secondProjectId = before.projectId
+  if (input.secondProjectId !== undefined) {
+    const target = await resolveTarget({ clientId: before.clientId, projectId: input.secondProjectId })
+    if ("error" in target) return { ok: false, status: 400, error: target.error }
+    secondProjectId = target.projectId
+  }
+
+  const warnings: string[] = []
+  const hasLine = before.status === "approved" && before.line !== null
+  const firstStatus: TimePunch["status"] =
+    before.status === "discarded" || input.drop === "before" ? "discarded" : before.status
+  const secondStatus: TimePunch["status"] =
+    before.status === "discarded" || input.drop === "after" ? "discarded" : "stopped"
+
+  let line: SplitPlan["line"] = null
+  let lock: PunchLock | null = null
+  if (hasLine) {
+    lock = before.lockedBy
+    if (lock && !input.force) return { ok: false, status: 409, error: lockError(lock) }
+    if (lock) warnings.push(`Invoice ${lock.number} is already ${lock.status}; this changes a billed line.`)
+    if (input.drop === "before") {
+      line = { action: "delete" }
+      warnings.push("The approved line is removed; the part after the split waits in Review.")
+    } else {
+      line = { action: "keep", hours: punchHours(start, input.at) }
+      if (secondStatus === "stopped") warnings.push("The part after the split waits in Review — approve it to bill it.")
+    }
+  } else if (before.status === "approved") {
+    warnings.push("Its timesheet line was deleted earlier, so only the punch is split.")
+  }
+
+  return {
+    ok: true,
+    data: {
+      before,
+      first: { status: firstStatus, startedAt: start, endedAt: input.at, hours: punchHours(start, input.at), note: before.note },
+      second: {
+        status: secondStatus,
+        startedAt: input.at,
+        endedAt: end,
+        hours: punchHours(input.at, end),
+        note: input.secondNote !== undefined ? input.secondNote.trim() : before.note,
+        projectId: secondProjectId,
+      },
+      line,
+      lock,
+      replayOf: null,
+      warnings,
+    },
+  }
+}
+
+export async function splitPunch(
+  input: PunchSplit
+): Promise<PunchResult<{ first: PunchDetail; second: PunchDetail; replayed: boolean; warnings: string[] }>> {
+  const planned = await planSplit(input)
+  if (!planned.ok) return planned
+  const plan = planned.data
+  const readBoth = async (secondId: string, replayed: boolean) => {
+    const [first, second] = await Promise.all([
+      punchDetail(input.userId, plan.before.id),
+      punchDetail(input.userId, secondId),
+    ])
+    if (!first || !second) return { ok: false as const, status: 500, error: "Could not read the split punches back." }
+    return { ok: true as const, data: { first, second, replayed, warnings: plan.warnings } }
+  }
+  if (plan.replayOf) return readBoth(plan.replayOf, true)
+
+  const tz = await workspaceTimezone()
+  const original = await db.query.timePunches.findFirst({ where: eq(timePunches.id, plan.before.id) })
+  if (!original) return { ok: false, status: 404, error: "No punch with that id." }
+
+  let secondId: string
+  try {
+    secondId = await db.transaction(async (tx) => {
+      const dropLine = plan.line?.action === "delete"
+      await tx
+        .update(timePunches)
+        .set({
+          endedAt: plan.first.endedAt,
+          status: plan.first.status,
+          ...(dropLine ? { timeEntryId: null, approvedAt: null, approvedBy: null } : {}),
+        })
+        .where(eq(timePunches.id, original.id))
+
+      if (plan.line?.action === "keep" && plan.before.line) {
+        await tx
+          .update(timeEntries)
+          .set({ hours: hoursToString(plan.line.hours), endedAt: wallClockIn(plan.first.endedAt, tz) })
+          .where(eq(timeEntries.id, plan.before.line.id))
+      }
+      if (dropLine && plan.before.line) {
+        await tx.delete(timeEntries).where(eq(timeEntries.id, plan.before.line.id))
+      }
+
+      const [created] = await tx
+        .insert(timePunches)
+        .values({
+          userId: original.userId,
+          clientId: original.clientId,
+          projectId: plan.second.projectId,
+          startedAt: plan.second.startedAt,
+          endedAt: plan.second.endedAt,
+          status: plan.second.status,
+          note: plan.second.note,
+          source: original.source,
+          deviceId: original.deviceId,
+          clientRequestId: input.requestId,
+        })
+        .returning({ id: timePunches.id })
+      return created.id
+    })
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      const winner = await db.query.timePunches.findFirst({
+        where: and(eq(timePunches.userId, input.userId), eq(timePunches.clientRequestId, input.requestId)),
+        columns: { id: true },
+      })
+      if (winner) return readBoth(winner.id, true)
+    }
+    throw error
+  }
+  return readBoth(secondId, false)
+}
+
+/* ---------- drop ---------- */
+
+export type DropPlan = {
+  before: PunchDetail
+  /** The line that goes with it, for an approved punch. */
+  line: PunchLine | null
+  lock: PunchLock | null
+  already: boolean
+}
+
+export async function planDropAny(input: { userId: string; punchId: string; force?: boolean }): Promise<PunchResult<DropPlan>> {
+  const before = await punchDetail(input.userId, input.punchId)
+  if (!before) return { ok: false, status: 404, error: "No punch with that id. Call list_punches for ids." }
+  const line = before.status === "approved" ? before.line : null
+  const lock = line ? before.lockedBy : null
+  if (lock && !input.force) return { ok: false, status: 409, error: lockError(lock) }
+  return { ok: true, data: { before, line, lock, already: before.status === "discarded" } }
+}
+
+/**
+ * Discard any punch, approved ones included: the punch is kept as discarded
+ * ("where did that hour go" still has an answer) and an approved punch's
+ * timesheet line is deleted, because that line is the money.
+ */
+export async function dropAnyPunch(input: {
+  userId: string
+  punchId: string
+  force?: boolean
+}): Promise<PunchResult<{ punch: PunchDetail; removedLine: PunchLine | null; already: boolean }>> {
+  const planned = await planDropAny(input)
+  if (!planned.ok) return planned
+  const plan = planned.data
+  if (!plan.already) {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(timePunches)
+        .set({
+          status: "discarded",
+          ...(plan.before.status === "running" ? { endedAt: new Date() } : {}),
+          ...(plan.before.status === "approved" ? { timeEntryId: null, approvedAt: null, approvedBy: null } : {}),
+        })
+        .where(eq(timePunches.id, plan.before.id))
+      if (plan.line) await tx.delete(timeEntries).where(eq(timeEntries.id, plan.line.id))
+    })
+  }
+  const fresh = await punchDetail(input.userId, plan.before.id)
+  if (!fresh) return { ok: false, status: 500, error: "Could not read that punch back." }
+  return { ok: true, data: { punch: fresh, removedLine: plan.already ? null : plan.line, already: plan.already } }
 }

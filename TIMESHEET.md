@@ -55,6 +55,41 @@ six.
 - **Sheets lock when billed.** Invoiced is read-only behind an Unlock button;
   paid asks a second time.
 
+## After the fact
+
+A punch can be changed in any state, not only while it waits in Review. The
+review screen keeps its own narrow edit; the chat's punch tools
+(`lib/chat/tools-time.ts`) call `lib/punches.ts`: `findPunches`,
+`revisePunch`, `splitPunch`, `dropAnyPunch`, plus the existing
+`approvePunch`. Each write has a `plan*` twin that works the change out
+without writing it, and the chat's preview card is drawn from that plan.
+
+- **In review or discarded:** times, client, project and summary change on the
+  punch. `reopen` sends a discarded punch back to Review.
+- **Running:** a new clock-out stops it.
+- **Approved:** the timesheet line follows the punch — client, project,
+  summary, and the day when the clock-in moves or a `day` is given.
+  - **Hours:** when the times move, the line re-bills the new span. When they
+    don't, the line keeps what it bills, including a hand correction made on
+    the sheet. An explicit `hours` wins either way.
+  - **Rules:** the approval rule still applies (no project means a summary).
+- **Billed months:** a line in a client-month an invoice locks is refused
+  unless the call carries `force: true`. "Locked" is the sheet's own rule
+  (`sheetLock`: a non-draft invoice issued that month, or the one the line
+  points at). The invoice itself is never re-issued; the card says so.
+- **Split** cuts a finished punch at a time. The first piece keeps the punch,
+  and its line if approved, re-billed to the shorter span. The second piece is
+  a new punch in Review. `drop: "before" | "after"` discards one side;
+  dropping the approved side deletes its line. The chat card's idempotency key
+  is the new piece's `client_request_id`, so a confirmed split never happens
+  twice.
+- **Drop** discards any punch. For an approved one the line is deleted, since
+  that line is the money, and the punch stays as discarded, so "where did that
+  hour go" still has an answer.
+- **Times as said:** "11:48 AM", "9am", "14:05" resolve on the punch's own day
+  in the workspace zone (`parsePunchTime` in `lib/punch.ts`). A full ISO
+  instant also works. Times in the future are refused.
+
 ## Clock API
 
 Every route takes `Authorization: Bearer <device token>`. A browser session
@@ -137,7 +172,8 @@ which writes the PNG set directly (no image library on the build machine).
 ## Checks
 
 ```bash
-npm run check:punch                      # hours, timezones, flags, approval rule
+npm run check:punch                      # hours, timezones, flags, approval rule, times as said
+npm run check:punch:db                   # the after-the-fact edits on planted punches, cleaned up after
 npm run db:dry-run 0020_timesheet_punches  # applies a migration, then rolls back
 ```
 

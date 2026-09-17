@@ -166,3 +166,90 @@ export function parseInstant(raw: unknown): { at: Date } | { error: string } {
   if (Number.isNaN(at.getTime())) return { error: "Not a valid ISO timestamp." }
   return { at }
 }
+
+/* ------------------------------------------------------------ after the fact */
+
+/**
+ * A time the way Karol says it — "11:48 AM", "11:48am", "9am", "14:05" — on a
+ * given local day, or a full instant ("2026-09-16T11:48:00+02:00"), or a local
+ * "2026-09-16 11:48". Local times resolve in `timeZone`, the zone the sheet
+ * already files days in.
+ */
+export function parsePunchTime(
+  raw: string,
+  day: string,
+  timeZone: string
+): { at: Date } | { error: string } {
+  const text = raw.trim()
+  if (!text) return { error: "Send a time." }
+
+  if (/^\d{4}-\d{2}-\d{2}[T ]\d{1,2}:\d{2}/.test(text)) {
+    const zoned = /([zZ]|[+-]\d{2}:?\d{2})$/.test(text)
+    if (zoned) {
+      const at = new Date(text)
+      return Number.isNaN(at.getTime()) ? { error: `"${text}" is not a time I can read.` } : { at }
+    }
+    const [datePart, clock] = text.split(/[T ]/)
+    return parsePunchTime(clock.slice(0, 5), datePart, timeZone)
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return { error: "The day must be YYYY-MM-DD." }
+
+  let hour: number
+  let minute: number
+  const twelve = /^(\d{1,2})(?::(\d{2}))?\s*([ap])\.?\s*m?\.?$/i.exec(text)
+  const twentyFour = /^(\d{1,2}):(\d{2})$/.exec(text)
+  if (twelve) {
+    hour = Number(twelve[1])
+    minute = Number(twelve[2] ?? "0")
+    if (hour < 1 || hour > 12) return { error: `"${text}" is not a time I can read.` }
+    hour = (hour % 12) + (twelve[3].toLowerCase() === "p" ? 12 : 0)
+  } else if (twentyFour) {
+    hour = Number(twentyFour[1])
+    minute = Number(twentyFour[2])
+    if (hour > 23) return { error: `"${text}" is not a time I can read.` }
+  } else {
+    return { error: `"${text}" is not a time I can read. Send "11:48 AM", "14:05", or an ISO instant.` }
+  }
+  if (minute > 59) return { error: `"${text}" is not a time I can read.` }
+
+  const [y, m, d] = day.split("-").map(Number)
+  // The zone's offset at the guessed instant, then again at the corrected one (DST edges).
+  const guess = Date.UTC(y, m - 1, d, hour, minute)
+  let at = guess - zoneOffset(new Date(guess), timeZone)
+  at = guess - zoneOffset(new Date(at), timeZone)
+  return { at: new Date(at) }
+}
+
+/** The zone's UTC offset at `at`, in ms — Warsaw in summer is +7 200 000. */
+function zoneOffset(at: Date, timeZone: string) {
+  const p = zoned(at, timeZone)
+  const asUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute)
+  return asUtc - Math.floor(at.getTime() / 60_000) * 60_000
+}
+
+/** A split has to land strictly inside a finished punch. */
+export function splitBlocker(start: Date, end: Date | null, at: Date): string | null {
+  if (!end) return "Clock this punch out before splitting it."
+  if (at.getTime() <= start.getTime() || at.getTime() >= end.getTime()) {
+    return "The split time has to fall inside the punch, not on or past either end."
+  }
+  return null
+}
+
+/**
+ * What an approved line bills after its punch changes: what the caller says,
+ * else the new span when the times moved, else what the line already bills —
+ * it may have been corrected by hand on the sheet, and that correction stands.
+ */
+export function revisedHours(input: {
+  explicit?: number | null
+  timesChanged: boolean
+  start: Date
+  end: Date
+  current: number
+}): number {
+  if (input.explicit != null) return Math.round(input.explicit * 100) / 100
+  if (input.timesChanged) return punchHours(input.start, input.end)
+  return input.current
+}

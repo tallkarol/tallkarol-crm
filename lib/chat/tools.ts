@@ -6,6 +6,7 @@ import { INBOX_TOOLS } from "@/lib/chat/tools-inbox"
 import { INSPIRATION_TOOLS } from "@/lib/chat/tools-inspiration"
 import { DESK_TOOLS } from "@/lib/chat/tools-desk"
 import { PACK_TOOLS } from "@/lib/chat/tools-packs"
+import { TIME_TOOLS } from "@/lib/chat/tools-time"
 import {
   hoursLabel,
   ISO_DAY,
@@ -380,6 +381,7 @@ export const TOOLS: readonly ToolSpec[] = [
   ...INSPIRATION_TOOLS,
   ...PACK_TOOLS,
   ...DESK_TOOLS,
+  ...TIME_TOOLS,
   logTime,
   createTask,
   refreshInsights,
@@ -396,6 +398,7 @@ export function toolSource(name: string): string {
   if (INSPIRATION_TOOLS.some((t) => t.name === name)) return "lib/chat/tools-inspiration.ts"
   if (PACK_TOOLS.some((t) => t.name === name)) return "lib/chat/tools-packs.ts"
   if (DESK_TOOLS.some((t) => t.name === name)) return "lib/chat/tools-desk.ts"
+  if (TIME_TOOLS.some((t) => t.name === name)) return "lib/chat/tools-time.ts"
   return "lib/chat/tools.ts"
 }
 
