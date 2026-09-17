@@ -35,6 +35,11 @@
   ],
   "shortcuts": [
     {
+      "name": "Chat",
+      "short_name": "Chat",
+      "url": "/chat"
+    },
+    {
       "name": "Clock in",
       "short_name": "Clock",
       "url": "/timesheet/live",
