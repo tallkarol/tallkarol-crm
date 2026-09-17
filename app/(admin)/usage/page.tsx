@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { PageHeader } from "@/components/PageHeader"
 import { Card } from "@/components/ui/Card"
 import { BreakdownTable, type Row } from "@/components/usage/BreakdownTable"
-import { ClaudeTile, CursorTile, RailwayTile, SurfaceTile } from "@/components/usage/CapTiles"
+import { AnthropicTile, ClaudeTile, CursorTile, RailwayTile, SurfaceTile } from "@/components/usage/CapTiles"
 import { HourBars } from "@/components/usage/HourBars"
 import { ReadingForm } from "@/components/usage/ReadingForm"
 import { SourcesFooter } from "@/components/usage/SourcesFooter"
@@ -14,7 +14,8 @@ import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { workspaceTimezone } from "@/lib/timezone"
 import { count, dollars, hours, share, tokens } from "@/lib/usage/format"
-import { latestBySource, parseClaudeMax, parseCursor, parseRailway, recentReadings, ageLabel, ageMs } from "@/lib/usage/snapshots"
+import { latestBySource, parseAnthropic, parseClaudeMax, parseCursor, parseRailway, recentReadings, ageLabel, ageMs } from "@/lib/usage/snapshots"
+import { refreshAnthropicIfStale } from "@/lib/usage/anthropic"
 import {
   byClientSurface,
   byDayClient,
@@ -47,6 +48,8 @@ export default async function UsagePage({ searchParams }: { searchParams: { days
   const tz = await workspaceTimezone().catch(() => "Europe/Warsaw")
   const w = windowFor(days, now, tz)
 
+  await refreshAnthropicIfStale(now, tz).catch(() => undefined)
+
   const none: Awaited<ReturnType<typeof latestBySource>> = {}
   const [snapshots, surfaces, where, clientRows, laneRows, modelRows, hourSlots, paceNow, ide, budget, health] = await Promise.all([
     latestBySource().catch(() => none),
@@ -69,6 +72,7 @@ export default async function UsagePage({ searchParams }: { searchParams: { days
   const railway = snapshots.railway ? parseRailway(snapshots.railway) : null
   const claude = snapshots.claude_max ? parseClaudeMax(snapshots.claude_max) : null
   const cursor = snapshots.cursor_dashboard ? parseCursor(snapshots.cursor_dashboard) : null
+  const anthropic = snapshots.anthropic ? parseAnthropic(snapshots.anthropic) : null
 
   const clientTable: Row[] = (clientRows ?? []).map((r) => ({
     key: `${r.client}|${r.surface}`,
@@ -140,9 +144,10 @@ export default async function UsagePage({ searchParams }: { searchParams: { days
         the provider itself gave both ends of it. Times in {tz.replace("_", " ")}.
       </p>
 
-      <div className="mt-6 grid gap-3 lg:grid-cols-2 2xl:grid-cols-4">
+      <div className="mt-6 grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
         <ClaudeTile reading={claude} pace={paceNow} now={now} tz={tz} />
         <CursorTile reading={cursor} budget={budget} ide={ide} now={now} />
+        <AnthropicTile reading={anthropic} now={now} />
         <RailwayTile reading={railway} now={now} />
         <SurfaceTile surfaces={surfaces} days={days} />
       </div>
@@ -167,8 +172,8 @@ export default async function UsagePage({ searchParams }: { searchParams: { days
           <Card className="p-5">
             <h2 className="font-display text-[15px] font-semibold text-tk-onyx">Readings</h2>
             <p className="mt-0.5 text-[11.5px] leading-[1.45] text-ink-3">
-              The two caps the CRM cannot read for itself. Type what the dashboard shows; the tile above uses the newest one and greys it
-              when it is older than the window it describes.
+              Caps the CRM cannot read for itself. Type what the dashboard shows; the tile above uses the newest one and greys it
+              when it is older than the window it describes. Anthropic Cost is polled when an Admin API key is set.
             </p>
             <div className="mt-3">
               <ReadingForm />
@@ -187,8 +192,10 @@ export default async function UsagePage({ searchParams }: { searchParams: { days
                         <span className="text-ink-2">
                           <b className="font-semibold text-tk-onyx">{r.source === "claude_max" ? "Claude Max" : "Cursor"}</b>{" "}
                           {r.source === "claude_max"
-                            ? `5h ${pctOrDash(p.five_hour_pct)} · 7d ${pctOrDash(p.seven_day_pct)}`
-                            : `${p.other_models_usd != null ? dollars(Number(p.other_models_usd), 0) : "—"} other models · plan ${pctOrDash(p.plan_pct)}`}
+                            ? p.fable_week_pct != null || p.other_week_pct != null
+                              ? `Fable ${pctOrDash(p.fable_week_pct)} · other ${pctOrDash(p.other_week_pct)}`
+                              : `7d ${pctOrDash(p.seven_day_pct)}`
+                            : `Grok ${pctOrDash(p.cursor_models_pct)} · Other ${p.other_models_usd != null ? dollars(Number(p.other_models_usd), 0) : pctOrDash(p.other_models_pct)}`}
                           {pacePair && typeof pacePair.output === "number" ? (
                             <span className="text-ink-3"> · pace then {tokens(pacePair.output)} out / 5 h</span>
                           ) : null}

@@ -68,6 +68,14 @@ export function SourcesFooter({
     detail: cursor ? `typed ${since(cursor.observedAt)} (${cursor.basis})` : "none yet — the form above",
     state: "info",
   })
+  const anthropic = snapshots.anthropic
+  lines.push({
+    name: "Anthropic API cost",
+    detail: anthropic
+      ? `${anthropic.basis === "api" ? "Admin API" : "typed"} ${since(anthropic.observedAt)}`
+      : "none yet — Admin API key or the form above",
+    state: anthropic && ageMs(anthropic.observedAt, now) <= 36 * HOUR ? "ok" : "info",
+  })
 
   return (
     <footer className="rounded-[14px] border border-line bg-well px-4 py-3">

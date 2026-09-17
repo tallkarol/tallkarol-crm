@@ -7,10 +7,10 @@ import { CHART } from "@/lib/insights/chart"
 import { ROUTES } from "@/lib/nav"
 import { count, deltaPct, dollars, hours, tokens } from "@/lib/usage/format"
 import {
-  CURSOR_OTHER_POOL_USD,
   ageLabel,
   ageMs,
   isStale,
+  type AnthropicReading,
   type ClaudeMaxReading,
   type CursorReading,
   type RailwayReading,
@@ -71,27 +71,32 @@ export function ClaudeTile({
   const through = pace?.d7.through ?? pace?.h5.through ?? null
   return (
     <Card surface="well" radius="xl" elevation="none" className="px-4 py-3">
-      <Label>Claude Max windows</Label>
+      <Label>Claude Max · weekly</Label>
       {reading && !stale ? (
         <>
           <div className="mt-1 grid grid-cols-2 gap-x-4">
             <div>
               <p className="font-mono text-[15px] font-semibold tabular-nums text-tk-onyx">
-                5h {reading.fiveHourPct !== null ? `${Math.round(reading.fiveHourPct)}%` : "—"}
-                {reading.resets5h ? <span className="ml-1 text-[10.5px] font-normal text-ink-3">resets {reading.resets5h}</span> : null}
+                Fable {reading.fableWeekPct !== null ? `${Math.round(reading.fableWeekPct)}%` : "—"}
               </p>
-              <Meter pct={reading.fiveHourPct} tone={(reading.fiveHourPct ?? 0) >= 90 ? "bad" : (reading.fiveHourPct ?? 0) >= 75 ? "warn" : "ok"} />
+              <Meter pct={reading.fableWeekPct} tone={(reading.fableWeekPct ?? 0) >= 90 ? "bad" : (reading.fableWeekPct ?? 0) >= 75 ? "warn" : "ok"} muted={reading.fableWeekPct === null} />
             </div>
             <div>
               <p className="font-mono text-[15px] font-semibold tabular-nums text-tk-onyx">
-                7d {reading.sevenDayPct !== null ? `${Math.round(reading.sevenDayPct)}%` : "—"}
+                other {reading.otherWeekPct !== null ? `${Math.round(reading.otherWeekPct)}%` : "—"}
                 {reading.resets7d ? <span className="ml-1 text-[10.5px] font-normal text-ink-3">resets {reading.resets7d}</span> : null}
               </p>
-              <Meter pct={reading.sevenDayPct} tone={(reading.sevenDayPct ?? 0) >= 90 ? "bad" : (reading.sevenDayPct ?? 0) >= 75 ? "warn" : "ok"} />
+              <Meter pct={reading.otherWeekPct} tone={(reading.otherWeekPct ?? 0) >= 90 ? "bad" : (reading.otherWeekPct ?? 0) >= 75 ? "warn" : "ok"} muted={reading.otherWeekPct === null} />
             </div>
           </div>
+          {reading.fiveHourPct !== null ? (
+            <p className="mt-1.5 font-mono text-[11px] tabular-nums text-ink-3">
+              5h session {Math.round(reading.fiveHourPct)}%{reading.resets5h ? ` · resets ${reading.resets5h}` : ""}
+            </p>
+          ) : null}
           <Source>
-            Claude&apos;s own reading, {reading.basis === "api" ? "polled" : "typed"} {ageLabel(ageMs(reading.observedAt, now))}.
+            Claude&apos;s own weekly split — Fable may use up to 50% of the Max week. {reading.basis === "api" ? "Polled" : "Typed"}{" "}
+            {ageLabel(ageMs(reading.observedAt, now))}.
           </Source>
         </>
       ) : (
@@ -99,8 +104,8 @@ export function ClaudeTile({
           <p className="mt-1 text-[13px] font-semibold text-ink-3">no current reading</p>
           <Meter pct={null} muted />
           <Source>
-            {reading ? `Last typed ${ageLabel(ageMs(reading.observedAt, now))} — older than the window it describes. ` : ""}
-            Run <span className="font-mono">/usage</span> in Claude Code, then the form below.
+            {reading ? `Last reading ${ageLabel(ageMs(reading.observedAt, now))} — older than the window it describes. ` : ""}
+            The Mac collector reads Claude Code&apos;s own weekly split at 07:15 / 19:15. The form below is a fallback.
           </Source>
         </>
       )}
@@ -145,21 +150,33 @@ export function CursorTile({
   const pct = reading?.otherModelsPct !== null && reading?.otherModelsPct !== undefined ? reading.otherModelsPct : usd !== null && pool ? (usd / pool) * 100 : null
   return (
     <Card surface="well" radius="xl" elevation="none" className="px-4 py-3">
-      <Label>Cursor · Other models pool</Label>
+      <Label>Cursor · monthly pools</Label>
       {reading && !stale ? (
         <>
-          <p className="mt-1 font-mono text-[15px] font-semibold tabular-nums text-tk-onyx">
-            {usd !== null ? `${dollars(usd, 0)}${pool ? ` of ${dollars(pool, 0)}` : ""}` : pct !== null ? `${Math.round(pct)}%` : "—"}
-            {pct !== null && usd !== null ? <span className="ml-1 text-[11px] font-normal text-ink-3">{Math.round(pct)}%</span> : null}
-            {reading.planPct !== null ? <span className="ml-1.5 text-[10.5px] font-normal text-ink-3">plan {Math.round(reading.planPct)}%</span> : null}
-            {reading.cursorModelsPct !== null ? <span className="ml-1.5 text-[10.5px] font-normal text-ink-3">Cursor models {Math.round(reading.cursorModelsPct)}%</span> : null}
-          </p>
-          <Meter pct={pct} tone={(pct ?? 0) >= 90 ? "bad" : (pct ?? 0) >= 75 ? "warn" : "ok"} muted={pct === null} />
+          <div className="mt-1 grid grid-cols-2 gap-x-4">
+            <div>
+              <p className="font-mono text-[15px] font-semibold tabular-nums text-tk-onyx">
+                Grok {reading.cursorModelsPct !== null ? `${Math.round(reading.cursorModelsPct)}%` : "—"}
+              </p>
+              <Meter
+                pct={reading.cursorModelsPct}
+                tone={(reading.cursorModelsPct ?? 0) >= 90 ? "bad" : (reading.cursorModelsPct ?? 0) >= 75 ? "warn" : "ok"}
+                muted={reading.cursorModelsPct === null}
+              />
+            </div>
+            <div>
+              <p className="font-mono text-[15px] font-semibold tabular-nums text-tk-onyx">
+                Other {usd !== null ? `${dollars(usd, usd < 10 ? 2 : 0)}${pool ? ` of ${dollars(pool, 0)}` : ""}` : pct !== null ? `${Math.round(pct)}%` : "—"}
+              </p>
+              <Meter pct={pct} tone={(pct ?? 0) >= 90 ? "bad" : (pct ?? 0) >= 75 ? "warn" : "ok"} muted={pct === null} />
+            </div>
+          </div>
           <Source>
-            cursor.com says so, typed {ageLabel(ageMs(reading.observedAt, now))}
+            cursor.com&apos;s two monthly pools — Grok / Composer on Cursor models, Ultra&apos;s $400 Other. Typed{" "}
+            {ageLabel(ageMs(reading.observedAt, now))}
             {reading.cycleEnd ? ` · cycle ends ${reading.cycleEnd}` : ""}
             {reading.onDemandUsd ? ` · on-demand ${dollars(reading.onDemandUsd, 0)}` : ""}
-            {pct === null && usd !== null ? ` · no bar: type the pool size (plan says ${dollars(CURSOR_OTHER_POOL_USD, 0)}) or the percent with the reading` : ""}.
+            {reading.planPct !== null ? ` · plan ${Math.round(reading.planPct)}%` : ""}.
           </Source>
         </>
       ) : (
@@ -167,8 +184,8 @@ export function CursorTile({
           <p className="mt-1 text-[13px] font-semibold text-ink-3">no reading</p>
           <Meter pct={null} muted />
           <Source>
-            {reading ? `Last typed ${ageLabel(ageMs(reading.observedAt, now))}. ` : ""}
-            cursor.com › Usage, then the form below. The only figure for the $400 pool that covers IDE spend.
+            {reading ? `Last reading ${ageLabel(ageMs(reading.observedAt, now))}. ` : ""}
+            The Mac collector reads cursor.com&apos;s two monthly pools at 07:15 / 19:15. The form below is a fallback.
           </Source>
         </>
       )}
@@ -194,6 +211,48 @@ export function CursorTile({
           </p>
         ) : null}
       </div>
+    </Card>
+  )
+}
+
+export function AnthropicTile({ reading, now }: { reading: AnthropicReading | null; now: Date }) {
+  if (!reading || reading.monthUsd === null) {
+    return (
+      <Card surface="well" radius="xl" elevation="none" className="px-4 py-3">
+        <Label>Anthropic API</Label>
+        <p className="mt-1 text-[13px] font-semibold text-ink-3">no reading</p>
+        <Meter pct={null} muted />
+        <Source>
+          Console Cost this calendar month. Polled when <span className="font-mono">ANTHROPIC_ADMIN_API_KEY</span> is
+          set; otherwise type the figure below.
+        </Source>
+      </Card>
+    )
+  }
+  const stale = isStale("anthropic", reading.observedAt, now)
+  const top = reading.byModel.slice(0, 3)
+  return (
+    <Card surface="well" radius="xl" elevation="none" className="px-4 py-3">
+      <Label>Anthropic API · this month</Label>
+      <p className="mt-1 font-mono text-[15px] font-semibold tabular-nums text-tk-onyx">
+        {dollars(reading.monthUsd)}
+        {reading.periodStart ? <span className="ml-1.5 text-[10.5px] font-normal text-ink-3">from {reading.periodStart}</span> : null}
+      </p>
+      <Meter pct={null} muted={stale} />
+      {top.length ? (
+        <ul className="mt-2 flex flex-col gap-0.5">
+          {top.map((m) => (
+            <li key={m.model} className="flex items-baseline justify-between gap-2 text-[11px]">
+              <span className="truncate text-ink-2">{m.model}</span>
+              <span className="font-mono tabular-nums text-tk-onyx">{dollars(m.usd)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <Source>
+        {reading.basis === "api" ? "Admin API cost_report" : "typed from Console Cost"}, {ageLabel(ageMs(reading.observedAt, now))}
+        {stale ? " — older than a day and a half" : ""}.
+      </Source>
     </Card>
   )
 }

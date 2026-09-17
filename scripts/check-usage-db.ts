@@ -28,6 +28,7 @@ async function main() {
   const { agentTurns, clients, usageSnapshots } = await import("../db/schema")
   const summary = await import("../lib/usage/summary")
   const snaps = await import("../lib/usage/snapshots")
+  const anthropic = await import("../lib/usage/anthropic")
 
   const tag = "check-usage-" + Math.random().toString(36).slice(2, 8)
   const host = `check-${tag}`
@@ -213,15 +214,41 @@ async function main() {
         },
         note: tag,
       },
-      { source: "claude_max", basis: "manual", observedAt: at(30), payload: { five_hour_pct: 38, seven_day_pct: 61, resets_5h: "16:00", pace: { h5: { output: 1 } } }, note: tag },
+      { source: "claude_max", basis: "manual", observedAt: at(30), payload: { five_hour_pct: 38, fable_week_pct: 22, other_week_pct: 61, resets_7d: "Sun 09:00", pace: { h5: { output: 1 } } }, note: tag },
+      { source: "cursor_dashboard", basis: "manual", observedAt: at(40), payload: { cursor_models_pct: 41, other_models_usd: 12.4, other_models_pool_usd: 400, other_models_pct: 3 }, note: tag },
+      { source: "anthropic", basis: "api", observedAt: at(20), periodStart: "2026-09-01", periodEnd: "2026-09-12", payload: { month_usd: 4.18, period_start: "2026-09-01", period_end: "2026-09-12", by_model: [{ model: "claude-opus-5", usd: 3.1 }] }, note: tag },
     ])
     const latest = await snaps.latestBySource()
     const railway = latest.railway ? snaps.parseRailway(latest.railway) : null
     check("the newest railway snapshot wins", !!railway && railway.overLimit && railway.usedDollars === 26.9, `${railway?.usedDollars}`)
     check("railway projects map to clients", !!railway && railway.projects[0]?.clientSlug === "artist-house" && railway.projects[1]?.clientSlug === null)
     const claude = latest.claude_max ? snaps.parseClaudeMax(latest.claude_max) : null
-    check("a typed claude reading parses", !!claude && claude.fiveHourPct === 38 && claude.resets5h === "16:00" && !snaps.isStale("claude_max", claude.observedAt, now))
-    check("a reading older than its window is stale", snaps.isStale("claude_max", at(7 * 60), now) && !snaps.isStale("railway", at(7 * 60), now))
+    check("a typed claude reading parses", !!claude && claude.fableWeekPct === 22 && claude.otherWeekPct === 61 && claude.resets7d === "Sun 09:00" && !snaps.isStale("claude_max", claude.observedAt, now))
+    const cursorDash = latest.cursor_dashboard ? snaps.parseCursor(latest.cursor_dashboard) : null
+    check("a typed cursor reading splits Grok and Other", !!cursorDash && cursorDash.cursorModelsPct === 41 && cursorDash.otherModelsUsd === 12.4, `${cursorDash?.cursorModelsPct}`)
+    check(
+      "a reading older than its window is stale",
+      snaps.isStale("claude_max", at(8 * 24 * 60), now) && !snaps.isStale("claude_max", at(2 * 24 * 60), now) && !snaps.isStale("railway", at(7 * 60), now)
+    )
+    const { usageRail } = await import("../lib/usage/rail")
+    const rail = await usageRail(now)
+    check(
+      "the chat rail is four vendor bars",
+      rail.bars.map((b) => b.key).join() === "claude-fable,claude-other,cursor-grok,cursor-other"
+    )
+    check(
+      "rail percents match the typed weekly and monthly splits",
+      rail.bars[0]?.pct === 22 && rail.bars[1]?.pct === 61 && rail.bars[2]?.pct === 41 && rail.bars[3]?.pct === 3,
+      rail.bars.map((b) => `${b.key}:${b.pct}`).join(" ")
+    )
+    const billed = latest.anthropic ? snaps.parseAnthropic(latest.anthropic) : null
+    check("an Anthropic cost reading parses", !!billed && billed.monthUsd === 4.18 && billed.byModel[0]?.model === "claude-opus-5", `${billed?.monthUsd}`)
+    const summed = anthropic.summarizeCostReport(
+      { data: [{ results: [{ amount: "200", model: "claude-opus-5" }, { amount: "50", model: "claude-sonnet-4" }] }] },
+      "2026-09-01",
+      "2026-09-12"
+    )
+    check("Admin API cents become dollars", summed.month_usd === 2.5 && summed.by_model[0]?.usd === 2, `${summed.month_usd}`)
     await db.insert(usageSnapshots).values({ source: "railway", basis: "cli", observedAt: at(-600), payload: { usage: { currentUsageDollars: 999 } }, note: tag })
     const guarded = await snaps.latestBySource()
     check("a future-dated reading never becomes the latest", guarded.railway ? snaps.parseRailway(guarded.railway)?.usedDollars === 26.9 : false)

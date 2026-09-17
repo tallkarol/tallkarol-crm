@@ -55,6 +55,14 @@ export function startOfDayInZone(date: Date, tz: string): Date {
   return wallClockToInstant(wall, tz) ?? date
 }
 
+/** Midnight of the first of the month that contains `date` in `tz`. */
+export function startOfMonthInZone(date: Date, tz: string): Date {
+  const parts = formatter(tz).formatToParts(date)
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0)
+  const wall = `${get("year")}-${String(get("month")).padStart(2, "0")}-01T00:00`
+  return wallClockToInstant(wall, tz) ?? date
+}
+
 /** The calendar day (YYYY-MM-DD) of `date` in `tz`. */
 export function dayInZone(date: Date, tz: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(date)

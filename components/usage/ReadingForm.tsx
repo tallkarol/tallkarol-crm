@@ -4,18 +4,17 @@ import { useState, useTransition } from "react"
 import { cn } from "@/lib/cn"
 import { recordReading } from "@/lib/usage/actions"
 
-type Source = "claude_max" | "cursor_dashboard"
+type Source = "claude_max" | "cursor_dashboard" | "anthropic"
 
 const FIELD =
   "mt-1 w-full rounded-lg border border-line bg-card px-2.5 py-1.5 font-mono text-[12.5px] tabular-nums text-tk-onyx outline-accent-ink placeholder:text-ink-3"
 const LABEL = "block text-[11px] font-medium text-ink-3"
 
 /**
- * The two caps the CRM cannot read for itself get typed here: what /usage
- * shows inside Claude Code, and what cursor.com → Usage shows. Same row
- * shape as a poller would write, so the tiles never change if one is
- * switched on later. Each Claude reading also stores the token pace at
- * that moment — the calibration pair.
+ * Fallback when the Mac collector has not posted. Claude Max and Cursor
+ * Ultra usually arrive from vendor-caps.py. Anthropic Console Cost is
+ * still typed here when the Admin API is off. A Claude reading also
+ * stores the token pace at that moment.
  */
 export function ReadingForm({ defaultSource = "claude_max" }: { defaultSource?: Source }) {
   const [source, setSource] = useState<Source>(defaultSource)
@@ -36,8 +35,9 @@ export function ReadingForm({ defaultSource = "claude_max" }: { defaultSource?: 
       <div className="flex gap-0.5 rounded-[10px] border border-line bg-well p-[3px]" role="group" aria-label="Reading source">
         {(
           [
-            ["claude_max", "Claude Max — /usage in Claude Code"],
-            ["cursor_dashboard", "Cursor — cursor.com › Usage"],
+            ["claude_max", "Claude Max"],
+            ["cursor_dashboard", "Cursor"],
+            ["anthropic", "Anthropic API"],
           ] as [Source, string][]
         ).map(([key, label]) => (
           <button
@@ -58,24 +58,39 @@ export function ReadingForm({ defaultSource = "claude_max" }: { defaultSource?: 
       {source === "claude_max" ? (
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <label className={LABEL}>
-            5-hour window %
-            <input name="five_hour_pct" inputMode="decimal" placeholder="38" className={FIELD} />
+            Fable weekly %
+            <input name="fable_week_pct" inputMode="decimal" placeholder="38" className={FIELD} />
           </label>
           <label className={LABEL}>
-            resets at
-            <input name="resets_5h" placeholder="16:00" className={FIELD} />
+            other models weekly %
+            <input name="other_week_pct" inputMode="decimal" placeholder="61" className={FIELD} />
           </label>
           <label className={LABEL}>
-            7-day window %
-            <input name="seven_day_pct" inputMode="decimal" placeholder="61" className={FIELD} />
-          </label>
-          <label className={LABEL}>
-            resets
+            weekly resets
             <input name="resets_7d" placeholder="Sun 09:00" className={FIELD} />
+          </label>
+          <label className={LABEL}>
+            5-hour window %
+            <input name="five_hour_pct" inputMode="decimal" placeholder="" className={FIELD} />
+          </label>
+        </div>
+      ) : source === "anthropic" ? (
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <label className={LABEL}>
+            Console $ this month
+            <input name="month_usd" inputMode="decimal" placeholder="14.20" className={FIELD} />
+          </label>
+          <label className={LABEL}>
+            month starts
+            <input name="period_start" type="date" className={FIELD} />
           </label>
         </div>
       ) : (
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <label className={LABEL}>
+            Grok / Cursor models %
+            <input name="cursor_models_pct" inputMode="decimal" placeholder="41" className={FIELD} />
+          </label>
           <label className={LABEL}>
             Other models $ used
             <input name="other_models_usd" inputMode="decimal" placeholder="212.40" className={FIELD} />
@@ -90,11 +105,7 @@ export function ReadingForm({ defaultSource = "claude_max" }: { defaultSource?: 
           </label>
           <label className={LABEL}>
             plan %
-            <input name="plan_pct" inputMode="decimal" placeholder="41" className={FIELD} />
-          </label>
-          <label className={LABEL}>
-            Cursor models %
-            <input name="cursor_models_pct" inputMode="decimal" placeholder="" className={FIELD} />
+            <input name="plan_pct" inputMode="decimal" placeholder="" className={FIELD} />
           </label>
           <label className={LABEL}>
             on-demand $

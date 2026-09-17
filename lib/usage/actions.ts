@@ -7,15 +7,16 @@ import { getSessionUser } from "@/lib/auth"
 import { ROUTES } from "@/lib/nav"
 import { workspaceTimezone } from "@/lib/timezone"
 import { pace } from "@/lib/usage/summary"
-import { FUTURE_TOLERANCE_MS, wallClockToInstant } from "@/lib/usage/time"
+import { FUTURE_TOLERANCE_MS, dayInZone, wallClockToInstant } from "@/lib/usage/time"
 
 /**
- * A reading Karol types from a dashboard the CRM cannot read itself: what
- * /usage inside Claude Code shows, or cursor.com → Usage. Stored as a
- * usage_snapshots row with basis 'manual', the same shape a poller would
- * write, so the tile never changes if polling is switched on later. A
- * Claude reading also stores the token pace at that instant — the pair that
- * lets him see, over weeks, roughly how many output tokens a window holds.
+ * A fallback when the Mac collector has not posted. Claude Max and Cursor
+ * Ultra usually arrive from vendor-caps.py. Anthropic Console Cost is
+ * still typed here when the Admin API key is off. Stored as a usage_snapshots row with basis 'manual',
+ * the same shape a poller would write, so the tile never changes if polling
+ * is switched on later. A Claude reading also stores the token pace at that
+ * instant — the pair that lets him see, over weeks, roughly how many output
+ * tokens a window holds.
  */
 
 export type ReadingResult = { ok: true } | { ok: false; error: string }
@@ -63,11 +64,17 @@ export async function recordReading(formData: FormData): Promise<ReadingResult> 
   let payload: Record<string, unknown>
   if (source === "claude_max") {
     const fiveHour = pctField(formData, "five_hour_pct")
+    const fableWeek = pctField(formData, "fable_week_pct")
+    const otherWeek = pctField(formData, "other_week_pct")
     const sevenDay = pctField(formData, "seven_day_pct")
-    if (fiveHour === null && sevenDay === null) return { ok: false, error: "Type at least one of the two percents." }
+    if (fableWeek === null && otherWeek === null && fiveHour === null && sevenDay === null) {
+      return { ok: false, error: "Type the Fable weekly percent or the other-models weekly percent." }
+    }
     const p = await pace(at)
     payload = {
       five_hour_pct: fiveHour,
+      fable_week_pct: fableWeek,
+      other_week_pct: otherWeek,
       seven_day_pct: sevenDay,
       resets_5h: textField(formData, "resets_5h"),
       resets_7d: textField(formData, "resets_7d"),
@@ -78,19 +85,33 @@ export async function recordReading(formData: FormData): Promise<ReadingResult> 
     }
   } else if (source === "cursor_dashboard") {
     const otherUsd = moneyField(formData, "other_models_usd")
+    const otherPct = pctField(formData, "other_models_pct")
+    const grokPct = pctField(formData, "cursor_models_pct")
     const planPct = pctField(formData, "plan_pct")
-    if (otherUsd === null && planPct === null) return { ok: false, error: "Type the Other-models dollars or the plan percent." }
+    if (otherUsd === null && otherPct === null && grokPct === null && planPct === null) {
+      return { ok: false, error: "Type the Grok (Cursor models) percent or the Other-models dollars." }
+    }
     payload = {
       plan_pct: planPct,
-      cursor_models_pct: pctField(formData, "cursor_models_pct"),
+      cursor_models_pct: grokPct,
       other_models_usd: otherUsd,
       other_models_pool_usd: moneyField(formData, "other_models_pool_usd"),
-      other_models_pct: pctField(formData, "other_models_pct"),
+      other_models_pct: otherPct,
       on_demand_usd: moneyField(formData, "on_demand_usd"),
       cycle_end: textField(formData, "cycle_end", 20),
     }
+  } else if (source === "anthropic") {
+    const monthUsd = moneyField(formData, "month_usd")
+    if (monthUsd === null) return { ok: false, error: "Type this month's Anthropic Console cost." }
+    const periodStart = textField(formData, "period_start", 10)
+    payload = {
+      month_usd: monthUsd,
+      period_start: periodStart || `${dayInZone(at, tz).slice(0, 7)}-01`,
+      period_end: dayInZone(at, tz),
+      by_model: [],
+    }
   } else {
-    return { ok: false, error: "Pick Claude Max or the Cursor dashboard." }
+    return { ok: false, error: "Pick Claude Max, Cursor, or Anthropic." }
   }
 
   await db
@@ -104,5 +125,6 @@ export async function recordReading(formData: FormData): Promise<ReadingResult> 
     })
     .onConflictDoNothing({ target: [usageSnapshots.source, usageSnapshots.observedAt] })
   revalidatePath(ROUTES.usage)
+  revalidatePath(ROUTES.chat)
   return { ok: true }
 }

@@ -23,8 +23,9 @@ would be an invented number.
 | Cursor IDE turns (time; model from `ai-code-tracking.db`; **no tokens**) | `agent_turns` | same hooks through `cursor-hook.sh`; model joined at push time | same |
 | CRM chat (tokens and $ at registry rates) | `chat_turns` + `chat_threads` | the chat worker, read as-is | live |
 | Railway dollars, per project, hard limit | `usage_snapshots` source `railway` | `railway-usage.sh` (three `railway usage … --json` reads) → `POST /api/usage/snapshots` | 07:15 / 19:15 |
-| Claude Max 5-hour / 7-day windows | `usage_snapshots` source `claude_max` | typed from `/usage` inside Claude Code (the form on the page); each reading stores the token pace at that instant | when Karol looks; greys after 6 h |
-| Cursor plan (Other-models $ of $400, plan %, cycle end) | `usage_snapshots` source `cursor_dashboard` | typed from cursor.com → Usage | weekly and on the cycle day; greys after 10 d |
+| Claude Max weekly Fable / other (and optional 5-hour session) | `usage_snapshots` source `claude_max` | `vendor-caps.py` on the Mac reads Claude Code's Keychain login and `GET /api/oauth/usage` (the same payload `/usage` draws); Fable is the `weekly_scoped` bar, other is `weekly_all`. The form on the page is a fallback. | 07:15 / 19:15 with the session-log job; weekly figures stay for 7 d |
+| Cursor monthly Grok (Cursor models %) and Other | `usage_snapshots` source `cursor_dashboard` | `vendor-caps.py` reads the Cursor IDE session and `GET cursor.com/api/usage-summary` (the two bars the dashboard draws). The form is a fallback. | same sweep; greys after 10 d |
+| Anthropic Console Cost (calendar month, USD) | `usage_snapshots` source `anthropic` | Admin API `cost_report` when `ANTHROPIC_ADMIN_API_KEY` is set (`sk-ant-admin…`); otherwise typed from console.anthropic.com → Cost | on /usage when the last reading is stale; greys after 36 h |
 
 `agent_turns` is one row per metered turn or subagent run, keyed by
 `meter_ref` = `<host>:<agent_meter.id>`, so a re-push merges with
@@ -40,12 +41,22 @@ tile does not change if polling is ever switched on.
 
 ## The page
 
-Row one, the caps: Claude Max (Claude's own reading with its age; pace
-underneath with no bar), Cursor (cursor.com's reading of the $400 pool;
-the CRM chat share from `budgetState()` as a sub-line, never the bar; IDE
-turns by pool via the model registry), Railway (used vs hard limit from the
-same snapshot, per-project list mapped to clients), and the window by
-surface with deltas against the previous window.
+Row one, the caps: Claude Max (weekly Fable and other, Claude's own
+reading; optional 5-hour session as a footnote; pace underneath with no
+bar), Cursor (monthly Grok / Cursor-models percent and the $400 Other
+pool; the CRM chat share from `budgetState()` as a sub-line, never a bar;
+IDE turns by pool via the model registry), Anthropic API (Console Cost for
+the calendar month, dollars from the Admin API or a typed reading — no
+cap, so no bar), Railway (used vs hard limit from the same snapshot,
+per-project list mapped to clients), and the window by surface with
+deltas against the previous window.
+
+The chat rail prints four bars, the splits those products publish: Claude
+weekly Fable and other, Cursor monthly Grok (Cursor models) and Other
+($400 on Ultra). Those come from this Mac (`vendor-caps.py`), not from a
+typed form. Anthropic API dollars stay on this page — they have no cap
+to draw a bar against. The chat ledger's $250 reserve still gates which
+model a turn may spend; it does not live under the thread list.
 
 Row two, *Where it went*: stacked bars per day, one segment per client, one
 metric at a time — Claude Code output tokens, hours (both Mac surfaces), or
@@ -86,8 +97,6 @@ invoice moved.
 
 Vercel (`/v1/billing/charges` — every sampled row $0, no project
 attribution), Resend (metrics only, plan tier is dashboard-only), GA4
-property quota, DataForSEO balance, the Anthropic Admin API (needs a
-Console org). Each becomes one `usage_snapshots` source with its raw payload
-when wired; no schema change needed. Claude Max polling through the
-undocumented OAuth usage endpoint is Karol's call — the row shape is
-already there for it.
+property quota, DataForSEO balance. Each becomes one `usage_snapshots`
+source with its raw payload when wired; no schema change needed. Claude Max
+and Cursor Ultra caps are polled from this Mac (`vendor-caps.py`), not typed.

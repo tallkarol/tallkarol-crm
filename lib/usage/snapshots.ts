@@ -13,6 +13,7 @@ export const SNAPSHOT_SOURCES = [
   "railway",
   "claude_max",
   "cursor_dashboard",
+  "anthropic",
   "vercel",
   "resend",
   "dataforseo",
@@ -22,11 +23,12 @@ export type SnapshotSource = (typeof SNAPSHOT_SOURCES)[number]
 const HOUR = 3_600_000
 const DAY = 24 * HOUR
 
-/** After this a reading is shown grey with "no current reading". */
+/** After this a reading is shown grey with "no current reading". Claude weekly figures last a week; Cursor's cycle, ten days. */
 export const STALE_AFTER: Record<SnapshotSource, number> = {
   railway: 36 * HOUR,
-  claude_max: 6 * HOUR,
+  claude_max: 7 * DAY,
   cursor_dashboard: 10 * DAY,
+  anthropic: 36 * HOUR,
   vercel: 2 * DAY,
   resend: 2 * DAY,
   dataforseo: 2 * DAY,
@@ -138,7 +140,12 @@ export type ClaudeMaxReading = {
   observedAt: Date
   basis: string
   fiveHourPct: number | null
+  /** @deprecated All-models weekly. Prefer fableWeekPct / otherWeekPct. */
   sevenDayPct: number | null
+  /** Max weekly: Fable may use up to 50% of the plan's weekly limit. */
+  fableWeekPct: number | null
+  /** Max weekly: everything that is not Fable. */
+  otherWeekPct: number | null
   resets5h: string
   resets7d: string
   pace: { h5: PacePair; d7: PacePair } | null
@@ -157,6 +164,8 @@ export function parseClaudeMax(row: UsageSnapshot): ClaudeMaxReading {
     basis: row.basis,
     fiveHourPct: pct(p.five_hour_pct),
     sevenDayPct: pct(p.seven_day_pct),
+    fableWeekPct: pct(p.fable_week_pct),
+    otherWeekPct: pct(p.other_week_pct),
     resets5h: typeof p.resets_5h === "string" ? p.resets_5h : "",
     resets7d: typeof p.resets_7d === "string" ? p.resets_7d : "",
     pace,
@@ -203,3 +212,41 @@ export function parseCursor(row: UsageSnapshot): CursorReading {
  * numerator and denominator come from the same dashboard visit.
  */
 export const CURSOR_OTHER_POOL_USD = 400
+
+/* ------------------------------------------------------------------ anthropic */
+
+export type AnthropicModelCost = { model: string; usd: number }
+
+export type AnthropicReading = {
+  observedAt: Date
+  basis: string
+  /** Calendar-month spend the Console reported, in dollars. */
+  monthUsd: number | null
+  periodStart: string
+  periodEnd: string
+  byModel: AnthropicModelCost[]
+}
+
+/**
+ * What the Admin API (or a typed Console reading) said about this month.
+ * `month_usd` is already dollars. The raw `amount` field on the API is
+ * cents-as-a-decimal-string — convert before storing, never here.
+ */
+export function parseAnthropic(row: UsageSnapshot): AnthropicReading {
+  const p = row.payload as Record<string, unknown>
+  const models = Array.isArray(p.by_model) ? (p.by_model as Record<string, unknown>[]) : []
+  return {
+    observedAt: row.observedAt,
+    basis: row.basis,
+    monthUsd: money(p.month_usd),
+    periodStart: typeof p.period_start === "string" ? p.period_start : row.periodStart ?? "",
+    periodEnd: typeof p.period_end === "string" ? p.period_end : row.periodEnd ?? "",
+    byModel: models
+      .map((m) => ({
+        model: typeof m.model === "string" && m.model ? m.model : "unknown",
+        usd: money(m.usd) ?? 0,
+      }))
+      .filter((m) => m.usd > 0)
+      .sort((a, b) => b.usd - a.usd),
+  }
+}

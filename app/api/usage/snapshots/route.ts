@@ -78,5 +78,6 @@ export async function POST(request: Request) {
     .onConflictDoNothing({ target: [usageSnapshots.source, usageSnapshots.observedAt] })
     .returning({ id: usageSnapshots.id })
   revalidatePath(ROUTES.usage)
+  revalidatePath(ROUTES.chat)
   return NextResponse.json({ stored: stored.length })
 }
