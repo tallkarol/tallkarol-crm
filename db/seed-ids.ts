@@ -78,6 +78,7 @@ export const IDS = {
     queryToLead: "a7200000-0000-4000-8000-000000000002",
     pullToReport: "a7200000-0000-4000-8000-000000000003",
     pageToReport: "a7200000-0000-4000-8000-000000000004",
+    axvorHandoffReadiness: "a7200000-0000-4000-8000-000000000005",
   },
   worksheets: {
     tkSearchPriorities: "a7300000-0000-4000-8000-000000000001",

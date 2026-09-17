@@ -1348,6 +1348,21 @@ async function main() {
         notes:
           "Part 3 of 3. Superseded by page-to-report. Its central complaint is fixed: tallkarol-cron runs every 15 minutes. The job registry it assumed still does not exist.",
       },
+      {
+        id: IDS.proposals.axvorHandoffReadiness,
+        title: "AXVOR Handoff Readiness",
+        slug: "axvor-handoff-readiness",
+        bodyPath: "proposals/axvor-handoff-readiness.html",
+        clientId: IDS.clients.dqs,
+        retainerId: null,
+        projectId: IDS.projects.dqs,
+        series: "",
+        seriesPart: null,
+        seriesOf: null,
+        status: "accepted",
+        notes:
+          "Pre-handoff audit of axvor.com, approved 11 Sep 2026 and deferred to the post-launch pass so it can run alongside the cross-site plugin reconciliation in preprod. The site itself is clean — 9/9 pages 200 with no console errors and a correct (deliberately noindexed) sitemap. The finding is the editing experience: nothing is disabled, but theme CSS overrules Elementor's container controls, so padding, gaps and alignment look editable and do nothing. `:where()` — the fix dqs-architecture.mdc already prescribes — appears zero times across all 26 stylesheets. Also covers making the page specs canonical so `dqs build-page` stops being destructive, the hero min_height control that cannot represent 5 of its 6 live values, and three editor previews that disagree with the front end.",
+      },
     ])
     .onConflictDoUpdate({
       target: proposals.id,

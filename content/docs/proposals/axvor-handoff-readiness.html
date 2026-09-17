@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AXVOR Handoff Readiness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#F4F2EC;--surface:#FFF;--surface-2:#EDE9DE;--ink:#0F1615;--ink-2:#3D4947;--muted:#6E7A77;--line:rgba(15,22,21,.13);--line-soft:rgba(15,22,21,.07);--accent:#006965;--accent-ink:#00504D;--accent-soft:rgba(0,105,101,.10);--warn:#A45A1E;--warn-soft:rgba(164,90,30,.12);--crit:#8E3521;--crit-soft:rgba(142,53,33,.12);--good:#2E7D57;--good-soft:rgba(46,125,87,.12);--display:"Archivo",ui-sans-serif,system-ui,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:ui-sans-serif,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.62}
+.wrap{max-width:1080px;margin:0 auto;padding:0 32px}
+@media(max-width:720px){.wrap{padding:0 20px}body{font-size:16px}}
+h1,h2,h3,h4,.eyebrow,.chip,.num,th,.ui,.sec-num{font-family:var(--display)}
+h1{font-size:clamp(34px,5.4vw,58px);line-height:1.04;letter-spacing:-.02em;font-weight:700;margin:0 0 20px}
+h2{font-size:clamp(25px,3vw,34px);line-height:1.14;letter-spacing:-.015em;font-weight:600;margin:0 0 14px}
+h3{font-size:19px;line-height:1.3;font-weight:600;margin:0 0 7px}
+h4{font-size:15px;line-height:1.35;font-weight:600;margin:0 0 5px}
+p{margin:0 0 16px}p:last-child{margin-bottom:0}
+code,.mono{font-family:var(--mono);font-size:.86em;background:var(--surface-2);padding:.12em .38em;border-radius:3px}
+.lede{font-size:clamp(18px,2.1vw,22px);line-height:1.5;color:var(--ink-2)}
+.muted{color:var(--muted)}.small{font-size:14px;line-height:1.5}
+.eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 20px}
+.sec-num{display:flex;align-items:center;gap:12px;margin:0 0 8px;font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.sec-num::after{content:"";flex:1;height:1px;background:var(--line)}
+section{padding:56px 0;border-top:1px solid var(--line)}
+.hero{padding:72px 0 52px}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:860px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.stack>*+*{margin-top:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px 20px}
+.card.tint{background:var(--surface-2);border-color:var(--line-soft)}
+.rail{border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.rail.warn{border-left-color:var(--warn)}.rail.crit{border-left-color:var(--crit)}.rail.good{border-left-color:var(--good)}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.stat .num{font-size:31px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block}
+.stat .lbl{font-family:var(--ui);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:6px;display:block}
+.stat .sub{font-size:13.5px;color:var(--ink-2);margin-top:7px;display:block;line-height:1.4}
+.stat.crit .num{color:var(--crit)}.stat.warn .num{color:var(--warn)}.stat.good .num{color:var(--good)}.stat.accent .num{color:var(--accent-ink)}
+.metastrip{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;margin-top:34px}
+.metastrip>div{flex:1 1 200px;padding:14px 18px;border-right:1px solid var(--line-soft)}
+.metastrip>div:last-child{border-right:0}
+.metastrip .k{font-family:var(--ui);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.metastrip .v{font-family:var(--display);font-size:14.5px;font-weight:500;line-height:1.35}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2.5px 8px;border-radius:4px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);font-family:var(--ui)}
+.chip.new{background:var(--accent);color:#fff}.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.accent{background:var(--accent-soft);color:var(--accent-ink)}.chip.mono{font-family:var(--mono);font-weight:400}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:left;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);font-family:var(--ui)}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12.5px}.r{text-align:right}
+.tablecard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 10px 8px}
+.filepath{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding:0 0 7px}
+ul.tight{margin:0;padding-left:20px}ul.tight li{margin-bottom:5px}
+.callout{background:var(--accent-soft);border:1px solid rgba(0,105,101,.22);border-radius:8px;padding:16px 20px}
+.callout.warn{background:var(--warn-soft);border-color:rgba(164,90,30,.24)}
+blockquote{margin:0;padding:12px 0 12px 18px;border-left:3px solid var(--accent);font-size:17px;line-height:1.5}
+.step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line-soft)}
+.step:last-child{border-bottom:0}
+.step .n{flex:0 0 30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:13.5px;font-weight:600}
+.step .c{flex:1}
+.ships{font-size:13.5px;color:var(--accent-ink);margin-top:8px;font-style:italic}
+footer{padding:34px 0 60px;color:var(--muted);font-size:13px;font-family:var(--ui);text-align:center}
+.act{display:flex;gap:14px;padding:15px 0;border-bottom:1px solid var(--line-soft);align-items:flex-start}
+.act:last-child{border-bottom:0}
+.act .rank{flex:0 0 26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:12.5px;font-weight:600;margin-top:1px}
+.act .c{flex:1;min-width:0}
+.act .meta{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:5px}
+@media print{body{background:#fff}section{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">TALLKAROL &middot; DQS / AXVOR / AIS &middot; pre-handoff audit</p>
+  <h1>AXVOR Handoff Readiness</h1>
+  <p class="lede">
+    AXVOR is about to be handed to a client who will edit it in Elementor without a developer.
+    The site itself is sound &mdash; every page loads clean, the sitemap is correct, and the
+    pages open in the builder. What is not ready is the <em>editing</em> experience: a marketer
+    will find controls that look live and do nothing, and layouts that come apart when they drag
+    a card to a new place. This is the audit and the remediation, approved and deferred to the
+    post-launch pass.
+  </p>
+  <div class="metastrip">
+    <div><span class="k">Status</span><span class="v">Approved 11 Sep 2026 &middot; scheduled post-launch</span></div>
+    <div><span class="k">Touches</span><span class="v">dqs-core &middot; dqs-foundations &middot; websites/axvor specs</span></div>
+    <div><span class="k">Scope note</span><span class="v">axvor clone only &mdash; cross-site reconciliation happens in preprod</span></div>
+    <div><span class="k">Verified</span><span class="v">live DB, live site and both plugin clones, 11 Sep 2026</span></div>
+  </div>
+</header>
+
+<section style="border-top:0">
+  <p class="sec-num">00 &mdash; start here</p>
+  <h2>Recommended actions, in order</h2>
+  <p style="max-width:70ch">
+    The order matters. The first two items make controls that already exist start working, which
+    is far cheaper than building anything new &mdash; and the second one is a set of one-line
+    deletions with no visual consequence at all.
+  </p>
+
+  <div class="card" style="margin-top:24px">
+    <div class="act">
+      <div class="rank">1</div>
+      <div class="c">
+        <h4>Reconcile the page specs to the live pages</h4>
+        <p class="small" style="margin:0">
+          So <code>dqs build-page</code> stops being destructive. The AXVOR changes were
+          deliberate, so the database is canonical and the specs must come up to meet it.
+          Provable in a loop, because the builder's element ids are deterministic.
+        </p>
+        <p class="meta">4 sections to drop &middot; field-level deltas on 4 pages</p>
+      </div>
+    </div>
+    <div class="act">
+      <div class="rank">2</div>
+      <div class="c">
+        <h4>Delete the redundant real property from ~8 CSS blocks</h4>
+        <p class="small" style="margin:0">
+          Each of these writes both Elementor's <code>--padding-*</code> variable
+          <em>and</em> the real <code>padding</code>. The variable already carries the same value,
+          so removing the property restores a sidebar control at zero visual cost.
+        </p>
+        <p class="meta">one-line deletions &middot; no design change</p>
+      </div>
+    </div>
+    <div class="act">
+      <div class="rank">3</div>
+      <div class="c">
+        <h4>Make <code>.dqs-feature-row</code> exemplary</h4>
+        <p class="small" style="margin:0">
+          Move gap and alignment onto the container's real Elementor controls and delete the CSS
+          that overrules them. Seven live instances &mdash; the most repeated band on the site,
+          and the one a marketer touches first.
+        </p>
+      </div>
+    </div>
+    <div class="act">
+      <div class="rank">4</div>
+      <div class="c">
+        <h4>Fix the widget control gaps</h4>
+        <p class="small" style="margin:0">
+          The hero height dropdown that cannot represent its own data, and the three editor
+          previews that disagree with the front end.
+        </p>
+      </div>
+    </div>
+    <div class="act">
+      <div class="rank">5</div>
+      <div class="c">
+        <h4>Populate Elementor's global colours and fonts</h4>
+        <p class="small" style="margin:0">
+          A read-only mirror of <code>brand-tokens.json</code>, so the brand is visible in the UI
+          without a global edit being able to repaint the site.
+        </p>
+      </div>
+    </div>
+    <div class="act">
+      <div class="rank">6</div>
+      <div class="c">
+        <h4>Redesign the ledger hairline maths</h4>
+        <p class="small" style="margin:0">
+          The one finding that cannot be fixed by specificity. Treat as its own piece of design
+          work rather than folding it into the tidy-up.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">01 &mdash; verdict</p>
+  <h2>What is ready, and what is not</h2>
+
+  <div class="grid g4" style="margin-bottom:26px">
+    <div class="stat good"><span class="num">9/9</span><span class="lbl">Pages clean</span><span class="sub">200, zero console errors, zero failed requests, no broken media</span></div>
+    <div class="stat good"><span class="num">83%</span><span class="lbl">Native widgets</span><span class="sub">74 native to 15 custom &mdash; the architecture rule is being followed</span></div>
+    <div class="stat crit"><span class="num">0</span><span class="lbl">Uses of <code>:where()</code></span><span class="sub">Across all 26 stylesheets. The house fix has never been applied</span></div>
+    <div class="stat crit"><span class="num">5/6</span><span class="lbl">Heroes unpresentable</span><span class="sub">Hold a height the control cannot display</span></div>
+  </div>
+
+  <p style="max-width:72ch">
+    The distinction that matters: <strong>nothing is disabled.</strong> There are no
+    <code>remove_control</code> hooks in dqs-core or the theme, no excluded user roles, and every
+    container control is present in the sidebar. The controls are all there &mdash; CSS just
+    overrules them, so they look functional and do nothing.
+  </p>
+
+  <div class="callout warn" style="margin-top:20px">
+    <p style="margin:0">
+      That is the worst failure mode for a handoff. A control that is greyed out teaches the
+      editor something. A control that moves, previews, saves and changes nothing teaches them
+      that the site is broken and they cannot tell where.
+    </p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">02 &mdash; sitemap</p>
+  <h2>Working, and correctly gated</h2>
+
+  <p style="max-width:72ch">
+    The sitemap is owned entirely by <code>tall-seo-aieo</code>
+    (<code>class-tall-seo-sitemap.php</code>), which disables WordPress core's own at line 55.
+    <code>/sitemap_index.xml</code> serves a valid index pointing at
+    <code>page-sitemap.xml</code>, which carries every published page with a real
+    <code>lastmod</code> and an XSL stylesheet so it renders as a table in a browser.
+    <code>llms.txt</code> points at it correctly.
+  </p>
+
+  <p style="max-width:72ch">
+    It is inert today only because <code>blog_public = 0</code> &mdash; robots.txt is
+    <code>Disallow: /</code> and every page carries <code>noindex, nofollow</code>. That is
+    correct for a staging domain and should stay that way until launch.
+  </p>
+
+  <h3 style="margin-top:26px">The launch switch</h3>
+  <div class="card">
+    <div class="step">
+      <div class="n">1</div>
+      <div class="c"><h4>Uncheck <em>Discourage search engines</em></h4><p class="small muted" style="margin:0">Settings &rarr; Reading. This is the single switch that gates everything above.</p></div>
+    </div>
+    <div class="step">
+      <div class="n">2</div>
+      <div class="c"><h4>Run <code>wp rewrite flush</code></h4><p class="small muted" style="margin:0">The sitemap's rewrite rules live in the plugin's activation hook, which a deploy never re-runs. Without a flush, every sitemap URL survives only on a <code>REQUEST_URI</code> fallback that force-sets a 200.</p></div>
+    </div>
+    <div class="step">
+      <div class="n">3</div>
+      <div class="c"><h4>Verify on the real domain</h4><p class="small muted" style="margin:0">robots.txt should lose <code>Disallow: /</code> and gain exactly one <code>Sitemap:</code> line; the <code>noindex</code> meta should disappear; canonicals should have moved off <code>wpenginepowered.com</code>.</p></div>
+    </div>
+  </div>
+
+  <p class="small muted" style="margin-top:18px">
+    <strong>Corrected 11 Sep 2026.</strong> An earlier draft of this section said
+    <code>/wp-sitemap.xml</code> returns 404 once rewrites are flushed. Tested directly: it
+    <strong>301s</strong> to <code>/sitemap_index.xml</code>, deliberately, via a redirect in
+    SEOEO &mdash; as does <code>/sitemap.xml</code>. The 404 belongs to a different thing:
+    WordPress core's own sitemap does 404 while <code>blog_public = 0</code>, which is every Local
+    and staging build. Both statements are true about different endpoints, and neither is a defect
+    to fix.
+  </p>
+</section>
+
+<section>
+  <p class="sec-num">03 &mdash; specs</p>
+  <h2>Make <code>build-page</code> safe to run</h2>
+
+  <p style="max-width:72ch">
+    Today a rebuild would silently re-add sections that were deliberately removed and discard
+    edits made in the builder. The AXVOR changes have been intentional throughout, so the live
+    pages are canonical and the specs need to be brought up to them &mdash; not the other way
+    round.
+  </p>
+
+  <div class="tablecard" style="margin-top:22px">
+    <table>
+      <thead><tr><th>Page</th><th class="r">Live bands</th><th class="r">Spec sections</th><th>Delta</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">home</td><td class="r">8</td><td class="r">8</td><td>Field-level only</td></tr>
+        <tr><td class="mono">our-story</td><td class="r">6</td><td class="r">9</td><td>Spec has three sections live does not: the CEO video, the video grid, and the whole FAQ accordion</td></tr>
+        <tr><td class="mono">newsroom</td><td class="r">3</td><td class="r">4</td><td>Spec has a video grid live does not</td></tr>
+        <tr><td class="mono">solutions</td><td class="r">11</td><td class="r">11</td><td>Rebuilt from spec on 11 Sep &mdash; the control case</td></tr>
+        <tr><td class="mono">contact</td><td class="r">2</td><td class="r">2</td><td>Field-level only</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="small muted" style="margin-top:14px">
+    Field-level deltas: hero <code>video_loading: eager</code> and an emptied <code>stats</code>
+    repeater on home; a marketer's inline <code>font-size: 23.8px</code> span in home's The Value
+    heading; heading copy on newsroom and contact.
+  </p>
+
+  <h3 style="margin-top:28px">Why this is provable rather than hopeful</h3>
+  <p style="max-width:72ch">
+    The builder's element ids are <code>substr(md5('dqs-bp-' . $seed), 7)</code> &mdash; fully
+    deterministic from a stable seed. Rebuilding an unchanged spec therefore produces
+    <strong>byte-identical</strong> output. That turns "the spec matches the page" from an
+    assertion into something the machine can check.
+  </p>
+
+  <div class="card rail" style="margin-top:18px">
+    <p style="margin:0" class="small">
+      Per page: snapshot <code>_elementor_data</code> &rarr; fix the spec &rarr; rebuild &rarr;
+      diff against the snapshot &rarr; repeat until the diff is <strong>empty</strong>. An empty
+      diff means the page did not move and the spec is now canonical. Run <code>solutions</code>
+      first &mdash; if the control case is not already clean, the loop itself is wrong.
+    </p>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">04 &mdash; the editing experience</p>
+  <h2>Controls that look live and do nothing</h2>
+
+  <p style="max-width:72ch">
+    The workspace already prescribes the fix. <code>dqs-architecture.mdc</code> says to keep theme
+    layout at (0,2,0), using <code>:where()</code> to trim weight, so it sits above Elementor's
+    <code>.e-con</code> defaults and below the sidebar. <strong><code>:where()</code> appears zero
+    times across all 26 audited stylesheets.</strong> The rule was written and never applied.
+  </p>
+
+  <div class="callout" style="margin-top:20px">
+    <p style="margin:0">
+      Specificity is only half the story, and the smaller half. Elementor's container controls
+      ship as custom properties &mdash; <code>--padding-block-start</code>, <code>--gap</code>,
+      <code>--width</code> &mdash; consumed once by <code>.e-con</code> at (0,1,0). A theme rule
+      that writes the <strong>real</strong> property beats that at any specificity at or above
+      (0,2,0): the variable the sidebar writes is simply never read. No amount of setting it
+      higher in the sidebar helps.
+    </p>
+  </div>
+
+  <h3 style="margin-top:30px">Dead controls, by how likely a marketer is to hit them</h3>
+
+  <div class="stack" style="margin-top:16px">
+    <div class="card rail crit">
+      <h4>Feature rows &mdash; the entire Layout tab <span class="chip crit">7 live</span></h4>
+      <p class="filepath">dqs-page.css:222&ndash;245</p>
+      <p class="small" style="margin:0">
+        Gap, align-items, align-self on both columns, justify-content on the copy column, and a
+        44%/56% width split that only applies at 1025px and up &mdash; so the sidebar
+        <em>appears</em> to work on tablet and does nothing on desktop. This is the most repeated
+        band on the site and the first thing anyone will try to adjust.
+      </p>
+    </div>
+
+    <div class="card rail crit">
+      <h4>Icon-feature rails &mdash; head and cells both locked <span class="chip crit">5 live</span></h4>
+      <p class="filepath">dqs-page.css:1078&ndash;1086, :1147, :1158&ndash;1163</p>
+      <p class="small" style="margin:0">
+        The head writes a bare <code>padding: 0</code> and <code>margin-block-end</code> rather
+        than the variables, so padding and bottom margin are unreachable on every rail &mdash;
+        plus display, grid columns, align, gaps, width, and per-card padding at (0,3,0).
+      </p>
+    </div>
+
+    <div class="card rail warn">
+      <h4>Section heads &mdash; eight properties</h4>
+      <p class="filepath">dqs-page.css:1860&ndash;1875</p>
+      <p class="small" style="margin:0">
+        Layout, direction, align-items, gaps, width, text-align and margin-bottom, all as real
+        properties. Padding works, because that half of the block correctly writes variables.
+        Nothing else does.
+      </p>
+    </div>
+
+    <div class="card rail warn">
+      <h4>Capability rows &mdash; <code>!important</code> on four Solutions rows</h4>
+      <p class="filepath">dqs-page.css:3242, :3258</p>
+      <p class="small" style="margin:0">
+        Added on 11 Sep 2026 while matching the client's deck. It kills Align Self on eight
+        columns and Padding Top/Bottom on all four rows. Ours, and ours to undo.
+      </p>
+    </div>
+
+    <div class="card rail warn">
+      <h4>Stats film, newsroom bands and image-box plates</h4>
+      <p class="filepath">dqs-page.css:2896&ndash;2909, :3037, :3114&ndash;3166, :917&ndash;927, :1226&ndash;1233</p>
+      <p class="small" style="margin:0">
+        Align-self, padding, margin and the player/figures flex split behind <code>!important</code>;
+        and on every icon card and ledger cell, forced display, width and margin that kill the
+        Image Box width and spacing controls.
+      </p>
+    </div>
+
+    <div class="card rail crit">
+      <h4>Cover hero &mdash; the inverse failure <span class="chip crit">6 live</span></h4>
+      <p class="filepath">dqs-cover-hero.css:29&ndash;32</p>
+      <p class="small" style="margin:0">
+        Here the sidebar <em>does</em> work, and that is the problem. Touching Advanced &rarr;
+        Margin on a hero ties the full-bleed rule, Elementor loads later and wins, and the hero
+        silently collapses into the 1200px grid.
+      </p>
+    </div>
+
+    <div class="card rail crit">
+      <h4>No escape hatch</h4>
+      <p class="small" style="margin:0">
+        Elementor's Advanced &rarr; Custom CSS field generates at selector-scoped (0,3,0)
+        <em>without</em> <code>!important</code>, so it cannot beat the rules above. A marketer
+        who needs different padding on a capability row has no path at all &mdash; not through
+        the sidebar, and not through custom CSS either.
+      </p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:34px">What breaks when they rearrange things</h3>
+
+  <div class="stack" style="margin-top:16px">
+    <div class="card rail crit">
+      <h4>Ledger hairlines have two sources of truth <span class="chip crit">5 bands</span></h4>
+      <p class="small" style="margin:0">
+        The builder stamps a <code>dqs-ledger--cols-N</code> class while the CSS keys its borders
+        off child indices. Change <strong>Grid &rarr; Columns</strong> from 3 to 4 &mdash; the
+        obvious move when adding a card &mdash; and the grid reflows while the hairline maths does
+        not: stray vertical rules mid-row, missing flush left edges, a top rule cutting through
+        the first row. Nothing in the editor hints that a class needs changing too.
+      </p>
+      <p class="small" style="margin:10px 0 0"><strong>This one cannot be fixed by specificity.</strong>
+        It needs the border maths driven off the grid itself rather than child indices &mdash; a
+        real piece of design work, not a tidy-up.</p>
+    </div>
+
+    <div class="card rail warn">
+      <h4>Stats and footprint rails hardcode four columns</h4>
+      <p class="filepath">dqs-stats.css:209, dqs-footprint.css:237</p>
+      <p class="small" style="margin:0">
+        Both with <code>:first-child</code>-only flush edges. Adding a fifth repeater row &mdash;
+        the most natural edit there is in a stats widget &mdash; wraps it with the wrong indent
+        and no separating rule. The stats ledger does not wrap at all; five figures squeeze into
+        one row and the numerals collide.
+      </p>
+    </div>
+
+    <div class="card rail warn">
+      <h4>Media-text decorations read DOM position, not a flip flag <span class="chip warn">7 rows</span></h4>
+      <p class="small" style="margin:0">
+        Media-left versus media-right <em>is</em> which column comes first. Drag to flip a row and
+        the photo's edge overrun pulls the wrong way while the heavy corner masks stamp on the
+        inside edge. Four of the seven are the Solutions capability deck, which was built
+        specifically to alternate. Insert a third widget into the row and every decoration
+        disappears at once.
+      </p>
+    </div>
+
+    <div class="card rail">
+      <h4>Cross-section and conditional rules</h4>
+      <p class="small" style="margin:0">
+        <code>dqs-section--leads-into</code> uses an adjacent-sibling selector across two sections,
+        so inserting anything between them leaves a lopsided seam. The newsroom film pins mobile
+        order by class and desktop order by DOM, so fixing one view breaks the other. And a
+        <code>:has()</code> rule shrinks the gap under a section heading the moment someone deletes
+        the deck paragraph, with no control showing why.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">05 &mdash; widgets</p>
+  <h2>Control gaps in the custom widgets</h2>
+
+  <div class="stack">
+    <div class="card rail crit">
+      <h4>The hero height dropdown cannot represent its own data</h4>
+      <p class="small" style="margin:0 0 10px">
+        The control offers 50 / 70 / 90 / 100vh. The live values are:
+      </p>
+      <p style="margin:0">
+        <span class="chip mono">home 94vh</span>
+        <span class="chip mono">solutions 60vh</span>
+        <span class="chip mono">solutions 52vh</span>
+        <span class="chip mono">newsroom 40vh</span>
+        <span class="chip mono">contact 40vh</span>
+        <span class="chip ok">our-story 50vh</span>
+      </p>
+      <p class="small" style="margin:10px 0 0">
+        Five of six heroes hold a value the dropdown has no option for. The first touch of that
+        control silently re-heights the hero. Converting it to a slider in <code>vh</code> makes
+        every existing value survive and become editable &mdash; no data migration.
+      </p>
+    </div>
+
+    <div class="card rail warn">
+      <h4>Three editor previews disagree with the front end</h4>
+      <p class="small" style="margin:0">
+        The CTA banner's preview hardcodes its button classes, so the style dropdown changes the
+        front end and does nothing on canvas. The footprint widget's preview drops the bundled map
+        and shows pins floating on an empty plate. The contrast widget escapes one way in
+        <code>render()</code> and the other in its preview, so markup renders bold in the editor
+        and as literal tags on the site.
+      </p>
+    </div>
+
+    <div class="card rail warn">
+      <h4>Three dead fields on the homepage</h4>
+      <p class="small" style="margin:0">
+        In film-split mode the builder blanks the stats widget's eyebrow, heading and description
+        and moves the real copy into sibling widgets. Verified live: all three are empty. Fill one
+        in and either nothing happens or you get a second heading.
+      </p>
+    </div>
+
+    <div class="card rail">
+      <h4>A latent landmine</h4>
+      <p class="small" style="margin:0">
+        The builder emits a <code>dqs-showcase</code> widget type for which no class exists and
+        none is registered. Nothing triggers it today; the first spec to use a
+        <code>showcase</code> section would produce an invisible widget.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">06 &mdash; globals</p>
+  <h2>The brand is invisible in the UI</h2>
+
+  <p style="max-width:72ch">
+    Elementor's kit has zero global colours and zero global typography, and both the
+    colour-scheme and typography-scheme defaults are disabled. That combination is correct for a
+    token-driven theme, but it means a marketer opening Site Settings sees nothing at all, and
+    every "Global" colour picker in the interface has nothing to offer.
+  </p>
+
+  <p style="max-width:72ch">
+    Mirror the palette from <code>brand-tokens.json</code> into the kit &mdash; the navy, the two
+    blues, the text and surface tokens, and the two font stacks. <strong>A read-only mirror:</strong>
+    the tokens stay the source of truth and the widgets keep consuming CSS variables, so the brand
+    becomes visible in the interface without a global edit being able to repaint the site or
+    break a contrast ratio.
+  </p>
+</section>
+
+<section>
+  <p class="sec-num">07 &mdash; boundaries</p>
+  <h2>Deliberately out of scope</h2>
+
+  <div class="grid g3">
+    <div class="card tint">
+      <h4>Markup inside headings</h4>
+      <p class="small muted" style="margin:0">
+        Ten of fifty-six headings carry <code>&lt;strong&gt;</code> or a responsive line-break tag
+        that a marketer sees as literal text in the sidebar field. Karol's call to leave them &mdash;
+        the two-tone accent is worth the rough edit field. Goes in the handoff guide instead. The
+        trailing space after the break tag is load-bearing.
+      </p>
+    </div>
+    <div class="card tint">
+      <h4>No Style tab on custom widgets</h4>
+      <p class="small muted" style="margin:0">
+        None of the six custom widgets exposes typography, colour or spacing controls. That is the
+        design: the theme owns the visual system. "Make this headline bigger" stays a developer
+        ticket, and the handoff guide should say so plainly rather than leave it to be discovered.
+      </p>
+    </div>
+    <div class="card tint">
+      <h4>Cross-site plugin reconciliation</h4>
+      <p class="small muted" style="margin:0">
+        Each site carries its own drifted clone of dqs-core and dqs-foundations. Reconciling now
+        would be wasted work; it happens once in preprod across all three sites. Everything in this
+        proposal lands in the axvor clone only.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="sec-num">08 &mdash; loose ends</p>
+  <h2>Worth a decision before the client owns it</h2>
+
+  <div class="tablecard">
+    <table>
+      <thead><tr><th>Item</th><th>Why it matters</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Press release is hot-linked</strong></td>
+          <td>The newsroom download points at <code>drivingforwardasone.com</code>. A client-owned site should not depend on a domain they may retire. The spec's own notes already say to import it before launch.</td>
+        </tr>
+        <tr>
+          <td><strong><code>seo.json</code> is stale</strong></td>
+          <td>The copy the site actually reads still lists the four retired brand pages, and live meta descriptions still name only three companies &mdash; no AIS, no GAA.</td>
+        </tr>
+        <tr>
+          <td><strong>Retired brand pages still live</strong></td>
+          <td><code>/dqs/</code>, <code>/cli/</code>, <code>/mclaren/</code> and <code>/ais/</code> are trashed locally but still published on WP Engine and listed in its sitemap. The next push removes them. No redirects needed &mdash; the site has been noindexed throughout, so nothing was ever indexed.</td>
+        </tr>
+        <tr>
+          <td><strong>Deploy script points elsewhere</strong></td>
+          <td><code>wpe-deploy.sh</code> is hardwired to a different install; run against axvor it would overwrite the remote <code>seo.json</code>. Harmless while pushing through Local Connect, but worth a guard.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  TALLKAROL &middot; DQS / AXVOR / AIS &middot; approved 11 September 2026, scheduled for the post-launch pass
+</footer>
+
+</div>
+</body>
+</html>
