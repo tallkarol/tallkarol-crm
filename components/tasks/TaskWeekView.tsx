@@ -18,6 +18,7 @@ import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { updateTask } from "@/lib/task-actions"
 import { isoDay, type HubTask } from "@/lib/task-view"
+import { TaskClientMenu, type TaskClientOption } from "@/components/tasks/TaskClientMenu"
 import { Card as TkCard } from "@/components/ui/Card"
 
 export type WeekEvent = {
@@ -56,10 +57,12 @@ export function TaskWeekView({
   tasks: initial,
   events,
   peekBase,
+  clients,
 }: {
   tasks: HubTask[]
   events: WeekEvent[]
   peekBase: string
+  clients?: TaskClientOption[]
 }) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -145,6 +148,7 @@ export function TaskWeekView({
                   task={task}
                   dragging={task.id === activeId}
                   peekBase={peekBase}
+                  clients={clients}
                 />
               ))}
           </Column>
@@ -159,6 +163,7 @@ export function TaskWeekView({
                 task={task}
                 dragging={task.id === activeId}
                 peekBase={peekBase}
+                clients={clients}
               />
             ))}
         </Column>
@@ -221,10 +226,12 @@ function Card({
   task,
   dragging,
   peekBase,
+  clients,
 }: {
   task: HubTask
   dragging: boolean
   peekBase: string
+  clients?: TaskClientOption[]
 }) {
   const { attributes, listeners, setNodeRef } = useDraggable({ id: task.id })
   const color = task.clientSlug ? clientColor(task.clientSlug) : "#8A9794"
@@ -253,7 +260,13 @@ function Card({
         {task.priority === 1 ? (
           <span aria-hidden className="size-[7px] rounded-full bg-bad" />
         ) : null}
-        {task.clientName ? (
+        {clients ? (
+          <TaskClientMenu
+            taskId={task.id}
+            clientId={task.clientId}
+            clients={clients}
+          />
+        ) : task.clientName ? (
           <span
             className="inline-flex items-center gap-1 text-[11px] font-semibold"
             style={{ color }}

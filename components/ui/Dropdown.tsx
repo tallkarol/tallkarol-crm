@@ -15,6 +15,7 @@ export function Dropdown({
   on = false,
   count,
   align = "left",
+  placement = "down",
   icon,
   title,
   variant = "default",
@@ -22,19 +23,22 @@ export function Dropdown({
   pending = false,
   children,
 }: {
-  label: string
+  label: React.ReactNode
   /** Filtering something — goes teal so it reads without opening. */
   on?: boolean
   /** Shown as a badge when more than one thing is picked. */
   count?: number
   align?: "left" | "right"
+  /** The composer sits at the bottom of the pane, so its menu opens up. */
+  placement?: "down" | "up"
   icon?: React.ReactNode
   title?: string
   /**
    * `status` renders the trigger as a state chip rather than a filter button —
    * the delivery ledger, where a status is the thing you change.
+   * `chip` is the quieter composer control (Auto ladder).
    */
-  variant?: "default" | "status"
+  variant?: "default" | "status" | "chip"
   /** Chip colours for `variant="status"`, as a border/bg/text class string. */
   tone?: string
   /** Dims the trigger while an optimistic write settles. */
@@ -79,13 +83,21 @@ export function Dropdown({
                 pending && "opacity-60",
                 open && "ring-1 ring-tk-teal/40"
               )
-            : cn(
-                "rounded-lg px-2.5 py-1.5 text-xs font-medium",
-                on
-                  ? "border-tk-teal bg-accent text-tk-linen"
-                  : "border-line bg-card text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal",
-                open && !on && "border-tk-teal bg-tk-teal/5 text-tk-teal"
-              )
+            : variant === "chip"
+              ? cn(
+                  "h-7 rounded-lg px-2.5 font-ui text-[11.5px] font-semibold",
+                  on
+                    ? "border-tk-teal bg-accent text-tk-linen"
+                    : "border-line bg-card text-ink-2 hover:border-line-strong hover:text-tk-teal",
+                  open && !on && "border-tk-teal bg-tk-teal/5 text-tk-teal"
+                )
+              : cn(
+                  "rounded-lg px-2.5 py-1.5 text-xs font-medium",
+                  on
+                    ? "border-tk-teal bg-accent text-tk-linen"
+                    : "border-line bg-card text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal",
+                  open && !on && "border-tk-teal bg-tk-teal/5 text-tk-teal"
+                )
         )}
       >
         {icon}
@@ -113,7 +125,8 @@ export function Dropdown({
           id={id}
           role="menu"
           className={cn(
-            "absolute top-[calc(100%+5px)] z-30 max-h-[330px] min-w-[232px] overflow-y-auto rounded-xl border border-line bg-card p-1.5 shadow-overlay",
+            "absolute z-30 max-h-[330px] min-w-[232px] overflow-y-auto rounded-xl border border-line bg-card p-1.5 shadow-overlay",
+            placement === "up" ? "bottom-[calc(100%+5px)]" : "top-[calc(100%+5px)]",
             align === "right" ? "right-0" : "left-0"
           )}
         >

@@ -1,9 +1,9 @@
 "use server"
 
-import { and, eq, sql } from "drizzle-orm"
+import { and, eq, isNull, sql } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { db } from "@/db"
-import { taskItems, taskViews, tasks } from "@/db/schema"
+import { chatThreads, taskItems, taskViews, tasks } from "@/db/schema"
 import type { Cadence } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { ROUTES } from "@/lib/nav"
@@ -18,13 +18,15 @@ type Result<T = undefined> = Ok<T> | { ok: false; error: string }
 const CADENCES: Cadence[] = ["none", "weekly", "monthly", "quarterly"]
 const STAGES = ["queue", "doing", "waiting"] as const
 
-function touch() {
+function touch(taskId?: string) {
   revalidatePath(ROUTES.tasks)
   revalidatePath(ROUTES.home)
   revalidatePath(ROUTES.projects)
   revalidatePath(ROUTES.retainers)
   revalidatePath(ROUTES.clients)
   revalidatePath(ROUTES.products)
+  revalidatePath(ROUTES.chat)
+  if (taskId) revalidatePath(ROUTES.task(taskId))
 }
 
 function isDay(value: string) {
@@ -241,13 +243,22 @@ export async function updateTask(id: string, patch: TaskPatch): Promise<Result> 
     values.projectId = target.projectId
     values.productId = target.productId
     values.deliverableId = target.deliverableId
-    // Only adopt a derived retainer; never clear one that was set by hand.
-    if (target.retainerId) values.retainerId = target.retainerId
+    // A move writes the new house's retainer, including null — otherwise a
+    // hand-set retainer on the old client follows the task across.
+    values.retainerId = target.retainerId
   }
   if (patch.retainerId !== undefined) values.retainerId = patch.retainerId || null
 
   await db.update(tasks).set(values).where(eq(tasks.id, id))
-  touch()
+
+  if (retargeting) {
+    await db
+      .update(chatThreads)
+      .set({ clientId: (values.clientId as string | null) ?? null })
+      .where(and(eq(chatThreads.taskId, id), isNull(chatThreads.archivedAt)))
+  }
+
+  touch(id)
   return { ok: true }
 }
 

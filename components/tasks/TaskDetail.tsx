@@ -9,6 +9,7 @@ import {
 } from "@/components/peek/controls"
 import { SolveInChat, type SolveState } from "@/components/tasks/SolveInChat"
 import { TaskChecklist } from "@/components/tasks/TaskChecklist"
+import { TaskClientMenu } from "@/components/tasks/TaskClientMenu"
 import { TaskTargetPicker } from "@/components/tasks/TaskTargetPicker"
 import { db } from "@/db"
 import { clients, deliverables, products, projects, tasks } from "@/db/schema"
@@ -119,23 +120,20 @@ export async function TaskDetailBody({ id }: { id: string }) {
           {task.title}
         </h2>
         <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-3">
-          {task.client ? (
-            <EntityLink
-              href={ROUTES.client(task.client.slug)}
-              color={clientColor(task.client.slug)}
-            >
-              {task.client.name}
-            </EntityLink>
-          ) : task.product ? (
+          <TaskClientMenu
+            taskId={task.id}
+            clientId={task.clientId}
+            clients={clientRows.map((c) => ({ id: c.id, name: c.name, slug: c.slug }))}
+            size="md"
+          />
+          {!task.client && task.product ? (
             <EntityLink
               href={ROUTES.productPage(task.product.slug)}
               color={clientColor(task.product.slug)}
             >
               {task.product.name}
             </EntityLink>
-          ) : (
-            <span className="text-ink-3">No client</span>
-          )}
+          ) : null}
           {task.labels.map((label) => (
             <span
               key={label}

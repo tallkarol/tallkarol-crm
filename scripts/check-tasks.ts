@@ -4,7 +4,12 @@
  * Run with `npm run check:tasks`.
  */
 
-import { parseTaskInput, parseWhen, type ParseTarget } from "../lib/task-parse"
+import {
+  clientsFromTargets,
+  parseTaskInput,
+  parseWhen,
+  type ParseTarget,
+} from "../lib/task-parse"
 import { periodKey, taskMatches, type HubTask } from "../lib/task-view"
 
 let failures = 0
@@ -187,6 +192,16 @@ console.log("\nfull lines")
     "do the thing !someday",
     null,
   ])
+}
+
+console.log("\nmove-to-client menu")
+{
+  check(
+    "unique + sorted by name",
+    clientsFromTargets(TARGETS).map((c) => c.id),
+    ["c-caps", "c-dqs", "c-gdi", "c-sondry"]
+  )
+  check("skips a product with no client", clientsFromTargets([TARGETS[7]]), [])
 }
 
 console.log("\nrecurrence periods — this is what weekly-means-monthly cost")

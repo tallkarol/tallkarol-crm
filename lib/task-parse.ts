@@ -25,6 +25,23 @@ export type ParseTarget = {
   productName?: string | null
 }
 
+/** Unique clients from the composer target list, for the move-to-client menu. */
+export function clientsFromTargets(
+  targets: ParseTarget[]
+): { id: string; name: string; slug: string }[] {
+  const seen = new Map<string, { id: string; name: string; slug: string }>()
+  for (const row of targets) {
+    if (!row.clientId || !row.clientName || !row.clientSlug) continue
+    if (seen.has(row.clientId)) continue
+    seen.set(row.clientId, {
+      id: row.clientId,
+      name: row.clientName,
+      slug: row.clientSlug,
+    })
+  }
+  return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name))
+}
+
 export type ParsedTask = {
   title: string
   target: ParseTarget | null

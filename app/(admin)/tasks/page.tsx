@@ -12,6 +12,7 @@ import { calendarEvents } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import {
   allTasks,
+  clientsFromTargets,
   DEFAULT_VIEW_SLUG,
   ensureDefaultViews,
   listViews,
@@ -174,7 +175,11 @@ export default async function TasksPage({
       </div>
 
       {bar.layout === "board" ? (
-        <TaskBoardView tasks={visible} peekBase={peekBase} />
+        <TaskBoardView
+          tasks={visible}
+          peekBase={peekBase}
+          clients={clientsFromTargets(targets)}
+        />
       ) : bar.layout === "week" ? (
         <TaskWeekView
           tasks={visible.filter((t) => t.status === "open")}
@@ -185,6 +190,7 @@ export default async function TasksPage({
             allDay: e.allDay,
           }))}
           peekBase={peekBase}
+          clients={clientsFromTargets(targets)}
         />
       ) : (
         <div className="mt-3">
@@ -193,6 +199,7 @@ export default async function TasksPage({
             sortBy={bar.sort}
             grouping={bar.group}
             peekBase={peekBase}
+            clients={clientsFromTargets(targets)}
           />
         </div>
       )}

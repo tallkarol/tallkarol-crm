@@ -9,7 +9,7 @@ import {
   taskViews,
   tasks,
 } from "@/db/schema"
-import type { ParseTarget } from "@/lib/task-parse"
+import { clientsFromTargets, type ParseTarget } from "@/lib/task-parse"
 import {
   WAITING_ALERT_DAYS,
   daysBetween,
@@ -21,6 +21,8 @@ import {
   type TaskCriteria,
   type ViewRow,
 } from "@/lib/task-view"
+
+export { clientsFromTargets }
 
 /**
  * Everything the task hub reads from Postgres. The shaping — sorting, banding,

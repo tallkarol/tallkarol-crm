@@ -19,6 +19,7 @@ import { cn } from "@/lib/cn"
 import { setTaskStage } from "@/lib/task-actions"
 import type { HubTask } from "@/lib/task-view"
 import { CADENCE_LABEL } from "@/lib/work"
+import { TaskClientMenu, type TaskClientOption } from "@/components/tasks/TaskClientMenu"
 import { Card as TkCard } from "@/components/ui/Card"
 
 const STAGES = [
@@ -38,11 +39,13 @@ export function TaskBoardView({
   peekBase,
   doneLabel = "Done",
   showClient = true,
+  clients,
 }: {
   tasks: HubTask[]
   peekBase: string
   doneLabel?: string
   showClient?: boolean
+  clients?: TaskClientOption[]
 }) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -87,7 +90,21 @@ export function TaskBoardView({
       [task.id]: stage === "done" ? "done" : (stage as HubTask["stage"]),
     }))
     startTransition(async () => {
-      await setTaskStage(task.id, stage)
+      // setTaskStage reports refusals as { ok: false } and throws when it
+      // cannot reach the database. Ignoring both left a card sitting in its new
+      // lane as though the move had landed, with nothing written — the board
+      // only told the truth again on the next full load.
+      const result = await setTaskStage(task.id, stage).catch(() => ({
+        ok: false as const,
+      }))
+      if (!result.ok) {
+        setForced((current) => {
+          const next = { ...current }
+          delete next[task.id]
+          return next
+        })
+        return
+      }
       router.refresh()
     })
   }
@@ -116,6 +133,7 @@ export function TaskBoardView({
                   dragging={task.id === activeId}
                   peekBase={peekBase}
                   showClient={showClient}
+                  clients={clients}
                 />
               ))}
             </Column>
@@ -170,11 +188,13 @@ function Card({
   dragging,
   peekBase,
   showClient,
+  clients,
 }: {
   task: HubTask
   dragging: boolean
   peekBase: string
   showClient: boolean
+  clients?: TaskClientOption[]
 }) {
   const { attributes, listeners, setNodeRef } = useDraggable({ id: task.id })
   const color = task.clientSlug ? clientColor(task.clientSlug) : "#8A9794"
@@ -215,7 +235,13 @@ function Card({
               className="size-[7px] rounded-full bg-bad"
             />
           ) : null}
-          {showClient && task.clientName ? (
+          {showClient && clients ? (
+            <TaskClientMenu
+              taskId={task.id}
+              clientId={task.clientId}
+              clients={clients}
+            />
+          ) : showClient && task.clientName ? (
             <span
               className="inline-flex items-center gap-1 text-[11px] font-semibold"
               style={{ color }}

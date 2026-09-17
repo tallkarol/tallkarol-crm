@@ -11,7 +11,7 @@ import { clientColor } from "@/lib/client-colors"
 import { daysSince, fmtHours, readLinks } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
 import { punchlistsFor } from "@/lib/punchlists"
-import { tasksFor, taskTargets } from "@/lib/tasks"
+import { clientsFromTargets, tasksFor, taskTargets } from "@/lib/tasks"
 import { formatDay, formatMoney, plural } from "@/lib/work"
 import { addProjectLink, draftDeliverableInvoice, removeProjectLink } from "../actions"
 import { Card } from "@/components/ui/Card"
@@ -389,6 +389,7 @@ export default async function ProjectDetailPage({
                   sortBy="due"
                   grouping="none"
                   peekBase={ROUTES.project(project.slug)}
+                  clients={clientsFromTargets(targets)}
                 />
               </div>
             )}

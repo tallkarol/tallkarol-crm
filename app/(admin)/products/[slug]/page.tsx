@@ -9,7 +9,7 @@ import { clientColor, markColor } from "@/lib/client-colors"
 import { daysSince, readLinks } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
 import { studiosWithProducts } from "@/lib/products"
-import { tasksFor, taskTargets } from "@/lib/tasks"
+import { clientsFromTargets, tasksFor, taskTargets } from "@/lib/tasks"
 import { studioCaption } from "@/lib/work"
 import { addProductLink, removeProductLink, setProductNotes } from "../actions"
 import { Card } from "@/components/ui/Card"
@@ -185,6 +185,7 @@ export default async function ProductDetailPage({
                 sortBy="due"
                 grouping="none"
                 peekBase={ROUTES.productPage(product.slug)}
+                clients={clientsFromTargets(targets)}
               />
             </div>
           )}

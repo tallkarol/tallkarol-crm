@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { clientColor } from "@/lib/client-colors"
+import { TaskClientMenu } from "@/components/tasks/TaskClientMenu"
 import { cn } from "@/lib/cn"
 import { updateTask } from "@/lib/task-actions"
 
@@ -68,21 +68,12 @@ export function TaskTargetPicker({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-1.5">
-        <Select
-          value={clientId ?? ""}
+        <TaskClientMenu
+          taskId={taskId}
+          clientId={clientId}
+          clients={clients}
+          variant="field"
           disabled={busy}
-          onChange={(value) =>
-            // Changing client drops a project that belonged to the old one.
-            apply({
-              clientId: value || null,
-              projectId: null,
-              productId: null,
-              deliverableId: null,
-            })
-          }
-          swatch={clientId ? clientColor(clients.find((c) => c.id === clientId)?.slug ?? "") : undefined}
-          empty="No client"
-          options={clients.map((c) => ({ value: c.id, label: c.name }))}
         />
 
         <Select
@@ -144,26 +135,17 @@ function Select({
   value,
   options,
   empty,
-  swatch,
   disabled,
   onChange,
 }: {
   value: string
   options: { value: string; label: string }[]
   empty: string
-  swatch?: string
   disabled?: boolean
   onChange: (value: string) => void
 }) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      {swatch ? (
-        <span
-          aria-hidden
-          className="tk-client-mark size-2 shrink-0 rounded-full"
-          style={{ "--c": swatch } as React.CSSProperties}
-        />
-      ) : null}
       <select
         value={value}
         disabled={disabled}

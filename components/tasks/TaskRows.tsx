@@ -12,6 +12,7 @@ import {
   type HubTask,
   type RenderRow,
 } from "@/lib/task-view"
+import { TaskClientMenu, type TaskClientOption } from "@/components/tasks/TaskClientMenu"
 import { CADENCE_LABEL } from "@/lib/work"
 import { Card } from "@/components/ui/Card"
 
@@ -25,12 +26,15 @@ export function TaskRows({
   sortBy,
   grouping,
   peekBase,
+  clients,
 }: {
   tasks: HubTask[]
   sortBy: string
   grouping: string
   /** Where the peek query lands — the hub, or an entity page. */
   peekBase: string
+  /** When present, the client name on a row is the move-to-client menu. */
+  clients?: TaskClientOption[]
 }) {
   const [hidden, setHidden] = useState<string[]>([])
   const visible = tasks.filter((task) => !hidden.includes(task.id))
@@ -74,6 +78,7 @@ export function TaskRows({
                   key={row.id}
                   row={row}
                   peekBase={peekBase}
+                  clients={clients}
                   onHide={() =>
                     setHidden((ids) =>
                       ids.includes(row.id) ? ids : [...ids, row.id]
@@ -98,6 +103,7 @@ export function TaskRows({
           key={row.id}
           row={row}
           peekBase={peekBase}
+          clients={clients}
           onHide={() =>
             setHidden((ids) => (ids.includes(row.id) ? ids : [...ids, row.id]))
           }
@@ -113,11 +119,13 @@ export function TaskRows({
 function Row({
   row,
   peekBase,
+  clients,
   onHide,
   onShow,
 }: {
   row: RenderRow
   peekBase: string
+  clients?: TaskClientOption[]
   onHide: () => void
   onShow: () => void
 }) {
@@ -199,7 +207,13 @@ function Row({
           {row.title}
         </Link>
         <span className="mt-0.5 flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-[11.5px] text-ink-3">
-          {houseName ? (
+          {clients ? (
+            <TaskClientMenu
+              taskId={row.id}
+              clientId={row.clientId}
+              clients={clients}
+            />
+          ) : houseName ? (
             <span
               className="inline-flex shrink-0 items-center gap-1.5 font-semibold text-tk-slate"
               style={{ color }}
@@ -214,7 +228,7 @@ function Row({
           ) : (
             <span className="shrink-0 text-ink-3">No client</span>
           )}
-          {showProductBesideClient ? (
+          {(showProductBesideClient || (clients && row.productName)) ? (
             <>
               <span aria-hidden className="hidden shrink-0 text-ink-3 sm:inline">
                 ·
