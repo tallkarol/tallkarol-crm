@@ -2463,7 +2463,7 @@ export const usageSnapshots = pgTable(
   "usage_snapshots",
   {
     id: serial("id").primaryKey(),
-    /** railway | claude_max | cursor_dashboard | vercel | resend | dataforseo */
+    /** railway | claude_max | cursor_dashboard | anthropic | vercel | resend | dataforseo */
     source: text("source").notNull(),
     /** cli | api | manual */
     basis: text("basis").notNull().default("manual"),
@@ -3394,6 +3394,41 @@ export const chatToolCallsRelations = relations(chatToolCalls, ({ one }) => ({
   }),
 }))
 
+/**
+ * Screenshots pasted into the composer. A row lands the moment the image is
+ * pasted, with `messageId` null, and is claimed by the message it was sent
+ * with — so a paste never waits on the send, and an image nobody sent is an
+ * orphan the next upload sweeps. Bytes in Postgres with a `storage_key` seam,
+ * exactly like ticket_attachments. The browser downsizes before upload, so
+ * `mime` is always PNG or JPEG and the bytes are what the model is sent.
+ */
+export const chatAttachments = pgTable(
+  "chat_attachments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    messageId: uuid("message_id").references(() => chatMessages.id, { onDelete: "cascade" }),
+    name: text("name").notNull().default(""),
+    mime: text("mime").notNull(),
+    bytes: integer("bytes").notNull().default(0),
+    width: integer("width").notNull().default(0),
+    height: integer("height").notNull().default(0),
+    data: customType<{ data: Buffer; driverData: Buffer }>({
+      dataType: () => "bytea",
+    })("data"),
+    storageKey: text("storage_key").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byMessage: index("chat_attachments_message_idx").on(table.messageId),
+    byUser: index("chat_attachments_user_idx").on(table.userId, table.createdAt),
+  })
+)
+
+export type ChatAttachment = typeof chatAttachments.$inferSelect
+
 export type ChatThread = typeof chatThreads.$inferSelect
 export type ChatMessage = typeof chatMessages.$inferSelect
 export type ChatTurn = typeof chatTurns.$inferSelect
@@ -3644,3 +3679,76 @@ export const meetingNoteItemsRelations = relations(meetingNoteItems, ({ one }) =
 
 export type MeetingNote = typeof meetingNotes.$inferSelect
 export type MeetingNoteItem = typeof meetingNoteItems.$inferSelect
+
+/* --------------------------------------------------------------- activity */
+
+/**
+ * How the CRM gets used — one row per event, append-only. See ACTIVITY.md.
+ *
+ * Props are allowlisted per kind in lib/activity/modules and nothing typed is
+ * ever stored. `route` is the pattern (/projects/[slug]), never the filled-in
+ * path. Raw rows live 90 days; tick() then rolls them into activity_daily.
+ */
+export const activityEvents = pgTable(
+  "activity_events",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    /** When it happened on the device, clamped to a day behind arrival and never ahead. */
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+    receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    /** admin | customer */
+    role: text("role").notNull().default("admin"),
+    /** A customer whose portal grants name exactly one client. */
+    clientId: uuid("client_id").references(() => clients.id, { onDelete: "set null" }),
+    /** Browser session, renewed after 30 minutes idle. */
+    session: text("session").notNull().default(""),
+    /** browser | mac_app | phone */
+    surface: text("surface").notNull().default("browser"),
+    /** phone | tablet | desktop */
+    viewport: text("viewport").notNull().default("desktop"),
+    module: text("module").notNull(),
+    /** Dotted: page.view, action.run, frustration.rage. */
+    kind: text("kind").notNull(),
+    route: text("route").notNull().default("/"),
+    /** A data-track id or a server action name. */
+    target: text("target"),
+    durationMs: integer("duration_ms"),
+    ok: boolean("ok"),
+    props: jsonb("props").notNull().default({}),
+    /** The commit the running deploy was built from. */
+    deploy: text("deploy").notNull().default(""),
+    /** Headless Chrome — every CDP verify run. Stored, hidden unless asked for. */
+    synthetic: boolean("synthetic").notNull().default(false),
+  },
+  (table) => ({
+    byTime: index("activity_events_occurred_idx").on(table.occurredAt),
+    byKind: index("activity_events_kind_idx").on(table.kind, table.occurredAt),
+    byRoute: index("activity_events_route_idx").on(table.route, table.occurredAt),
+  })
+)
+
+/** Days older than the raw window, one row per day × kind × route × target × surface × role. */
+export const activityDaily = pgTable(
+  "activity_daily",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    day: date("day").notNull(),
+    kind: text("kind").notNull(),
+    route: text("route").notNull(),
+    target: text("target").notNull().default(""),
+    surface: text("surface").notNull(),
+    role: text("role").notNull(),
+    count: integer("count").notNull().default(0),
+    failed: integer("failed").notNull().default(0),
+    sumMs: bigint("sum_ms", { mode: "number" }).notNull().default(0),
+    p50Ms: integer("p50_ms"),
+    p95Ms: integer("p95_ms"),
+  },
+  (table) => ({
+    key: uniqueIndex("activity_daily_key_idx").on(table.day, table.kind, table.route, table.target, table.surface, table.role),
+  })
+)
+
+export type ActivityEvent = typeof activityEvents.$inferSelect
+export type ActivityDaily = typeof activityDaily.$inferSelect
