@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server"
-import { and, asc, desc, eq, ne } from "drizzle-orm"
+import { and, desc, eq, ne } from "drizzle-orm"
 import { db } from "@/db"
-import { chatMessages, chatThreads } from "@/db/schema"
+import { chatThreads, chatToolCalls } from "@/db/schema"
 import { threadAttachments } from "@/lib/chat/attachment-data"
+import { callSummary } from "@/lib/chat/transcript"
 import { modelFor, type ModelKey } from "@/lib/chat/models"
 import { PERSONAS } from "@/lib/chat/personas"
 import { parseCommand } from "@/lib/chat/skills"
 import { solveBranch, taskBrief } from "@/lib/chat/task-brief"
 import { loadTaskBrief } from "@/lib/chat/task-thread"
-import { claimTurn, markRunning } from "@/lib/chat/turns"
+import { claimHistory, claimTurn, markRunning, reclaimStaleTurns } from "@/lib/chat/turns"
 import { toolSchemas } from "@/lib/chat/tools"
 import {
   authenticateTimeRequest,
@@ -48,13 +49,24 @@ export async function POST(request: Request) {
   const body = await readJson(request)
   const worker = readString(body, "worker") ?? "unknown"
 
-  const turn = await claimTurn(worker)
-  if (!turn) return NextResponse.json({ turn: null }, { status: 200 })
+  // What a dead worker left at claimed/running goes back on the queue first.
+  const reclaimed = await reclaimStaleTurns(worker)
 
-  const history = await db.query.chatMessages.findMany({
-    where: eq(chatMessages.threadId, turn.threadId),
-    orderBy: [asc(chatMessages.createdAt)],
-    limit: 60,
+  const turn = await claimTurn(worker)
+  if (!turn) return NextResponse.json({ turn: null, reclaimed }, { status: 200 })
+
+  // The newest spoken rows, the answered message always among them (lib/chat/turns.ts claimHistory).
+  const history = await claimHistory(turn.threadId, turn.messageId)
+
+  /**
+   * What each earlier reply's tools came to — a task CONFIRMED, a time entry
+   * DISCARDED. The rows are role 'tool' messages the worker drops and
+   * chat_tool_calls it never saw, so the next turn used to re-propose a
+   * write Karol had already confirmed.
+   */
+  const calls = await db.query.chatToolCalls.findMany({
+    where: eq(chatToolCalls.threadId, turn.threadId),
+    columns: { turnId: true, name: true, status: true, mutating: true, preview: true, result: true, error: true },
   })
 
   await markRunning(turn.id)
@@ -141,6 +153,7 @@ export async function POST(request: Request) {
     : []
 
   return NextResponse.json({
+    reclaimed,
     command,
     task,
     persona,
@@ -165,6 +178,7 @@ export async function POST(request: Request) {
       images: attachments
         .filter((a) => a.messageId === m.id)
         .map((a) => ({ id: a.id, name: a.name, mime: a.mime, width: a.width, height: a.height })),
+      calls: m.turnId ? calls.filter((c) => c.turnId === m.turnId).map(callSummary) : [],
     })),
     tools: toolSchemas(),
   })

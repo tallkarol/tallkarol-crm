@@ -118,7 +118,7 @@ export function resultCount(result: unknown): number | null {
   const r = result as Record<string, unknown>
   if (typeof r.total === "number") return r.total
   if (typeof r.count === "number") return r.count
-  for (const k of ["entries", "rows", "sessions", "messages", "items", "matches", "mail", "events", "tasks", "notes", "pins", "boards"]) {
+  for (const k of ["entries", "rows", "sessions", "messages", "items", "matches", "mail", "events", "tasks", "notes", "pins", "boards", "clients", "sites", "meetings", "punches"]) {
     if (Array.isArray(r[k])) return (r[k] as unknown[]).length
   }
   return null

@@ -155,6 +155,7 @@ never writes SQL and cannot reach anything not on this list.
 | `search_work_history` | `ledgerEntries` (`lib/sheets.ts`) | no |
 | `search_sessions` | `searchSessions` (`lib/leftoff-history.ts`) | no |
 | `list_clients` | `clients` + `projects` | no |
+| `list_sites` | `sites` — the slugs `refresh_insights` takes | no |
 | `peek_agent_mailbox` | `peekAgentMailbox` (`lib/inbox-sync.ts`) | no |
 | `list_inbox` | `loadInbox` (`lib/inbox-data.ts`) | no |
 | `read_mail` | `loadInboxMail` / `readAgentMail` | no |
@@ -184,7 +185,7 @@ never writes SQL and cannot reach anything not on this list.
 | `drop_punch` | `dropAnyPunch` — an approved punch's line is deleted | **yes** |
 | `approve_punch` | `approvePunch` | **yes** |
 | `create_task` | `resolveTaskTarget` + `insertTaskRow` | **yes** |
-| `refresh_insights` | `refreshInsightsAction` | **yes** |
+| `refresh_insights` | `refreshInsights` (`lib/insights/refresh.ts`, no session — the action wraps the same lib) | **yes** |
 
 `peek_agent_mailbox` is the live JMAP read of **agent@** — id, headers, and
 snippet, nothing written, nothing sent. `read_mail` opens one of those by
@@ -259,8 +260,8 @@ All on device-token auth (`authenticateTimeRequest`), same as `/api/time/*`.
 | Route | Who calls it |
 |---|---|
 | `POST /api/chat` | phone shortcut, script. Queues a turn, returns the routing decision. |
-| `POST /api/chat/queue` | **worker.** Claims the oldest queued turn, returns thread + tools + model. |
-| `POST /api/chat/turns/[id]` | **worker.** Posts the reply, or an error (with a `detector` to escalate). |
+| `POST /api/chat/queue` | **worker.** Requeues turns a dead worker left, then claims the oldest queued turn and returns thread + tools + model. |
+| `POST /api/chat/turns/[id]` | **worker.** Posts the reply, or an error (with a `detector` to escalate), with its `worker` name. Accepted once: a second or late report answers 409. |
 | `POST /api/chat/approvals/[id]` | confirm or reject a parked write. |
 | `POST /api/chat/pack-writes` | **worker.** Claims the oldest approved pack line (a claim older than five minutes with no outcome is claimable again). |
 | `POST /api/chat/pack-writes/[id]` | **worker.** Reports `{file, commit, changed}` or `{error}` for a claimed pack line. |
@@ -269,7 +270,7 @@ All on device-token auth (`authenticateTimeRequest`), same as `/api/time/*`.
 | `GET /api/chat/threads?agent=&pack=&since=&limit=` | **Mac (`/train`).** A desk's threads with messages, tool-call outcomes and digests. |
 | `GET /api/chat/feedback?agent=&since=` | **Mac (`/train`).** What Karol said about a desk's replies, each with the reply. |
 | `GET /api/clients/[slug]/dossier?since=` | **Mac (`/intake client`).** Sessions, mail, tasks, meetings, tickets and commitment-shaped sentences for one client. |
-| `POST /api/chat/worker` | **worker.** Heartbeat only. Separate from `queue` so a busy worker can say it is alive without claiming more work. |
+| `POST /api/chat/worker` | **worker.** Heartbeat: `{worker, running, commit, startedAt}` — the turn it holds and the commit it runs. Separate from `queue` so a busy worker can say it is alive without claiming more work. |
 | `GET /api/chat/attachments/[id]` | **worker.** A sent screenshot's bytes. Admin device token; unsent pastes 404. |
 
 The browser does not use these — `lib/chat/actions.ts` holds server actions that
@@ -280,16 +281,43 @@ Claiming is a compare-and-swap, not a held transaction: read the oldest queued
 id, update `where id = ? and status = 'queued'`, and an empty result means
 another worker won. The loser takes the next one.
 
+**What the claim carries.** The newest 60 spoken rows (user and assistant;
+tool and system rows are neither spoken nor counted), oldest first, with the
+message being answered always among them — it used to be the oldest 60 of
+every role, so a long thread handed the model everything but the question.
+Each reply carries `calls`: what its tools came to, rendered into the
+transcript as `[did: create_task (Task preview): CONFIRMED by Karol …]`
+(`lib/chat/transcript.ts`, pure, shared with the worker), so a confirmed
+write is not proposed twice and a discarded one is not proposed again. A
+user row a desk handed over (`route_to`) is labelled with the desk's name
+and *not Karol*, in the transcript and in the thread.
+
+**Reporting is once.** `completeTurn` and `failTurn` move the turn by
+compare-and-swap from `queued`/`claimed`/`running`; anything already settled
+answers 409 and changes nothing, and a report that names a `worker` other
+than the claimant is refused. The worker posts its reply with three retries
+and, failing that, spools it under `~/.daedalus/chat-outbox/` and delivers
+it before its next poll — a slow CRM makes a late reply, never a lost one.
+
+**Reclaim.** A turn at `claimed` or `running` whose `claimedBy` is not the
+worker polling now, older than three minutes, and not the turn the last
+heartbeat named as running, goes back to `queued` on the next poll. A
+worker's name is its process, so this is exactly "the process that took it
+is gone" — a `kickstart -k` mid-turn, a crash, a closed laptop. Before this
+such a turn stayed "Working" forever behind a green heartbeat.
+
 ## Checks
 
 | Command | Touches the DB | What it guards |
 |---|---|---|
-| `npm run check:chat` | no | Ladder arithmetic — every rung pair must clear its break-even, rungs must climb in price, nothing escalates without a detector, and Elevate / a forced job cannot steal a locked job's tools. |
-| `npm run check:chat:attachments` | no | Screenshot rules — PNG/JPEG sniffing from the bytes, size caps, safe file names, which images a turn carries and how the transcript numbers them. |
-| `npm run check:chat:db` | yes | The spine end to end: routing, claiming, both kinds of tool, pricing, approval, the escalation chain. Creates one throwaway thread and deletes it. |
+| `npm run check:chat` | no | Ladder arithmetic — every rung pair must clear its break-even, rungs must climb in price, nothing escalates without a detector, and Elevate / a forced job cannot steal a locked job's tools. Also the prose parser (`lib/chat/prose.ts`: headings, nested lists, tables, quotes, fences, italics; only https and CRM paths become links) and the transcript rules. Runs in `prebuild`. |
+| `npm run check:chat:attachments` | no | Screenshot rules — PNG/JPEG sniffing from the bytes, size caps, safe file names, which images a turn carries and how the transcript numbers them. Runs in `prebuild`. |
+| `npm run check:chat:db` | yes | The spine end to end: routing, claiming, both kinds of tool, pricing, approval, the escalation chain, the newest-60 claim, a report accepted once, two confirms at once, archive settling parked cards. Creates throwaway threads and deletes them in a `finally`. |
 
 `check:chat:db` rejects the write it proposes rather than confirming it, so it
-never creates a time entry or a task.
+never creates a time entry or a task. Its claims are scoped to its own thread
+(`claimTurn(…, { onlyThreadId })`), so it cannot take a real queued turn off
+the queue while the launchd worker is running.
 
 ## Running the worker
 
@@ -305,6 +333,13 @@ npm run chat:worker
 |---|---|
 | `CRM_URL` | Defaults to `http://localhost:3001`. |
 | `CRM_DEVICE_TOKEN` | Required. Settings → Devices. |
+
+The worker reads **only these keys** (`loadWorkerEnv` in `lib/load-env.ts`,
+from `~/.daedalus/chat-worker.env` if present, else the checkout's
+`.env.local`). It never loads `DATABASE_URL`, `VAULT_SECRET` or the Google
+key: a skill turn's shell inherits this process's environment, and the trust
+story above is only true if the secrets are not in it. `npm run chat:worker`
+no longer passes `--env-file` for the same reason.
 | `CURSOR_API_KEY` | Cursor SDK auth. |
 | `CHAT_WORKER_NAME` | Shows in `chat_turns.claimedBy`. Defaults to `mac-<pid>`. |
 | `CHAT_WORKER_REPO` | Repo the agent runs against, for jobs that touch code. |
@@ -512,7 +547,15 @@ MEETING-NOTES.md.
 
 `lib/chat/worker-status.ts` keeps a heartbeat in `app_settings` under
 `chat_worker`, and the chat page swaps the "Working…" dots for a plain notice
-when the last beat is over twenty seconds old.
+when the last beat is over twenty seconds old — whatever the turn's status,
+since a turn a dead worker left at `running` is exactly that case. The beat
+also carries the turn the worker holds (what the reclaim rule spares) and
+the commit its checkout was on when it started; when Railway's commit
+differs, the worker is outdated and needs
+`launchctl kickstart -k gui/$(id -u)/com.tallkarol.chat-worker` (DEPLOY.md
+§10). The worker's log stamps every line and, when the CRM is unreachable,
+backs off from 2.5 s to a minute and writes one line per change of state
+instead of one per poll.
 
 The beat runs on a **timer in the worker, not its poll loop**. A worker
 running a two-minute turn polls the queue zero times, so a poll-based signal
@@ -536,9 +579,12 @@ never scrolls away, the thread on the right, only the thread scrolling.
 an amber "Needs you" on any thread with a write parked, an Archived group
 folded at the bottom, and four vendor usage bars under the list (Claude
 weekly Fable / other, Cursor monthly Grok / Other). Archive is the
-box icon in the thread header; it stamps `archivedAt` and nothing else, so
-Restore (same spot, on an archived thread) or simply sending into the
-thread brings it back. Nothing is ever deleted. *Skills* — every command, skill and agent from the
+box icon in the thread header; it stamps `archivedAt` and settles any card
+still parked in the thread as *skipped* ("Thread archived before a
+decision") — a record, nothing run — so no "Needs you" can point into a
+folded group. Restore (same spot, on an archived thread) or simply sending
+into the thread brings it back; a skipped card needs a new proposal. Nothing
+is ever deleted. *Skills* — every command, skill and agent from the
 committed hive-mind scan, grouped by lane; a row opens to what it is and
 what to type, and each form either drops into the composer with its blank
 selected or, when it needs no argument, sends. The tab is remembered per
@@ -548,10 +594,22 @@ browser.
 canvas with the model that answered beside the name. Reads show as chips
 (`peek_agent_mailbox · 6`), writes as the approval card, and the rungs a
 question climbed as a footnote with cost and time. Failed reads and failed
-writes stay visible as what they are.
+writes stay visible as what they are. A reply shows every rung's calls; a
+question whose turn failed or is still running shows its own under the
+bubble, so a card parked in a rung that then failed can still be decided.
+When one reply parks several cards, a bar above them offers *Confirm all N*
+/ *Discard all* — each still decided by its own compare-and-swap. A line a
+desk handed over renders in a muted bubble under the desk's name, never as
+Karol's. Replies render through `lib/chat/prose.ts`: headings with their
+paragraph, nested bullets and checkboxes, pipe tables, blockquotes, fenced
+code, bold and italics, and links — `https://` URLs and paths into the CRM
+only; anything else stays text and nothing is ever parsed as HTML.
 
 **The composer.** Enter sends, Shift+Enter breaks a line, `/` opens the
-palette over the commands. The sidebar and the empty-thread starters reach
+palette over the commands. The box and the screenshot tray clear only once
+the CRM has accepted the message; a refused send leaves both in place under
+the error. A rail form or a starter that sends carries whatever is in the
+tray. The sidebar and the empty-thread starters reach
 the box through a window event (`components/chat/compose-bus.ts`), the same
 idiom as the dashboard's left-off board.
 

@@ -27,6 +27,10 @@ const VERB: Record<string, string> = {
   reschedule_task: "Reschedule it",
   propose_pack_line: "Write it to the pack",
   route_to: "Hand it over",
+  edit_punch: "Change the punch",
+  split_punch: "Split the punch",
+  drop_punch: "Drop the punch",
+  approve_punch: "Approve the punch",
 }
 
 const TAG: Record<ChatToolCall["status"], { label: string; className: string }> = {
@@ -173,7 +177,9 @@ export function ApprovalCard({ call }: { call: ChatToolCall }) {
                   ? "Discarded. Nothing was written."
                   : call.status === "failed"
                     ? "The write failed. Nothing landed."
-                    : tag.label}
+                    : call.status === "skipped"
+                      ? call.error || "Skipped. Nothing was written."
+                      : tag.label}
           </span>
           {call.status === "failed" ? (
             <button

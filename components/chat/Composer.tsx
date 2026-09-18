@@ -28,7 +28,8 @@ export function Composer({
   error,
   autoFocus,
 }: {
-  onSend: (text: string, ladder?: LadderPick, attachmentIds?: string[]) => void
+  /** Resolves true when the message was accepted; the box and the tray clear only then. */
+  onSend: (text: string, ladder?: LadderPick, attachmentIds?: string[]) => Promise<boolean> | boolean | void
   busy: boolean
   error: string | null
   autoFocus?: boolean
@@ -61,14 +62,19 @@ export function Composer({
   useEffect(() => {
     return onCompose((request) => {
       if (request.send) {
-        onSend(request.text, ladder)
+        // A rail form or a starter sends with whatever is in the tray — it
+        // used to send without the ids and leave the pictures stranded.
+        const ids = images.readyIds
+        void Promise.resolve(onSend(request.text, ladder, ids)).then((ok) => {
+          if (ok !== false) images.clear()
+        })
         return
       }
       insert(request.text)
     })
     // onSend is stable enough: the parent re-creates it only with the thread.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onSend, ladder])
+  }, [onSend, ladder, images.readyIds])
 
   function insert(value: string) {
     setText(value)
@@ -88,12 +94,20 @@ export function Composer({
     insert(first ? first.text : `${doc.label} `)
   }
 
+  /**
+   * Clear only once the CRM has the message. A refused send — a session that
+   * expired, a screenshot that was swept — used to cost the text and the
+   * tray both; now they stay put under the error, ready to send again.
+   */
   function submit() {
     if (empty || blocked) return
     const ids = images.readyIds
-    setText("")
-    images.clear()
-    onSend(text.trim(), ladder, ids)
+    const body = text.trim()
+    void Promise.resolve(onSend(body, ladder, ids)).then((ok) => {
+      if (ok === false) return
+      setText("")
+      images.clear()
+    })
   }
 
   return (

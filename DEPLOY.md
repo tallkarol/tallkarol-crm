@@ -227,3 +227,35 @@ a deploy, and being unable to ship during an incident is its own failure, so
 through — still printing every entry it found missing. Use it to get back up
 with a schema you know is incomplete, then take the variable off. Leaving it
 set turns the check back into the silence it was written to end.
+
+## 10. Chat worker — restart it after a deploy that touches chat
+
+The worker (`scripts/chat-worker.ts`) is not deployed. launchd runs it from
+the checkout on Karol's Mac and it loads its code once, at start. After a
+deploy that changes anything the worker imports — `scripts/chat-worker.ts`,
+`lib/chat/attachments.ts`, `lib/chat/transcript.ts`, `lib/chat/pack-lines.ts`,
+`lib/chat/reply-actions.ts`, `lib/chat/task-brief.ts`, `lib/load-env.ts` — it
+keeps running the old code against the new CRM until it is restarted. On
+Sep 11–17, 2026 it ran six days on code that predated screenshot support,
+so a pasted picture was stored and listed in the claim and the model never
+saw it, with no error anywhere.
+
+```sh
+git -C ~/Work/tallkarol/crm pull            # the checkout is what launchd runs
+launchctl kickstart -k gui/$(id -u)/com.tallkarol.chat-worker
+tail -n 3 ~/Library/Logs/tallkarol/chat-worker.log   # "chat worker mac-<pid> → https://crm.tallkarol.com (commit <sha> …)"
+```
+
+Kick it when no turn is mid-flight: the heartbeat now carries the turn the
+worker holds, and a turn whose worker died is put back on the queue after
+three minutes, so a bad moment costs a re-run, not a lost question. The
+worker also sends the commit it runs; when Railway's commit differs the chat
+header shows the worker as outdated.
+
+The worker reads only its own keys (`lib/load-env.ts` `loadWorkerEnv`):
+`CRM_URL`, `CRM_DEVICE_TOKEN`, `CURSOR_API_KEY`, `CHAT_WORKER_*`,
+`DAEDALUS_*` — from `~/.daedalus/chat-worker.env` if it exists, else from the
+checkout's `.env.local`. It never loads `DATABASE_URL` or `VAULT_SECRET`:
+a skill turn's shell inherits the worker's environment, and the whole trust
+story in CHAT.md is that the Mac holds a device token and nothing else.
+

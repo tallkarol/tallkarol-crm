@@ -19,6 +19,8 @@ import {
   type ReplyActionContext,
 } from "@/lib/chat/reply-actions"
 import { BRIEF_PREFIX, TITLE_MAX, solveBranch, taskBrief } from "@/lib/chat/task-brief"
+import { inlineText, linkNode, parseInline, parseProse } from "@/lib/chat/prose"
+import { callsNote, callSummary, resultSummary, speaker, transcriptText } from "@/lib/chat/transcript"
 
 /**
  * Guards the routing table.
@@ -410,6 +412,92 @@ console.log("✓ the dock fronts the right desk per page")
   }
   if (isLadderPick("nope") || isLadderPick(undefined)) fail("a junk pick was accepted")
   console.log("✓ Auto / Elevate / a forced job keep locked jobs on their own tools")
+}
+
+/* 8. Prose: the constructs the models actually emit parse to the right blocks, and
+      nothing becomes an href unless it is https or a CRM path. */
+{
+  const doc = parseProse(
+    [
+      "## Topics",
+      "First point here.",
+      "",
+      "- one",
+      "- two",
+      "  - two a",
+      "  - two b",
+      "- [x] done",
+      "",
+      "| Site | Score |",
+      "|---|---|",
+      "| zemvelo | 98 |",
+      "",
+      "> quoted line",
+      "",
+      "```sql",
+      "select 1",
+      "```",
+      "",
+      "See /tasks/abc-123 and [the doc](/doc/reports/x). Not <img src=x> nor [evil](javascript:alert(1)) nor http://plain.example.",
+      "",
+      "This is *italic* and _also_ italic, but snake_case_name is not.",
+      "---",
+      "Visit https://example.com/path.",
+    ].join("\n")
+  )
+  const kinds = doc.map((b) => b.kind).join(",")
+  const want = "heading,paragraph,list,table,quote,code,paragraph,paragraph,rule,paragraph"
+  if (kinds !== want) fail(`prose blocks: ${kinds} (wanted ${want})`)
+  const list = doc[2]
+  if (list.kind !== "list" || list.items.length !== 3 || list.items[1].sub?.items.length !== 2 || list.items[2].checked !== true) {
+    fail(`prose list nesting/tasks wrong: ${JSON.stringify(list).slice(0, 200)}`)
+  }
+  const table = doc[3]
+  if (table.kind !== "table" || table.header.length !== 2 || table.rows.length !== 1 || inlineText(table.rows[0][1]) !== "98") {
+    fail("prose table not parsed")
+  }
+  const code = doc[5]
+  if (code.kind !== "code" || code.language !== "sql" || code.text !== "select 1") fail("prose fence not parsed")
+  const links = doc[6]
+  const hrefs = links.kind === "paragraph" ? links.children.filter((n) => n.kind === "link").map((n) => (n.kind === "link" ? n.href : "")) : []
+  if (hrefs.join(" ") !== "/tasks/abc-123 /doc/reports/x") fail(`prose links: ${hrefs.join(" ")}`)
+  if (links.kind === "paragraph" && !inlineText(links.children).includes("<img src=x>")) fail("prose must keep HTML as text")
+  const em = doc[7]
+  const italics = em.kind === "paragraph" ? em.children.filter((n) => n.kind === "italic").length : 0
+  if (italics !== 2) fail(`prose italics: ${italics} (wanted 2; snake_case must not italicise)`)
+  const ext = doc[9]
+  const extHref = ext.kind === "paragraph" ? ext.children.find((n) => n.kind === "link") : null
+  if (!extHref || extHref.kind !== "link" || extHref.href !== "https://example.com/path" || !extHref.external) fail("prose https autolink wrong")
+  if (linkNode("javascript:alert(1)", []) !== null || linkNode("/nope/x", []) !== null || linkNode("http://x.y", []) !== null) {
+    fail("linkNode let an unsafe or unknown href through")
+  }
+  if (parseInline("`a|b`").length !== 1) fail("inline code must survive a pipe")
+  console.log("✓ prose parses headings, nested lists, tables, quotes, fences, links and italics; hrefs stay narrow")
+}
+
+/* 9. Transcript: a confirmed write is named as confirmed, a handed brief is not Karol. */
+{
+  const call = callSummary({ name: "create_task", status: "ran", mutating: true, preview: { title: "Task preview" }, result: { taskId: "12345678-abcd", title: "Call DQS" } })
+  const note = callsNote([call, { name: "log_time", status: "rejected", mutating: true }, { name: "list_tasks", status: "ran", mutating: false }])
+  if (!/create_task \(Task preview\): CONFIRMED/.test(note) || !/log_time: DISCARDED/.test(note) || !/1 read/.test(note)) {
+    fail(`callsNote: ${note}`)
+  }
+  if (!/taskId 12345678/.test(note) || !/Call DQS/.test(note)) fail(`callsNote result summary: ${note}`)
+  if (resultSummary({ sessions: [1, 2, 3], total: 47000 }) !== "total 47000") fail("resultSummary must not dump arrays")
+  if (speaker({ role: "user", agent: "Karol" }) !== "Karol" || speaker({ role: "user", agent: "" }) !== "Karol") fail("speaker: Karol")
+  if (!/not Karol/.test(speaker({ role: "user", agent: "Client manager" }))) fail("speaker: a handed brief must not read as Karol")
+  const text = transcriptText(
+    [
+      { role: "user", agent: "Karol", body: "file it", at: "" },
+      { role: "assistant", agent: "Assistant", body: "Proposed.", at: "", calls: [call] },
+      { role: "tool", agent: "create_task", body: "{}", at: "" },
+    ],
+    []
+  )
+  if (!text.startsWith("Karol: file it") || !/You: Proposed\.\n\[did: /.test(text) || /create_task: \{\}/.test(text)) {
+    fail(`transcriptText: ${text}`)
+  }
+  console.log("✓ transcript names confirmed and discarded writes and never lets a handed line speak as Karol")
 }
 
 /* Report the economics so a change to the table is legible in the diff. */

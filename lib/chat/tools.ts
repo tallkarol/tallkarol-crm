@@ -15,7 +15,7 @@ import {
   str,
   type ToolSpec,
 } from "@/lib/chat/tool-helpers"
-import { refreshInsightsAction } from "@/lib/insights/actions"
+import { refreshInsights as refreshInsightsForSite } from "@/lib/insights/refresh"
 import { logAgentTime } from "@/lib/punches"
 import { ledgerEntries } from "@/lib/sheets"
 import { searchSessions } from "@/lib/leftoff-history"
@@ -185,7 +185,13 @@ const logTime: ToolSpec = {
     const client = slug
       ? await db.query.clients.findFirst({ where: eq(clients.slug, slug) })
       : null
+    // The same refusals run() makes, made here — before Karol sees a card.
+    const occurredOn = str(args, "occurredOn")
+    if (!occurredOn || !ISO_DAY.test(occurredOn)) throw new Error("`occurredOn` must be YYYY-MM-DD.")
     const hours = num(args, "hours") ?? 0
+    if (hours <= 0 || hours > 24) throw new Error("`hours` must be between 0 and 24.")
+    if (!str(args, "summary")) throw new Error("`summary` is required.")
+    if (!client) throw new Error(`No client with slug "${slug ?? ""}". Call list_clients and use a slug from it.`)
     return {
       title: "Time entry preview",
       fields: [
@@ -256,12 +262,18 @@ const createTask: ToolSpec = {
     const client = slug
       ? await db.query.clients.findFirst({ where: eq(clients.slug, slug) })
       : null
+    if (!str(args, "title")) throw new Error("`title` is required.")
+    if (slug && !client) throw new Error(`No client with slug "${slug}". Call list_clients and use a slug from it.`)
+    // A due date that is not a day would file as no due date at all; the
+    // card must not say "Due: next friday" and then write NULL.
+    const dueOn = str(args, "dueOn")
+    if (dueOn && !ISO_DAY.test(dueOn)) throw new Error("`dueOn` must be YYYY-MM-DD.")
     return {
       title: "Task preview",
       fields: [
         { label: "Title", value: str(args, "title") ?? "—" },
         { label: "Client", value: client?.name ?? slug ?? "—" },
-        { label: "Due", value: str(args, "dueOn") ?? "—" },
+        { label: "Due", value: dueOn ?? "—" },
         { label: "Notes", value: str(args, "notes") ?? "—" },
       ],
     }
@@ -279,11 +291,13 @@ const createTask: ToolSpec = {
     if ("error" in target) throw new Error(target.error)
 
     const priority = num(args, "priority")
+    const dueOn = str(args, "dueOn")
+    if (dueOn && !ISO_DAY.test(dueOn)) throw new Error("`dueOn` must be YYYY-MM-DD.")
     const id = await insertTaskRow(db, {
       title: title.slice(0, 300),
       userId: ctx.userId,
       target,
-      dueOn: str(args, "dueOn") ?? null,
+      dueOn: dueOn ?? null,
       notes: str(args, "notes") ?? "",
       priority: priority && [1, 2, 3].includes(priority) ? priority : 2,
       source: "chat",
@@ -365,9 +379,11 @@ const refreshInsights: ToolSpec = {
   async run(args) {
     const slug = str(args, "siteSlug")
     if (!slug) throw new Error("`siteSlug` is required.")
-    const result = await refreshInsightsAction(slug)
+    // The lib, not the server action: an approval through the device-token
+    // route has no browser session, and the action refused it every time.
+    const result = await refreshInsightsForSite(slug)
     if (!result.ok) throw new Error(result.error)
-    return { refreshed: slug }
+    return { refreshed: result.site.slug, site: result.site.name }
   },
 }
 

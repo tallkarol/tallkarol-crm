@@ -1,9 +1,10 @@
-import { eq } from "drizzle-orm"
+import { eq, inArray } from "drizzle-orm"
 import { db } from "@/db"
-import { chatThreads, chatTurns, clients, tasks, users } from "@/db/schema"
+import { chatMessages, chatThreads, chatTurns, clients, tasks, users } from "@/db/schema"
 import { budgetState, formatCents } from "@/lib/chat/budget"
 import { classify } from "@/lib/chat/turns"
 import {
+  claimHistory,
   claimTurn,
   completeTurn,
   decideToolCall,
@@ -12,8 +13,11 @@ import {
   invokeTool,
   latestThreadFor,
   send,
+  staleTurnIds,
+  setThreadArchived,
   threadDetail,
 } from "@/lib/chat/turns"
+import { CLAIM_MESSAGES } from "@/lib/chat/transcript"
 import { leaveFeedback } from "@/lib/chat/feedback"
 import { startTaskThread, threadForTask } from "@/lib/chat/task-thread"
 import { PERSONAL_CALENDAR_ID, pickCalendarSource } from "@/lib/calendar-write"
@@ -28,16 +32,26 @@ import { insertTaskRow } from "@/lib/task-insert"
  * chain — the parts that only fail once Postgres is involved, which no amount
  * of typechecking catches.
  *
- * It WRITES: one throwaway thread, deleted on the way out along with
- * everything that cascades from it. Nothing else in the schema is touched, and
- * the one write tool it exercises is rejected rather than confirmed, so no
- * time entry or task is ever created.
+ * It WRITES: throwaway threads and two scratch tasks, deleted on the way out
+ * — in a `finally`, so a failing check cannot leave "smoke test — delete me"
+ * on Karol's board. Nothing else in the schema is touched, and every write
+ * tool it exercises is rejected rather than confirmed, so no time entry or
+ * task is ever created. Claims are scoped to its own thread
+ * (`claimTurn(…, { onlyThreadId })`), so a real queued turn is never taken.
  */
 
 let failures = 0
 function check(label: string, ok: boolean, detail = "") {
   if (!ok) failures++
   console.log(`${ok ? "✓" : "✗"} ${label}${detail ? ` — ${detail}` : ""}`)
+}
+
+/** Everything this run made, for the finally. */
+const made = { threads: new Set<string>(), tasks: new Set<string>() }
+
+async function cleanup() {
+  if (made.tasks.size) await db.delete(tasks).where(inArray(tasks.id, Array.from(made.tasks)))
+  if (made.threads.size) await db.delete(chatThreads).where(inArray(chatThreads.id, Array.from(made.threads)))
 }
 
 async function main() {
@@ -47,6 +61,20 @@ async function main() {
 
   const client = await db.query.clients.findFirst()
   const slug = client?.slug ?? "unknown"
+  try {
+    await run(admin, client, slug)
+  } finally {
+    await cleanup()
+  }
+  console.log(failures === 0 ? "\nall good" : `\n${failures} failed`)
+  process.exit(failures === 0 ? 0 : 1)
+}
+
+async function run(
+  admin: { id: string; email: string },
+  client: { id: string; slug: string } | undefined,
+  slug: string
+) {
 
   /* --- routing --- */
   check("classify: work history → chat", classify("what did I work on for x in june") === "chat")
@@ -71,19 +99,62 @@ async function main() {
 
   /* --- send --- */
   const first = await send({
+    hold: "smoke",
     userId: admin.id,
     text: `what did I work on for ${slug} in June 2026`,
   })
   const threadId = first.threadId
-  check("send queued a turn", first.turn.status === "queued")
+  made.threads.add(threadId)
+  check("send made a turn", first.turn.status === "queued" || first.turn.status === "claimed")
   check("routed to the chat rung", first.turn.model === "composer-2.5", first.turn.model)
   check("billed to the cursor pool", first.turn.pool === "cursor")
 
-  /* --- claim --- */
-  const claimed = await claimTurn("smoke")
-  check("worker claimed a turn", claimed?.id === first.turn.id)
-  const second = await claimTurn("smoke")
-  check("queue empties after claim", second === null || second.id !== first.turn.id)
+  check("send queued it pre-claimed for this script (`hold`)", first.turn.status === "claimed" && first.turn.claimedBy === "smoke")
+
+  /* --- claim ---
+     A real queued row races the launchd worker (it polls production every
+     2.5 s), so the claim is exercised on a scratch row and reported as
+     skipped, not failed, when the live worker got there first. */
+  const [scratch] = await db
+    .insert(chatTurns)
+    .values({ threadId, messageId: first.messageId, status: "queued", claimedBy: "smoke", jobType: "chat", model: "composer-2.5", pool: "cursor", rung: 0 })
+    .returning()
+  const claimed = await claimTurn("smoke", { onlyThreadId: threadId })
+  if (claimed?.id === scratch.id) {
+    check("worker claimed a turn", true)
+    check("queue empties after claim", (await claimTurn("smoke", { onlyThreadId: threadId })) === null)
+  } else {
+    const row = await db.query.chatTurns.findFirst({ where: eq(chatTurns.id, scratch.id) })
+    console.log(`- claim skipped: the live worker (${row?.claimedBy || "?"}) took the scratch turn first`)
+  }
+  await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.id, scratch.id))
+
+  /* --- a turn a dead worker left behind goes back on the queue --- */
+  const [ghost] = await db
+    .insert(chatTurns)
+    .values({
+      threadId,
+      messageId: first.messageId,
+      status: "running",
+      claimedBy: "mac-ghost",
+      claimedAt: new Date(Date.now() - 4 * 60_000),
+      startedAt: new Date(Date.now() - 4 * 60_000),
+      jobType: "chat",
+      model: "composer-2.5",
+      pool: "cursor",
+      rung: 0,
+    })
+    .returning()
+  // The selector, not the update: a requeued row would sit open to the live worker for a moment.
+  const stale = await staleTurnIds("smoke")
+  check("a stale running turn is due for requeue", stale.includes(ghost.id))
+  await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.id, ghost.id))
+  const [fresh] = await db
+    .insert(chatTurns)
+    .values({ threadId, messageId: first.messageId, status: "claimed", claimedBy: "mac-alive", claimedAt: new Date(), jobType: "chat", model: "composer-2.5", pool: "cursor", rung: 0 })
+    .returning()
+  check("a turn claimed a moment ago is left alone", !(await staleTurnIds("smoke")).includes(fresh.id))
+  await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.id, fresh.id))
 
   /* --- read tools --- */
   const history = await invokeTool({
@@ -233,6 +304,7 @@ async function main() {
     },
     source: "manual",
   })
+  made.tasks.add(rescheduleScratch)
   const reschedule = await invokeTool({
     userId: admin.id,
     turnId: first.turn.id,
@@ -246,14 +318,38 @@ async function main() {
   )
   await db.delete(tasks).where(eq(tasks.id, rescheduleScratch))
 
-  /* --- completing prices the turn --- */
+  /* --- completing prices the turn, once, and only from the claimant --- */
+  const impostor = await completeTurn({ turnId: first.turn.id, body: "not mine", worker: "someone-else" })
+  check("a report from another worker is refused", !impostor.ok, impostor.ok ? "" : impostor.reason)
   const done = await completeTurn({
     turnId: first.turn.id,
     body: "Here is what I found.",
+    worker: "smoke",
     usage: { inputTokens: 12_000, outputTokens: 800, cacheReadTokens: 4_000, cacheWriteTokens: 0 },
   })
   // composer-2.5: 12k@$0.50 + 0.8k@$2.50 + 4k@$0.20 = $0.0088 = 0.88c
-  check("turn priced from the registry", Math.abs(done.costCents - 0.88) < 0.01, `${done.costCents.toFixed(4)}c`)
+  check("turn priced from the registry", done.ok && Math.abs(done.costCents - 0.88) < 0.01, done.ok ? `${done.costCents.toFixed(4)}c` : done.reason)
+  const twice = await completeTurn({ turnId: first.turn.id, body: "Here it is again.", worker: "smoke" })
+  check("a second report is refused, not double-posted", !twice.ok)
+  check("an error after a success cannot flip the turn", (await failTurn(first.turn.id, "late", "smoke")) === false)
+  const replies = (await threadDetail(admin.id, threadId))?.messages.filter((m) => m.role === "assistant" && m.turnId === first.turn.id) ?? []
+  check("exactly one reply for the turn", replies.length === 1, String(replies.length))
+
+  /* --- the claim carries the newest rows, the answered message among them --- */
+  await db.insert(chatMessages).values(
+    Array.from({ length: CLAIM_MESSAGES + 5 }, (_, i) => ({
+      threadId,
+      role: (i % 2 === 0 ? "user" : "assistant") as "user" | "assistant",
+      agent: i % 2 === 0 ? "Karol" : "Assistant",
+      body: `filler ${i}`,
+    }))
+  )
+  const late = await send({ hold: "smoke", userId: admin.id, threadId, text: "and the newest question?" })
+  await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.id, late.turn.id))
+  const carried = await claimHistory(threadId, late.messageId)
+  check(`claim carries at most ${CLAIM_MESSAGES} spoken rows`, carried.length <= CLAIM_MESSAGES, String(carried.length))
+  check("the newest message is the last one in the claim", carried[carried.length - 1]?.id === late.messageId)
+  check("no tool or system rows in the claim", carried.every((m) => m.role === "user" || m.role === "assistant"))
 
   /* --- rejecting a write leaves nothing behind --- */
   const detail = await threadDetail(admin.id, threadId)
@@ -273,9 +369,18 @@ async function main() {
     })
     check("a settled call cannot be re-run", !again.ok)
   }
+  // A different pending card than the one just rejected — that row is settled.
+  const twoAtOnce = (detail?.calls ?? []).filter((c) => c.status === "pending" && c.id !== pending?.id)[0]
+  if (twoAtOnce) {
+    const race = await Promise.all([
+      decideToolCall({ userId: admin.id, callId: twoAtOnce.id, approve: false }),
+      decideToolCall({ userId: admin.id, callId: twoAtOnce.id, approve: false }),
+    ])
+    check("two decisions at once: exactly one lands", race.filter((r) => r.ok).length === 1)
+  }
 
   /* --- escalation --- */
-  const debug = await send({ userId: admin.id, threadId, text: "why is the UWD build still failing" })
+  const debug = await send({ hold: "smoke", userId: admin.id, threadId, text: "why is the UWD build still failing" })
   check("debug routed to the top Cursor rung", debug.turn.model === "grok-4.6-xhigh", debug.turn.model)
 
   await failTurn(debug.turn.id, "repro still fails")
@@ -308,7 +413,9 @@ async function main() {
     notes: "Throwaway row from check:chat:db.",
     source: "manual",
   })
+  made.tasks.add(tmpTask)
   const started = await startTaskThread(admin.id, tmpTask)
+  made.threads.add(started.threadId)
   // Park the turn before a live worker can claim it and cut a worktree for a smoke test.
   await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, started.threadId))
   const taskThread = await threadDetail(admin.id, started.threadId)
@@ -323,9 +430,9 @@ async function main() {
   check("task ladder's rung", taskThread?.turns[0]?.model === "grok-4.6-high", taskThread?.turns[0]?.model)
   const again = await startTaskThread(admin.id, tmpTask)
   check("second click lands in the same thread", again.threadId === started.threadId && !again.created)
-  const followUp = await send({ userId: admin.id, threadId: started.threadId, text: "try the other approach" })
+  const followUp = await send({ hold: "smoke", userId: admin.id, threadId: started.threadId, text: "try the other approach" })
   check("follow-up stays on the task ladder", followUp.turn.jobType === "task", followUp.turn.jobType)
-  const cmd = await send({ userId: admin.id, threadId: started.threadId, text: "/clock status" })
+  const cmd = await send({ hold: "smoke", userId: admin.id, threadId: started.threadId, text: "/clock status" })
   check("a /command still wins inside a task thread", cmd.turn.jobType === "skill", cmd.turn.jobType)
   await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, started.threadId))
   const state = await threadForTask(tmpTask)
@@ -336,7 +443,8 @@ async function main() {
   check("task thread cleaned up", (await threadForTask(tmpTask)) === null)
 
   /* --- a thread addressed to a desk --- */
-  const coach = await send({ userId: admin.id, text: "@coach how am I doing this week" })
+  const coach = await send({ hold: "smoke", userId: admin.id, text: "@coach how am I doing this week" })
+  made.threads.add(coach.threadId)
   await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, coach.threadId))
   const addressed = await db.query.chatThreads.findFirst({ where: eq(chatThreads.id, coach.threadId) })
   check(
@@ -373,7 +481,10 @@ async function main() {
   check("rejected before the Mac could land it", settled?.ok === true && settled.call.status === "rejected")
 
   /* --- feedback lands on the reply, filed under the desk --- */
-  const replied = await completeTurn({ turnId: coach.turn.id, body: "Thin week. Say no if Monday still stands.", agent: "Coach" })
+  // The turn was parked as cancelled above; take it back as a claim so a report may land.
+  await db.update(chatTurns).set({ status: "claimed", claimedBy: "smoke" }).where(eq(chatTurns.id, coach.turn.id))
+  const replied = await completeTurn({ turnId: coach.turn.id, body: "Thin week. Say no if Monday still stands.", agent: "Coach", worker: "smoke" })
+  if (!replied.ok) throw new Error(`could not complete the coach turn: ${replied.reason}`)
   const fb = await leaveFeedback({ userId: admin.id, messageId: replied.messageId, kind: "down", note: "smoke — too terse" })
   check("feedback carries the desk and pack", fb.agent === "coach" && fb.pack === "me" && fb.kind === "down")
   let refusedUser = false
@@ -393,6 +504,7 @@ async function main() {
   })
   check("coach cannot hand to anyone", noEdge.status === "failed", JSON.stringify(noEdge).slice(0, 120))
   const handed = await send({
+    hold: "smoke",
     userId: admin.id,
     threadId: coach.threadId,
     text: `@client-manager ${slug} what did we promise them`,
@@ -424,10 +536,11 @@ async function main() {
     const dropped = await decideToolCall({ userId: admin.id, callId: handoffCall.id, approve: false })
     check("handoff rejected, no thread opened", dropped.ok && dropped.call.status === "rejected")
   }
-  const plain = await send({ userId: admin.id, threadId: coach.threadId, text: "and what is due?" })
+  const plain = await send({ hold: "smoke", userId: admin.id, threadId: coach.threadId, text: "and what is due?" })
   await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, coach.threadId))
   check("the thread keeps its desk", plain.turn.jobType === "persona", plain.turn.jobType)
   const po = await send({
+    hold: "smoke",
     userId: admin.id,
     threadId: coach.threadId,
     text: "/as product-owner nosuchproduct what comes next",
@@ -442,10 +555,12 @@ async function main() {
   check("the product owner runs on judgment", po.turn.jobType === "judgment", po.turn.jobType)
   /* --- the dock addresses a desk without the grammar, and continues its latest thread --- */
   const docked = await send({
+    hold: "smoke",
     userId: admin.id,
     text: "what's due before the call?",
     desk: { agent: "client-manager", pack: `clients/${slug}` },
   })
+  made.threads.add(docked.threadId)
   await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, docked.threadId))
   const dockedThread = await db.query.chatThreads.findFirst({ where: eq(chatThreads.id, docked.threadId) })
   check(
@@ -457,14 +572,14 @@ async function main() {
   check("latestThreadFor finds the dock's thread", latest?.id === docked.threadId)
   let wrongKind = false
   try {
-    await send({ userId: admin.id, threadId: docked.threadId, text: "x", desk: { agent: "product-owner", pack: `clients/${slug}` } })
+    await send({ hold: "smoke", userId: admin.id, threadId: docked.threadId, text: "x", desk: { agent: "product-owner", pack: `clients/${slug}` } })
   } catch {
     wrongKind = true
   }
   check("a desk cannot be pinned to a pack of the wrong kind", wrongKind)
   await db.delete(chatThreads).where(eq(chatThreads.id, docked.threadId))
 
-  const cmd2 = await send({ userId: admin.id, threadId: coach.threadId, text: "/clock status" })
+  const cmd2 = await send({ hold: "smoke", userId: admin.id, threadId: coach.threadId, text: "/clock status" })
   await db.update(chatTurns).set({ status: "cancelled" }).where(eq(chatTurns.threadId, coach.threadId))
   check("a /command still wins inside a desk thread", cmd2.turn.jobType === "skill", cmd2.turn.jobType)
   await db.delete(chatThreads).where(eq(chatThreads.id, coach.threadId))
@@ -477,13 +592,31 @@ async function main() {
     `other ${formatCents(budget.other.spentCents)}, cursor ${formatCents(budget.cursor.spentCents)}`
   )
 
-  /* --- cleanup --- */
+  /* --- archiving settles what was still parked --- */
+  const parkedLate = await invokeTool({
+    userId: admin.id,
+    turnId: late.turn.id,
+    name: "create_task",
+    args: { title: "smoke test — delete me", clientSlug: slug },
+  })
+  check("a card parks before the archive test", parkedLate.status === "pending")
+  const archived = await setThreadArchived(admin.id, threadId, true)
+  check("archiving skips the parked card", archived.skipped >= 1, String(archived.skipped))
+  const afterArchive = await threadDetail(admin.id, threadId)
+  check(
+    "no card left pending in an archived thread",
+    (afterArchive?.calls ?? []).every((c) => c.status !== "pending")
+  )
+
+  /* --- cleanup (the finally does it; this proves the cascade) --- */
   await db.delete(chatThreads).where(eq(chatThreads.id, threadId))
+  made.threads.delete(threadId)
   const gone = await threadDetail(admin.id, threadId)
   check("cascade cleaned the thread up", gone === null)
-
-  console.log(failures === 0 ? "\nall good" : `\n${failures} failed`)
-  process.exit(failures === 0 ? 0 : 1)
 }
 
-void main()
+main().catch(async (err) => {
+  console.error(err instanceof Error ? err.stack ?? err.message : String(err))
+  await cleanup().catch(() => {})
+  process.exit(1)
+})

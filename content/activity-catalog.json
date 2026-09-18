@@ -282,7 +282,7 @@
     }
   ],
   "actions": {
-    "total": 186,
+    "total": 187,
     "wrapped": 69,
     "files": [
       {
@@ -407,7 +407,7 @@
       },
       {
         "file": "lib/chat/actions.ts",
-        "total": 7,
+        "total": 8,
         "wrapped": 0
       },
       {

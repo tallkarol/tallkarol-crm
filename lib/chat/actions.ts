@@ -84,13 +84,13 @@ export async function renameThread(input: {
 export async function archiveThread(input: {
   threadId: string
   archived: boolean
-}): Promise<ActionResult<{ archived: boolean }>> {
+}): Promise<ActionResult<{ archived: boolean; skipped: number }>> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
   try {
-    await setThreadArchived(user.id, input.threadId, input.archived)
+    const { skipped } = await setThreadArchived(user.id, input.threadId, input.archived)
     revalidatePath("/chat")
-    return { ok: true, archived: input.archived }
+    return { ok: true, archived: input.archived, skipped }
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) }
   }
@@ -204,6 +204,38 @@ export async function decideApproval(input: {
 
   if (!outcome.ok) return { ok: false, error: outcome.error }
   return { ok: true, status: outcome.call.status }
+}
+
+/**
+ * Several cards from one reply, decided together — "Confirm all 8". Each
+ * still goes through decideToolCall, so the per-row compare-and-swap and
+ * the idempotency key that flows into the domain write are unchanged; only
+ * the clicks and the revalidation are shared.
+ */
+export async function decideApprovals(input: {
+  callIds: string[]
+  approve: boolean
+}): Promise<ActionResult<{ decided: number; failed: { callId: string; error: string }[] }>> {
+  const user = await getSessionUser()
+  if (!user) return { ok: false, error: "Sign in first." }
+
+  const ids = Array.from(new Set(input.callIds.filter((id) => typeof id === "string"))).slice(0, 50)
+  const failed: { callId: string; error: string }[] = []
+  let decided = 0
+  for (const callId of ids) {
+    const outcome = await decideToolCall({ userId: user.id, callId, approve: input.approve })
+    if (outcome.ok) decided++
+    else failed.push({ callId, error: outcome.error })
+  }
+
+  revalidatePath("/chat")
+  revalidatePath("/timesheet")
+  revalidatePath("/tasks")
+  revalidatePath("/inbox")
+  revalidatePath("/inspiration")
+  revalidatePath("/")
+
+  return { ok: true, decided, failed }
 }
 
 /**

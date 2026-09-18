@@ -4,7 +4,7 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Bookmark, Check, Sparkles, Terminal, ThumbsDown, X } from "lucide-react"
 import { cn } from "@/lib/cn"
-import { giveFeedback } from "@/lib/chat/actions"
+import { decideApprovals, giveFeedback } from "@/lib/chat/actions"
 import { modelLabel, modelPool, resultCount, timeLabel } from "@/lib/chat/format"
 import { parseCommand } from "@/lib/chat/skills"
 import { ApprovalCard } from "@/components/chat/ApprovalCard"
@@ -41,11 +41,30 @@ export function Message({ message }: { message: ChatMessageView }) {
     const failedOutright =
       message.chain.length > 0 &&
       message.chain.every((t) => t.status === "failed" || t.status === "cancelled")
+    /**
+     * A line a desk handed over (route_to's brief) is stored as a user row
+     * under the desk's name. It is not Karol speaking, and must not look it.
+     */
+    const handed = Boolean(message.agent && message.agent !== "Karol")
+    // Calls from turns that never produced a reply — a write parked in a rung
+    // that then failed — used to render nowhere while lighting "Needs you".
+    const orphanReads = message.calls.filter((c) => !c.mutating)
+    const orphanWrites = message.calls.filter((c) => c.mutating && !viaReplyAction(c.args))
     return (
       <div className="group flex flex-col items-end gap-1.5">
+        {handed ? (
+          <span className="pr-1 font-ui text-[10.5px] font-semibold text-ink-3">
+            {message.agent} · handed over, not Karol
+          </span>
+        ) : null}
         <Screenshots attachments={message.attachments} />
         {message.body ? (
-          <div className="max-w-[72%] whitespace-pre-wrap rounded-[18px] rounded-br-[6px] bg-accent-soft px-3.5 py-2.5 text-[14.5px] leading-[1.5] text-tk-onyx [overflow-wrap:anywhere]">
+          <div
+            className={cn(
+              "max-w-[72%] whitespace-pre-wrap rounded-[18px] rounded-br-[6px] px-3.5 py-2.5 text-[14.5px] leading-[1.5] text-tk-onyx [overflow-wrap:anywhere]",
+              handed ? "border border-line bg-well" : "bg-accent-soft"
+            )}
+          >
             {command ? (
               <span className="font-mono text-[13px]">
                 <span className="text-accent-ink">/{command.name}</span>
@@ -59,6 +78,20 @@ export function Message({ message }: { message: ChatMessageView }) {
         <span className="pr-1 font-ui text-[10.5px] text-ink-3 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none">
           {timeLabel(message.createdAt)}
         </span>
+        {orphanReads.length || orphanWrites.length ? (
+          <div className="flex w-full flex-col gap-2">
+            {orphanReads.length ? (
+              <div className="flex flex-wrap gap-1.5 pl-8">
+                {orphanReads.map((call) => (
+                  <ReadChip key={call.id} call={call} />
+                ))}
+              </div>
+            ) : null}
+            {orphanWrites.map((call) => (
+              <ApprovalCard key={call.id} call={call} />
+            ))}
+          </div>
+        ) : null}
         {failedOutright ? (
           <div className="w-full">
             <LadderTrace turns={message.chain} />
@@ -130,6 +163,10 @@ export function Message({ message }: { message: ChatMessageView }) {
         context={message.actionsContext}
         calls={message.calls}
       />
+
+      {writes.filter((c) => c.status === "pending").length > 1 ? (
+        <BulkDecide callIds={writes.filter((c) => c.status === "pending").map((c) => c.id)} />
+      ) : null}
 
       {writes.map((call) => (
         <ApprovalCard key={call.id} call={call} />
@@ -284,6 +321,54 @@ function Feedback({ message }: { message: ChatMessageView }) {
         </span>
       )}
       {error ? <span className="font-ui text-[11px] text-bad">{error}</span> : null}
+    </div>
+  )
+}
+
+/**
+ * One reply, several cards. Eight create_task cards from one message used to
+ * be eight clicks; this decides them together, each still through its own
+ * compare-and-swap and idempotency key.
+ */
+function BulkDecide({ callIds }: { callIds: string[] }) {
+  const router = useRouter()
+  const [busy, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+
+  function decide(approve: boolean) {
+    setError(null)
+    startTransition(async () => {
+      const result = await decideApprovals({ callIds, approve })
+      if (!result.ok) setError(result.error)
+      else {
+        if (result.failed.length) setError(`${result.failed.length} could not be decided: ${result.failed[0].error}`)
+        router.refresh()
+      }
+    })
+  }
+
+  return (
+    <div className="ml-8 flex max-w-[36rem] flex-wrap items-center gap-2 rounded-xl border border-line bg-well px-3 py-2">
+      <span className="font-ui text-[11.5px] font-semibold text-tk-onyx">{callIds.length} previews waiting</span>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => decide(true)}
+        className="inline-flex h-7 items-center gap-1.5 rounded-[8px] bg-accent px-2.5 font-ui text-[11px] font-semibold text-on-accent outline-accent-ink disabled:opacity-60"
+      >
+        <Check className="size-3" aria-hidden />
+        Confirm all {callIds.length}
+      </button>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => decide(false)}
+        className="inline-flex h-7 items-center gap-1.5 rounded-[8px] border border-line px-2.5 font-ui text-[11px] font-semibold text-ink-2 outline-accent-ink hover:border-line-strong hover:text-tk-onyx disabled:opacity-60"
+      >
+        <X className="size-3" aria-hidden />
+        Discard all
+      </button>
+      {error ? <span className="basis-full font-ui text-[11px] text-bad">{error}</span> : null}
     </div>
   )
 }

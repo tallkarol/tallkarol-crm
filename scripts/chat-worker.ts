@@ -24,7 +24,8 @@ import type {
   SDKUserMessage,
   ToolName,
 } from "@cursor/sdk"
-import { imageNote, pickImages } from "@/lib/chat/attachments"
+import { pickImages } from "@/lib/chat/attachments"
+import { transcriptText, type TranscriptCall } from "@/lib/chat/transcript"
 import {
   PACK_LINE_TARGETS,
   allowed,
@@ -35,7 +36,7 @@ import {
 } from "@/lib/chat/pack-lines"
 import { CRM_ACTIONS_HINT } from "@/lib/chat/reply-actions"
 import { BRIEF_PREFIX } from "@/lib/chat/task-brief"
-import { loadLocalEnv } from "@/lib/load-env"
+import { loadWorkerEnv } from "@/lib/load-env"
 
 /**
  * The chat worker.
@@ -51,12 +52,42 @@ import { loadLocalEnv } from "@/lib/load-env"
  * CRM parks for Karol. A compromised worker can waste tokens and lie in a
  * chat bubble; it cannot touch the timesheet.
  *
+ * That only holds if the process really does not have the secrets. The
+ * checkout's .env.local carries DATABASE_URL and the vault key for the dev
+ * server, and a skill turn's shell inherits this environment — so the
+ * worker reads its own short list of keys (`loadWorkerEnv`) and the npm
+ * script no longer loads the whole file.
+ *
  *   npm run chat:worker
  *
  * Needs CRM_URL and CRM_DEVICE_TOKEN (Settings → Devices). See CHAT.md.
  */
 
-loadLocalEnv()
+loadWorkerEnv()
+
+/* ---------- the log ---------- */
+
+/**
+ * Every line stamped, because launchd's redirect has no idea what time it
+ * is: the log used to be 34,000 undated lines, most of them a bare "fetch
+ * failed" every 2.5 seconds with no cause. `cause` names the socket error
+ * undici hides behind that message.
+ */
+function stamp(): string {
+  return new Date().toISOString().slice(0, 19).replace("T", " ")
+}
+function log(message: string) {
+  console.log(`${stamp()} ${message}`)
+}
+function warn(message: string) {
+  console.error(`${stamp()} ${message}`)
+}
+function describeError(err: unknown): string {
+  if (!(err instanceof Error)) return String(err)
+  const cause = (err as Error & { cause?: { code?: unknown; message?: unknown } }).cause
+  const code = cause && typeof cause === "object" ? (cause.code ?? cause.message) : null
+  return code ? `${err.message} (${String(code)})` : err.message
+}
 
 const CRM = process.env.CRM_URL || "http://localhost:3001"
 const TOKEN = process.env.CRM_DEVICE_TOKEN || ""
@@ -113,11 +144,11 @@ const SOLVE_TOOLS: ToolName[] = SKILL_TOOLS
 const SOLVE_READ_TOOLS: ToolName[] = ["mcp", "read", "shell", "grep", "glob", "ls"]
 
 if (!TOKEN) {
-  console.error("CRM_DEVICE_TOKEN missing — issue one at Settings → Devices.")
+  warn("CRM_DEVICE_TOKEN missing — issue one at Settings → Devices.")
   process.exit(1)
 }
 if (!API_KEY) {
-  console.error("CURSOR_API_KEY missing — cursor.com/dashboard/integrations.")
+  warn("CURSOR_API_KEY missing — cursor.com/dashboard/integrations.")
   process.exit(1)
 }
 
@@ -159,7 +190,17 @@ type ClaimImage = { id: string; name: string; mime: string; width: number; heigh
 
 type Claim = {
   turn: QueuedTurn | null
-  messages?: { role: string; agent: string; body: string; at: string; images?: ClaimImage[] }[]
+  /** Turns a dead worker left at claimed/running that this poll put back on the queue. */
+  reclaimed?: number
+  messages?: {
+    role: string
+    agent: string
+    body: string
+    at: string
+    images?: ClaimImage[]
+    /** What this reply's tools came to — so a confirmed write is not proposed twice. */
+    calls?: TranscriptCall[]
+  }[]
   tools?: ToolSchema[]
   /** Set on a `skill` turn: the command the CRM parsed from the message. */
   command?: { name: string; args: string } | null
@@ -192,6 +233,15 @@ type DigestJob = {
  */
 const REQUEST_TIMEOUT_MS = 30_000
 
+class CrmError extends Error {
+  constructor(
+    message: string,
+    readonly status: number
+  ) {
+    super(message)
+  }
+}
+
 async function crm(path: string, body: unknown) {
   const response = await fetch(`${CRM}${path}`, {
     method: "POST",
@@ -203,9 +253,118 @@ async function crm(path: string, body: unknown) {
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   })
   if (!response.ok) {
-    throw new Error(`${path} → ${response.status} ${await response.text()}`)
+    throw new CrmError(`${path} → ${response.status} ${await response.text()}`, response.status)
   }
   return response.json()
+}
+
+/* ---------- reporting a turn ---------- */
+
+/**
+ * The turn this process is running, for the heartbeat: a turn whose worker
+ * is gone gets requeued by the CRM, and this is how it knows which one is
+ * not gone.
+ */
+let currentTurnId: string | null = null
+
+/** The commit this checkout was on when the process started — the version the CRM compares itself to. */
+const COMMIT = (() => {
+  const r = spawnSync("git", ["rev-parse", "--short", "HEAD"], { cwd: CWD, encoding: "utf8" })
+  return r.status === 0 ? r.stdout.trim() : ""
+})()
+const STARTED_AT = new Date().toISOString()
+
+/**
+ * A finished reply that could not be posted waits here and is retried, not
+ * discarded. One post with a 30 s timeout used to be the whole delivery: a
+ * slow CRM meant the model's answer — and its cost — vanished, and the turn
+ * showed a transport error as if the model had failed.
+ */
+const OUTBOX = join(homedir(), ".daedalus", "chat-outbox")
+
+type Report = { body?: string; usage?: unknown; agent?: string; error?: string; detector?: string }
+
+function spool(turnId: string, report: Report) {
+  try {
+    mkdirSync(OUTBOX, { recursive: true })
+    writeFileSync(join(OUTBOX, `${turnId}.json`), JSON.stringify({ turnId, report, at: new Date().toISOString() }))
+  } catch (err) {
+    warn(`could not spool ${turnId.slice(0, 8)}: ${describeError(err)}`)
+  }
+}
+
+function unspool(turnId: string) {
+  try {
+    unlinkSync(join(OUTBOX, `${turnId}.json`))
+  } catch {
+    /* nothing spooled */
+  }
+}
+
+/**
+ * Post a turn's outcome. Three tries with growing waits; a 409 means the CRM
+ * already settled the turn (a retry that did land, a reclaim that re-ran it)
+ * and there is nothing left to say. Anything still undelivered is spooled
+ * and the loop keeps trying between polls.
+ */
+async function reportTurn(turnId: string, report: Report): Promise<"sent" | "settled" | "spooled"> {
+  const waits = [2000, 5000, 10000]
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await crm(`/api/chat/turns/${turnId}`, { ...report, worker: NAME })
+      unspool(turnId)
+      return "sent"
+    } catch (err) {
+      if (err instanceof CrmError && err.status === 409) {
+        unspool(turnId)
+        warn(`[${turnId.slice(0, 8)}] already settled on the CRM — ${err.message.slice(0, 120)}`)
+        return "settled"
+      }
+      if (err instanceof CrmError && err.status >= 400 && err.status < 500) {
+        // A 4xx other than 409 will not change on retry: bad token, bad body.
+        throw err
+      }
+      spool(turnId, report)
+      if (attempt >= waits.length) {
+        warn(`[${turnId.slice(0, 8)}] report spooled after ${attempt + 1} tries: ${describeError(err)}`)
+        return "spooled"
+      }
+      await new Promise((resolve) => setTimeout(resolve, waits[attempt]))
+    }
+  }
+}
+
+/** Anything spooled goes out before new work is taken, oldest first. */
+async function drainOutbox(): Promise<void> {
+  if (!existsSync(OUTBOX)) return
+  const files = readdirSync(OUTBOX).filter((f) => f.endsWith(".json")).sort()
+  for (const file of files) {
+    const path = join(OUTBOX, file)
+    let item: { turnId: string; report: Report } | null = null
+    try {
+      item = JSON.parse(readFileSync(path, "utf8"))
+    } catch {
+      unlinkSync(path)
+      continue
+    }
+    if (!item?.turnId) {
+      unlinkSync(path)
+      continue
+    }
+    try {
+      await crm(`/api/chat/turns/${item.turnId}`, { ...item.report, worker: NAME })
+      unlinkSync(path)
+      log(`[${item.turnId.slice(0, 8)}] spooled report delivered`)
+    } catch (err) {
+      if (err instanceof CrmError && err.status >= 400 && err.status < 500) {
+        unlinkSync(path)
+        warn(`[${item.turnId.slice(0, 8)}] spooled report dropped: ${err.message.slice(0, 120)}`)
+        continue
+      }
+      // Still unreachable; try again next cycle, and do not start new work first.
+      throw err
+    }
+  }
 }
 
 /**
@@ -248,14 +407,7 @@ function customTools(turn: QueuedTurn, tools: ToolSchema[]) {
  * left" can be matched to a picture two messages back.
  */
 function transcript(claim: Claim): string {
-  const sent = pickImages(claim.messages ?? [])
-  return (claim.messages ?? [])
-    .filter((m) => m.role === "user" || m.role === "assistant")
-    .map((m) => {
-      const said = [m.body, imageNote(m.images, sent)].filter(Boolean).join("\n")
-      return `${m.role === "user" ? "Karol" : "You"}: ${said}`
-    })
-    .join("\n\n")
+  return transcriptText(claim.messages ?? [], pickImages(claim.messages ?? []))
 }
 
 /**
@@ -500,7 +652,10 @@ function resolveRepo(
   if (!slug) return { pick: null, candidates: [], slug: null }
 
   let candidates = readRepos().filter((r) => r.slug === slug)
-  if (!task.client && task.product) {
+  // A product narrows Karol's own repos whether the task came with the house
+  // client set or with no client at all; it used to apply only to the latter,
+  // so every house task with a product resolved to ~20 candidates and asked.
+  if (task.product && (!task.client || slug === "tallkarol")) {
     const want = tokens(task.product.slug)
     candidates = candidates.filter((r) => {
       const name = basename(r.dir).toLowerCase()
@@ -900,7 +1055,7 @@ async function landPackLine(w: PackWrite): Promise<void> {
   const label = w.id.slice(0, 8)
   const report = (body: Record<string, unknown>) =>
     crm(`/api/chat/pack-writes/${w.id}`, { worker: NAME, ...body }).catch((err) =>
-      console.error(`[write ${label}] report failed: ${err instanceof Error ? err.message : String(err)}`)
+      warn(`[write ${label}] report failed: ${err instanceof Error ? err.message : String(err)}`)
     )
   try {
     const target = String(w.args.target ?? "").trim() as PackLineTarget
@@ -919,7 +1074,7 @@ async function landPackLine(w: PackWrite): Promise<void> {
     const mark = marker(w.idempotencyKey)
     const line = renderLine(target, w.args, { date, source: `chat:${w.threadId.slice(0, 8)}`, marker: mark })
     const rel = place.rel ? `${place.rel}/${line.file}` : line.file
-    console.log(`[write ${label}] claimed ${w.pack} ${target} → ${rel}`)
+    log(`[write ${label}] claimed ${w.pack} ${target} → ${rel}`)
 
     const outcome = await withRepoLock(place.repo, async () => {
       const inHead = git(["show", `HEAD:${rel}`], place.repo)
@@ -979,7 +1134,7 @@ async function landPackLine(w: PackWrite): Promise<void> {
       }
     })
 
-    console.log(
+    log(
       outcome.changed
         ? `[write ${label}] landed ${rel} @ ${outcome.commit}`
         : `[write ${label}] already in HEAD ${rel} @ ${outcome.commit || "?"}`
@@ -987,7 +1142,7 @@ async function landPackLine(w: PackWrite): Promise<void> {
     await report(outcome)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error(`[write ${label}] failed: ${message}`)
+    warn(`[write ${label}] failed: ${message}`)
     await report({ error: message })
   }
 }
@@ -1030,10 +1185,10 @@ async function digestThread(job: DigestJob): Promise<void> {
       throw new Error(result.error?.message ?? `run ${result.status}`)
     }
     await crm(`/api/chat/digests/${job.id}`, { digest: result.result.trim() })
-    console.log(`[digest ${label}] ${job.agent}${job.pack ? ` (${job.pack})` : ""} — ${result.result.trim().slice(0, 80)}…`)
+    log(`[digest ${label}] ${job.agent}${job.pack ? ` (${job.pack})` : ""} — ${result.result.trim().slice(0, 80)}…`)
   } catch (err) {
     digestSkips.set(job.id, Date.now())
-    console.error(`[digest ${label}] failed: ${err instanceof Error ? err.message : String(err)}`)
+    warn(`[digest ${label}] failed: ${err instanceof Error ? err.message : String(err)}`)
   }
 }
 
@@ -1089,7 +1244,7 @@ async function runTurn(claim: Claim) {
   if (!turn) return
 
   const label = turn.id.slice(0, 8)
-  console.log(
+  log(
     `[${label}] ${turn.jobType} rung ${turn.rung} → ${turn.model}${turn.effort ? ` (${turn.effort})` : ""}`
   )
 
@@ -1109,8 +1264,8 @@ async function runTurn(claim: Claim) {
           ? `No command file for /${command.name} under ${SKILLS}/commands.`
           : null
     if (refusal) {
-      console.error(`[${label}] refused: ${refusal}`)
-      await crm(`/api/chat/turns/${turn.id}`, { error: refusal }).catch(() => {})
+      warn(`[${label}] refused: ${refusal}`)
+      await reportTurn(turn.id, { error: refusal }).catch((err) => warn(`[${label}] ${describeError(err)}`))
       return
     }
   }
@@ -1128,8 +1283,8 @@ async function runTurn(claim: Claim) {
         ? "This thread's task no longer exists, so there is nothing left to solve."
         : null
     if (refusal) {
-      console.error(`[${label}] refused: ${refusal}`)
-      await crm(`/api/chat/turns/${turn.id}`, { error: refusal }).catch(() => {})
+      warn(`[${label}] refused: ${refusal}`)
+      await reportTurn(turn.id, { error: refusal }).catch((err) => warn(`[${label}] ${describeError(err)}`))
       return
     }
   }
@@ -1152,12 +1307,13 @@ async function runTurn(claim: Claim) {
           ? `No agent file for ${persona.name} under ${join(SKILLS, "agents")}.`
           : null
     if (refusal) {
-      console.error(`[${label}] refused: ${refusal}`)
-      await crm(`/api/chat/turns/${turn.id}`, { error: refusal }).catch(() => {})
+      warn(`[${label}] refused: ${refusal}`)
+      await reportTurn(turn.id, { error: refusal }).catch((err) => warn(`[${label}] ${describeError(err)}`))
       return
     }
   }
 
+  currentTurnId = turn.id
   try {
     /**
      * `tools: ["mcp"]` is deliberate and load-bearing for a chat turn: it
@@ -1188,17 +1344,17 @@ async function runTurn(claim: Claim) {
         where.kind === "worktree" ? SOLVE_TOOLS : where.kind === "none" ? ["mcp"] : SOLVE_READ_TOOLS
       cwd = where.kind === "worktree" || where.kind === "readonly" ? where.cwd : CWD
       agent = "Solver"
-      console.log(`[${label}] task → ${describe(where)}`)
+      log(`[${label}] task → ${describe(where)}`)
     } else if (persona) {
       prompt = personaPrompt(claim, persona)
       agent = persona.label
-      console.log(`[${label}] persona → ${persona.name}${persona.pack ? ` (${persona.pack})` : ""}`)
+      log(`[${label}] persona → ${persona.name}${persona.pack ? ` (${persona.pack})` : ""}`)
     }
 
     const images = await loadImages(claim)
     if (images.length > 0) {
       prompt += `\n\n(${images.length === 1 ? "One image is" : `${images.length} images are`} attached to this message, numbered from 1 in the order given. The [image N attached] marks above say which message each came with.)`
-      console.log(`[${label}] ${images.length} image${images.length === 1 ? "" : "s"} attached`)
+      log(`[${label}] ${images.length} image${images.length === 1 ? "" : "s"} attached`)
     }
 
     const result = await promptWith(images.length > 0 ? { text: prompt, images } : prompt, {
@@ -1228,20 +1384,24 @@ async function runTurn(claim: Claim) {
        * the run died, so it still does not earn a rung. Ladders that do have
        * detectors pass one here.
        */
-      await crm(`/api/chat/turns/${turn.id}`, {
-        error: result.error?.message ?? `run ${result.status}`,
-      })
-      console.error(`[${label}] run ${result.status}`)
+      warn(`[${label}] run ${result.status}`)
+      await reportTurn(turn.id, { error: result.error?.message ?? `run ${result.status}` })
       return
     }
 
-    await crm(`/api/chat/turns/${turn.id}`, {
+    /**
+     * The model is done; from here on a failure is the CRM's, not the
+     * model's. The report is retried and spooled rather than turned into
+     * an error post — the worst outcome of a slow CRM is a late reply, not
+     * a lost one and a bill for nothing.
+     */
+    const outcome = await reportTurn(turn.id, {
       body: result.result ?? "",
       usage: result.usage ?? {},
       ...(agent ? { agent } : {}),
     })
-    console.log(
-      `[${label}] done${result.durationMs ? ` in ${(result.durationMs / 1000).toFixed(1)}s` : ""}`
+    log(
+      `[${label}] done${result.durationMs ? ` in ${(result.durationMs / 1000).toFixed(1)}s` : ""}${outcome === "sent" ? "" : ` (${outcome})`}`
     )
   } catch (err) {
     /**
@@ -1251,10 +1411,12 @@ async function runTurn(claim: Claim) {
      * model to hit the same missing API key. A plain Error before the run
      * (a worktree that would not cut) lands in the thread the same way.
      */
-    const message = err instanceof Error ? err.message : String(err)
+    const message = describeError(err)
     const startup = err instanceof CursorAgentError
-    console.error(`[${label}] ${startup ? "did not start" : "failed"}: ${message}`)
-    await crm(`/api/chat/turns/${turn.id}`, { error: message }).catch(() => {})
+    warn(`[${label}] ${startup ? "did not start" : "failed"}: ${message}`)
+    await reportTurn(turn.id, { error: message }).catch((e) => warn(`[${label}] ${describeError(e)}`))
+  } finally {
+    currentTurnId = null
   }
 }
 
@@ -1271,7 +1433,12 @@ const HEARTBEAT_MS = 5000
 
 function startHeartbeat() {
   const beat = () => {
-    void crm("/api/chat/worker", { worker: NAME }).catch(() => {})
+    void crm("/api/chat/worker", {
+      worker: NAME,
+      running: currentTurnId,
+      commit: COMMIT,
+      startedAt: STARTED_AT,
+    }).catch(() => {})
   }
   beat()
   const timer = setInterval(beat, HEARTBEAT_MS)
@@ -1280,21 +1447,37 @@ function startHeartbeat() {
   return timer
 }
 
+/** How long to wait after N consecutive failures to reach the CRM: 2.5 s doubling to a minute. */
+function backoff(failures: number): number {
+  return Math.min(IDLE_MS * 2 ** Math.max(0, failures - 1), 60_000)
+}
+
 async function loop() {
-  console.log(`chat worker ${NAME} → ${CRM} (cwd ${CWD}, solves under ${SOLVE_DIR})`)
+  log(`chat worker ${NAME} → ${CRM} (commit ${COMMIT || "unknown"}, cwd ${CWD}, solves under ${SOLVE_DIR})`)
   startHeartbeat()
+  let failures = 0
+  let downSince: number | null = null
   for (;;) {
     try {
-      // Approved pack lines first, drained: a write takes under a second, a
+      // Replies that could not be delivered earlier go first — before any
+      // new turn is claimed, so a reclaim cannot re-run what is already answered.
+      await drainOutbox()
+      // Approved pack lines next, drained: a write takes under a second, a
       // turn takes a minute, and the next turn's prompt reads the pack from
       // disk — so the line Karol just approved must be there before the
       // reply he sends right after.
       const pending = (await crm("/api/chat/pack-writes", { worker: NAME })) as { write: PackWrite | null }
+      if (failures > 0) {
+        log(`CRM reachable again after ${failures} failed poll${failures === 1 ? "" : "s"}${downSince ? ` (${Math.round((Date.now() - downSince) / 1000)}s)` : ""}`)
+        failures = 0
+        downSince = null
+      }
       if (pending.write) {
         await landPackLine(pending.write)
         continue
       }
       const claim = (await crm("/api/chat/queue", { worker: NAME })) as Claim
+      if (claim.reclaimed) log(`requeued ${claim.reclaimed} turn${claim.reclaimed === 1 ? "" : "s"} a previous worker left behind`)
       if (claim.turn) {
         await runTurn(claim)
         continue
@@ -1306,7 +1489,14 @@ async function loop() {
         continue
       }
     } catch (err) {
-      console.error(err instanceof Error ? err.message : String(err))
+      failures++
+      downSince ??= Date.now()
+      // One line when it starts, then one a minute — not one every poll.
+      if (failures === 1 || backoff(failures) >= 60_000) {
+        warn(`CRM unreachable (${failures} in a row): ${describeError(err)}`)
+      }
+      await new Promise((resolve) => setTimeout(resolve, backoff(failures)))
+      continue
     }
     await new Promise((resolve) => setTimeout(resolve, IDLE_MS))
   }

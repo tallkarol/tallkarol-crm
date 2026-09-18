@@ -38,9 +38,11 @@
         <!-- launchd starts with a bare PATH; node and npm live in Homebrew. -->
         <key>PATH</key>
         <string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
-        <!-- Point at the deployed CRM instead when the worker should serve it. -->
+        <!-- The deployed CRM. This is the copy launchd runs, so it says so;
+             point it at http://localhost:3001 only to serve a dev server, and
+             never re-copy it without checking this line. -->
         <key>CRM_URL</key>
-        <string>http://localhost:3001</string>
+        <string>https://crm.tallkarol.com</string>
         <!-- Lets /commands from the chat run the hive mind's skills, with
              shell and edit on this Mac. Remove the key to refuse skill turns. -->
         <key>CHAT_WORKER_SKILLS</key>

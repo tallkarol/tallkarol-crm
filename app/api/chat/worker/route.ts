@@ -25,7 +25,13 @@ export async function POST(request: Request) {
   const body = await readJson(request)
   const worker = readString(body, "worker") ?? "unknown"
 
-  await recordWorkerSeen(worker)
+  // Which turn it holds, and which commit it runs — so a turn whose worker
+  // died can be reclaimed, and a worker left on old code shows as outdated.
+  await recordWorkerSeen(worker, undefined, {
+    running: readString(body, "running") ?? null,
+    commit: readString(body, "commit") ?? "",
+    startedAt: readString(body, "startedAt") ?? undefined,
+  })
 
   return NextResponse.json({ ok: true })
 }

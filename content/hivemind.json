@@ -1,18 +1,18 @@
 {
-  "scannedAt": "2026-09-10T14:31:16.027Z",
+  "scannedAt": "2026-09-18T11:15:50.658Z",
   "plugin": {
     "name": "daedalus-hive-mind",
-    "version": "0.14.0",
+    "version": "0.15.0",
     "root": "~/Work/daedalus-hive-mind"
   },
   "counts": {
     "root": 1,
     "lane": 8,
     "agent": 18,
-    "skill": 23,
+    "skill": 25,
     "reference": 15,
-    "script": 32,
-    "command": 19,
+    "script": 38,
+    "command": 21,
     "routine": 7,
     "pipeline": 1
   },
@@ -25,7 +25,7 @@
       "source": "skills/team-charter/SKILL.md",
       "meta": {
         "plugin": "daedalus-hive-mind",
-        "version": "0.14.0"
+        "version": "0.15.0"
       }
     },
     {
@@ -495,6 +495,20 @@
       "source": "skills/inspector/references/slop-catalog.md"
     },
     {
+      "id": "skill:intake",
+      "label": "intake",
+      "kind": "skill",
+      "blurb": "Fill a persona's pack from what already exists, so a desk stops asking day-one questions — the coach interviews Karol for the private `me` pack (goals, habits, schedule, career, pursuits),…",
+      "source": "skills/intake/SKILL.md"
+    },
+    {
+      "id": "script:intake/intake.py",
+      "label": "intake.py",
+      "kind": "script",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/intake/scripts/intake.py"
+    },
+    {
       "id": "skill:launch-audit",
       "label": "launch-audit",
       "kind": "skill",
@@ -846,12 +860,36 @@
       "source": "skills/timeclock/scripts/meter-math.py"
     },
     {
+      "id": "script:timeclock/push-turns.py",
+      "label": "push-turns.py",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/timeclock/scripts/push-turns.py"
+    },
+    {
+      "id": "script:timeclock/railway-usage.sh",
+      "label": "railway-usage.sh",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/timeclock/scripts/railway-usage.sh"
+    },
+    {
       "id": "script:timeclock/reattribute.py",
       "label": "reattribute.py",
       "kind": "script",
       "lane": "lane:ledger",
       "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
       "source": "skills/timeclock/scripts/reattribute.py"
+    },
+    {
+      "id": "script:timeclock/recompute-tokens.py",
+      "label": "recompute-tokens.py",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/timeclock/scripts/recompute-tokens.py"
     },
     {
       "id": "script:timeclock/tclib.py",
@@ -878,12 +916,34 @@
       "source": "skills/timeclock/scripts/turn-tokens.py"
     },
     {
+      "id": "script:timeclock/vendor-caps.py",
+      "label": "vendor-caps.py",
+      "kind": "script",
+      "lane": "lane:ledger",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/timeclock/scripts/vendor-caps.py"
+    },
+    {
       "id": "reference:timeclock/invoice-template.html",
       "label": "invoice-template.html",
       "kind": "reference",
       "lane": "lane:ledger",
       "blurb": "Reference the skill reads before acting.",
       "source": "skills/timeclock/references/invoice-template.html"
+    },
+    {
+      "id": "skill:train",
+      "label": "train",
+      "kind": "skill",
+      "blurb": "A persona's conversations turned into the rules it keeps — CRM threads addressed to it, Karol's thumbs-down / keep-this / notes, the Claude Code sessions after `/as <persona>` — scanned for…",
+      "source": "skills/train/SKILL.md"
+    },
+    {
+      "id": "script:train/train.py",
+      "label": "train.py",
+      "kind": "script",
+      "blurb": "Companion instrument — the deterministic part the model calls instead of doing by hand.",
+      "source": "skills/train/scripts/train.py"
     },
     {
       "id": "skill:website-care",
@@ -993,6 +1053,16 @@
       }
     },
     {
+      "id": "command:intake",
+      "label": "/intake",
+      "kind": "command",
+      "blurb": "Fill a persona's pack from what already exists — interview Karol for the private me pack or a product pack (one question at a time, his words, written after he confirms), or read a client's…",
+      "source": "commands/intake.md",
+      "meta": {
+        "arguments": "me | product <slug> | client <slug> [--since 180d] — e.g. \"me\", \"product momentum\", \"client zemvelo --since 90d\". No argument lists the three modes and what each pack still has TO FILL."
+      }
+    },
+    {
       "id": "command:invoice",
       "label": "/invoice",
       "kind": "command",
@@ -1099,6 +1169,16 @@
       "source": "commands/styleguide.md",
       "meta": {
         "arguments": "<site url> [--wp <wordpress root>] [--page <url>]... [--client <slug>] [--skip mobile] — e.g. \"https://uwd.gdi-multi-site-wp.local/ --page https://uwd.gdi-multi-site-wp.local/replacement-windows/\""
+      }
+    },
+    {
+      "id": "command:train",
+      "label": "/train",
+      "kind": "command",
+      "blurb": "A persona's conversations (CRM threads, feedback, /as sessions) → corrections, rejected writes, questions asked and asked again → rules, clarifying questions and examples for personas/<name…",
+      "source": "commands/train.md",
+      "meta": {
+        "arguments": "<persona> [--since 30d] | show <scan-id> | status [persona] — e.g. \"coach\", \"copywriter --since 14d\", \"show coach-20260911-081530\", \"status\", \"status coach\""
       }
     },
     {
@@ -1436,6 +1516,11 @@
       "rel": "contains"
     },
     {
+      "source": "skill:intake",
+      "target": "script:intake/intake.py",
+      "rel": "contains"
+    },
+    {
       "source": "lane:delivery",
       "target": "skill:launch-audit",
       "rel": "contains"
@@ -1647,7 +1732,22 @@
     },
     {
       "source": "skill:timeclock",
+      "target": "script:timeclock/push-turns.py",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
+      "target": "script:timeclock/railway-usage.sh",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
       "target": "script:timeclock/reattribute.py",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
+      "target": "script:timeclock/recompute-tokens.py",
       "rel": "contains"
     },
     {
@@ -1667,7 +1767,17 @@
     },
     {
       "source": "skill:timeclock",
+      "target": "script:timeclock/vendor-caps.py",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:timeclock",
       "target": "reference:timeclock/invoice-template.html",
+      "rel": "contains"
+    },
+    {
+      "source": "skill:train",
+      "target": "script:train/train.py",
       "rel": "contains"
     },
     {
@@ -1806,6 +1916,16 @@
       "rel": "loads"
     },
     {
+      "source": "skill:intake",
+      "target": "skill:timeclock",
+      "rel": "loads"
+    },
+    {
+      "source": "skill:intake",
+      "target": "agent:coach",
+      "rel": "loads"
+    },
+    {
       "source": "skill:launch-audit",
       "target": "skill:browser-check",
       "rel": "loads"
@@ -1901,6 +2021,11 @@
       "rel": "loads"
     },
     {
+      "source": "skill:train",
+      "target": "skill:log-session",
+      "rel": "loads"
+    },
+    {
       "source": "command:as",
       "target": "skill:client-pack",
       "rel": "loads"
@@ -1976,6 +2101,16 @@
       "rel": "loads"
     },
     {
+      "source": "command:intake",
+      "target": "skill:intake",
+      "rel": "loads"
+    },
+    {
+      "source": "command:intake",
+      "target": "agent:coach",
+      "rel": "loads"
+    },
+    {
       "source": "command:invoice",
       "target": "skill:timeclock",
       "rel": "loads"
@@ -2038,6 +2173,11 @@
     {
       "source": "command:styleguide",
       "target": "skill:styleguide",
+      "rel": "loads"
+    },
+    {
+      "source": "command:train",
+      "target": "skill:train",
       "rel": "loads"
     },
     {

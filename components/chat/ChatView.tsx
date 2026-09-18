@@ -98,7 +98,7 @@ export function ChatView({
 }) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
-  const [busy, startTransition] = useTransition()
+  const [busy, setBusy] = useState(false)
   const foot = useRef<HTMLDivElement>(null)
 
   const waiting = pending !== null
@@ -115,19 +115,23 @@ export function ChatView({
   }, [waiting, router])
 
   const submit = useCallback(
-    (value: string, ladder?: LadderPick, attachmentIds: string[] = []) => {
+    async (value: string, ladder?: LadderPick, attachmentIds: string[] = []): Promise<boolean> => {
       const body = value.trim()
-      if (!body && attachmentIds.length === 0) return
+      if (!body && attachmentIds.length === 0) return false
       setError(null)
-      startTransition(async () => {
+      setBusy(true)
+      try {
         const result = await sendMessage({ threadId, text: body, ladder, attachmentIds })
         if (!result.ok) {
           setError(result.error)
-          return
+          return false
         }
         if (result.threadId !== threadId) router.push(`${ROUTES.chat}?thread=${result.threadId}`)
         else router.refresh()
-      })
+        return true
+      } finally {
+        setBusy(false)
+      }
     },
     [threadId, router]
   )
@@ -163,8 +167,11 @@ export function ChatView({
               )
             })}
             {pending ? (
-              worker.online || pending.status === "running" ? (
-                <Thinking pending={pending} />
+              worker.online ? (
+                <Thinking
+                  pending={pending}
+                  speaker={task ? "Solver" : persona ? persona.label : "Assistant"}
+                />
               ) : (
                 <Stranded worker={worker} />
               )
@@ -405,27 +412,36 @@ function Sep() {
   )
 }
 
+/**
+ * Listening, offline, or listening on old code. The worker sends the commit
+ * its checkout was on when it started; when Railway's differs, it has not
+ * been restarted since a deploy and the pill says so — a pasted screenshot
+ * once went unseen for six days with nothing anywhere saying why.
+ */
 function WorkerPill({ worker }: { worker: WorkerStatus }) {
   const online = worker.online
+  const outdated = online && Boolean(worker.commit && worker.crmCommit && worker.commit.slice(0, 7) !== worker.crmCommit)
   return (
     <span
       className="hidden h-[26px] shrink-0 items-center gap-1.5 rounded-full border border-line bg-card pl-2 pr-2.5 font-ui text-[11px] font-semibold text-ink-2 sm:inline-flex"
       title={
-        online
-          ? "The worker on the Mac that runs turns is listening."
-          : "No worker is listening. Turns queue until one starts."
+        outdated
+          ? `The worker runs ${worker.commit} but the CRM is on ${worker.crmCommit}. Restart it: launchctl kickstart -k gui/$(id -u)/com.tallkarol.chat-worker`
+          : online
+            ? `The worker on the Mac that runs turns is listening${worker.commit ? ` (commit ${worker.commit})` : ""}.`
+            : "No worker is listening. Turns queue until one starts."
       }
     >
       <span
         className={cn(
           "size-[7px] rounded-full",
-          online ? "bg-good ring-[3px] ring-good-soft" : "bg-warn ring-[3px] ring-warn-soft"
+          online && !outdated ? "bg-good ring-[3px] ring-good-soft" : "bg-warn ring-[3px] ring-warn-soft"
         )}
         aria-hidden
       />
       {online ? (
         <>
-          Worker
+          {outdated ? "Worker outdated" : "Worker"}
           <span className="font-mono font-medium text-ink-3">
             {worker.name}
             {worker.secondsAgo != null ? ` · ${worker.secondsAgo}s` : ""}
@@ -466,7 +482,7 @@ function DayRule({ label }: { label: string }) {
  * The seconds count from when the worker took it, so a long turn reads as
  * long rather than as stuck.
  */
-function Thinking({ pending }: { pending: PendingView }) {
+function Thinking({ pending, speaker }: { pending: PendingView; speaker: string }) {
   const [tick, setTick] = useState(0)
   useEffect(() => {
     const timer = setInterval(() => setTick((t) => t + 1), 1000)
@@ -484,7 +500,7 @@ function Thinking({ pending }: { pending: PendingView }) {
         >
           <Sparkles className="size-3" />
         </span>
-        <span className="font-ui text-[12.5px] font-semibold text-tk-onyx">Assistant</span>
+        <span className="font-ui text-[12.5px] font-semibold text-tk-onyx">{speaker}</span>
         <span className="rounded-md border border-line bg-card px-1.5 py-0.5 font-mono text-[10.5px] text-ink-3">
           {modelLabel(pending.model)}
         </span>
@@ -515,15 +531,17 @@ function Thinking({ pending }: { pending: PendingView }) {
 }
 
 /**
- * Queued, but no heartbeat.
+ * Queued or claimed, but no heartbeat.
  *
  * Without this the page shows the dots forever and the honest answer is
  * invisible. What the page knows is only that no beat has reached THIS
  * database for twenty seconds — not whether a process exists on the Mac. On
  * Sep 11, 2026 the worker ran the whole time while its CRM (the dev server it
  * was pointed at) served a compile-error page to every route, so the copy
- * names both causes. The question is not lost: it stays queued and is
- * claimed the moment a beat returns.
+ * names both causes. Shown whatever the turn's status: a turn a dead worker
+ * left at "running" is exactly the case, and the CRM puts it back on the
+ * queue once a worker returns. launchd owns the process, so the fix is a
+ * kickstart, not a terminal.
  */
 function Stranded({ worker }: { worker: WorkerStatus }) {
   return (
@@ -534,9 +552,10 @@ function Stranded({ worker }: { worker: WorkerStatus }) {
           No heartbeat from the worker{worker.secondsAgo != null ? ` for ${ago(worker.secondsAgo)}` : ""}.
         </p>
         <p className="mt-1">
-          Your question is queued and answers the moment a beat arrives. Either nothing is running on the
-          Mac — start it with <code className="font-mono">npm run chat:worker</code> — or the worker is up
-          but the CRM it talks to is not answering; its log is{" "}
+          Your question stays queued and is taken the moment a beat arrives. Either the worker is not
+          running on the Mac — restart it with{" "}
+          <code className="font-mono">launchctl kickstart -k gui/$(id -u)/com.tallkarol.chat-worker</code>{" "}
+          — or it is up but the CRM it talks to is not answering; its log is{" "}
           <code className="font-mono">~/Library/Logs/tallkarol/chat-worker.log</code>.
         </p>
       </div>

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm"
+import { and, asc, desc, eq, inArray, isNotNull, isNull, lt, ne, sql } from "drizzle-orm"
 import { db } from "@/db"
 import {
   chatFeedback,
@@ -28,6 +28,8 @@ import {
 import { PERSONAS, parseMention, type PersonaSpec } from "@/lib/chat/personas"
 import { parseCommand } from "@/lib/chat/skills"
 import { toolByName, type ToolContext } from "@/lib/chat/tools"
+import { CLAIM_MESSAGES } from "@/lib/chat/transcript"
+import { workerStatus } from "@/lib/chat/worker-status"
 
 /**
  * The life of a turn.
@@ -229,6 +231,13 @@ export async function send(input: {
    * before anything is written.
    */
   attachmentIds?: string[]
+  /**
+   * Queue the turn already claimed by this worker name. For the smoke
+   * script only: a real queued turn races the launchd worker, which polls
+   * production every 2.5 seconds and would take it — and answer it — before
+   * the script could. The browser and the API never pass this.
+   */
+  hold?: string
 }): Promise<SendResult> {
   const text = input.text.trim()
   const attachmentIds = Array.from(new Set(input.attachmentIds ?? []))
@@ -316,36 +325,58 @@ export async function send(input: {
   const routing = await route(decided.job, decided.rung, { model: decided.model })
   const spec = modelFor(routing.model)
 
-  const [message] = await db
-    .insert(chatMessages)
-    .values({ threadId, role: "user", agent: input.as?.trim().slice(0, 60) || "Karol", body: text })
-    .returning()
-  await attachToMessage(input.userId, attachmentIds, message.id)
+  /**
+   * Message, images, turn and the thread stamp land together or not at all.
+   * Four separate statements used to leave a user message with no turn when
+   * the connection dropped between them — a bubble nothing would ever answer.
+   */
+  const { message, turn } = await db.transaction(async (tx) => {
+    const [message] = await tx
+      .insert(chatMessages)
+      .values({ threadId, role: "user", agent: input.as?.trim().slice(0, 60) || "Karol", body: text })
+      .returning()
+    await attachToMessage(input.userId, attachmentIds, message.id, tx)
 
-  const [turn] = await db
-    .insert(chatTurns)
-    .values({
-      threadId,
-      messageId: message.id,
-      status: "queued",
-      jobType: routing.job,
-      model: routing.model,
-      effort: spec.effort,
-      pool: spec.pool,
-      fast: false, // never for queued work — Composer Fast is a 6x tax
-      rung: routing.rung,
-    })
-    .returning()
+    /**
+     * The budget gate moved this off the model the ladder wanted. Said in the
+     * thread as a system pill, where it persists — the routing notice used to
+     * be returned to the page and never shown.
+     */
+    if (routing.downgradedFrom && routing.notice) {
+      await tx
+        .insert(chatMessages)
+        .values({ threadId, role: "system", agent: "Router", body: routing.notice.slice(0, 500) })
+    }
 
-  await db
-    .update(chatThreads)
-    .set({
-      lastMessageAt: new Date(),
-      title: sql`case when ${chatThreads.title} = '' then ${titleFrom(title)} else ${chatThreads.title} end`,
-      // A thread you are talking in is not archived, whatever it was before.
-      archivedAt: null,
-    })
-    .where(eq(chatThreads.id, threadId))
+    const [turn] = await tx
+      .insert(chatTurns)
+      .values({
+        threadId,
+        messageId: message.id,
+        status: input.hold ? "claimed" : "queued",
+        claimedBy: input.hold ?? "",
+        claimedAt: input.hold ? new Date() : null,
+        jobType: routing.job,
+        model: routing.model,
+        effort: spec.effort,
+        pool: spec.pool,
+        fast: false, // never for queued work — Composer Fast is a 6x tax
+        rung: routing.rung,
+      })
+      .returning()
+
+    await tx
+      .update(chatThreads)
+      .set({
+        lastMessageAt: new Date(),
+        title: sql`case when ${chatThreads.title} = '' then ${titleFrom(title)} else ${chatThreads.title} end`,
+        // A thread you are talking in is not archived, whatever it was before.
+        archivedAt: null,
+      })
+      .where(eq(chatThreads.id, threadId))
+
+    return { message, turn }
+  })
 
   return { threadId, messageId: message.id, turn, routing }
 }
@@ -353,15 +384,71 @@ export async function send(input: {
 /* ---------- the worker's side ---------- */
 
 /**
+ * A claimed or running turn whose worker is gone.
+ *
+ * A worker's name is its process (`mac-<pid>`), so a turn claimed by a name
+ * that is not the one polling now belongs to a process that has exited — a
+ * `launchctl kickstart -k`, a crash, a closed laptop. Nothing else ever
+ * moved such a row: `claimTurn` took `queued` only, and the page showed
+ * "Working" forever behind a green heartbeat. After this long without its
+ * worker the turn goes back to the queue and the next poll takes it.
+ *
+ * Two guards keep a live turn safe: the row must be older than the window,
+ * and it must not be the one the heartbeat says is running right now.
+ */
+export const RECLAIM_AFTER_MS = 3 * 60_000
+
+/** The turns the rule above would requeue right now, for `worker`. Read-only, so a check can hold it to the rule. */
+export async function staleTurnIds(worker: string): Promise<string[]> {
+  const live = await workerStatus()
+  const cutoff = new Date(Date.now() - RECLAIM_AFTER_MS)
+  const rows = await db
+    .select({ id: chatTurns.id })
+    .from(chatTurns)
+    .where(
+      and(
+        inArray(chatTurns.status, ["claimed", "running"]),
+        ne(chatTurns.claimedBy, worker),
+        lt(chatTurns.claimedAt, cutoff),
+        live.online && live.running ? ne(chatTurns.id, live.running) : undefined
+      )
+    )
+  return rows.map((r) => r.id)
+}
+
+export async function reclaimStaleTurns(worker: string): Promise<number> {
+  const ids = await staleTurnIds(worker)
+  if (ids.length === 0) return 0
+  const rows = await db
+    .update(chatTurns)
+    .set({ status: "queued", claimedBy: "", claimedAt: null, startedAt: null })
+    .where(and(inArray(chatTurns.id, ids), inArray(chatTurns.status, ["claimed", "running"])))
+    .returning({ id: chatTurns.id })
+  return rows.length
+}
+
+/**
  * Oldest queued turn, claimed by compare-and-swap: the update only lands if
  * the row is still `queued`, so two workers racing produce one winner and one
  * empty result. The loser retries and takes the next one — cheaper than
  * holding a transaction open across the poll.
+ *
+ * `onlyThreadId` is for the smoke script, which must never take a real turn
+ * off the queue; the worker never passes it.
  */
-export async function claimTurn(worker: string): Promise<ChatTurn | null> {
+export async function claimTurn(
+  worker: string,
+  opts: { onlyThreadId?: string } = {}
+): Promise<ChatTurn | null> {
   for (let attempt = 0; attempt < 5; attempt++) {
+    // A queued row with a name on it is reserved for that worker (the smoke
+    // script's scratch turns); ordinary queued rows carry no name.
     const next = await db.query.chatTurns.findFirst({
-      where: eq(chatTurns.status, "queued"),
+      where: and(
+        eq(chatTurns.status, "queued"),
+        sql`(${chatTurns.claimedBy} = '' or ${chatTurns.claimedBy} = ${worker})`,
+        opts.onlyThreadId ? eq(chatTurns.threadId, opts.onlyThreadId) : undefined
+      ),
       orderBy: [asc(chatTurns.createdAt)],
       columns: { id: true },
     })
@@ -376,6 +463,27 @@ export async function claimTurn(worker: string): Promise<ChatTurn | null> {
     if (claimed) return claimed
   }
   return null
+}
+
+/**
+ * What a claim carries of the thread: the NEWEST spoken rows, oldest first,
+ * with the answered message always among them. It used to be the oldest
+ * sixty of every role, so a thread past sixty rows handed the model
+ * everything but the question. Tool and system rows are never spoken and
+ * never counted.
+ */
+export async function claimHistory(threadId: string, messageId: string | null) {
+  const newest = await db.query.chatMessages.findMany({
+    where: and(eq(chatMessages.threadId, threadId), inArray(chatMessages.role, ["user", "assistant"])),
+    orderBy: [desc(chatMessages.createdAt)],
+    limit: CLAIM_MESSAGES,
+  })
+  const history = newest.reverse()
+  if (messageId && !history.some((m) => m.id === messageId)) {
+    const asked = await db.query.chatMessages.findFirst({ where: eq(chatMessages.id, messageId) })
+    if (asked) history.push(asked)
+  }
+  return history
 }
 
 export async function markRunning(turnId: string) {
@@ -476,20 +584,39 @@ export async function invokeTool(input: {
   }
 }
 
+/** The states a worker's report may still move. Everything else is settled. */
+const OPEN_TURN: ChatTurn["status"][] = ["queued", "claimed", "running"]
+
+export type CompleteOutcome =
+  | { ok: true; messageId: string; costCents: number }
+  | { ok: false; reason: string }
+
 /**
  * The worker posts the assistant's reply and what the run cost. A skill turn
  * names its speaker ("/inspect") so the thread shows who answered.
+ *
+ * The report is accepted once, and only from the process that claimed the
+ * turn when it says who it is. A retried post after a dropped connection, a
+ * late post from a worker that was restarted mid-turn, or an error posted
+ * after a success used to double-post the reply or flip done to failed; now
+ * the row moves by compare-and-swap and the loser is told "already done".
  */
 export async function completeTurn(input: {
   turnId: string
   body: string
   usage?: Partial<TokenUsage>
   agent?: string
-}) {
+  /** The worker's name, when it sends one; checked against the claim. */
+  worker?: string
+}): Promise<CompleteOutcome> {
   const turn = await db.query.chatTurns.findFirst({
     where: eq(chatTurns.id, input.turnId),
   })
-  if (!turn) throw new Error("Unknown turn.")
+  if (!turn) return { ok: false, reason: "Unknown turn." }
+  if (!OPEN_TURN.includes(turn.status)) return { ok: false, reason: `Already ${turn.status}.` }
+  if (input.worker && turn.claimedBy && turn.claimedBy !== input.worker) {
+    return { ok: false, reason: `Claimed by ${turn.claimedBy}, not ${input.worker}.` }
+  }
 
   const usage: TokenUsage = {
     inputTokens: input.usage?.inputTokens ?? 0,
@@ -499,43 +626,56 @@ export async function completeTurn(input: {
   }
   const cents = priceCents(turn.model as ModelKey, usage)
 
-  const [message] = await db
-    .insert(chatMessages)
-    .values({
-      threadId: turn.threadId,
-      role: "assistant",
-      agent: input.agent?.trim().slice(0, 60) || "Assistant",
-      body: input.body,
-      turnId: turn.id,
-    })
-    .returning()
+  return db.transaction(async (tx) => {
+    const [won] = await tx
+      .update(chatTurns)
+      .set({
+        status: "done",
+        finishedAt: new Date(),
+        inputTokens: usage.inputTokens,
+        outputTokens: usage.outputTokens,
+        cacheReadTokens: usage.cacheReadTokens,
+        cacheWriteTokens: usage.cacheWriteTokens,
+        costCents: cents.toFixed(4),
+      })
+      .where(and(eq(chatTurns.id, turn.id), inArray(chatTurns.status, OPEN_TURN)))
+      .returning({ id: chatTurns.id })
+    if (!won) return { ok: false as const, reason: "Already settled." }
 
-  await db
-    .update(chatTurns)
-    .set({
-      status: "done",
-      finishedAt: new Date(),
-      inputTokens: usage.inputTokens,
-      outputTokens: usage.outputTokens,
-      cacheReadTokens: usage.cacheReadTokens,
-      cacheWriteTokens: usage.cacheWriteTokens,
-      costCents: cents.toFixed(4),
-    })
-    .where(eq(chatTurns.id, turn.id))
+    const [message] = await tx
+      .insert(chatMessages)
+      .values({
+        threadId: turn.threadId,
+        role: "assistant",
+        agent: input.agent?.trim().slice(0, 60) || "Assistant",
+        body: input.body,
+        turnId: turn.id,
+      })
+      .returning()
 
-  await db
-    .update(chatThreads)
-    .set({ lastMessageAt: new Date() })
-    .where(eq(chatThreads.id, turn.threadId))
+    await tx
+      .update(chatThreads)
+      .set({ lastMessageAt: new Date() })
+      .where(eq(chatThreads.id, turn.threadId))
 
-  return { messageId: message.id, costCents: cents }
+    return { ok: true as const, messageId: message.id, costCents: cents }
+  })
 }
 
-export async function failTurn(turnId: string, error: string) {
-  await db
+/** Same rule as completeTurn: only an open turn fails, and only once. True when this call did it. */
+export async function failTurn(turnId: string, error: string, worker?: string): Promise<boolean> {
+  const rows = await db
     .update(chatTurns)
     .set({ status: "failed", finishedAt: new Date(), error: error.slice(0, 2000) })
-    .where(eq(chatTurns.id, turnId))
+    .where(
+      and(
+        eq(chatTurns.id, turnId),
+        inArray(chatTurns.status, OPEN_TURN),
+        worker ? sql`(${chatTurns.claimedBy} = '' or ${chatTurns.claimedBy} = ${worker})` : undefined
+      )
+    )
+    .returning({ id: chatTurns.id })
+  return rows.length > 0
 }
 
 /**
@@ -552,7 +692,7 @@ export async function escalate(
   const turn = await db.query.chatTurns.findFirst({
     where: eq(chatTurns.id, turnId),
   })
-  if (!turn) return null
+  if (!turn || turn.status !== "failed") return null
 
   const job = turn.jobType as JobType
   const next = nextRung(job, turn.rung)
@@ -607,6 +747,19 @@ export async function decideToolCall(input: {
     ),
   })
   if (!thread) return { ok: false, error: "Not your thread." }
+
+  /**
+   * Take the row before doing anything with it. The status check above is a
+   * read; two Confirms landing together — a double tap, the phone and the
+   * browser — both passed it and both ran the tool. The compare-and-swap on
+   * `pending` lets exactly one through; the other is told it was decided.
+   */
+  const [taken] = await db
+    .update(chatToolCalls)
+    .set({ decidedAt: new Date() })
+    .where(and(eq(chatToolCalls.id, call.id), eq(chatToolCalls.status, "pending"), isNull(chatToolCalls.decidedAt)))
+    .returning({ id: chatToolCalls.id })
+  if (!taken) return { ok: false, error: "Already decided." }
 
   if (!input.approve) {
     const [rejected] = await db
@@ -768,13 +921,27 @@ export async function setThreadArchived(
   userId: string,
   threadId: string,
   archived: boolean
-) {
+): Promise<{ skipped: number }> {
   const [row] = await db
     .update(chatThreads)
     .set({ archivedAt: archived ? new Date() : null })
     .where(and(eq(chatThreads.id, threadId), eq(chatThreads.userId, userId)))
     .returning({ id: chatThreads.id })
   if (!row) throw new Error("Not your thread.")
+  if (!archived) return { skipped: 0 }
+
+  /**
+   * Archiving is a decision about the whole thread, so the writes still
+   * parked in it are settled as skipped — a record, nothing run. Twelve
+   * cards once sat pending in archived threads where no surface could show
+   * them; the rail said "Needs you" about a group folded shut.
+   */
+  const skipped = await db
+    .update(chatToolCalls)
+    .set({ status: "skipped", decidedAt: new Date(), error: "Thread archived before a decision." })
+    .where(and(eq(chatToolCalls.threadId, threadId), eq(chatToolCalls.status, "pending")))
+    .returning({ id: chatToolCalls.id })
+  return { skipped: skipped.length }
 }
 
 export async function threadDetail(userId: string, threadId: string) {

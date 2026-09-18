@@ -27,6 +27,19 @@ export function messageViews(detail: Detail): ChatMessageView[] {
         : produced
           ? turns.filter((t) => t.messageId === produced.messageId)
           : []
+    /**
+     * Calls bind to the chain, not to one rung: an escalated question's
+     * rung-0 reads and a write parked in a rung that then failed used to
+     * render nowhere while still lighting "Needs you". A reply shows every
+     * rung's calls; a question with no reply yet (failed, or still running)
+     * shows its own under the bubble.
+     */
+    const chainIds = new Set(chain.map((t) => t.id))
+    const answered = message.role === "user" ? messages.some((m) => m.role === "assistant" && m.turnId && chainIds.has(m.turnId)) : true
+    const own =
+      message.role === "assistant" || (message.role === "user" && !answered)
+        ? calls.filter((c) => c.turnId && chainIds.has(c.turnId))
+        : []
     return {
       id: message.id,
       role: message.role,
@@ -36,7 +49,7 @@ export function messageViews(detail: Detail): ChatMessageView[] {
       turnId: message.turnId,
       actionsContext,
       chain,
-      calls: message.turnId ? calls.filter((c) => c.turnId === message.turnId) : [],
+      calls: own,
       feedback: feedback
         .filter((f) => f.messageId === message.id)
         .map((f) => ({ kind: f.kind as "down" | "example" | "note", note: f.note })),

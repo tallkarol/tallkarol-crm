@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { and, eq } from "drizzle-orm"
+import { and, eq, isNull } from "drizzle-orm"
 import { db } from "@/db"
 import { chatThreads, chatToolCalls } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
@@ -105,7 +105,14 @@ export async function deskBadges(): Promise<Record<string, number>> {
     .select({ agent: chatThreads.agent, threadId: chatThreads.id })
     .from(chatToolCalls)
     .innerJoin(chatThreads, eq(chatToolCalls.threadId, chatThreads.id))
-    .where(and(eq(chatToolCalls.status, "pending"), eq(chatThreads.userId, user.id)))
+    .where(
+      and(
+        eq(chatToolCalls.status, "pending"),
+        eq(chatThreads.userId, user.id),
+        // An archived thread's cards are skipped on archive; a dot must open to a card.
+        isNull(chatThreads.archivedAt)
+      )
+    )
   const seen = new Map<string, Set<string>>()
   for (const r of rows) {
     if (!r.agent) continue

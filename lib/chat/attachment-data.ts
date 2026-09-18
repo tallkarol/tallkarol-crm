@@ -70,9 +70,17 @@ export async function assertUnsent(userId: string, ids: string[]): Promise<void>
   }
 }
 
-export async function attachToMessage(userId: string, ids: string[], messageId: string): Promise<void> {
+/** `db`, or the transaction `send()` runs in. */
+type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
+
+export async function attachToMessage(
+  userId: string,
+  ids: string[],
+  messageId: string,
+  conn: DbOrTx = db
+): Promise<void> {
   if (ids.length === 0) return
-  await db
+  await conn
     .update(chatAttachments)
     .set({ messageId })
     .where(

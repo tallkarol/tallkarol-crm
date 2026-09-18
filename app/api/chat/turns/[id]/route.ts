@@ -13,8 +13,13 @@ export const dynamic = "force-dynamic"
 /**
  * The worker reports back.
  *
- *   { "body": "...", "usage": { ... }, "agent"?: "/inspect" }   finished
- *   { "error": "...", "detector": "test suite" }               failed
+ *   { "body": "...", "usage": { ... }, "agent"?: "/inspect", "worker"?: "mac-1" }   finished
+ *   { "error": "...", "detector": "test suite", "worker"?: "mac-1" }              failed
+ *
+ * A report lands once. The turn moves by compare-and-swap, so a retried
+ * post, a late post from a restarted worker, or an error posted after a
+ * success answers 409 and changes nothing — the reply already in the thread
+ * stays the reply. `worker`, when sent, must match the name that claimed it.
  *
  * Tool calls do not arrive here — they happen mid-run through
  * /api/chat/tools, so a read the model made is already recorded by the time
@@ -34,9 +39,13 @@ export async function POST(
 
   const body = await readJson(request)
   const error = readString(body, "error")
+  const worker = readString(body, "worker") ?? undefined
 
   if (error) {
-    await failTurn(params.id, error)
+    const failed = await failTurn(params.id, error, worker)
+    if (!failed) {
+      return NextResponse.json({ status: "settled", error: "That turn was already settled." }, { status: 409 })
+    }
     const detector = readString(body, "detector")
     const next = detector ? await escalate(params.id, detector) : null
     revalidatePath("/chat")
@@ -64,6 +73,7 @@ export async function POST(
     turnId: params.id,
     body: text,
     agent: readString(body, "agent") ?? undefined,
+    worker,
     usage: {
       inputTokens: int("inputTokens"),
       outputTokens: int("outputTokens"),
@@ -71,6 +81,10 @@ export async function POST(
       cacheWriteTokens: int("cacheWriteTokens"),
     },
   })
+
+  if (!result.ok) {
+    return NextResponse.json({ status: "settled", error: result.reason }, { status: 409 })
+  }
 
   revalidatePath("/chat")
 

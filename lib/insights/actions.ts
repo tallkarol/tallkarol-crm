@@ -5,10 +5,10 @@ import { revalidatePath } from "next/cache"
 import { db } from "@/db"
 import { reports, sites, snapshotArchive } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
-import { archivePeriod, ensureMonthlyArchive } from "@/lib/insights/archive"
-import { loadSnapshotV2 } from "@/lib/insights/load"
+import { archivePeriod } from "@/lib/insights/archive"
+import { refreshInsights } from "@/lib/insights/refresh"
 import { insightsCacheKey, type SnapshotV2 } from "@/lib/insights/types"
-import { readReport, writeReport } from "@/lib/report-cache"
+import { readReport } from "@/lib/report-cache"
 
 /**
  * The only thing that calls GA4 / Search Console / Ads for the hub. Page views read
@@ -20,25 +20,13 @@ export async function refreshInsightsAction(slug: string) {
   const user = await getSessionUser()
   if (!user) return { ok: false as const, error: "Sign in first." }
 
-  const site = await db.query.sites.findFirst({ where: eq(sites.slug, slug) })
-  if (!site) return { ok: false as const, error: "Site not found." }
-
-  try {
-    const cached = await readReport<SnapshotV2>(insightsCacheKey(site.slug))
-    const previous =
-      cached.payload && cached.payload.version === 2 ? cached.payload : null
-    const snapshot = await loadSnapshotV2(site, previous)
-    await writeReport(insightsCacheKey(site.slug), snapshot)
-    await ensureMonthlyArchive(site, snapshot)
-    revalidatePath("/insights", "layout")
-    revalidatePath("/ads", "layout")
-    revalidatePath("/clients", "layout")
-    revalidatePath("/reports")
-    return { ok: true as const }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Could not reach Google."
-    return { ok: false as const, error: message }
-  }
+  const result = await refreshInsights(slug)
+  if (!result.ok) return { ok: false as const, error: result.error }
+  revalidatePath("/insights", "layout")
+  revalidatePath("/ads", "layout")
+  revalidatePath("/clients", "layout")
+  revalidatePath("/reports")
+  return { ok: true as const }
 }
 
 /**

@@ -35,7 +35,7 @@ export const listInspirationTool: ToolSpec = {
       }
     }
     const detail = await listPinsOnBoard(name)
-    if (!detail) return { error: `No board named "${name}".`, pins: [] }
+    if (!detail) throw new Error(`No board named "${name}". Call list_inspiration without a board to see them.`)
     return {
       board: detail.title,
       slug: detail.slug,

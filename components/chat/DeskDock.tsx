@@ -32,6 +32,7 @@ export function DeskDock() {
   const [sheet, setSheet] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, startTransition] = useTransition()
+  const [sending, setSending] = useState(false)
 
   const refreshBadges = useCallback(() => {
     deskBadges().then(setBadges).catch(() => {})
@@ -92,10 +93,11 @@ export function DeskDock() {
     setSheet(false)
   }
 
-  function submit(text: string, attachmentIds: string[]) {
-    if (!open) return
+  async function submit(text: string, attachmentIds: string[]): Promise<boolean> {
+    if (!open) return false
     setError(null)
-    startTransition(async () => {
+    setSending(true)
+    try {
       const result = await sendToDesk({
         threadId: view?.threadId ?? null,
         agent: open.agent,
@@ -105,12 +107,15 @@ export function DeskDock() {
       })
       if (!result.ok) {
         setError(result.error)
-        return
+        return false
       }
       const loaded = await loadDeskThread({ threadId: result.threadId, agent: open.agent, pack: open.pack })
       if (loaded.ok) setView(loaded.view)
       refreshBadges()
-    })
+      return true
+    } finally {
+      setSending(false)
+    }
   }
 
   if (pathname === ROUTES.chat || pathname.startsWith(`${ROUTES.chat}/`)) return null
@@ -158,7 +163,7 @@ export function DeskDock() {
       agent={open.agent}
       pack={open.pack}
       view={view}
-      busy={busy}
+      busy={busy || sending}
       error={error}
       onFresh={() => show(open.agent, true)}
       onClose={close}
@@ -252,7 +257,7 @@ function Panel({
   error: string | null
   onFresh: () => void
   onClose: () => void
-  onSend: (text: string, attachmentIds: string[]) => void
+  onSend: (text: string, attachmentIds: string[]) => Promise<boolean> | boolean | void
 }) {
   const persona = PERSONAS[agent]
   const foot = useRef<HTMLDivElement>(null)
@@ -362,7 +367,7 @@ function DeskComposer({
   label: string
   busy: boolean
   error: string | null
-  onSend: (text: string, attachmentIds: string[]) => void
+  onSend: (text: string, attachmentIds: string[]) => Promise<boolean> | boolean | void
 }) {
   const [text, setText] = useState("")
   const box = useRef<HTMLTextAreaElement>(null)
@@ -380,9 +385,13 @@ function DeskComposer({
   function submit() {
     if (empty || blocked) return
     const ids = images.readyIds
-    setText("")
-    images.clear()
-    onSend(text.trim(), ids)
+    const body = text.trim()
+    // Same rule as the page's box: nothing is cleared until the send lands.
+    void Promise.resolve(onSend(body, ids)).then((ok) => {
+      if (ok === false) return
+      setText("")
+      images.clear()
+    })
   }
 
   return (

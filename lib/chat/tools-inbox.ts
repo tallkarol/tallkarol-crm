@@ -143,7 +143,7 @@ export const readMailTool: ToolSpec = {
     const subject = str(args, "subject")
     const from = str(args, "from")
     if (!raw && !subject && !from) {
-      return { error: "Pass a mail id (from peek) or a subject." }
+      throw new Error("Pass a mail id (from peek) or a subject.")
     }
 
     const parts = raw ? splitInboxKey(raw) : null
@@ -162,10 +162,8 @@ export const readMailTool: ToolSpec = {
         also: live.matches,
       }
     }
-    return {
-      error: live.error ?? "That mail is not on agent@ and not in the CRM.",
-      matches: live.matches,
-    }
+    const near = live.matches?.length ? ` Near misses: ${JSON.stringify(live.matches).slice(0, 600)}` : ""
+    throw new Error((live.error ?? "That mail is not on agent@ and not in the CRM.") + near)
   },
 }
 

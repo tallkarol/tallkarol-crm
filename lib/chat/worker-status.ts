@@ -29,10 +29,30 @@ export type WorkerStatus = {
   online: boolean
   /** Seconds since the last beat, for "last seen 4m ago". */
   secondsAgo: number | null
+  /** The turn the worker says it is running right now, if any. */
+  running: string | null
+  /** The commit the worker's checkout was on when it started — "adfc632", or "" for an older worker. */
+  commit: string
+  startedAt: string | null
+  /** The commit the CRM itself runs (Railway sets it); "" locally. Differs from `commit` → the worker needs a kickstart. */
+  crmCommit: string
 }
 
-export async function recordWorkerSeen(name: string, key: string = KEY) {
-  const value = { name, lastSeenAt: new Date().toISOString() }
+/** What a beat may say beyond its name. All optional: an older worker sends the name alone. */
+export type WorkerBeat = {
+  running?: string | null
+  commit?: string
+  startedAt?: string
+}
+
+export async function recordWorkerSeen(name: string, key: string = KEY, beat: WorkerBeat = {}) {
+  const value = {
+    name,
+    lastSeenAt: new Date().toISOString(),
+    running: beat.running ?? null,
+    commit: beat.commit ?? "",
+    startedAt: beat.startedAt ?? null,
+  }
   await db
     .insert(appSettings)
     .values({ key, value, updatedAt: new Date() })
@@ -46,13 +66,25 @@ export async function workerStatus(key: string = KEY): Promise<WorkerStatus> {
   const row = await db.query.appSettings.findFirst({
     where: eq(appSettings.key, key),
   })
-  const value = (row?.value ?? {}) as { name?: unknown; lastSeenAt?: unknown }
+  const value = (row?.value ?? {}) as {
+    name?: unknown
+    lastSeenAt?: unknown
+    running?: unknown
+    commit?: unknown
+    startedAt?: unknown
+  }
 
   const name = typeof value.name === "string" ? value.name : ""
   const lastSeenAt =
     typeof value.lastSeenAt === "string" ? value.lastSeenAt : null
+  const running = typeof value.running === "string" && value.running ? value.running : null
+  const commit = typeof value.commit === "string" ? value.commit : ""
+  const startedAt = typeof value.startedAt === "string" ? value.startedAt : null
+  const crmCommit = (process.env.RAILWAY_GIT_COMMIT_SHA ?? "").slice(0, 7)
 
-  if (!lastSeenAt) return { name, lastSeenAt: null, online: false, secondsAgo: null }
+  if (!lastSeenAt) {
+    return { name, lastSeenAt: null, online: false, secondsAgo: null, running, commit, startedAt, crmCommit }
+  }
 
   const elapsed = Date.now() - new Date(lastSeenAt).getTime()
   return {
@@ -60,5 +92,14 @@ export async function workerStatus(key: string = KEY): Promise<WorkerStatus> {
     lastSeenAt,
     online: elapsed < STALE_MS,
     secondsAgo: Math.max(0, Math.round(elapsed / 1000)),
+    running,
+    commit,
+    startedAt,
+    crmCommit,
   }
+}
+
+/** The worker runs a different commit than the CRM, as far as either can tell. */
+export function workerOutdated(status: WorkerStatus): boolean {
+  return Boolean(status.commit && status.crmCommit && status.commit.slice(0, 7) !== status.crmCommit)
 }
