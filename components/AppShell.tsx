@@ -93,7 +93,7 @@ export function AppShell({
   }
 
   return (
-    <div className="flex h-[100dvh] min-w-0 flex-1 flex-col overflow-hidden md:flex-row">
+    <div className="flex h-[100dvh] min-w-0 flex-1 flex-col overflow-hidden rail:flex-row">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80] focus:rounded-lg focus:bg-accent focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-tk-linen"
@@ -106,7 +106,7 @@ export function AppShell({
       <aside
         data-chrome="sidebar"
         className={cn(
-          "hidden h-full shrink-0 flex-col border-r border-rail-ink/10 bg-rail text-rail-ink md:flex",
+          "hidden h-full shrink-0 flex-col border-r border-rail-ink/10 bg-rail text-rail-ink rail:flex",
           "transition-[width] duration-200 ease-out motion-reduce:transition-none",
           collapsed ? "w-[4.25rem]" : "w-[15.5rem]"
         )}
@@ -155,7 +155,7 @@ export function AppShell({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <header
           data-chrome="topbar"
-          className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line bg-well px-4 backdrop-blur-md md:hidden"
+          className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line bg-well px-4 backdrop-blur-md rail:hidden"
         >
           <BrandMark />
           <button
@@ -199,7 +199,7 @@ export function AppShell({
       </div>
 
       {menuOpen ? (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 rail:hidden">
           <button
             type="button"
             className="absolute inset-0 bg-scrim"

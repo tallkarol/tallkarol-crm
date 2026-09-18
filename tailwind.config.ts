@@ -49,6 +49,13 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        // Below md (768px) the chrome switches to the phone top bar + drawer,
+        // which is the wrong call on a half-screen window: Karol's display is
+        // 1512pt wide, so a half-screen tile is 756px. This sits just under
+        // that so the desktop rail still wins at half-screen.
+        rail: "700px",
+      },
       colors: {
         /* Brand literals. LOCKED. These are what make bg-tk-onyx stay onyx in
            both themes (the payload block, CopyButton, the rail) and a teal

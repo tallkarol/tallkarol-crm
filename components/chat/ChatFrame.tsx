@@ -57,7 +57,7 @@ export function ChatFrame({
       <div className="relative flex min-h-0 flex-1">
         <aside
           aria-label="Threads and skills"
-          className="hidden w-[18rem] shrink-0 flex-col border-r border-line bg-card md:flex"
+          className="hidden w-[18rem] shrink-0 flex-col border-r border-line bg-card rail:flex"
         >
           {sidebar}
         </aside>
@@ -65,7 +65,7 @@ export function ChatFrame({
         <section className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</section>
 
         {open ? (
-          <div className="absolute inset-0 z-40 md:hidden">
+          <div className="absolute inset-0 z-40 rail:hidden">
             <button
               type="button"
               className="absolute inset-0 bg-scrim"
