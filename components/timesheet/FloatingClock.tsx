@@ -1,25 +1,24 @@
 "use client"
 
 import {
-  useCallback,
-  useEffect,
   useLayoutEffect,
+  useEffect,
   useRef,
   useState,
   useTransition,
 } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { GripVertical, Square } from "lucide-react"
 import { REC_MARK } from "@/components/meeting-notes/RecordPanel"
 import { formatClock } from "@/lib/meeting-note"
-import { liveRecordingNow, stopRecordingAction } from "@/lib/meeting-note-actions"
+import { stopRecordingAction } from "@/lib/meeting-note-actions"
 import type { LiveView } from "@/lib/meeting-notes"
 import { clockLabel, useElapsed } from "@/components/timesheet/useElapsed"
+import { useRunningClock } from "@/components/timesheet/RunningClockProvider"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
-import { runningNow, stopPunch } from "@/lib/punch-actions"
-import { announcePunchChange, onPunchChange } from "@/lib/punch-signal"
+import { stopPunch } from "@/lib/punch-actions"
+import { announcePunchChange } from "@/lib/punch-signal"
 import type { PunchView } from "@/lib/punches"
 
 /**
@@ -32,16 +31,12 @@ import type { PunchView } from "@/lib/punches"
  * the window shrinks. Mounted by the admin layout *outside* the app shell, so
  * no scrolling or transformed ancestor can trap the fixed positioning.
  *
- * Data: the layout's server render seeds it; afterwards it polls on a slow
- * interval and refetches on focus, on navigation, and the moment anything in
- * the browser announces a punch change. The poll is what makes a clock-in
- * from the watch or the Mac widget show up here without a reload.
+ * Data comes from RunningClockProvider (mounted once in the admin layout) —
+ * the same poll the Time hub panel's clock card reads, so two surfaces never
+ * mean two intervals hitting the server.
  */
 
 const POSITION_KEY = "tk-crm-clock-position"
-const POLL_MS = 30_000
-/** A recording changes state in seconds — starting, stopping — so the pill polls faster while one is live. */
-const LIVE_POLL_MS = 5_000
 const EDGE = 8
 const NUDGE = 12
 
@@ -77,54 +72,9 @@ function clamp(point: Point, el: HTMLElement | null): Point {
   }
 }
 
-export function FloatingClock({
-  initial,
-  initialRecording = null,
-}: {
-  initial: PunchView[]
-  initialRecording?: LiveView | null
-}) {
-  const pathname = usePathname()
-  const [running, setRunning] = useState(initial)
-  const [recording, setRecording] = useState<LiveView | null>(initialRecording)
+export function FloatingClock() {
+  const { running, recording, refresh } = useRunningClock()
   const [error, setError] = useState<string | null>(null)
-
-  // The server render is the freshest data on a hard load; on soft
-  // navigation the layout keeps its old props, so the poll below takes over.
-  useEffect(() => setRunning(initial), [initial])
-  useEffect(() => setRecording(initialRecording), [initialRecording])
-
-  const refresh = useCallback(async () => {
-    try {
-      const [punches, live] = await Promise.all([runningNow(), liveRecordingNow()])
-      setRunning(punches)
-      setRecording(live)
-    } catch {
-      /* transient — the next poll retries */
-    }
-  }, [])
-
-  useEffect(() => {
-    void refresh()
-  }, [pathname, refresh])
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void refresh()
-    }, recording ? LIVE_POLL_MS : POLL_MS)
-    const onVisible = () => {
-      if (document.visibilityState === "visible") void refresh()
-    }
-    document.addEventListener("visibilitychange", onVisible)
-    window.addEventListener("focus", onVisible)
-    const off = onPunchChange(() => void refresh())
-    return () => {
-      window.clearInterval(timer)
-      document.removeEventListener("visibilitychange", onVisible)
-      window.removeEventListener("focus", onVisible)
-      off()
-    }
-  }, [refresh, recording])
 
   /* ---- position ---- */
   const ref = useRef<HTMLDivElement>(null)

@@ -108,7 +108,7 @@ export const SCAFFOLDS: readonly Scaffold[] = [
       {
         title: "Add a page",
         steps: [
-          "Add the path to ROUTES in lib/nav.ts and a NavLink in the right section (plus an icon name).",
+          "Add the path to ROUTES in lib/nav.ts and, if it belongs on the dock, a NavLink in the right DOCK_NAV group (plus an icon name) — otherwise it stays parked, reachable by URL and ⌘K only.",
           "Map the icon name to a lucide icon in lib/nav-icons.ts.",
           "Create app/(admin)/<route>/page.tsx starting with <PageHeader title=…> — export metadata and, if it reads the db, dynamic = \"force-dynamic\".",
           "Mutations live in a sibling actions.ts as server actions.",

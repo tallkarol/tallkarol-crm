@@ -7,9 +7,9 @@ import { AppShell } from "@/components/AppShell"
 import { probeModules } from "@/lib/activity/modules"
 import { activityFlags } from "@/lib/activity/settings"
 import { FloatingClock } from "@/components/timesheet/FloatingClock"
+import { RunningClockProvider } from "@/components/timesheet/RunningClockProvider"
 import { getSessionUser } from "@/lib/auth"
-import { adminNav, ROUTES } from "@/lib/nav"
-import { flattenProducts, studiosWithProducts } from "@/lib/products"
+import { ROUTES } from "@/lib/nav"
 import { COLOR_GLOBAL } from "@/lib/client-colors"
 import { hydrateClientColors } from "@/lib/client-colors-store"
 import { HIDE_MONEY_GLOBAL } from "@/lib/money-privacy"
@@ -17,7 +17,7 @@ import { readHideMoneyCookie } from "@/lib/money-privacy-server"
 import { readThemeCookie } from "@/lib/theme-server"
 import { loadUnread } from "@/lib/unread-data"
 import { worstTone } from "@/lib/unread"
-import { runningPunches } from "@/lib/punches"
+import { pendingPunchCount, runningPunches } from "@/lib/punches"
 import { liveRecording } from "@/lib/meeting-notes"
 
 export const metadata = rootMetadata
@@ -43,9 +43,11 @@ export default async function AdminLayout({
   // One read behind every badge and behind the dashboard's Unread card, so a
   // badge can never disagree with the card or the page it points at. The call
   // is request-cached, so the dashboard shares this one rather than repeating it.
-  const [unread, catalog, colors, running, recording, activity] = await Promise.all([
+  const [unread, pendingPunches, colors, running, recording, activity] = await Promise.all([
     loadUnread(),
-    studiosWithProducts(),
+    // A plain count(*) — same cost class as the unread/leads/tickets reads
+    // below, so the Time hub's Review badge costs nothing extra to add.
+    pendingPunchCount(user.id),
     // Fills the map `clientColor()` reads, for this request's server render.
     hydrateClientColors(),
     runningPunches(user.id),
@@ -62,6 +64,7 @@ export default async function AdminLayout({
     },
     [ROUTES.leads]: { count: unread.leads.count, tone: unread.leads.tone },
     [ROUTES.support]: { count: unread.tickets.count, tone: unread.tickets.tone },
+    [ROUTES.timesheetReview]: { count: pendingPunches },
   }
 
   return (
@@ -103,17 +106,18 @@ export default async function AdminLayout({
             "try{var p=new URLSearchParams(location.search).get('embed');if(p)sessionStorage.setItem('tk-embed',p);var m=p||sessionStorage.getItem('tk-embed');if(m)document.documentElement.dataset.embed=m}catch(e){}",
         }}
       />
-    <AppShell
-      email={user.email}
-      badges={badges}
-      nav={adminNav(flattenProducts(catalog))}
-      hideMoney={hideMoney}
-      theme={theme}
-    >
-      {children}
-    </AppShell>
-    {/* Outside the shell so no overflow or transform on an ancestor can trap it. */}
-    <FloatingClock initial={running} initialRecording={recording} />
+    <RunningClockProvider initial={running} initialRecording={recording}>
+      <AppShell
+        email={user.email}
+        badges={badges}
+        hideMoney={hideMoney}
+        theme={theme}
+      >
+        {children}
+      </AppShell>
+      {/* Outside the shell so no overflow or transform on an ancestor can trap it. */}
+      <FloatingClock />
+    </RunningClockProvider>
     {/* How the CRM gets used — renders nothing. See ACTIVITY.md. */}
     {activity ? (
       <Suspense fallback={null}>

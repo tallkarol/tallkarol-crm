@@ -2,19 +2,17 @@
 
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
-import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react"
-import { BrandMark } from "@/components/BrandMark"
 import { DeskDock } from "@/components/chat/DeskDock"
-import { SidebarNav, type NavBadge } from "@/components/SidebarNav"
-import { ThemeToggle } from "@/components/ThemeToggle"
-import { logoutAction } from "@/lib/actions"
+import { DockRail } from "@/components/nav/DockRail"
+import { HubPanel } from "@/components/nav/HubPanel"
+import { MobileNav } from "@/components/nav/MobileNav"
 import { cn } from "@/lib/cn"
-import { HideMoneyToggle } from "@/components/HideMoneyToggle"
-import { ADMIN_NAV, ROUTES, type NavSection } from "@/lib/nav"
+import { DOCK_NAV, ROUTES, resolveActiveNav, type NavBadge } from "@/lib/nav"
 import { primeHideMoney } from "@/lib/money-privacy"
 import type { Theme } from "@/lib/theme"
 
-const STORAGE_KEY = "tk-crm-sidebar-collapsed"
+const PINNED_KEY = "tk-crm-panel-pinned"
+const GROUP_KEY = "tk-crm-panel-group"
 
 /**
  * Routes that own their own scrolling. The chat is one frame the height of
@@ -24,10 +22,21 @@ const STORAGE_KEY = "tk-crm-sidebar-collapsed"
  */
 const FULL_BLEED = new Set<string>([ROUTES.chat])
 
+/** "Review" on /timesheet/review, "Dashboard" on the monogram, "Chat" on
+ *  /chat — the phone header's title. Falls back to the last path segment
+ *  for a parked page, which has no row in the dock to read a label from. */
+function titleFor(pathname: string, itemLabel: string | undefined): string {
+  if (itemLabel) return itemLabel
+  if (pathname === "/") return "Dashboard"
+  if (pathname === ROUTES.chat) return "Chat"
+  const last = pathname.split("/").filter(Boolean).pop() ?? ""
+  const words = last.replace(/-/g, " ")
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : "Tall Karol"
+}
+
 export function AppShell({
   email,
   badges = {},
-  nav = ADMIN_NAV,
   hideMoney = false,
   theme = "system",
   children,
@@ -35,7 +44,6 @@ export function AppShell({
   email: string
   /** Keyed by href — see `lib/unread.ts` for what the counts and tones mean. */
   badges?: Record<string, NavBadge>
-  nav?: readonly NavSection[]
   /** Demo mode, from the cookie the admin layout read. */
   hideMoney?: boolean
   /** Appearance, from the cookie the admin layout read. */
@@ -49,48 +57,56 @@ export function AppShell({
 
   const pathname = usePathname()
   const fullBleed = FULL_BLEED.has(pathname)
-  const [collapsed, setCollapsed] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [pinned, setPinned] = useState(true)
+  const [lastGroupId, setLastGroupId] = useState<string>(DOCK_NAV[0].id)
+  // The dock's Chat icon can wear the desks' "needs a yes" total, but the
+  // count has to come up from DeskDock's own 30s poll rather than a second
+  // one. That prop is waiting on the chat session's in-flight work, so the
+  // dot stays dark until it lands.
+  const [chatNeedsYou] = useState(0)
 
   useEffect(() => {
     try {
-      setCollapsed(localStorage.getItem(STORAGE_KEY) === "true")
+      const rawPinned = localStorage.getItem(PINNED_KEY)
+      if (rawPinned !== null) setPinned(rawPinned === "true")
+      const rawGroup = localStorage.getItem(GROUP_KEY)
+      if (rawGroup && DOCK_NAV.some((g) => g.id === rawGroup)) setLastGroupId(rawGroup)
     } catch {
       /* ignore */
     }
   }, [])
 
-  useEffect(() => {
-    setMenuOpen(false)
-  }, [pathname])
+  // The pathname is the source of truth for which group is current — a
+  // group opened by clicking its dock icon before navigating away must not
+  // outlive the navigation. Only chrome-only routes (the dashboard, /chat, a
+  // parked settings page) fall back to whichever group was last real, so the
+  // panel has something sensible to show rather than nothing.
+  const activeNav = resolveActiveNav(pathname)
+  const activeGroupId = activeNav?.group.id ?? lastGroupId
 
   useEffect(() => {
-    if (!menuOpen) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMenuOpen(false)
+    if (!activeNav) return
+    setLastGroupId(activeNav.group.id)
+    try {
+      localStorage.setItem(GROUP_KEY, activeNav.group.id)
+    } catch {
+      /* ignore */
     }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [menuOpen])
+  }, [activeNav])
 
-  useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : ""
-    return () => {
-      document.body.style.overflow = ""
-    }
-  }, [menuOpen])
-
-  function toggleCollapsed() {
-    setCollapsed((current) => {
+  function togglePinned() {
+    setPinned((current) => {
       const next = !current
       try {
-        localStorage.setItem(STORAGE_KEY, String(next))
+        localStorage.setItem(PINNED_KEY, String(next))
       } catch {
         /* ignore */
       }
       return next
     })
   }
+
+  const openGroup = DOCK_NAV.find((g) => g.id === activeGroupId) ?? DOCK_NAV[0]
 
   return (
     <div className="flex h-[100dvh] min-w-0 flex-1 flex-col overflow-hidden rail:flex-row">
@@ -101,85 +117,45 @@ export function AppShell({
         Skip to main content
       </a>
 
-      {/* The rail: onyx in both themes, so the brand chrome is the one
-          constant while the canvas flips. */}
-      <aside
-        data-chrome="sidebar"
-        className={cn(
-          "hidden h-full shrink-0 flex-col border-r border-rail-ink/10 bg-rail text-rail-ink rail:flex",
-          "transition-[width] duration-200 ease-out motion-reduce:transition-none",
-          collapsed ? "w-[4.25rem]" : "w-[15.5rem]"
-        )}
-      >
-        <div
-          className={cn(
-            "flex items-center gap-2 pb-2 pt-[18px]",
-            collapsed ? "flex-col px-2" : "justify-between pl-[18px] pr-3"
-          )}
-        >
-          <BrandMark compact={collapsed} tone="rail" />
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            aria-expanded={!collapsed}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-rail-ink/50 hover:bg-rail-ink/[0.06] hover:text-rail-ink"
-          >
-            {collapsed ? (
-              <PanelLeftOpen className="size-4" aria-hidden />
-            ) : (
-              <PanelLeftClose className="size-4" aria-hidden />
-            )}
-          </button>
-        </div>
-        <div
-          className={cn(
-            "tk-nav-scroll min-h-0 flex-1 overflow-y-auto py-3",
-            collapsed ? "tk-nav-scroll--compact px-1.5" : "px-2.5"
-          )}
-        >
-          <SidebarNav
-            sections={nav}
-            collapsed={collapsed}
-            badges={badges}
-          />
-        </div>
-        <UserFooter
-          email={email}
-          collapsed={collapsed}
-          hideMoney={hideMoney}
-          theme={theme}
+      {/* Desktop and tablet: the 76px dock, then the panel beside it when
+          pinned open. Below the `rail` breakpoint both are replaced by
+          MobileNav's top bar, bottom bar and sheet. */}
+      <DockRail
+        badges={badges}
+        chatNeedsYou={chatNeedsYou}
+        activeGroupId={activeGroupId}
+        pinned={pinned}
+        onTogglePinned={togglePinned}
+        email={email}
+        hideMoney={hideMoney}
+        theme={theme}
+      />
+      {pinned ? (
+        <HubPanel
+          group={openGroup}
+          activeHref={activeNav?.item.href ?? null}
+          badges={badges}
+          pinned={pinned}
+          onTogglePinned={togglePinned}
+          className="hidden w-[236px] shrink-0 flex-col gap-3.5 border-r border-rail-line bg-rail-2 px-3 py-5 rail:flex"
         />
-      </aside>
+      ) : null}
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <header
-          data-chrome="topbar"
-          className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line bg-well px-4 backdrop-blur-md rail:hidden"
-        >
-          <BrandMark />
-          <button
-            type="button"
-            className="flex size-9 items-center justify-center rounded-lg text-tk-onyx hover:bg-well transition-colors duration-[120ms]"
-            aria-expanded={menuOpen}
-            aria-controls="tk-crm-mobile-nav"
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            {menuOpen ? (
-              <X className="size-5" aria-hidden />
-            ) : (
-              <Menu className="size-5" aria-hidden />
-            )}
-          </button>
-        </header>
+        <MobileNav
+          activeHref={activeNav?.item.href ?? null}
+          title={titleFor(pathname, activeNav?.item.label)}
+          activeGroupId={activeNav ? activeGroupId : null}
+          badges={badges}
+          chatNeedsYou={chatNeedsYou}
+        />
 
         {/* The page and, on the right edge, the desk dock — a panel when a desk is open. */}
         <div className="flex min-h-0 min-w-0 flex-1">
           <main
             id="main"
             className={cn(
-              "relative min-w-0 flex-1",
+              "relative min-w-0 flex-1 pb-[76px] rail:pb-0",
               fullBleed
                 ? "flex min-h-0 flex-col overflow-hidden"
                 : "tk-main-scroll overflow-x-hidden overflow-y-auto"
@@ -197,109 +173,6 @@ export function AppShell({
           <DeskDock />
         </div>
       </div>
-
-      {menuOpen ? (
-        <div className="fixed inset-0 z-50 rail:hidden">
-          <button
-            type="button"
-            className="absolute inset-0 bg-scrim"
-            aria-label="Close menu"
-            onClick={() => setMenuOpen(false)}
-          />
-          <aside
-            id="tk-crm-mobile-nav"
-            className="relative flex h-full w-[min(18rem,88vw)] flex-col bg-rail text-rail-ink shadow-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Navigation menu"
-          >
-            <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-rail-ink/10 px-4">
-              <BrandMark onClick={() => setMenuOpen(false)} tone="rail" />
-              <button
-                type="button"
-                className="flex size-9 items-center justify-center rounded-lg text-rail-ink/70 hover:bg-rail-ink/[0.06] hover:text-rail-ink"
-                aria-label="Close menu"
-                onClick={() => setMenuOpen(false)}
-              >
-                <X className="size-5" aria-hidden />
-              </button>
-            </div>
-            <div className="tk-nav-scroll min-h-0 flex-1 overflow-y-auto px-2.5 py-3">
-              <SidebarNav
-                sections={nav}
-                badges={badges}
-                onNavigate={() => setMenuOpen(false)}
-              />
-            </div>
-            <UserFooter email={email} hideMoney={hideMoney} theme={theme} />
-          </aside>
-        </div>
-      ) : null}
-    </div>
-  )
-}
-
-function UserFooter({
-  email,
-  collapsed,
-  hideMoney,
-  theme,
-}: {
-  email: string
-  collapsed?: boolean
-  hideMoney: boolean
-  theme: Theme
-}) {
-  const initial = email.slice(0, 1).toUpperCase()
-
-  return (
-    <div
-      className={cn(
-        "mt-auto border-t border-rail-ink/10 bg-rail-2 py-3.5",
-        collapsed ? "px-2" : "px-3.5"
-      )}
-    >
-      {collapsed ? (
-        <div className="flex flex-col items-center gap-2">
-          <HideMoneyToggle initial={hideMoney} collapsed />
-          <ThemeToggle initial={theme} collapsed />
-          <span
-            className="flex size-8 items-center justify-center rounded-full bg-[--rail-active] text-xs font-bold text-[--rail-active-icon]"
-            title={email}
-          >
-            {initial}
-          </span>
-          <form action={logoutAction}>
-            <button
-              type="submit"
-              className="text-[11px] font-semibold text-rail-ink/60 hover:text-rail-ink hover:underline"
-            >
-              Out
-            </button>
-          </form>
-        </div>
-      ) : (
-        <div className="space-y-2.5">
-          <HideMoneyToggle initial={hideMoney} />
-          <ThemeToggle initial={theme} />
-          <div className="flex items-center justify-between gap-3 pt-0.5">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[--rail-active] text-[11px] font-bold text-[--rail-active-icon]">
-                {initial}
-              </span>
-              <span className="truncate text-xs text-rail-ink/70">{email}</span>
-            </div>
-            <form action={logoutAction}>
-              <button
-                type="submit"
-                className="shrink-0 text-xs font-semibold text-rail-ink/70 hover:text-rail-ink hover:underline"
-              >
-                Sign out
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

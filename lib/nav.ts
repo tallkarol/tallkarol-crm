@@ -1,3 +1,5 @@
+import type { UnreadTone } from "@/lib/unread"
+
 export type NavIconName =
   | "dashboard"
   | "chat"
@@ -22,9 +24,10 @@ export type NavIconName =
   | "expenses"
   | "timesheet"
   | "clock"
+  | "timer"
   | "review"
   | "sheets"
-  | "ledger"
+  | "list"
   | "sessions"
   | "devices"
   | "attribution"
@@ -52,11 +55,30 @@ export type NavLink = {
   href: string
   label: string
   icon: NavIconName
-  children?: readonly NavLink[]
 }
 
 export type NavSection = {
   title?: string
+  items: readonly NavLink[]
+}
+
+/**
+ * A count on a dock badge or a panel row. Shared with `lib/unread.ts`'s tone
+ * ladder so a badge and the card it summarises never tell two stories — see
+ * SidebarNav's old doc comment, which this replaces.
+ */
+export type NavBadge = { count: number; tone?: UnreadTone }
+
+/**
+ * One of the six groups on the dock: an icon in the 76px rail, and the pages
+ * that live in its 236px panel. `href` is the group's landing page — the
+ * dock icon is a real link there, not just a panel toggle.
+ */
+export type NavGroup = {
+  id: string
+  label: string
+  icon: NavIconName
+  href: string
   items: readonly NavLink[]
 }
 
@@ -136,147 +158,131 @@ export const ROUTES = {
   inquiry: (id: string) => `/inquiries/${id}`,
 } as const
 
-export const ADMIN_NAV: readonly NavSection[] = [
+/**
+ * The dock: one icon per group, its pages in the panel beside it. Signed off
+ * 18 Sep 2026 from `~/Work/tallkarol/nav-mockup.html` (its DEFAULT_MODEL) —
+ * 35 rows collapsed to six groups on the surface. The pick and the usage
+ * sweep behind it are in the `crm-nav-dock-panel` memory note. Group order,
+ * page order and labels are the signed-off list; do not re-sort by hand.
+ *
+ * Chrome, not a group: `/` (the monogram), `/chat` (an icon beside the panel
+ * toggle), ⌘K search, and the avatar menu (theme, hide-money, sign out).
+ *
+ * Parked — reachable by URL and ⌘K, not in the dock:
+ *   /settings/notifications — Notifications
+ *   /settings/colors — Colours
+ *   /settings/portals — Client portals
+ *   /settings/integrations — Integrations
+ *   /settings/integrations/devices — Devices
+ *
+ * Off every surface:
+ *   /contacts — stub: ComingSoon, no contacts table
+ *   /emails — stub: ComingSoon, never in the nav
+ *   /settings/team — stub: ComingSoon, one admin
+ *   /settings/email — stub: ComingSoon
+ *   /settings/attribution — stub: ComingSoon
+ *   /inquiries — redirect: → /inbox?kind=lead (same intake as Leads)
+ *   /pipeline — redirect: → /delivery, kept for old bookmarks
+ *   /analytics — redirect: → /insights
+ *   /attribution — redirect: → /settings
+ *   /timesheet/meetings — redirect: → /timesheet/review?tab=meetings
+ *
+ * On the client hub instead of the dock (Karol, 12 Sep — see ON_HUB in the
+ * mockup): meeting notes, notebooks, inspiration, paid ads and vault all also
+ * hang a link off /clients/[slug]; tasks and tickets keep their client filter
+ * there too. That is a client-hub concern, not this file's.
+ */
+export const DOCK_NAV: readonly NavGroup[] = [
   {
+    id: "time",
+    label: "Time",
+    icon: "clock",
+    href: ROUTES.timesheetLive,
     items: [
-      { href: ROUTES.home, label: "Dashboard", icon: "dashboard" },
-      { href: ROUTES.chat, label: "Chat", icon: "chat" },
+      { href: ROUTES.timesheetLive, label: "Clock", icon: "timer" },
+      { href: ROUTES.timesheet, label: "Timesheet", icon: "clock" },
+      { href: ROUTES.timesheetReview, label: "Review", icon: "review" },
+      { href: ROUTES.timesheetSheets, label: "Sheets", icon: "sheets" },
+      { href: ROUTES.timesheetEntries, label: "Ledger", icon: "list" },
+      { href: ROUTES.timesheetSessions, label: "Sessions", icon: "sessions" },
+      { href: ROUTES.usage, label: "Usage", icon: "usage" },
+    ],
+  },
+  {
+    id: "inbox",
+    label: "Inbox",
+    icon: "inbox",
+    href: ROUTES.inbox,
+    items: [
       { href: ROUTES.inbox, label: "Inbox", icon: "inbox" },
-      { href: ROUTES.leads, label: "Leads", icon: "leads" },
       { href: ROUTES.support, label: "Tickets", icon: "support" },
-      { href: ROUTES.calendar, label: "Calendar", icon: "calendar" },
+      { href: ROUTES.leads, label: "Leads", icon: "leads" },
+    ],
+  },
+  {
+    id: "work",
+    label: "Work",
+    icon: "tasks",
+    href: ROUTES.tasks,
+    items: [
       { href: ROUTES.tasks, label: "Tasks", icon: "tasks" },
-      {
-        href: ROUTES.timesheet,
-        label: "Timesheet",
-        icon: "timesheet",
-        children: [
-          { href: ROUTES.timesheetLive, label: "Clock", icon: "clock" },
-          { href: ROUTES.timesheetReview, label: "Review", icon: "review" },
-          { href: ROUTES.timesheetSheets, label: "Sheets", icon: "sheets" },
-          { href: ROUTES.timesheetEntries, label: "Ledger", icon: "ledger" },
-          { href: ROUTES.timesheetSessions, label: "Sessions", icon: "sessions" },
-          { href: ROUTES.usage, label: "Usage", icon: "usage" },
-        ],
-      },
-      { href: ROUTES.meetingNotes, label: "Meeting notes", icon: "meeting-notes" },
-    ],
-  },
-  {
-    title: "Insights",
-    items: [
-      { href: ROUTES.insights, label: "Analytics", icon: "analytics" },
-      { href: ROUTES.paidAds, label: "Paid Ads", icon: "ads" },
-      { href: ROUTES.reports, label: "Reports", icon: "reports" },
-      { href: ROUTES.logs, label: "Logs", icon: "logs" },
-      { href: ROUTES.uptime, label: "Uptime", icon: "uptime" },
-    ],
-  },
-  {
-    title: "Delivery",
-    items: [
+      { href: ROUTES.calendar, label: "Calendar", icon: "calendar" },
       { href: ROUTES.delivery, label: "Delivery", icon: "delivery" },
       { href: ROUTES.projects, label: "Projects", icon: "projects" },
-      { href: ROUTES.punchlists, label: "Punch lists", icon: "punchlists" },
       { href: ROUTES.retainers, label: "Retainers", icon: "retainers" },
+      { href: ROUTES.punchlists, label: "Punch lists", icon: "punchlists" },
+      { href: ROUTES.products, label: "Products", icon: "product" },
     ],
   },
   {
-    title: "Products",
+    id: "clients",
+    label: "Clients",
+    icon: "clients",
+    href: ROUTES.clients,
     items: [
-      {
-        href: ROUTES.products,
-        label: "Products",
-        icon: "product",
-        children: [],
-      },
-    ],
-  },
-  {
-    title: "Accounts",
-    items: [
-      { href: ROUTES.contacts, label: "Contacts", icon: "contacts" },
       { href: ROUTES.clients, label: "Clients", icon: "clients" },
-      { href: ROUTES.notebooks, label: "Notebooks", icon: "notebooks" },
-      { href: ROUTES.inspiration, label: "Inspiration", icon: "inspiration" },
+      { href: ROUTES.insights, label: "Insights", icon: "analytics" },
+      { href: ROUTES.paidAds, label: "Paid Ads", icon: "ads" },
+      { href: ROUTES.reports, label: "Reports", icon: "reports" },
       { href: ROUTES.proposals, label: "Proposals", icon: "proposals" },
       { href: ROUTES.worksheets, label: "Worksheets", icon: "worksheets" },
       { href: ROUTES.contracts, label: "Contracts", icon: "contracts" },
-      { href: ROUTES.expenses, label: "Expenses", icon: "expenses" },
-      { href: ROUTES.invoices, label: "Invoices", icon: "invoices" },
-      { href: ROUTES.revenue, label: "Revenue", icon: "revenue" },
+      { href: ROUTES.meetingNotes, label: "Meeting notes", icon: "meeting-notes" },
+      { href: ROUTES.notebooks, label: "Notebooks", icon: "notebooks" },
+      { href: ROUTES.inspiration, label: "Inspiration", icon: "inspiration" },
     ],
   },
   {
-    title: "Workspace",
+    id: "money",
+    label: "Money",
+    icon: "invoices",
+    href: ROUTES.invoices,
     items: [
-      { href: ROUTES.vault, label: "Vault", icon: "vault" },
-      { href: ROUTES.slinks, label: "Slinks", icon: "slinks" },
-      { href: ROUTES.scaffolds, label: "Scaffolds", icon: "scaffolds" },
-      { href: ROUTES.hivemind, label: "Hive mind", icon: "hivemind" },
-      { href: ROUTES.activity, label: "Activity", icon: "activity" },
-      {
-        href: ROUTES.settings,
-        label: "Settings",
-        icon: "settings",
-        children: [
-          { href: ROUTES.settingsNotifications, label: "Notifications", icon: "settings" },
-          { href: ROUTES.settingsColors, label: "Colours", icon: "clients" },
-          { href: ROUTES.settingsPortals, label: "Client Portals", icon: "clients" },
-          { href: ROUTES.settingsTeam, label: "Team", icon: "team" },
-          { href: ROUTES.settingsEmail, label: "Email", icon: "email-settings" },
-          {
-            href: ROUTES.attribution,
-            label: "Attribution",
-            icon: "attribution",
-          },
-          {
-            href: ROUTES.settingsIntegrations,
-            label: "Integrations",
-            icon: "integrations",
-          },
-          { href: ROUTES.settingsDevices, label: "Devices", icon: "devices" },
-        ],
-      },
+      { href: ROUTES.invoices, label: "Invoices", icon: "invoices" },
+      { href: ROUTES.revenue, label: "Revenue", icon: "revenue" },
+      { href: ROUTES.expenses, label: "Expenses", icon: "expenses" },
     ],
   },
-]
-
-export type ProductNavItem = {
-  slug: string
-  name: string
-}
-
-/** Fills the Products section from the catalog so a new product is a nav link. */
-export function adminNav(
-  products: readonly ProductNavItem[] = []
-): NavSection[] {
-  return ADMIN_NAV.map((section) => {
-    if (section.title !== "Products") return section
-    return {
-      title: "Products",
-      items: [
-        {
-          href: ROUTES.products,
-          label: "Products",
-          icon: "product",
-          children: products.map((product) => ({
-            href: ROUTES.productPage(product.slug),
-            label: product.name,
-            icon: "product" as const,
-          })),
-        },
-      ],
-    }
-  })
-}
+  {
+    id: "studio",
+    label: "Studio",
+    icon: "scaffolds",
+    href: ROUTES.vault,
+    items: [
+      { href: ROUTES.vault, label: "Vault", icon: "vault" },
+      { href: ROUTES.hivemind, label: "HiveMind", icon: "hivemind" },
+      { href: ROUTES.scaffolds, label: "Scaffolds", icon: "scaffolds" },
+      { href: ROUTES.activity, label: "Activity", icon: "activity" },
+      { href: ROUTES.uptime, label: "Uptime", icon: "uptime" },
+      { href: ROUTES.logs, label: "Logs", icon: "logs" },
+      { href: ROUTES.slinks, label: "Slinks", icon: "slinks" },
+      { href: ROUTES.settings, label: "Settings", icon: "settings" },
+    ],
+  },
+] as const
 
 function flattenNav(sections: readonly NavSection[]): NavLink[] {
-  return sections.flatMap((section) =>
-    section.items.flatMap((item) =>
-      item.children?.length ? [item, ...item.children] : [item]
-    )
-  )
+  return sections.flatMap((section) => section.items)
 }
 
 export function pathMatchesHref(pathname: string, href: string): boolean {
@@ -284,9 +290,15 @@ export function pathMatchesHref(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
+/**
+ * Longest-prefix match over a flat `NavSection[]` tree. Nothing in the app
+ * builds that shape anymore now that the dock replaced the sidebar, but the
+ * function stays correct and exported per the nav rebuild's brief — keep it
+ * working rather than delete it out from under some future importer.
+ */
 export function resolveActiveHref(
   pathname: string,
-  sections: readonly NavSection[] = ADMIN_NAV
+  sections: readonly NavSection[] = []
 ): string | null {
   const matches = flattenNav(sections).filter((item) =>
     pathMatchesHref(pathname, item.href)
@@ -295,4 +307,48 @@ export function resolveActiveHref(
   return matches.reduce((best, cur) =>
     cur.href.length > best.href.length ? cur : best
   ).href
+}
+
+export type ActiveNav = { group: NavGroup; item: NavLink }
+
+/**
+ * The dock+panel version of `resolveActiveHref`: longest-prefix match, but
+ * across every group's items at once, returning which GROUP owns the match
+ * as well as which row. Null on a chrome-only route — the dashboard, /chat,
+ * or a parked settings page — where no group is "current" and the panel
+ * should keep showing whatever it last had open rather than guess.
+ */
+export function resolveActiveNav(
+  pathname: string,
+  groups: readonly NavGroup[] = DOCK_NAV
+): ActiveNav | null {
+  let best: ActiveNav | null = null
+  for (const group of groups) {
+    for (const item of group.items) {
+      if (!pathMatchesHref(pathname, item.href)) continue
+      if (!best || item.href.length > best.item.href.length) {
+        best = { group, item }
+      }
+    }
+  }
+  return best
+}
+
+/**
+ * The one badge a group's dock icon wears, if any — the first row in the
+ * group that has one. Deliberately NOT a sum: /inbox's own count is already
+ * every unread thing in the group (it includes what Leads and Tickets show
+ * separately), so adding them again would double it. Work, Clients, Money
+ * and Studio have no badge source today and always return undefined, which
+ * matches the mockup — only Time and Inbox carry a count in the dock.
+ */
+export function groupBadge(
+  group: NavGroup,
+  badges: Record<string, NavBadge>
+): NavBadge | undefined {
+  for (const item of group.items) {
+    const badge = badges[item.href]
+    if (badge && badge.count > 0) return badge
+  }
+  return undefined
 }

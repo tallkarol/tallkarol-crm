@@ -1,4 +1,4 @@
-import { ADMIN_NAV, type NavLink } from "@/lib/nav"
+import { DOCK_NAV, type NavLink } from "@/lib/nav"
 
 /**
  * Pathnames → route patterns, PURE.
@@ -91,10 +91,13 @@ export function matchRoute(pathname: string, compiled: Compiled[]): RouteMatch {
 
 /* ------------------------------------------------------------------ labels */
 
+/**
+ * The dock's rows as one flat list, for labelling — not what renders the
+ * chrome. DOCK_NAV groups are already flat (no children since the sidebar's
+ * nested rows were absorbed into the panel), so this is just a concat.
+ */
 function flatNav(): NavLink[] {
-  return ADMIN_NAV.flatMap((section) =>
-    section.items.flatMap((item) => (item.children?.length ? [item, ...item.children] : [item]))
-  )
+  return DOCK_NAV.flatMap((group) => group.items)
 }
 
 const NAV_LABEL: Record<string, string> = {}

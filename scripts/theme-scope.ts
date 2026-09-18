@@ -78,11 +78,6 @@ export const PINNED: Readonly<Record<string, readonly string[]>> = {
   "components/peek/SiteUptimePeek.tsx": ["text-[#CFD8D4]"],
   "components/peek/AppHealthPeek.tsx": ["text-[#CFD8D4]"],
 
-  // The rail is onyx in both themes; --warn is not. #8A5A05 vs the rail is
-  // 3.09:1 light / 3.24:1 dark with a linen count on it at 4.95:1. bg-warn in
-  // dark is #E4C07A and the linen count drops to 1.45:1.
-  "components/SidebarNav.tsx": ['warn: "bg-[#8A5A05]"'],
-
   // Literal linen on a bg-tk-teal pill. Neither borderColor nor ringColor has
   // a tk-linen key, so these fall through to the brand hex and are correct in
   // both themes. Do NOT "fix" them for consistency with the divide-tk-linen
