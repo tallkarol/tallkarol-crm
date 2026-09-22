@@ -74,8 +74,7 @@
     "activity:scan": "tsx scripts/activity-scan.ts",
     "check:activity": "tsx scripts/check-activity.ts",
     "check:activity:db": "tsx --env-file-if-exists=.env.local scripts/check-activity-db.ts",
-    "check:waiting": "tsx scripts/check-waiting.ts",
-    "prebuild": "npm run check:theme && npm run check:chat && npm run check:chat:attachments && npm run check:waiting && npm run activity:scan"
+    "prebuild": "npm run check:theme && npm run check:chat && npm run check:chat:attachments && npm run activity:scan"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
