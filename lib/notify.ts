@@ -148,12 +148,31 @@ function ensureVapid(): boolean {
 
 /* ----------------------------------------------------------------- send */
 
+/**
+ * A button on the notification itself.
+ *
+ * `action` is what the service worker switches on; `post` is the endpoint it
+ * calls with the session cookie, and `body` what it sends. Same shape as a
+ * `WaitingVerb` and for the same reason — the surface draws what the server
+ * says it may do, rather than holding its own copy of the rules.
+ *
+ * Two at most: Chrome and Android show two buttons and silently drop the
+ * rest, and a button nobody can see is worse than none.
+ */
+export type PushAction = {
+  action: string
+  title: string
+  post: string
+  body: Record<string, string>
+}
+
 export type PushPayload = {
   title: string
   body: string
   url: string
   kind?: string
   tag?: string
+  actions?: PushAction[]
 }
 
 export type SendReport = { sent: number; failed: number; pruned: number }
@@ -209,6 +228,8 @@ export type NotifyInput = {
   title?: string
   body: string
   url: string
+  /** Buttons on the notification. See `PushAction` — two at most. */
+  actions?: PushAction[]
   userId?: string | null
   now?: Date
 }
@@ -250,6 +271,7 @@ export async function notify(input: NotifyInput): Promise<NotifyResult> {
     url: input.url,
     kind: input.kind,
     tag: `${input.kind}:${input.dedupeKey}`,
+    actions: input.actions?.slice(0, 2),
   })
   return report.sent > 0 ? "sent" : "unsent"
 }

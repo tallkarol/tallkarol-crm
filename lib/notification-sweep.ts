@@ -12,6 +12,7 @@ import {
   setNotificationPrefs,
   type NotificationKind,
   type NotifyResult,
+  type PushAction,
 } from "@/lib/notify"
 
 /**
@@ -49,7 +50,14 @@ export async function sweepNotifications(now = new Date()): Promise<SweepReport>
   ])
 
   // Everything worth saying, as (kind, key, body, url).
-  const candidates: { kind: NotificationKind; key: string; body: string; url: string }[] = []
+  const candidates: {
+    kind: NotificationKind
+    key: string
+    body: string
+    url: string
+    /** Buttons on the notification, for the kinds that can be decided from one. */
+    actions?: PushAction[]
+  }[] = []
 
   for (const t of tickets.tickets) {
     candidates.push({
@@ -70,12 +78,25 @@ export async function sweepNotifications(now = new Date()): Promise<SweepReport>
   }
   // The call id is the dedupe key, so a write that sits for three days is
   // announced once rather than every fifteen minutes until it is decided.
+  //
+  // The buttons are the same offer the queue row makes, under the same rule:
+  // Confirm only where the title says everything the write does, Discard
+  // always. `/api/chat/approvals/[id]` takes a session cookie as well as a
+  // device token, which is what lets the service worker post from the phone.
   for (const a of approvals) {
+    const post = `/api/chat/approvals/${a.callId}`
+    const actions = [
+      ...(a.canConfirm
+        ? [{ action: "confirm", title: "Confirm", post, body: { approve: "true" } }]
+        : []),
+      { action: "discard", title: "Discard", post, body: { approve: "false" } },
+    ]
     candidates.push({
       kind: "chat.approval",
       key: a.callId,
       body: `${a.thread} · ${approvalLine(a)}`,
       url: a.href,
+      actions,
     })
   }
   if (hour >= 8) {
