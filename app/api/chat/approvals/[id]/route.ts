@@ -6,6 +6,7 @@ import {
   readJson,
   unauthorized,
 } from "@/lib/time-api"
+import { approveFromBody } from "@/lib/waiting"
 
 export const dynamic = "force-dynamic"
 
@@ -24,7 +25,10 @@ export async function POST(
   if (!caller) return unauthorized()
 
   const body = await readJson(request)
-  const approve = body.approve !== false
+  // Written beside the verbs that produce it, in lib/waiting.ts, and tested by
+  // `npm run check:waiting`. The queue sends `approve` as a string, and a bare
+  // truthiness check would read `"false"` as a Confirm.
+  const approve = approveFromBody(body.approve)
 
   const outcome = await decideToolCall({
     userId: caller.userId,
@@ -35,6 +39,10 @@ export async function POST(
   revalidatePath("/chat")
   revalidatePath("/timesheet")
   revalidatePath("/tasks")
+  // The dashboard carries the same parked write as a queue row now, so a
+  // decision made from a device has to clear it there too. `decideApproval`
+  // in lib/chat/actions.ts has always revalidated `/`; this path had not.
+  revalidatePath("/")
 
   if (!outcome.ok) {
     return NextResponse.json({ error: outcome.error }, { status: 400 })

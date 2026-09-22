@@ -207,6 +207,29 @@ agent never sends mail.
 The preview is built by the same tool that performs the write, from the same
 arguments, so the card cannot describe one time entry and file another.
 
+**A parked write is also a row on the dashboard.** The card in the thread was
+the only place one appeared, so a turn queued from the phone, picked up at 2am,
+or handed between desks stopped where nobody was looking — twelve writes were
+parked when this was built, the oldest seventeen days old. Every `pending` call
+now enters the decision queue as `agent_approval` (`lib/waiting.ts`, the
+`decide` band, one row per call), with Confirm, Discard and Open thread as
+verbs, and a `chat.approval` push deduped by the call id.
+
+Confirm is not offered for every tool. The queue row shows one line and the
+card shows every field, so only the writes whose title says everything they do
+can be taken blind; the list is `CONFIRM_FROM_STRIP` in
+`lib/chat/tool-helpers.ts`, and the punch tools, `propose_pack_line`,
+`create_calendar_event` and inbox triage are deliberately outside it. Those
+rows carry Discard and Open only, and say why. Discard is offered on every row,
+because refusing a write you cannot fully see is always safe.
+
+Deciding from the queue calls the same `decideApproval` the card calls, so both
+paths take one compare-and-swap and carry the same idempotency key into the
+domain write. `npm run check:waiting` covers the kinds table, the allow-list
+against the live tool registry, the row text, and how `approve` is read off the
+wire — the string `"false"` is truthy, and reading it as a Confirm would file
+the write it was refusing.
+
 **One exception, stated precisely.** A write whose target lives on the Mac —
 a line in a pack file — cannot run in the CRM, because the CRM has no pack
 files; and it cannot run before approval, because nothing does. So a tool
@@ -262,7 +285,7 @@ All on device-token auth (`authenticateTimeRequest`), same as `/api/time/*`.
 | `POST /api/chat` | phone shortcut, script. Queues a turn, returns the routing decision. |
 | `POST /api/chat/queue` | **worker.** Requeues turns a dead worker left, then claims the oldest queued turn and returns thread + tools + model. |
 | `POST /api/chat/turns/[id]` | **worker.** Posts the reply, or an error (with a `detector` to escalate), with its `worker` name. Accepted once: a second or late report answers 409. |
-| `POST /api/chat/approvals/[id]` | confirm or reject a parked write. |
+| `POST /api/chat/approvals/[id]` | confirm or reject a parked write. `{"approve": false}` or `"false"` rejects; an absent body approves. |
 | `POST /api/chat/pack-writes` | **worker.** Claims the oldest approved pack line (a claim older than five minutes with no outcome is claimable again). |
 | `POST /api/chat/pack-writes/[id]` | **worker.** Reports `{file, commit, changed}` or `{error}` for a claimed pack line. |
 | `POST /api/chat/digests` | **worker.** A quiet desk thread with no digest yet, with its messages; `?skip=id,id` for ones that just failed. |
@@ -312,6 +335,7 @@ such a turn stayed "Working" forever behind a green heartbeat.
 |---|---|---|
 | `npm run check:chat` | no | Ladder arithmetic — every rung pair must clear its break-even, rungs must climb in price, nothing escalates without a detector, and Elevate / a forced job cannot steal a locked job's tools. Also the prose parser (`lib/chat/prose.ts`: headings, nested lists, tables, quotes, fences, italics; only https and CRM paths become links) and the transcript rules. Runs in `prebuild`. |
 | `npm run check:chat:attachments` | no | Screenshot rules — PNG/JPEG sniffing from the bytes, size caps, safe file names, which images a turn carries and how the transcript numbers them. Runs in `prebuild`. |
+| `npm run check:waiting` | no | Parked writes as queue rows — the kinds table stays total, every name in `CONFIRM_FROM_STRIP` is still a real mutating tool (read from the registry), the row text a stored preview produces, and how `approve` is read off the wire. Runs in `prebuild`. |
 | `npm run check:chat:db` | yes | The spine end to end: routing, claiming, both kinds of tool, pricing, approval, the escalation chain, the newest-60 claim, a report accepted once, two confirms at once, archive settling parked cards. Creates throwaway threads and deletes them in a `finally`. |
 
 `check:chat:db` rejects the write it proposes rather than confirming it, so it

@@ -1,5 +1,7 @@
 import { occurredOnIn } from "@/lib/punch"
 import { workspaceTimezone } from "@/lib/timezone"
+import { approvalLine } from "@/lib/waiting"
+import { approvalFacts } from "@/lib/waiting-data"
 import { widgetAttention, widgetTasks, widgetTickets } from "@/lib/widget"
 import { widgetUserId } from "@/lib/widget-auth"
 import { widgetClock } from "@/lib/widget-clock"
@@ -37,11 +39,12 @@ export async function sweepNotifications(now = new Date()): Promise<SweepReport>
   const today = occurredOnIn(now, tz)
   const { hour, isWeekday } = localHourAndWeekday(now, tz)
 
-  const [clock, tasks, tickets, attention, prefs] = await Promise.all([
+  const [clock, tasks, tickets, attention, approvals, prefs] = await Promise.all([
     widgetClock(userId, now),
     widgetTasks(now),
     widgetTickets(now),
     widgetAttention(now),
+    approvalFacts(),
     getNotificationPrefs(),
   ])
 
@@ -64,6 +67,16 @@ export async function sweepNotifications(now = new Date()): Promise<SweepReport>
     if (t.badgeTone === "hot") {
       candidates.push({ kind: "task.overdue", key: t.id, body: `${t.title} · ${t.context}`, url: t.href })
     }
+  }
+  // The call id is the dedupe key, so a write that sits for three days is
+  // announced once rather than every fifteen minutes until it is decided.
+  for (const a of approvals) {
+    candidates.push({
+      kind: "chat.approval",
+      key: a.callId,
+      body: `${a.thread} · ${approvalLine(a)}`,
+      url: a.href,
+    })
   }
   if (hour >= 8) {
     const due = tasks.tasks.filter((t) => t.dueOn === today)

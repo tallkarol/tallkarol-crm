@@ -26,6 +26,7 @@ import {
   Receipt,
   Search,
   ServerCrash,
+  ShieldQuestion,
   SquareCode,
   Sparkles,
   X,
@@ -40,6 +41,7 @@ import {
   type NoteState,
 } from "@/lib/leftoff"
 import { ROUTES } from "@/lib/nav"
+import { decideApproval } from "@/lib/chat/actions"
 import { setTaskDone } from "@/lib/task-actions"
 import {
   BAND_HINT,
@@ -245,8 +247,11 @@ const CODE_LANES: LaneConfig[] = [
  * The admin view's lanes.
  *
  * Not the same names as CODE_LANES, and that is the point of splitting them.
- * Every one of the eight waiting kinds appears in exactly one lane except
- * `blocked_chat`, which belongs to Code and would be counted twice here.
+ * Every one of the nine waiting kinds appears in exactly one lane except
+ * `blocked_chat`, which belongs to Code and would be counted twice here, and
+ * `agent_approval`, which is answered in Morning. Both are filtered out of
+ * `adminItems` rather than merely left unlisted, so `adminTotal` cannot count
+ * a row no lane draws.
  */
 type AdminLaneConfig = {
   label: string
@@ -324,6 +329,7 @@ const KIND_ICON: Record<WaitingKind, IconType> = {
   monitor_failing: ServerCrash,
   ticket_no_reply: LifeBuoy,
   new_inquiry: Inbox,
+  agent_approval: ShieldQuestion,
   overdue_task: Clock,
   punchlist_item: ListChecks,
   untested_item: FlaskConical,
@@ -500,8 +506,18 @@ export function LeftOffBoard({
 
   /* ------------------------------------------------------- the other half */
 
+  // `blocked_chat` belongs to Code and would be counted twice here.
+  // `agent_approval` is left out for the same shape of reason: the admin view
+  // is client work banded by what it needs, and a desk's parked write is
+  // neither a client's nor work — it is a decision, which is what Morning is.
   const adminItems = useMemo(
-    () => (waiting?.items ?? []).filter((i) => BAND_OF_KIND[i.kind] !== "standing" && i.kind !== "blocked_chat"),
+    () =>
+      (waiting?.items ?? []).filter(
+        (i) =>
+          BAND_OF_KIND[i.kind] !== "standing" &&
+          i.kind !== "blocked_chat" &&
+          i.kind !== "agent_approval"
+      ),
     [waiting]
   )
 
@@ -1715,8 +1731,11 @@ function WaitingDetail({ item, onClose }: { item: WaitingItem; onClose: () => vo
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [done, setDone] = useState(false)
+  const [error, setError] = useState("")
   const Icon = KIND_ICON[item.kind]
   const complete = item.verbs.find((v) => v.id === "complete")
+  const confirm = item.verbs.find((v) => v.id === "confirm")
+  const reject = item.verbs.find((v) => v.id === "reject")
 
   function tick() {
     if (!complete) return
@@ -1725,6 +1744,30 @@ function WaitingDetail({ item, onClose }: { item: WaitingItem; onClose: () => vo
       const result = await setTaskDone(complete.ref, true)
       if (!result.ok) setDone(false)
       else {
+        router.refresh()
+        onClose()
+      }
+    })
+  }
+
+  /**
+   * The same server action the chat's own card calls, so a write decided here
+   * and one decided in the thread take the identical path — one compare-and
+   * -swap, one idempotency key into the domain write. The verb only carries
+   * the call id; nothing about the decision is re-derived on this side.
+   *
+   * Not optimistic, unlike the tick above. A write is the one row where being
+   * told it worked when it did not is worse than waiting 200ms to be sure.
+   */
+  function decide(approve: boolean) {
+    const verb = approve ? confirm : reject
+    if (!verb) return
+    setError("")
+    startTransition(async () => {
+      const result = await decideApproval({ callId: verb.ref, approve })
+      if (!result.ok) setError(result.error)
+      else {
+        setDone(true)
         router.refresh()
         onClose()
       }
@@ -1769,6 +1812,25 @@ function WaitingDetail({ item, onClose }: { item: WaitingItem; onClose: () => vo
             {new Date(item.since).toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" })}
           </p>
         </Block>
+
+        {/* A row that carries Discard but not Confirm is saying something
+            specific: the write's fields are the part worth reading, and this
+            drawer does not have them. Say it, rather than leaving a gap where
+            a Confirm button is on every other approval. */}
+        {reject && !confirm ? (
+          <Block label="Why there is no Confirm here">
+            <p className="text-[12.5px] text-ink-3">
+              This write says more than its title. Open the thread to read the fields
+              before confirming it.
+            </p>
+          </Block>
+        ) : null}
+
+        {error ? (
+          <p className="rounded-lg bg-bad-soft px-3 py-2.5 text-[12.5px] font-semibold text-bad">
+            {error}
+          </p>
+        ) : null}
       </div>
       <div className={DRAWER_FOOT}>
         {complete && !done ? (
@@ -1777,7 +1839,19 @@ function WaitingDetail({ item, onClose }: { item: WaitingItem; onClose: () => vo
             {complete.label}
           </button>
         ) : null}
-        <Link href={item.href} className={cn(complete ? BTN : BTN_GO)}>
+        {confirm && !done ? (
+          <button type="button" onClick={() => decide(true)} className={BTN_GO}>
+            <CheckCircle2 className="size-3" aria-hidden />
+            {confirm.label}
+          </button>
+        ) : null}
+        {reject && !done ? (
+          <button type="button" onClick={() => decide(false)} className={BTN}>
+            <X className="size-3" aria-hidden />
+            {reject.label}
+          </button>
+        ) : null}
+        <Link href={item.href} className={cn(complete || confirm ? BTN : BTN_GO)}>
           <ArrowUpRight className="size-3" aria-hidden />
           Open
         </Link>

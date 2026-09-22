@@ -15,11 +15,11 @@ import type { TicketPriority } from "@/lib/support"
  *
  * Every verb names an endpoint that already exists — nothing here invents a
  * mutation. That is the whole reason `verbs` is data rather than markup: the
- * Mac app adds one case for `/api/widget/waiting` and gets all eight kinds,
+ * Mac app adds one case for `/api/widget/waiting` and gets all nine kinds,
  * and the browser strip reads the same array to decide which affordances to
  * draw. One list of what can be done to a row, two surfaces drawing it.
  *
- * Destinations are passed in rather than built here. Three of the eight kinds
+ * Destinations are passed in rather than built here. Three of the nine kinds
  * are folded out of widget payloads that already carry their own `href`, and
  * one source of truth for where a row leads beats two that can drift.
  *
@@ -41,6 +41,12 @@ export const WAITING_RULES = {
   /** Two failed runs in a row is a pattern; one is a blip. */
   monitorHotStreak: 2,
   /**
+   * A parked write that has outlived a night was not deferred, it was missed.
+   * Anything shorter would make the 2am turn you are meant to answer over
+   * coffee shout at you the moment you sit down.
+   */
+  approvalHotHours: 24,
+  /**
    * How many rows the queue hands out. `counts` and `total` still report
    * everything that qualified, so a caller can say "+9 more" honestly rather
    * than believing the cap is the truth.
@@ -58,6 +64,7 @@ export const WAITING_KINDS = [
   "monitor_failing",
   "ticket_no_reply",
   "new_inquiry",
+  "agent_approval",
   "overdue_task",
   "punchlist_item",
   "untested_item",
@@ -74,16 +81,22 @@ export type WaitingKind = (typeof WAITING_KINDS)[number]
  * mid-turn right now; a failing monitor is something a client pays for being
  * down; a ticket and an enquiry are somebody else's clock running. Only then
  * come our own promises, and last the money we have already earned.
+ *
+ * `agent_approval` sits between the two halves on purpose. It is not somebody
+ * else's clock, so it cannot outrank a client's site being down. But the work
+ * behind it is already done — a desk computed the write and stopped — so it
+ * beats our own promises, which still need doing after you decide them.
  */
 export const KIND_RANK: Record<WaitingKind, number> = {
   blocked_chat: 0,
   monitor_failing: 1,
   ticket_no_reply: 2,
   new_inquiry: 3,
-  overdue_task: 4,
-  punchlist_item: 5,
-  untested_item: 6,
-  unbilled_session: 7,
+  agent_approval: 4,
+  overdue_task: 5,
+  punchlist_item: 6,
+  untested_item: 7,
+  unbilled_session: 8,
 }
 
 export const KIND_LABEL: Record<WaitingKind, string> = {
@@ -91,6 +104,7 @@ export const KIND_LABEL: Record<WaitingKind, string> = {
   monitor_failing: "Uptime",
   ticket_no_reply: "Ticket",
   new_inquiry: "Enquiry",
+  agent_approval: "Approval",
   overdue_task: "Overdue",
   punchlist_item: "Punch list",
   untested_item: "Untested",
@@ -126,6 +140,9 @@ export const BAND_OF_KIND: Record<WaitingKind, WaitingBand> = {
   ticket_no_reply: "answer",
   new_inquiry: "answer",
   monitor_failing: "decide",
+  // Nothing you could type clears a parked write — it is confirmed, rejected
+  // or it sits there. That is the band's own definition, word for word.
+  agent_approval: "decide",
   overdue_task: "decide",
   punchlist_item: "decide",
   untested_item: "decide",
@@ -164,7 +181,15 @@ const SEVERITY_RANK: Record<WaitingSeverity, number> = { hot: 0, warn: 1, quiet:
 
 /* ------------------------------------------------------------------ verbs */
 
-export const VERB_IDS = ["reply", "dismiss", "complete", "log", "open"] as const
+export const VERB_IDS = [
+  "reply",
+  "dismiss",
+  "complete",
+  "log",
+  "confirm",
+  "reject",
+  "open",
+] as const
 export type VerbId = (typeof VERB_IDS)[number]
 
 /**
@@ -198,6 +223,7 @@ const LEFTOFF_REPLY = "/api/leftoff/reply"
 const LEFTOFF_DISMISS = "/api/leftoff/dismiss"
 const AGENT_LOG = "/api/widget/agent/log"
 const TASK_COMPLETE = "/api/widget/complete"
+const CHAT_APPROVAL = "/api/chat/approvals"
 
 function replyVerb(sessionRef: string): WaitingVerb {
   return {
@@ -245,6 +271,56 @@ function completeVerb(taskId: string): WaitingVerb {
     needsText: false,
     href: "",
   }
+}
+
+/**
+ * Confirm and reject are the same endpoint with opposite bodies.
+ *
+ * `body` is strings, so `approve` arrives as `"true"` or `"false"` rather than
+ * a boolean — which is exactly the trap the route now guards against, since
+ * the string `"false"` is truthy everywhere except where somebody wrote the
+ * check for it. Rejecting is the destructive direction here: a reject that
+ * confirmed would file the write it was refusing.
+ */
+function confirmVerb(callId: string): WaitingVerb {
+  return {
+    id: "confirm",
+    label: "Confirm",
+    ref: callId,
+    post: `${CHAT_APPROVAL}/${callId}`,
+    body: { approve: "true" },
+    needsText: false,
+    href: "",
+  }
+}
+
+function rejectVerb(callId: string): WaitingVerb {
+  return {
+    id: "reject",
+    label: "Discard",
+    ref: callId,
+    post: `${CHAT_APPROVAL}/${callId}`,
+    body: { approve: "false" },
+    needsText: false,
+    href: "",
+  }
+}
+
+/**
+ * The other half of the pair above: how `POST /api/chat/approvals/<id>` reads
+ * what those verbs send.
+ *
+ * It lives here, beside the verbs that write it, because the two are one
+ * agreement and a condition inlined in a route is an agreement only one side
+ * has read. A device may send a boolean, the strip sends a string, and the
+ * string `"false"` is truthy — which in this endpoint means a Discard that
+ * files the write it was refusing.
+ *
+ * Absent still means approve, which is what the endpoint has always done for
+ * the Mac app's plain `POST` with no body.
+ */
+export function approveFromBody(value: unknown): boolean {
+  return !(value === false || value === "false" || value === "0" || value === 0)
 }
 
 function openVerb(label: string, href: string): WaitingVerb {
@@ -386,6 +462,44 @@ export type InquiryFacts = {
   href: string
 }
 
+/**
+ * A write a desk computed and parked. One row per call, not per thread.
+ *
+ * The call is the unit of decision — it carries its own idempotency key into
+ * the domain write, and confirming two of a reply's three cards is a thing
+ * Karol does. Folding a thread into one row would have to invent a verb that
+ * decides all of them, and `decideApprovals` already exists for that case
+ * inside the thread, where the cards are readable.
+ */
+export type ApprovalFacts = {
+  callId: string
+  /** The tool's own name, e.g. `log_time`. Never shown raw. */
+  tool: string
+  /**
+   * What kind of write it is, in the preview's own words — "Task",
+   * "Calendar event", "Time entry". Every preview in the registry titles
+   * itself that way, some with a trailing "preview" the db half removes.
+   */
+  action: string
+  /**
+   * What the write is about: the first field the preview chose to show.
+   *
+   * Every preview in the registry leads with its identifying field — the task
+   * title, the punch's client, the site being refreshed — because that is the
+   * order a person reads a card in. Taking the first one rather than a field
+   * named per tool is what keeps this free of a table that has to be extended
+   * every time a tool is written. "" when the preview had nothing to lead with.
+   */
+  subject: string
+  /** The desk or thread that proposed it. */
+  thread: string
+  /** True when the row may offer Confirm without opening the card. */
+  canConfirm: boolean
+  parkedAt: Date
+  client: WaitingClient | null
+  href: string
+}
+
 export type WaitingFacts = {
   chats: ChatFacts[]
   sessions: SessionFacts[]
@@ -394,6 +508,7 @@ export type WaitingFacts = {
   overdueTasks: OverdueTaskFacts[]
   monitors: MonitorFacts[]
   inquiries: InquiryFacts[]
+  approvals: ApprovalFacts[]
 }
 
 /* ------------------------------------------------------------------ shape */
@@ -648,6 +763,67 @@ function sessionItem(session: SessionFacts, now: Date): WaitingItem {
   )
 }
 
+/* -------------------------------------------------------------- approvals */
+
+/** `log_time` reads as "log time" in a sentence, and nowhere else does it. */
+function toolWords(tool: string) {
+  return tool.replace(/_/g, " ")
+}
+
+/**
+ * What a parked write is called, everywhere it is named.
+ *
+ * The queue row and the push notification both say this, so a notification
+ * and the row it takes you to cannot describe the same write differently —
+ * which is the whole complaint that produced `lib/attention.ts`'s one-rules-
+ * module shape.
+ */
+export function approvalLine(row: Pick<ApprovalFacts, "action" | "subject" | "tool">): string {
+  const action = row.action || `Waiting to ${toolWords(row.tool)}`
+  return row.subject ? `${action}: ${row.subject}` : action
+}
+
+/**
+ * A parked write, as one row.
+ *
+ * The title is built out of the preview and nothing else, because the preview
+ * is the one description guaranteed to match the write — the same code makes
+ * both. "Task: Ring the accountant" rather than the preview's own heading,
+ * which every tool spells as a generic "Task preview" and which on its own
+ * tells you only that a decision exists, not which one.
+ *
+ * Never `quiet`: a parked write is the one kind here that is definitionally
+ * waiting on Karol and nobody else. Warn while that is normal, hot once it has
+ * outlived a night — an overnight turn is meant to be answered in the morning,
+ * a write still sitting after a full day was missed.
+ */
+function approvalItem(row: ApprovalFacts, now: Date): WaitingItem {
+  const stale = now.getTime() - row.parkedAt.getTime() > WAITING_RULES.approvalHotHours * HOUR
+  const why = row.canConfirm ? "" : " — open it to read the fields"
+  return item(
+    "agent_approval",
+    row.callId,
+    {
+      title: approvalLine(row),
+      // "Parked in", not the thread's name alone: on a hot row this line is
+      // rendered as the what-is-stuck banner, and a bare thread name there
+      // reads as though the thread were the problem.
+      subtitle: `Parked in ${row.thread}${why}`,
+      client: row.client,
+      since: row.parkedAt,
+      severity: stale ? "hot" : "warn",
+      // Reject is offered on every row and Confirm is not, which is the one
+      // asymmetry worth keeping: refusing a write you cannot fully see is
+      // always safe, and accepting one is the thing this gate exists to stop.
+      verbs: row.canConfirm
+        ? [confirmVerb(row.callId), rejectVerb(row.callId), openVerb("Open thread", row.href)]
+        : [rejectVerb(row.callId), openVerb("Open thread", row.href)],
+      href: row.href,
+    },
+    now
+  )
+}
+
 /* ------------------------------------------------------------------ build */
 
 /**
@@ -678,6 +854,7 @@ export function buildWaiting(facts: WaitingFacts, now: Date): WaitingPayload {
     ...facts.monitors.map((monitor) => monitorItem(monitor, now)),
     ...facts.tickets.filter((t) => ticketIsWaiting(t, now)).map((t) => ticketItem(t, now)),
     ...facts.inquiries.map((inquiry) => inquiryItem(inquiry, now)),
+    ...facts.approvals.map((row) => approvalItem(row, now)),
     ...facts.overdueTasks.map((task) => taskItem(task, now)),
     ...facts.punchItems
       .map((row) => punchItem(row, now))

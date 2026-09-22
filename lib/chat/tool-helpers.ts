@@ -66,3 +66,48 @@ export function range(from?: string, to?: string): { from?: string; to?: string 
 export function hoursLabel(hours: number): string {
   return `${hours.toFixed(2)} h`
 }
+
+/* ----------------------------------------------------- confirming blind */
+
+/**
+ * Which parked writes may be confirmed from the decision queue, where the
+ * only thing on screen is the preview's title.
+ *
+ * The chat's gate is `ApprovalCard`, and the card shows every field the tool
+ * built. A queue row shows one line. So this is not "which tools are safe" —
+ * every tool here is safe, that is what the gate is for — it is "which tools
+ * say everything they are about to do in their title".
+ *
+ * Out, and why: `create_calendar_event` puts something where other people can
+ * see it; the four `*_punch` tools move billable time and their fields are the
+ * whole point; the inbox triage four and `inbox_to_*` file things under a
+ * client, which is the field you are checking; `propose_pack_line` writes a
+ * sentence into a client's pack, and a sentence cannot be judged by its title.
+ * Those rows carry Reject and Open, never Confirm.
+ *
+ * A table, not a flag on `ToolSpec`, for one boring reason: `lib/waiting-data.ts`
+ * needs to read it, `lib/chat/tools-board.ts` already imports that module, and
+ * a flag on the spec would close that circle. This file imports nothing that
+ * imports it back.
+ *
+ * `npm run check:waiting` asserts every name here is a real mutating tool, so
+ * a rename cannot quietly turn a Confirm button into a dead one.
+ */
+export const CONFIRM_FROM_STRIP: readonly string[] = [
+  "log_time",
+  "create_task",
+  "complete_task",
+  "reschedule_task",
+  "dismiss_leftoff",
+  "pin_inspiration",
+  "refresh_insights",
+  "sync_inbox",
+  "route_to",
+]
+
+const STRIP_SET = new Set(CONFIRM_FROM_STRIP)
+
+/** True when a queue row may offer Confirm without opening the card. */
+export function confirmsFromStrip(toolName: string): boolean {
+  return STRIP_SET.has(toolName)
+}

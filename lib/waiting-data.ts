@@ -1,6 +1,16 @@
 import { and, asc, eq, gte, isNull, lt, lte, notInArray, or, sql } from "drizzle-orm"
 import { db } from "@/db"
-import { clients, inquiries, monitors, sessionNotes, supportTickets, tasks } from "@/db/schema"
+import {
+  chatThreads,
+  chatToolCalls,
+  clients,
+  inquiries,
+  monitors,
+  sessionNotes,
+  supportTickets,
+  tasks,
+} from "@/db/schema"
+import { confirmsFromStrip } from "@/lib/chat/tool-helpers"
 import { clientColor } from "@/lib/client-colors"
 import { ensureClientColors } from "@/lib/client-colors-store"
 import { deriveState, LEFTOFF_RULES, type NoteState } from "@/lib/leftoff"
@@ -9,9 +19,11 @@ import { loadPunchlist } from "@/lib/punchlists"
 import { ticketNumber, ticketOpenedAt, ticketPriority, ticketSlug, ticketState } from "@/lib/support"
 import { daysBetween, isoDay } from "@/lib/task-view"
 import { widgetAgent } from "@/lib/widget-agent"
+import { widgetUserId } from "@/lib/widget-auth"
 import { widgetPunchlists } from "@/lib/widget-punchlists"
 import {
   buildWaiting,
+  type ApprovalFacts,
   type ChatFacts,
   type InquiryFacts,
   type MonitorFacts,
@@ -26,7 +38,7 @@ import {
 /**
  * The decision queue — the db half. `lib/waiting.ts` is the pure one.
  *
- * Seven reads, none of them new sources of truth. The two expensive ones are
+ * Eight reads, none of them new sources of truth. The two expensive ones are
  * folded out of widget payloads that already memoise themselves —
  * `widgetAgent()` for the unconverted sessions and `widgetPunchlists()` for
  * the open lists — so the queue cannot decide a session is unbilled while the
@@ -40,8 +52,10 @@ import {
  * caches of their own.
  *
  * `/api/widget/day` and `/api/widget/approvals` are deliberately left out:
- * the day view is a schedule, not a bottleneck, and approvals are somebody
- * else's queue.
+ * the day view is a schedule, not a bottleneck, and that route's approvals
+ * are stopped punches, which the timesheet's own review page exists for.
+ * `agent_approval` below is a different animal with an unlucky shared word —
+ * a chat desk's write, parked before it touched anything.
  */
 
 /* ---------------------------------------------------------------- helpers */
@@ -343,11 +357,112 @@ async function inquiryFacts(): Promise<InquiryFacts[]> {
   }))
 }
 
+/* -------------------------------------------------------------- approvals */
+
+/**
+ * Writes a desk computed and parked, waiting to be confirmed.
+ *
+ * Not the same thing as `/api/widget/approvals`, which the header above says
+ * is left out — that one is stopped punches waiting to become billable time.
+ * This is `chat_tool_calls` at `pending`: a tool the model called, whose write
+ * has not touched a table and will not until Karol says so.
+ *
+ * Scoped to the admin user the same way the notification sweep is, because a
+ * thread belongs to a user and `loadWaiting` has no session to read. In a
+ * single-admin CRM that is the same person either way; if a second user ever
+ * gets threads, this is the line that has to learn about them.
+ *
+ * `private` threads stay in — the coach's parked write still needs deciding,
+ * and the dashboard is not a shared or portal view, which is what the flag
+ * actually governs. What is withheld is the thread's *title*, which on a coach
+ * thread is the personal part. The desk's name goes in its place.
+ */
+export async function approvalFacts(): Promise<ApprovalFacts[]> {
+  const userId = await widgetUserId()
+  if (!userId) return []
+
+  const rows = await db
+    .select({
+      callId: chatToolCalls.id,
+      tool: chatToolCalls.name,
+      preview: chatToolCalls.preview,
+      parkedAt: chatToolCalls.createdAt,
+      threadId: chatThreads.id,
+      threadTitle: chatThreads.title,
+      agent: chatThreads.agent,
+      isPrivate: chatThreads.private,
+      slug: clients.slug,
+      name: clients.name,
+    })
+    .from(chatToolCalls)
+    .innerJoin(chatThreads, eq(chatToolCalls.threadId, chatThreads.id))
+    .leftJoin(clients, eq(clients.id, chatThreads.clientId))
+    .where(and(eq(chatToolCalls.status, "pending"), eq(chatThreads.userId, userId)))
+    .orderBy(asc(chatToolCalls.createdAt))
+    .limit(100)
+
+  return rows.map((row) => {
+    const { action, subject } = readPreview(row.preview)
+    return {
+      callId: row.callId,
+      tool: row.tool,
+      action,
+      subject,
+      thread: row.isPrivate
+        ? deskLabel(row.agent) || "A private thread"
+        : deskLabel(row.agent) || row.threadTitle || "A chat",
+      canConfirm: confirmsFromStrip(row.tool),
+      parkedAt: row.parkedAt,
+      client: clientOf(row),
+      href: ROUTES.chatThread(row.threadId),
+    }
+  })
+}
+
+/** `client-manager` is a slug in the database and a name on a card. */
+function deskLabel(agent: string) {
+  if (!agent) return ""
+  return agent.replace(/-/g, " ").replace(/^./, (c) => c.toUpperCase())
+}
+
+/**
+ * A stored `ToolPreview`, read defensively, into the two strings a queue row
+ * is built from.
+ *
+ * Defensively because this is `jsonb` written by whatever version of a tool
+ * was deployed the day the row was parked — the oldest pending writes in the
+ * database are two weeks old — and a row that throws here would take the whole
+ * dashboard down rather than just itself.
+ *
+ * Every preview in the registry titles itself "<Thing> preview" or "<Verb>
+ * <thing>", so the trailing word is dropped and the rest reads as a noun on a
+ * card. A field whose value is the em-dash the tools use for "not set" is not
+ * a subject, so the scan moves on to the next one.
+ */
+export function readPreview(value: unknown): { action: string; subject: string } {
+  const preview = (value ?? {}) as { title?: unknown; fields?: unknown }
+  const rawTitle = typeof preview.title === "string" ? preview.title.trim() : ""
+  const action = rawTitle.replace(/\s+preview$/i, "")
+
+  let subject = ""
+  if (Array.isArray(preview.fields)) {
+    for (const field of preview.fields) {
+      const candidate = (field as { value?: unknown })?.value
+      if (typeof candidate !== "string") continue
+      const clean = candidate.trim()
+      if (!clean || clean === "—" || clean === "-") continue
+      subject = clean
+      break
+    }
+  }
+  return { action, subject }
+}
+
 /* ------------------------------------------------------------------ build */
 
 export async function loadWaiting(now = new Date()): Promise<WaitingPayload> {
   await ensureClientColors().catch(() => ({}))
-  const [chats, sessions, punchItems, tickets, overdueTasks, monitorRows, inquiryRows] =
+  const [chats, sessions, punchItems, tickets, overdueTasks, monitorRows, inquiryRows, approvals] =
     await Promise.all([
       chatFacts(now),
       sessionFacts(now),
@@ -356,6 +471,7 @@ export async function loadWaiting(now = new Date()): Promise<WaitingPayload> {
       overdueTaskFacts(now),
       monitorFacts(now),
       inquiryFacts(),
+      approvalFacts(),
     ])
 
   return buildWaiting(
@@ -367,6 +483,7 @@ export async function loadWaiting(now = new Date()): Promise<WaitingPayload> {
       overdueTasks,
       monitors: monitorRows,
       inquiries: inquiryRows,
+      approvals,
     },
     now
   )
