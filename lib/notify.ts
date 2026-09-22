@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm"
+import { and, eq, inArray, isNull } from "drizzle-orm"
 import webpush from "web-push"
 import { db } from "@/db"
 import { appSettings, notificationLog, pushSubscriptions } from "@/db/schema"
@@ -305,4 +305,30 @@ export async function liveSubscriptionCount() {
     columns: { id: true },
   })
   return rows.length
+}
+
+/**
+ * Which kinds have never said anything.
+ *
+ * The seed at the top of a sweep answers "is this a fresh install"; this
+ * answers the narrower question a new kind asks: "has *this* kind ever fired
+ * here?" Without it, the first tick after a kind ships announces its whole
+ * backlog — `chat.approval` shipped with twelve parked writes behind it, the
+ * oldest seventeen days old, and a notification calling that news would be
+ * wrong twelve times before it was ever right once.
+ *
+ * Reads the log rather than a flag, so it is true of a kind that was added,
+ * removed and added again, and needs nothing stored to stay true.
+ */
+export async function kindsNeverFired(
+  kinds: NotificationKind[]
+): Promise<Set<NotificationKind>> {
+  const never = new Set<NotificationKind>(kinds)
+  if (never.size === 0) return never
+  const rows = await db
+    .selectDistinct({ kind: notificationLog.kind })
+    .from(notificationLog)
+    .where(inArray(notificationLog.kind, Array.from(never)))
+  for (const row of rows) never.delete(row.kind as NotificationKind)
+  return never
 }

@@ -7,6 +7,7 @@ import { widgetUserId } from "@/lib/widget-auth"
 import { widgetClock } from "@/lib/widget-clock"
 import {
   getNotificationPrefs,
+  kindsNeverFired,
   notify,
   recordSeeded,
   setNotificationPrefs,
@@ -128,10 +129,25 @@ export async function sweepNotifications(now = new Date()): Promise<SweepReport>
     return { seeded: candidates.length }
   }
 
+  // The same courtesy, per kind, for a kind that shipped after that first run.
+  // A new kind almost always arrives with a backlog behind it — `chat.approval`
+  // arrived with twelve parked writes, the oldest seventeen days — and a queue
+  // that shouts its whole history the first time it is asked teaches you to
+  // turn it off. What is already on the board does not need announcing; the
+  // next one does.
+  const fresh = await kindsNeverFired(Array.from(new Set(candidates.map((c) => c.kind))))
+
   const report: SweepReport = {}
+  let seeded = 0
   for (const c of candidates) {
+    if (fresh.has(c.kind)) {
+      await recordSeeded(c.kind, c.key, now)
+      seeded += 1
+      continue
+    }
     const result = await notify({ ...c, dedupeKey: c.key, userId, now })
     report[result] = (report[result] ?? 0) + 1
   }
+  if (seeded > 0) report.seeded = (report.seeded ?? 0) + seeded
   return report
 }
