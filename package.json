@@ -56,6 +56,7 @@
     "hivemind:scan": "tsx scripts/hivemind-scan.ts",
     "check:slink": "tsx scripts/check-slink.ts",
     "check:chat": "tsx scripts/check-chat.ts",
+    "cursor:models": "tsx --env-file-if-exists=.env.local scripts/cursor-models.ts",
     "check:chat:attachments": "tsx scripts/check-chat-attachments.ts",
     "check:inspiration": "tsx scripts/check-inspiration.ts",
     "check:chat:db": "tsx --env-file-if-exists=.env.local scripts/check-chat-db.ts",
@@ -73,7 +74,8 @@
     "activity:scan": "tsx scripts/activity-scan.ts",
     "check:activity": "tsx scripts/check-activity.ts",
     "check:activity:db": "tsx --env-file-if-exists=.env.local scripts/check-activity-db.ts",
-    "prebuild": "npm run check:theme && npm run check:chat && npm run check:chat:attachments && npm run activity:scan"
+    "check:waiting": "tsx scripts/check-waiting.ts",
+    "prebuild": "npm run check:theme && npm run check:chat && npm run check:chat:attachments && npm run check:waiting && npm run activity:scan"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

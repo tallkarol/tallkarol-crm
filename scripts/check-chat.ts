@@ -20,6 +20,7 @@ import {
 } from "@/lib/chat/reply-actions"
 import { BRIEF_PREFIX, TITLE_MAX, solveBranch, taskBrief } from "@/lib/chat/task-brief"
 import { inlineText, linkNode, parseInline, parseProse } from "@/lib/chat/prose"
+import catalog from "@/content/cursor-models.json"
 import { callsNote, callSummary, resultSummary, speaker, transcriptText } from "@/lib/chat/transcript"
 
 /**
@@ -412,6 +413,34 @@ console.log("✓ the dock fronts the right desk per page")
   }
   if (isLadderPick("nope") || isLadderPick(undefined)) fail("a junk pick was accepted")
   console.log("✓ Auto / Elevate / a forced job keep locked jobs on their own tools")
+}
+
+/* 7b. Every rung names a model Cursor's catalog lists, spelled as Cursor spells it,
+       with its effort under the parameter that model actually accepts. A wrong id
+       fails the turn ("Cannot use this model"); a wrong parameter name is silently
+       ignored and the rung runs at default effort. Refresh with `npm run cursor:models`. */
+{
+  const models = catalog.models as Record<string, { parameters: Record<string, string[]> }>
+  for (const [key, spec] of Object.entries(MODELS)) {
+    const entry = models[spec.id]
+    if (!entry) {
+      fail(`${key}: Cursor has no model "${spec.id}" (catalog of ${catalog.fetchedAt.slice(0, 10)}); ids are ${Object.keys(models).slice(0, 12).join(", ")}…`)
+      continue
+    }
+    if (!spec.effort) {
+      if (spec.effortParam) fail(`${key}: names an effort parameter but no effort`)
+      continue
+    }
+    const accepted = spec.effortParam ? entry.parameters[spec.effortParam] : undefined
+    if (!accepted) {
+      fail(`${key}: "${spec.id}" has no parameter "${spec.effortParam}"; it has ${Object.keys(entry.parameters).join(", ") || "none"}`)
+    } else if (!accepted.includes(spec.effort)) {
+      fail(`${key}: "${spec.id}" ${spec.effortParam} accepts ${accepted.join("|")}, not "${spec.effort}"`)
+    }
+  }
+  const age = Date.now() - new Date(catalog.fetchedAt).getTime()
+  if (age > 45 * 24 * 3600 * 1000) console.warn(`! content/cursor-models.json is ${Math.round(age / 86400000)} days old — npm run cursor:models`)
+  console.log(`✓ every rung is a model Cursor lists, with its effort under the parameter it accepts (catalog ${catalog.fetchedAt.slice(0, 10)})`)
 }
 
 /* 8. Prose: the constructs the models actually emit parse to the right blocks, and

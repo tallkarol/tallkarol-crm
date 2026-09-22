@@ -17,12 +17,24 @@ import type { ChatPool } from "@/db/schema"
 
 export type Effort = "low" | "medium" | "high" | "xhigh" | "max" | ""
 
+/**
+ * The parameter Cursor uses for effort on this model. It differs per
+ * model: `effort` on Grok 4.6, Fable and Opus, `reasoning` on Sol,
+ * `reasoning_effort` on Grok 4.7, nothing on Composer. Sending the wrong
+ * name is not an error — Cursor ignores it and runs at default effort —
+ * which is how every Grok High and XHigh turn ran at default for two weeks.
+ * content/cursor-models.json is the catalog; `check:chat` holds each rung
+ * to it.
+ */
+export type EffortParam = "effort" | "reasoning" | "reasoning_effort" | ""
+
 export type ModelSpec = {
-  /** The id passed to the Cursor SDK. */
+  /** The id passed to the Cursor SDK — exactly as `Cursor.models.list()` spells it. */
   id: string
   label: string
   pool: ChatPool
   effort: Effort
+  effortParam: EffortParam
   /** Per million tokens. */
   input: number
   output: number
@@ -44,6 +56,7 @@ export const MODELS = M({
     id: "composer-2.5",
     label: "Composer 2.5",
     pool: "cursor",
+    effortParam: "",
     effort: "",
     input: 0.5,
     output: 2.5,
@@ -55,6 +68,7 @@ export const MODELS = M({
     id: "grok-4.6",
     label: "Grok 4.6 Medium",
     pool: "cursor",
+    effortParam: "effort",
     effort: "medium",
     input: 2,
     output: 6,
@@ -66,6 +80,7 @@ export const MODELS = M({
     id: "grok-4.6",
     label: "Grok 4.6 High",
     pool: "cursor",
+    effortParam: "effort",
     effort: "high",
     input: 2,
     output: 6,
@@ -77,6 +92,7 @@ export const MODELS = M({
     id: "grok-4.6",
     label: "Grok 4.6 XHigh",
     pool: "cursor",
+    effortParam: "effort",
     effort: "xhigh",
     input: 2,
     output: 6,
@@ -85,9 +101,10 @@ export const MODELS = M({
     bench: { score: 70.8, costPerTask: 2.81 },
   },
   "fable-5.1-xhigh": {
-    id: "claude-fable-5.1",
+    id: "claude-fable-5-1",
     label: "Fable 5.1 XHigh",
     pool: "other",
+    effortParam: "effort",
     effort: "xhigh",
     input: 10,
     output: 50,
@@ -96,9 +113,10 @@ export const MODELS = M({
     bench: { score: 72.8, costPerTask: 6.96 },
   },
   "fable-5.1-max": {
-    id: "claude-fable-5.1",
+    id: "claude-fable-5-1",
     label: "Fable 5.1 Max",
     pool: "other",
+    effortParam: "effort",
     effort: "max",
     input: 10,
     output: 50,
@@ -107,9 +125,10 @@ export const MODELS = M({
     bench: { score: 73.4, costPerTask: 9.64 },
   },
   "fable-5.1-high": {
-    id: "claude-fable-5.1",
+    id: "claude-fable-5-1",
     label: "Fable 5.1 High",
     pool: "other",
+    effortParam: "effort",
     effort: "high",
     input: 10,
     output: 50,
@@ -121,6 +140,7 @@ export const MODELS = M({
     id: "claude-opus-5",
     label: "Opus 5 High",
     pool: "other",
+    effortParam: "effort",
     effort: "high",
     input: 5,
     output: 25,
@@ -132,6 +152,7 @@ export const MODELS = M({
     id: "claude-opus-5",
     label: "Opus 5 Max",
     pool: "other",
+    effortParam: "effort",
     effort: "max",
     input: 5,
     output: 25,
@@ -143,6 +164,7 @@ export const MODELS = M({
     id: "gpt-5.6-sol",
     label: "GPT-5.6 Sol Max",
     pool: "other",
+    effortParam: "reasoning",
     effort: "max",
     input: 4,
     output: 20,
@@ -153,6 +175,16 @@ export const MODELS = M({
 })
 
 export type ModelKey = keyof typeof MODELS
+
+/** What the worker hands `Agent.create` for a rung: the Cursor id and the effort under the name this model uses. */
+export function modelSelection(key: string): { id: string; params: { id: string; value: string }[] } {
+  const spec = MODELS[key as ModelKey]
+  if (!spec) return { id: key, params: [] }
+  return {
+    id: spec.id,
+    params: spec.effort && spec.effortParam ? [{ id: spec.effortParam, value: spec.effort }] : [],
+  }
+}
 
 /**
  * Rungs that are dominated on CursorBench — beaten on BOTH score and price

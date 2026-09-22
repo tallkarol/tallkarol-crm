@@ -160,6 +160,8 @@ type QueuedTurn = {
   model: string
   modelKey: string
   effort: string
+  /** The effort as Cursor's catalog names it for this model; absent from an older CRM. */
+  params?: { id: string; value: string }[]
   pool: string
 }
 
@@ -1361,9 +1363,9 @@ async function runTurn(claim: Claim) {
       apiKey: API_KEY,
       model: {
         id: turn.model,
-        ...(turn.effort
-          ? { params: [{ id: "reasoningEffort", value: turn.effort }] }
-          : {}),
+        // Effort under the parameter name this model uses (the CRM knows it);
+        // `reasoningEffort` was never a name Cursor accepted, so it was ignored.
+        ...(turn.params ? { params: turn.params } : turn.effort ? { params: [{ id: "effort", value: turn.effort }] } : {}),
       },
       tools,
       name: `chat ${label}`,

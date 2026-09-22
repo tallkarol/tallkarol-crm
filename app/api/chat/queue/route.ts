@@ -4,7 +4,7 @@ import { db } from "@/db"
 import { chatThreads, chatToolCalls } from "@/db/schema"
 import { threadAttachments } from "@/lib/chat/attachment-data"
 import { callSummary } from "@/lib/chat/transcript"
-import { modelFor, type ModelKey } from "@/lib/chat/models"
+import { modelFor, modelSelection, type ModelKey } from "@/lib/chat/models"
 import { PERSONAS } from "@/lib/chat/personas"
 import { parseCommand } from "@/lib/chat/skills"
 import { solveBranch, taskBrief } from "@/lib/chat/task-brief"
@@ -168,6 +168,9 @@ export async function POST(request: Request) {
       model: spec?.id ?? turn.model,
       modelKey: turn.model,
       effort: turn.effort,
+      // The selection as Cursor wants it — the effort parameter is named
+      // differently per model, and the worker must not have to know that.
+      params: modelSelection(turn.model).params,
       pool: turn.pool,
     },
     messages: history.map((m) => ({
