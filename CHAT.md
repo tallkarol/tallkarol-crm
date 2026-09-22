@@ -133,8 +133,9 @@ pool and falls back to Grok 4.6 XHigh; escalations may still spend it. Past 90%
 nothing gets it. Left alone, ordinary work drifts onto premium models and the
 escalations that actually need them arrive in week three to an empty allowance.
 
-The chat rail does not print that reserve. It shows the four bars Claude
-and Cursor publish: weekly Fable / other, monthly Grok / Other.
+The context panel beside a thread does not print that reserve. It shows
+the four bars Claude and Cursor publish: weekly Fable / other, monthly
+Grok / Other.
 
 Two caveats, both deliberate:
 
@@ -590,52 +591,75 @@ returns.
 ## The page
 
 `/chat` is one frame the height of the window (AppShell's `FULL_BLEED` hands
-it a flex column instead of the scrolling canvas): a rail on the left that
-never scrolls away, the thread on the right, only the thread scrolling.
+it a flex column instead of the scrolling canvas): the queue on the left
+that never scrolls away, the thread in the middle, a context panel on the
+right from `xl` up, only the thread scrolling. The unit on every part of it
+is a **request** — one line from Karol, the rungs it climbed, what those
+rungs read and wrote, the replies — not a message (`lib/chat/requests.ts`).
 
 | Route | Shows |
 |---|---|
 | `/chat` | the newest thread |
 | `/chat?thread=<id>` | that thread |
-| `/chat?new` | an empty composer; the first line starts and names the thread |
+| `/chat?new` | the launcher; the first line starts and names the thread |
 
-**The rail** has two tabs. *Threads* — grouped Today / Yesterday / Earlier,
-an amber "Needs you" on any thread with a write parked, an Archived group
-folded at the bottom, and four vendor usage bars under the list (Claude
-weekly Fable / other, Cursor monthly Grok / Other). Archive is the
-box icon in the thread header; it stamps `archivedAt` and settles any card
-still parked in the thread as *skipped* ("Thread archived before a
-decision") — a record, nothing run — so no "Needs you" can point into a
-folded group. Restore (same spot, on an archived thread) or simply sending
-into the thread brings it back; a skipped card needs a new proposal. Nothing
-is ever deleted. *Skills* — every command, skill and agent from the
-committed hive-mind scan, grouped by lane; a row opens to what it is and
-what to type, and each form either drops into the composer with its blank
-selected or, when it needs no argument, sends. The tab is remembered per
-browser.
+**The queue** files threads under their most urgent state — *Needs you* (a
+write parked), *Running* (a worker holds a turn), *Queued* (a turn waits
+for one) — and only then Today / Yesterday / Earlier, with an Archived
+group folded at the bottom. Each row says which desk, what is waiting or
+running (model, rung, the detector that promoted it), and what the thread
+has cost, from `threadPulses()` over the same rows the thread renders. The
+worker's heartbeat sits at the top because it gates everything below it.
+Archive is the box icon in the thread header; it stamps `archivedAt` and
+settles any card still parked in the thread as *skipped* ("Thread archived
+before a decision") — a record, nothing run — so no "Needs you" can point
+into a folded group. Restore (same spot, on an archived thread) or simply
+sending into the thread brings it back; a skipped card needs a new
+proposal. Nothing is ever deleted. The rail's second tab, *Skills*, lists
+every command, skill and agent from the committed hive-mind scan, grouped
+by lane; a row opens to what it is and what to type, and each form either
+drops into the composer with its blank selected or, when it needs no
+argument, sends. The tab is remembered per browser.
 
-**The thread.** Karol's messages are a bubble; replies are prose on the
-canvas with the model that answered beside the name. Reads show as chips
-(`peek_agent_mailbox · 6`), writes as the approval card, and the rungs a
-question climbed as a footnote with cost and time. Failed reads and failed
-writes stay visible as what they are. A reply shows every rung's calls; a
-question whose turn failed or is still running shows its own under the
-bubble, so a card parked in a rung that then failed can still be decided.
-When one reply parks several cards, a bar above them offers *Confirm all N*
-/ *Discard all* — each still decided by its own compare-and-swap. A line a
-desk handed over renders in a muted bubble under the desk's name, never as
-Karol's. Replies render through `lib/chat/prose.ts`: headings with their
-paragraph, nested bullets and checkboxes, pipe tables, blockquotes, fenced
-code, bold and italics, and links — `https://` URLs and paths into the CRM
-only; anything else stays text and nothing is ever parsed as HTML.
+**The ledger.** Karol's line is the heading of a request; under it a
+receipt strip reads straight off the turn rows — state, each rung with the
+detector that promoted it, reads, writes, cost, seconds — then the reads as
+chips (`peek_agent_mailbox · 6`, folded after eight), then each reply as
+prose with the model that wrote it beside the name, its approval cards, and
+what Karol thought of it. A hairline runs down the gutter and the marks sit
+on it: Karol on the well, a desk on onyx with its monogram, a skill on the
+accent tint. Failed reads and failed writes stay visible as what they are.
+A card parked by a rung that then failed, or is still running, hangs under
+the line that asked for it, so it can still be decided. When one reply
+parks several cards, a bar above them offers *Confirm all N* / *Discard
+all* — each still decided by its own compare-and-swap. A line a desk handed
+over carries the desk's mark and says so, never as Karol's. Replies render
+through `lib/chat/prose.ts`: headings with their paragraph, nested bullets
+and checkboxes, pipe tables, blockquotes, fenced code, bold and italics,
+and links — `https://` URLs and paths into the CRM only; anything else
+stays text and nothing is ever parsed as HTML. The dock's desk panel
+renders the same ledger, compact.
 
-**The composer.** Enter sends, Shift+Enter breaks a line, `/` opens the
-palette over the commands. The box and the screenshot tray clear only once
-the CRM has accepted the message; a refused send leaves both in place under
-the error. A rail form or a starter that sends carries whatever is in the
-tray. The sidebar and the empty-thread starters reach
-the box through a window event (`components/chat/compose-bus.ts`), the same
-idiom as the dashboard's left-off board.
+**The context panel** is the thread's facts as a list: the desk and its
+pack, the ladder the last turn ran on and the model that answered, the task
+a solve thread is bound to, every write proposed in the thread with where
+it stands (a row jumps to its card), turns and spend, and the four vendor
+usage bars (Claude weekly Fable / other, Cursor monthly Grok / Other). The
+header's panel button folds it; the choice is remembered per browser.
+
+**The composer** is docked to the column and addressed: the chip on the
+left says who answers — the desk and pack the thread is pinned to, the
+task it solves, or the plain assistant — and picking a desk from it types
+the `@name` (with the pack blank the desk needs) rather than switching the
+thread by itself, because a thread is addressed by what gets sent. Enter
+sends, Shift+Enter breaks a line, `/` opens the palette over the commands.
+The box and the screenshot tray clear only once the CRM has accepted the
+message; a refused send leaves both in place under the error. A rail form
+or a starter that sends carries whatever is in the tray. On a thread that
+has not started the same box sits at the top of the launcher over the desk
+roster and the starter lines. The sidebar and the launcher reach the box
+through a window event (`components/chat/compose-bus.ts`), the same idiom
+as the dashboard's left-off board.
 
 ### Screenshots
 

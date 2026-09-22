@@ -10,6 +10,7 @@ import {
   products,
 } from "@/db/schema"
 import type { ChatToolCall, ChatTurn } from "@/db/schema"
+import type { ThreadPulse } from "@/components/chat/types"
 import { assertUnsent, attachToMessage, threadAttachments } from "@/lib/chat/attachment-data"
 import { ATTACH, imagesTitle } from "@/lib/chat/attachments"
 import { budgetState, gate } from "@/lib/chat/budget"
@@ -842,6 +843,82 @@ export async function pendingApprovals(userId: string) {
 /* ---------- reading ---------- */
 
 /** Threads with a write parked for Karol — the amber dot in the sidebar. */
+/**
+ * What the queue shows for a thread without opening it. Two reads over the
+ * same rows the ledger renders — a parked write and a held turn are facts
+ * on chat_tool_calls and chat_turns, so the list and the thread cannot
+ * disagree about whether something needs Karol.
+ */
+export async function threadPulses(
+  userId: string,
+  threadIds: string[]
+): Promise<Record<string, ThreadPulse>> {
+  const pulses: Record<string, ThreadPulse> = {}
+  if (threadIds.length === 0) return pulses
+  for (const id of threadIds) {
+    pulses[id] = { waiting: null, waitingCount: 0, live: null, lastModel: "", cents: 0 }
+  }
+
+  const [waiting, turns] = await Promise.all([
+    db
+      .select({ threadId: chatToolCalls.threadId, name: chatToolCalls.name })
+      .from(chatToolCalls)
+      .innerJoin(chatThreads, eq(chatToolCalls.threadId, chatThreads.id))
+      .where(
+        and(
+          eq(chatToolCalls.status, "pending"),
+          eq(chatThreads.userId, userId),
+          inArray(chatToolCalls.threadId, threadIds)
+        )
+      )
+      .orderBy(asc(chatToolCalls.createdAt)),
+    db
+      .select({
+        threadId: chatTurns.threadId,
+        status: chatTurns.status,
+        model: chatTurns.model,
+        rung: chatTurns.rung,
+        detector: chatTurns.detector,
+        claimedBy: chatTurns.claimedBy,
+        claimedAt: chatTurns.claimedAt,
+        startedAt: chatTurns.startedAt,
+        createdAt: chatTurns.createdAt,
+        costCents: chatTurns.costCents,
+      })
+      .from(chatTurns)
+      .where(inArray(chatTurns.threadId, threadIds))
+      .orderBy(asc(chatTurns.createdAt)),
+  ])
+
+  for (const row of waiting) {
+    const pulse = pulses[row.threadId]
+    if (!pulse) continue
+    if (!pulse.waiting) pulse.waiting = row.name
+    pulse.waitingCount += 1
+  }
+
+  for (const turn of turns) {
+    const pulse = pulses[turn.threadId]
+    if (!pulse) continue
+    pulse.cents += Number(turn.costCents)
+    if (turn.status === "done") pulse.lastModel = turn.model
+    if (turn.status === "queued" || turn.status === "claimed" || turn.status === "running") {
+      // The newest live rung wins: an escalation queued behind a finished
+      // rung is what the worker will pick up next.
+      pulse.live = {
+        status: turn.status,
+        model: turn.model,
+        rung: turn.rung,
+        detector: turn.detector,
+        since: (turn.startedAt ?? turn.claimedAt ?? turn.createdAt).toISOString(),
+        claimedBy: turn.claimedBy,
+      }
+    }
+  }
+
+  return pulses
+}
+
 export async function pendingThreadIds(userId: string): Promise<Set<string>> {
   const rows = await db
     .selectDistinct({ threadId: chatToolCalls.threadId })

@@ -1,47 +1,24 @@
 "use client"
 
-import {
-  Fragment,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-  type CSSProperties,
-} from "react"
+import { Fragment, useCallback, useEffect, useRef, useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
-  Activity,
   Archive,
   ArchiveRestore,
-  BarChart3,
-  Clock,
-  FileText,
-  Inbox,
   ListChecks,
   Lock,
   PanelLeft,
+  PanelRight,
   Pencil,
-  Pin,
-  ShieldCheck,
-  Sparkles,
-  TrendingUp,
-  Unplug,
-  UserRound,
 } from "lucide-react"
 import { DESKS } from "@/lib/chat/personas"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
 import { archiveThread, renameThread, sendMessage } from "@/lib/chat/actions"
+import { packLabel } from "@/lib/chat/desk-context"
+import { dollars } from "@/lib/chat/format"
 import { type LadderPick } from "@/lib/chat/models"
-import {
-  dayKey,
-  dayLabel,
-  dollars,
-  durationLabel,
-  modelLabel,
-} from "@/lib/chat/format"
 import {
   ASK_STARTERS,
   CLIENT_STARTERS,
@@ -49,14 +26,15 @@ import {
   type Starter,
 } from "@/lib/chat/skills"
 import type { WorkerStatus } from "@/lib/chat/worker-status"
-import { Card } from "@/components/ui/Card"
 import { useChatFrame } from "@/components/chat/ChatFrame"
-import { Composer } from "@/components/chat/Composer"
-import { Message } from "@/components/chat/Message"
+import { Composer, type Addressee } from "@/components/chat/Composer"
+import { Ledger } from "@/components/chat/Ledger"
+import { deskSpeaker, Mark } from "@/components/chat/Marks"
 import { requestCompose, requestSkillsTab } from "@/components/chat/compose-bus"
 import type {
   ChatMessageView,
   PendingView,
+  ThreadState,
   ThreadStats,
 } from "@/components/chat/types"
 
@@ -74,11 +52,12 @@ export function ChatView({
   archived,
   task,
   persona,
+  pack,
+  state,
   messages,
   pending,
   stats,
   worker,
-  greeting,
   now,
 }: {
   threadId: string | null
@@ -88,11 +67,14 @@ export function ChatView({
   task: { id: string; title: string } | null
   /** Set when the thread is addressed to a desk persona. */
   persona: PersonaPill | null
+  /** Raw: `clients/mineralife`, `products/momentum`, `me`, or "". */
+  pack: string
+  /** What the queue files this thread under. */
+  state: ThreadState
   messages: ChatMessageView[]
   pending: PendingView | null
   stats: ThreadStats
   worker: WorkerStatus
-  greeting: string
   /** Server time, ISO — day headings must agree on both sides of hydration. */
   now: string
 }) {
@@ -136,7 +118,13 @@ export function ChatView({
     [threadId, router]
   )
 
-  const at = new Date(now)
+  const addressee: Addressee = {
+    name: persona?.name ?? null,
+    label: persona?.label ?? "Assistant",
+    pack: packLabel(pack) || null,
+    private: persona?.private ?? false,
+    task: task?.title ?? null,
+  }
 
   return (
     <>
@@ -146,55 +134,43 @@ export function ChatView({
         archived={archived}
         task={task}
         persona={persona}
+        pack={pack}
+        state={state}
         stats={stats}
-        worker={worker}
-        firstAt={messages[0]?.createdAt ?? null}
-        now={at}
       />
 
       {empty ? (
-        <EmptyThread greeting={greeting} onSend={submit} />
+        <Launcher onSend={submit} busy={busy} error={error} addressee={addressee} />
       ) : (
-        <div className="tk-main-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-3 pt-6 sm:px-7">
-          <div className="mx-auto flex max-w-[47.5rem] flex-col gap-7">
-            {messages.map((message, i) => {
-              const first = i === 0 || dayKey(messages[i - 1].createdAt) !== dayKey(message.createdAt)
-              return (
-                <Fragment key={message.id}>
-                  {first ? <DayRule label={dayLabel(message.createdAt, at)} /> : null}
-                  <Message message={message} />
-                </Fragment>
-              )
-            })}
-            {pending ? (
-              worker.online ? (
-                <Thinking
-                  pending={pending}
-                  speaker={task ? "Solver" : persona ? persona.label : "Assistant"}
-                />
-              ) : (
-                <Stranded worker={worker} />
-              )
-            ) : null}
-            <div ref={foot} />
+        <>
+          <div className="tk-main-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-5 sm:px-6">
+            <div className="max-w-[46rem]">
+              <Ledger
+                messages={messages}
+                pending={pending}
+                worker={worker}
+                speaker={task ? "Solver" : persona ? persona.label : "Assistant"}
+                now={now}
+              />
+              <div ref={foot} />
+            </div>
           </div>
-        </div>
+          <Composer
+            key={threadId ?? "new"}
+            onSend={submit}
+            busy={busy}
+            error={error}
+            addressee={addressee}
+          />
+        </>
       )}
-
-      <Composer
-        key={threadId ?? "new"}
-        onSend={submit}
-        busy={busy}
-        error={error}
-        autoFocus={empty}
-      />
     </>
   )
 }
 
 /* ---------- header ---------- */
 
-type PersonaPill = { name: string; label: string; pack: string | null; private: boolean }
+type PersonaPill = { name: string; label: string; private: boolean }
 
 function Header({
   threadId,
@@ -202,23 +178,21 @@ function Header({
   archived,
   task,
   persona,
+  pack,
+  state,
   stats,
-  worker,
-  firstAt,
-  now,
 }: {
   threadId: string | null
   title: string
   archived: boolean
   task: { id: string; title: string } | null
   persona: PersonaPill | null
+  pack: string
+  state: ThreadState
   stats: ThreadStats
-  worker: WorkerStatus
-  firstAt: string | null
-  now: Date
 }) {
   const router = useRouter()
-  const { setOpen } = useChatFrame()
+  const { setOpen, contextOpen, setContextOpen } = useChatFrame()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(title)
   const [saving, startSaving] = useTransition()
@@ -258,18 +232,20 @@ function Header({
     })
   }
 
+  const slug = packLabel(pack)
+
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line px-4 sm:px-5">
+    <header className="flex h-[50px] shrink-0 items-center gap-2.5 border-b border-line px-4 sm:px-6">
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Show threads and skills"
-        className="grid size-[30px] shrink-0 place-items-center rounded-lg text-ink-3 hover:bg-card hover:text-tk-onyx md:hidden"
+        aria-label="Show requests and skills"
+        className="grid size-[30px] shrink-0 place-items-center rounded-lg text-ink-3 hover:bg-well hover:text-tk-onyx md:hidden"
       >
         <PanelLeft className="size-4" aria-hidden />
       </button>
 
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 items-center gap-2.5">
         {editing ? (
           <input
             autoFocus
@@ -288,7 +264,7 @@ function Header({
             }}
             aria-label="Thread name"
             maxLength={120}
-            className="w-full max-w-[40rem] rounded-md bg-card px-1.5 py-0.5 font-display text-[15px] font-semibold tracking-[-0.01em] text-tk-onyx outline-none ring-1 ring-line-strong"
+            className="w-full max-w-[40rem] rounded-md bg-well px-1.5 py-0.5 font-display text-[15px] font-semibold tracking-[-0.01em] text-tk-onyx outline-none ring-1 ring-line-strong"
           />
         ) : (
           <h1
@@ -297,413 +273,247 @@ function Header({
               saving && "opacity-60"
             )}
           >
-            {threadId ? title : "New thread"}
+            {threadId ? title : "New request"}
           </h1>
         )}
-        <p className="mt-0.5 flex items-center gap-1.5 truncate font-ui text-[11px] text-ink-3">
-          {threadId ? (
-            <>
-              {archived ? (
-                <>
-                  <span className="rounded-full bg-well px-1.5 py-px text-[10px] font-bold uppercase tracking-[0.06em] text-ink-3 ring-1 ring-line">
-                    Archived
-                  </span>
-                  <Sep />
-                </>
-              ) : null}
-              {task ? (
-                <>
-                  <Link
-                    href={ROUTES.task(task.id)}
-                    title={task.title}
-                    className="inline-flex min-w-0 max-w-[50%] items-center gap-1 font-semibold text-tk-teal hover:underline"
-                  >
-                    <ListChecks className="size-3 shrink-0" aria-hidden />
-                    <span className="truncate">Task · {task.title}</span>
-                  </Link>
-                  <Sep />
-                </>
-              ) : null}
-              {persona ? (
-                <>
-                  <span
-                    title={
-                      persona.private
-                        ? `Addressed to ${persona.label}. Private — never in a shared view.`
-                        : `Addressed to ${persona.label}. @name switches desks.`
-                    }
-                    className="inline-flex min-w-0 max-w-[50%] items-center gap-1 font-semibold text-tk-onyx"
-                  >
-                    {persona.private ? (
-                      <Lock className="size-3 shrink-0" aria-hidden />
-                    ) : (
-                      <UserRound className="size-3 shrink-0" aria-hidden />
-                    )}
-                    <span className="truncate">
-                      {persona.label}
-                      {persona.pack ? ` · ${persona.pack}` : ""}
-                    </span>
-                  </span>
-                  <Sep />
-                </>
-              ) : null}
-              {firstAt ? <span>{dayLabel(firstAt, now)}</span> : null}
-              {stats.turns > 0 ? (
-                <>
-                  <Sep />
-                  <span>
-                    {stats.turns} {stats.turns === 1 ? "turn" : "turns"}
-                  </span>
-                  <Sep />
-                  <span className="font-mono tabular-nums">{dollars(stats.cents)}</span>
-                </>
-              ) : null}
-              {stats.chain ? (
-                <>
-                  <Sep />
-                  <span className="truncate">{stats.chain}</span>
-                </>
-              ) : null}
-            </>
-          ) : (
-            <span>Titled from your first line</span>
-          )}
-        </p>
+
+        {threadId ? (
+          <>
+            {task ? (
+              <Link
+                href={ROUTES.task(task.id)}
+                title={task.title}
+                className="hidden h-6 max-w-[16rem] shrink-0 items-center gap-1.5 rounded-[7px] border border-line bg-well px-2 font-mono text-[11px] font-medium text-ink-2 hover:border-line-strong hover:text-tk-onyx sm:inline-flex"
+              >
+                <ListChecks className="size-3 shrink-0 text-accent-ink" aria-hidden />
+                <span className="truncate">solve · {task.title}</span>
+              </Link>
+            ) : persona ? (
+              <span
+                title={
+                  persona.private
+                    ? `Addressed to ${persona.label}. Private — never in a shared view.`
+                    : `Addressed to ${persona.label}. @name switches desks.`
+                }
+                className="hidden h-6 max-w-[14rem] shrink-0 items-center gap-1.5 rounded-[7px] border border-line bg-well pl-1 pr-2 font-mono text-[11px] font-medium text-ink-2 sm:inline-flex"
+              >
+                <Mark speaker={deskSpeaker(persona.name)} size="sm" />
+                <span className="truncate">
+                  {persona.name}
+                  {slug ? ` · ${slug}` : ""}
+                </span>
+                {persona.private ? <Lock className="size-3 shrink-0 text-ink-3" aria-hidden /> : null}
+              </span>
+            ) : null}
+            {archived ? <Pill tone="mute">Archived</Pill> : null}
+            {state === "needs" ? (
+              <Pill tone="warn">Needs you</Pill>
+            ) : state === "running" ? (
+              <Pill tone="run">Running</Pill>
+            ) : state === "queued" ? (
+              <Pill tone="mute">Queued</Pill>
+            ) : null}
+          </>
+        ) : (
+          <span className="hidden shrink-0 font-ui text-[11px] text-ink-3 sm:inline">Titled from your first line</span>
+        )}
       </div>
 
-      <WorkerPill worker={worker} />
-
-      {threadId ? (
-        <>
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            aria-label="Rename thread"
-            title="Rename"
-            className="grid size-[30px] shrink-0 place-items-center rounded-lg text-ink-3 hover:bg-card hover:text-tk-onyx hover:ring-1 hover:ring-line"
-          >
-            <Pencil className="size-4" aria-hidden />
-          </button>
-          <button
-            type="button"
-            disabled={archiving}
-            onClick={() => setArchived(!archived)}
-            aria-label={archived ? "Restore thread" : "Archive thread"}
-            title={archived ? "Restore" : "Archive"}
-            className="grid size-[30px] shrink-0 place-items-center rounded-lg text-ink-3 hover:bg-card hover:text-tk-onyx hover:ring-1 hover:ring-line disabled:opacity-50"
-          >
-            {archived ? (
-              <ArchiveRestore className="size-4" aria-hidden />
-            ) : (
-              <Archive className="size-4" aria-hidden />
-            )}
-          </button>
-        </>
-      ) : null}
+      <div className="flex shrink-0 items-center gap-0.5">
+        {threadId && stats.turns > 0 ? (
+          <span className="mr-2 hidden font-mono text-[11px] tabular-nums text-ink-3 sm:inline">
+            {stats.turns} {stats.turns === 1 ? "turn" : "turns"} · {dollars(stats.cents)}
+          </span>
+        ) : null}
+        {threadId ? (
+          <>
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              aria-label="Rename thread"
+              title="Rename"
+              className="grid size-[30px] place-items-center rounded-lg text-ink-3 hover:bg-well hover:text-tk-onyx"
+            >
+              <Pencil className="size-4" aria-hidden />
+            </button>
+            <button
+              type="button"
+              disabled={archiving}
+              onClick={() => setArchived(!archived)}
+              aria-label={archived ? "Restore thread" : "Archive thread"}
+              title={archived ? "Restore" : "Archive"}
+              className="grid size-[30px] place-items-center rounded-lg text-ink-3 hover:bg-well hover:text-tk-onyx disabled:opacity-50"
+            >
+              {archived ? (
+                <ArchiveRestore className="size-4" aria-hidden />
+              ) : (
+                <Archive className="size-4" aria-hidden />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setContextOpen(!contextOpen)}
+              aria-pressed={contextOpen}
+              aria-label={contextOpen ? "Hide context" : "Show context"}
+              title="Context"
+              className={cn(
+                "hidden size-[30px] place-items-center rounded-lg xl:grid",
+                contextOpen ? "bg-well text-tk-onyx ring-1 ring-line" : "text-ink-3 hover:bg-well hover:text-tk-onyx"
+              )}
+            >
+              <PanelRight className="size-4" aria-hidden />
+            </button>
+          </>
+        ) : null}
+      </div>
     </header>
   )
 }
 
-function Sep() {
-  return (
-    <span className="opacity-50" aria-hidden>
-      ·
-    </span>
-  )
-}
-
-/**
- * Listening, offline, or listening on old code. The worker sends the commit
- * its checkout was on when it started; when Railway's differs, it has not
- * been restarted since a deploy and the pill says so — a pasted screenshot
- * once went unseen for six days with nothing anywhere saying why.
- */
-function WorkerPill({ worker }: { worker: WorkerStatus }) {
-  const online = worker.online
-  const outdated = online && Boolean(worker.commit && worker.crmCommit && worker.commit.slice(0, 7) !== worker.crmCommit)
+function Pill({ tone, children }: { tone: "warn" | "run" | "mute"; children: React.ReactNode }) {
   return (
     <span
-      className="hidden h-[26px] shrink-0 items-center gap-1.5 rounded-full border border-line bg-card pl-2 pr-2.5 font-ui text-[11px] font-semibold text-ink-2 sm:inline-flex"
-      title={
-        outdated
-          ? `The worker runs ${worker.commit} but the CRM is on ${worker.crmCommit}. Restart it: launchctl kickstart -k gui/$(id -u)/com.tallkarol.chat-worker`
-          : online
-            ? `The worker on the Mac that runs turns is listening${worker.commit ? ` (commit ${worker.commit})` : ""}.`
-            : "No worker is listening. Turns queue until one starts."
-      }
-    >
-      <span
-        className={cn(
-          "size-[7px] rounded-full",
-          online && !outdated ? "bg-good ring-[3px] ring-good-soft" : "bg-warn ring-[3px] ring-warn-soft"
-        )}
-        aria-hidden
-      />
-      {online ? (
-        <>
-          {outdated ? "Worker outdated" : "Worker"}
-          <span className="font-mono font-medium text-ink-3">
-            {worker.name}
-            {worker.secondsAgo != null ? ` · ${worker.secondsAgo}s` : ""}
-          </span>
-        </>
-      ) : (
-        <>
-          {worker.lastSeenAt ? "Worker offline" : "No worker"}
-          {worker.secondsAgo != null ? (
-            <span className="font-mono font-medium text-ink-3">· {ago(worker.secondsAgo)}</span>
-          ) : null}
-        </>
+      className={cn(
+        "inline-flex h-[18px] shrink-0 items-center rounded-full px-2 font-ui text-[10px] font-bold uppercase tracking-[0.06em]",
+        tone === "warn" && "bg-warn-soft text-warn",
+        tone === "run" && "bg-accent-soft text-accent-ink",
+        tone === "mute" && "bg-well text-ink-3 ring-1 ring-line"
       )}
+    >
+      {children}
     </span>
   )
 }
 
-function ago(seconds: number) {
-  if (seconds < 90) return `${seconds}s`
-  if (seconds < 5400) return `${Math.round(seconds / 60)}m`
-  return `${Math.round(seconds / 3600)}h`
-}
+/* ---------- the launcher: a request that has not started ---------- */
 
-/* ---------- thread furniture ---------- */
-
-function DayRule({ label }: { label: string }) {
-  return (
-    <div className="flex items-center gap-3 font-ui text-[11px] font-semibold tracking-[0.02em] text-ink-3 before:h-px before:flex-1 before:bg-line before:content-[''] after:h-px after:flex-1 after:bg-line after:content-['']">
-      {label}
-    </div>
-  )
-}
-
-/**
- * Wordless on purpose — the dots say it. `role="status"` and the label keep
- * the meaning for anyone who cannot see them, and `.tk-wave-dot` holds a
- * still resting state under reduced motion instead of freezing mid-rise.
- * The seconds count from when the worker took it, so a long turn reads as
- * long rather than as stuck.
- */
-function Thinking({ pending, speaker }: { pending: PendingView; speaker: string }) {
-  const [tick, setTick] = useState(0)
-  useEffect(() => {
-    const timer = setInterval(() => setTick((t) => t + 1), 1000)
-    return () => clearInterval(timer)
-  }, [])
-  const elapsed = Math.max(0, Date.now() - new Date(pending.since).getTime())
-  void tick
-
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <span
-          className="grid size-6 shrink-0 place-items-center rounded-full bg-rail text-[--rail-active-icon]"
-          aria-hidden
-        >
-          <Sparkles className="size-3" />
-        </span>
-        <span className="font-ui text-[12.5px] font-semibold text-tk-onyx">{speaker}</span>
-        <span className="rounded-md border border-line bg-card px-1.5 py-0.5 font-mono text-[10.5px] text-ink-3">
-          {modelLabel(pending.model)}
-        </span>
-      </div>
-      <div
-        role="status"
-        aria-label="Working"
-        className="flex items-center gap-2.5 pl-8 font-ui text-[11.5px] font-medium text-ink-3"
-      >
-        <span className="inline-flex h-3.5 items-center gap-1" aria-hidden>
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className="tk-wave-dot size-[5px] rounded-full bg-ink-3"
-              style={{ "--i": i } as CSSProperties}
-            />
-          ))}
-        </span>
-        <span suppressHydrationWarning>
-          {pending.status === "queued"
-            ? "Queued"
-            : `Claimed by ${pending.claimedBy || "the worker"}`}{" "}
-          · {durationLabel(elapsed)}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-/**
- * Queued or claimed, but no heartbeat.
- *
- * Without this the page shows the dots forever and the honest answer is
- * invisible. What the page knows is only that no beat has reached THIS
- * database for twenty seconds — not whether a process exists on the Mac. On
- * Sep 11, 2026 the worker ran the whole time while its CRM (the dev server it
- * was pointed at) served a compile-error page to every route, so the copy
- * names both causes. Shown whatever the turn's status: a turn a dead worker
- * left at "running" is exactly the case, and the CRM puts it back on the
- * queue once a worker returns. launchd owns the process, so the fix is a
- * kickstart, not a terminal.
- */
-function Stranded({ worker }: { worker: WorkerStatus }) {
-  return (
-    <div className="ml-8 flex max-w-[36rem] items-start gap-2.5 rounded-xl bg-warn-soft px-3 py-2.5 text-xs leading-[1.45] text-warn">
-      <Unplug className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-      <div>
-        <p className="font-ui font-bold">
-          No heartbeat from the worker{worker.secondsAgo != null ? ` for ${ago(worker.secondsAgo)}` : ""}.
-        </p>
-        <p className="mt-1">
-          Your question stays queued and is taken the moment a beat arrives. Either the worker is not
-          running on the Mac — restart it with{" "}
-          <code className="font-mono">launchctl kickstart -k gui/$(id -u)/com.tallkarol.chat-worker</code>{" "}
-          — or it is up but the CRM it talks to is not answering; its log is{" "}
-          <code className="font-mono">~/Library/Logs/tallkarol/chat-worker.log</code>.
-        </p>
-      </div>
-    </div>
-  )
-}
-
-/* ---------- the empty thread ---------- */
-
-const ICON: Record<Starter["icon"], typeof Pin> = {
-  pin: Pin,
-  inbox: Inbox,
-  clock: Clock,
-  activity: Activity,
-  reports: BarChart3,
-  shield: ShieldCheck,
-  punch: ListChecks,
-  revenue: TrendingUp,
-  file: FileText,
-}
-
-function EmptyThread({
-  greeting,
+function Launcher({
   onSend,
+  busy,
+  error,
+  addressee,
 }: {
-  greeting: string
-  onSend: (text: string) => void
+  onSend: (text: string) => Promise<boolean>
+  busy: boolean
+  error: string | null
+  addressee: Addressee
 }) {
   function start(starter: Starter) {
-    if (starter.send) onSend(starter.text)
+    if (starter.send) void onSend(starter.text)
     else requestCompose({ text: starter.text })
   }
 
   return (
-    <div className="tk-main-scroll min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-7">
-      <div className="mx-auto flex min-h-full max-w-[47.5rem] flex-col justify-center gap-6">
-        <div>
-          <h2 className="font-display text-[28px] font-medium leading-[1.15] tracking-[-0.02em] text-tk-onyx [text-wrap:balance]">
-            {greeting} What are we doing?
-          </h2>
-          <p className="mt-2 max-w-[56ch] text-sm text-ink-2">
-            Ask about the work, or run a skill. Reads answer straight away.
-            Anything that writes shows a preview and waits for you.
-          </p>
-        </div>
-
-        <StarterGroup label="Ask" starters={ASK_STARTERS} onPick={start} />
-        <StarterGroup
-          label="For a client"
-          hint="fill the blank in the composer"
-          starters={CLIENT_STARTERS}
-          onPick={start}
+    <div className="tk-main-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-10 pt-6 sm:px-8 sm:pt-[6vh]">
+      <div className="mx-auto flex max-w-[54rem] flex-col gap-7">
+        <Composer
+          key="launch"
+          variant="launch"
+          onSend={onSend}
+          busy={busy}
+          error={error}
+          autoFocus
+          addressee={addressee}
         />
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 font-ui text-[11px] font-semibold text-ink-3">Talk to</span>
-          {DESKS.map((desk) => (
-            <button
-              key={desk.name}
-              type="button"
-              title={desk.tagline}
-              onClick={() =>
-                requestCompose({
-                  text: `@${desk.name} ${desk.pack && desk.pack !== "me" ? "[slug] " : ""}`,
-                })
-              }
-              className="h-7 rounded-full border border-line bg-card px-2.5 font-mono text-xs text-accent-ink hover:border-line-strong"
-            >
-              @{desk.name}
-            </button>
-          ))}
-        </div>
+        <section>
+          <Label hint="@name in the box does the same">Desks</Label>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {DESKS.map((desk) => (
+              <button
+                key={desk.name}
+                type="button"
+                title={desk.tagline}
+                onClick={() =>
+                  requestCompose({
+                    text: `@${desk.name} ${desk.pack && desk.pack !== "me" ? "[slug] " : desk.pack === "me" ? "me " : ""}`,
+                  })
+                }
+                className="flex items-start gap-2.5 rounded-[10px] border border-line bg-card px-2.5 py-2.5 text-left hover:border-line-strong hover:bg-well"
+              >
+                <Mark speaker={deskSpeaker(desk.name)} />
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1.5 font-ui text-[12.5px] font-semibold text-tk-onyx">
+                    {desk.label}
+                    {desk.private ? <Lock className="size-3 text-ink-3" aria-label="Private" /> : null}
+                  </span>
+                  <span className="mt-px block text-[11px] leading-[1.4] text-ink-3">{desk.tagline}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 font-ui text-[11px] font-semibold text-ink-3">Skills</span>
-          {QUICK_COMMANDS.map((command) => (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <section>
+            <Label>Ask</Label>
+            {ASK_STARTERS.map((starter) => (
+              <Line key={starter.title} onClick={() => start(starter)}>
+                <Blanks text={starter.title} />
+              </Line>
+            ))}
+          </section>
+          <section>
+            <Label hint="fills the blank">For a client</Label>
+            {CLIENT_STARTERS.map((starter) => (
+              <Line key={starter.title} onClick={() => start(starter)}>
+                <Blanks text={starter.title} />
+              </Line>
+            ))}
+          </section>
+          <section>
+            <Label>Run</Label>
+            {QUICK_COMMANDS.map((command) => (
+              <Line key={command} mono onClick={() => requestCompose({ text: command })}>
+                {command.replace(/^\//, "")}
+              </Line>
+            ))}
             <button
-              key={command}
               type="button"
-              onClick={() => requestCompose({ text: command })}
-              className="h-7 rounded-full border border-line bg-card px-2.5 font-mono text-xs text-accent-ink hover:border-line-strong"
+              onClick={() => requestSkillsTab()}
+              className="mt-1.5 px-1.5 font-ui text-[11.5px] font-semibold text-accent-ink hover:underline"
             >
-              {command}
+              All skills →
             </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => {
-              requestSkillsTab()
-            }}
-            className="h-7 rounded-full border border-line bg-card px-2.5 font-ui text-xs font-semibold text-ink-2 hover:border-line-strong hover:text-tk-onyx"
-          >
-            All skills →
-          </button>
+          </section>
         </div>
       </div>
     </div>
   )
 }
 
-function StarterGroup({
-  label,
-  hint,
-  starters,
-  onPick,
+function Label({ children, hint }: { children: React.ReactNode; hint?: string }) {
+  return (
+    <h3 className="mb-2 flex items-baseline gap-2 font-ui text-[10px] font-bold uppercase tracking-[0.1em] text-ink-3">
+      {children}
+      {hint ? <span className="font-medium normal-case tracking-normal">{hint}</span> : null}
+    </h3>
+  )
+}
+
+function Line({
+  mono,
+  onClick,
+  children,
 }: {
-  label: string
-  hint?: string
-  starters: Starter[]
-  onPick: (starter: Starter) => void
+  mono?: boolean
+  onClick: () => void
+  children: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-2.5">
-      <div className="flex items-baseline gap-2.5 font-ui text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-3">
-        {label}
-        {hint ? (
-          <span className="font-medium normal-case tracking-normal">{hint}</span>
-        ) : null}
-      </div>
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-        {starters.map((starter) => {
-          const Icon = ICON[starter.icon]
-          return (
-            <Card
-              key={starter.title}
-              as="button"
-              type="button"
-              radius="xl"
-              interactive
-              onClick={() => onPick(starter)}
-              className="flex flex-col items-start gap-2.5 p-3.5 text-left"
-            >
-              <span className="grid size-[30px] place-items-center rounded-[9px] bg-accent-soft text-accent-ink">
-                <Icon className="size-[15px]" aria-hidden />
-              </span>
-              <span>
-                <span className="block font-ui text-[13px] font-semibold text-tk-onyx">
-                  <Blanks text={starter.title} />
-                </span>
-                <span className="mt-0.5 block text-[11.5px] leading-[1.4] text-ink-3">
-                  {starter.sub}
-                </span>
-              </span>
-            </Card>
-          )
-        })}
-      </div>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex w-full items-start gap-2 rounded-md px-1.5 py-1 text-left leading-[1.35] text-ink-2 hover:bg-well hover:text-tk-onyx",
+        mono ? "font-mono text-[12px] font-medium" : "text-[12.5px] font-medium"
+      )}
+    >
+      <span className="shrink-0 font-semibold text-accent-ink" aria-hidden>
+        {mono ? "/" : "›"}
+      </span>
+      <span className="min-w-0">{children}</span>
+    </button>
   )
 }
 

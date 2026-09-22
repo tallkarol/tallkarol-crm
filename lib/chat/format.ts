@@ -93,6 +93,13 @@ export function durationLabel(ms: number): string {
   return `${Math.floor(m / 60)}h ${m % 60}m`
 }
 
+/** "12s", "4m", "3h" — how long since a heartbeat or a claim. */
+export function agoLabel(seconds: number): string {
+  if (seconds < 90) return `${seconds}s`
+  if (seconds < 5400) return `${Math.round(seconds / 60)}m`
+  return `${Math.round(seconds / 3600)}h`
+}
+
 export function modelLabel(model: string): string {
   return MODELS[model as ModelKey]?.label ?? model
 }

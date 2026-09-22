@@ -79,7 +79,7 @@ export function ApprovalCard({ call }: { call: ChatToolCall }) {
   }
 
   return (
-    <Card radius="xl" className="ml-8 max-w-[36rem] overflow-hidden">
+    <Card radius="xl" id={`call-${call.id}`} className="max-w-[36rem] scroll-mt-4 overflow-hidden">
       <div className="flex items-center gap-2 border-b border-line px-3.5 py-2.5">
         <span
           className={cn(

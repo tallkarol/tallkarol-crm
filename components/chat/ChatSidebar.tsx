@@ -2,21 +2,31 @@
 
 import { Fragment, useEffect, useState } from "react"
 import Link from "next/link"
-import { BookOpen, ChevronRight, MessagesSquare, Plus, Search } from "lucide-react"
+import { ArrowUpRight, BookOpen, ChevronRight, ListChecks, Plus, Search } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { ROUTES } from "@/lib/nav"
-import { dayBucket, listStamp, type DayBucket } from "@/lib/chat/format"
+import { monogram } from "@/lib/chat/desk-context"
+import {
+  agoLabel,
+  dayBucket,
+  dollars,
+  durationLabel,
+  listStamp,
+  modelLabel,
+  modelPool,
+  type DayBucket,
+} from "@/lib/chat/format"
 import { PERSONAS } from "@/lib/chat/personas"
 import { SKILL_DOCS } from "@/lib/chat/skills"
-import { UsageMeters } from "@/components/chat/UsageMeters"
+import type { WorkerStatus } from "@/lib/chat/worker-status"
+import { StateDot } from "@/components/chat/Receipt"
 import { SkillsDocs } from "@/components/chat/SkillsDocs"
 import { onSkillsTab } from "@/components/chat/compose-bus"
-import type { ThreadRow } from "@/components/chat/types"
-import type { UsageRailView } from "@/lib/usage/types"
+import type { ThreadRow, ThreadState } from "@/components/chat/types"
 
 const TAB_KEY = "tk-chat-tab"
 
-type Tab = "threads" | "skills"
+type Tab = "requests" | "skills"
 
 const BUCKETS: { key: DayBucket; label: string }[] = [
   { key: "today", label: "Today" },
@@ -25,25 +35,30 @@ const BUCKETS: { key: DayBucket; label: string }[] = [
 ]
 
 /**
- * Two things in one rail: the threads, and the skills you can start one
- * with. The tab is remembered per browser because someone who opens the
- * Skills tab tends to keep using it.
+ * The queue.
+ *
+ * Threads filed under their most urgent state — a write waiting for Karol,
+ * a turn a worker holds, a turn queued behind it — and only then by day.
+ * The worker's heartbeat sits at the top because it gates everything below
+ * it. The Skills tab is the same rail's other face: what you can start a
+ * request with. The tab is remembered per browser because someone who opens
+ * Skills tends to keep using it.
  */
 export function ChatSidebar({
   threads,
   activeId,
   isNew,
-  usage,
+  worker,
   now,
 }: {
   threads: ThreadRow[]
   activeId: string | null
   isNew: boolean
-  usage: UsageRailView
+  worker: WorkerStatus
   /** Server time, ISO — the day buckets must agree on both sides of hydration. */
   now: string
 }) {
-  const [tab, setTab] = useState<Tab>("threads")
+  const [tab, setTab] = useState<Tab>("requests")
   const [q, setQ] = useState("")
   const [desk, setDesk] = useState("")
   const [archivedOpen, setArchivedOpen] = useState(false)
@@ -80,6 +95,8 @@ export function ChatSidebar({
   const visible = desk ? searched.filter((t) => t.agent === desk) : searched
   const active = visible.filter((t) => !t.archived)
   const archived = visible.filter((t) => t.archived)
+  const byState = (state: ThreadState) => active.filter((t) => t.state === state)
+  const idle = byState("idle")
   // The desks that actually have threads, in roster order — a filter, not a roster.
   const desks = Object.keys(PERSONAS).filter((name) => threads.some((t) => t.agent === name))
 
@@ -91,15 +108,32 @@ export function ChatSidebar({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="px-3 pb-2.5 pt-3.5">
+      <div className="flex items-center gap-2 px-3 pb-2 pt-3">
+        <Worker worker={worker} />
+        <Link
+          href={`${ROUTES.chat}?new`}
+          aria-current={isNew ? "page" : undefined}
+          className={cn(
+            "ml-auto inline-flex h-[30px] shrink-0 items-center gap-1.5 rounded-[9px] border pl-2 pr-2.5 font-ui text-[12px] font-semibold",
+            isNew
+              ? "border-transparent bg-accent-soft text-accent-ink"
+              : "border-line bg-card text-tk-onyx hover:border-line-strong"
+          )}
+        >
+          <Plus className="size-3.5 text-accent-ink" aria-hidden />
+          New
+        </Link>
+      </div>
+
+      <div className="px-3 pb-2">
         <div
           role="tablist"
           aria-label="Sidebar"
-          className="flex gap-0.5 rounded-[10px] border border-line bg-well p-[3px]"
+          className="flex gap-0.5 rounded-[9px] border border-line bg-card p-[3px]"
         >
-          <TabButton on={tab === "threads"} onClick={() => pick("threads")}>
-            <MessagesSquare className="size-[13px]" aria-hidden />
-            Threads
+          <TabButton on={tab === "requests"} onClick={() => pick("requests")}>
+            <ListChecks className="size-[13px]" aria-hidden />
+            Requests
           </TabButton>
           <TabButton on={tab === "skills"} onClick={() => pick("skills")}>
             <BookOpen className="size-[13px]" aria-hidden />
@@ -108,26 +142,12 @@ export function ChatSidebar({
         </div>
       </div>
 
-      {tab === "threads" ? (
+      {tab === "requests" ? (
         <>
-          <Link
-            href={`${ROUTES.chat}?new`}
-            aria-current={isNew ? "page" : undefined}
-            className={cn(
-              "mx-3 mb-2 flex h-[34px] items-center gap-2 rounded-[10px] border px-3 font-ui text-[12.5px] font-semibold",
-              isNew
-                ? "border-transparent bg-accent-soft text-accent-ink"
-                : "border-line bg-card text-tk-onyx hover:border-line-strong"
-            )}
-          >
-            <Plus className="size-3.5 text-accent-ink" aria-hidden />
-            New thread
-          </Link>
-
-          <SearchBox value={q} onChange={setQ} placeholder="Search threads" />
+          <SearchBox value={q} onChange={setQ} placeholder="Search requests" />
 
           {desks.length ? (
-            <div className="mx-3 mb-1.5 flex flex-wrap gap-1" role="group" aria-label="Filter by desk">
+            <div className="mx-3 mb-1 flex flex-wrap gap-1" role="group" aria-label="Filter by desk">
               <DeskChip on={desk === ""} onClick={() => setDesk("")}>
                 All
               </DeskChip>
@@ -139,19 +159,21 @@ export function ChatSidebar({
             </div>
           ) : null}
 
-          <div className="tk-main-scroll min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+          <div className="tk-main-scroll min-h-0 flex-1 overflow-y-auto px-2 pb-3">
             {threads.length === 0 ? (
               <p className="px-2 pt-3 text-xs text-ink-3">
-                No threads yet. Ask something and one starts.
+                No requests yet. Ask something and one starts.
               </p>
             ) : visible.length === 0 ? (
-              <p className="px-2 pt-3 text-xs text-ink-3">No thread matches.</p>
+              <p className="px-2 pt-3 text-xs text-ink-3">Nothing matches.</p>
             ) : null}
 
+            <Group label="Needs you" state="needs" rows={byState("needs")} activeId={activeId} now={at} worker={worker} />
+            <Group label="Running" state="running" rows={byState("running")} activeId={activeId} now={at} worker={worker} />
+            <Group label="Queued" state="queued" rows={byState("queued")} activeId={activeId} now={at} worker={worker} />
+
             {BUCKETS.map((bucket) => {
-              const rows = active.filter(
-                (t) => dayBucket(t.lastMessageAt, at) === bucket.key
-              )
+              const rows = idle.filter((t) => dayBucket(t.lastMessageAt, at) === bucket.key)
               if (rows.length === 0) return null
               return (
                 <Fragment key={bucket.key}>
@@ -159,12 +181,7 @@ export function ChatSidebar({
                     {bucket.label}
                   </div>
                   {rows.map((thread) => (
-                    <ThreadLink
-                      key={thread.id}
-                      thread={thread}
-                      active={thread.id === activeId}
-                      now={at}
-                    />
+                    <Row key={thread.id} thread={thread} active={thread.id === activeId} now={at} worker={worker} />
                   ))}
                 </Fragment>
               )
@@ -186,17 +203,16 @@ export function ChatSidebar({
                     aria-hidden
                   />
                   Archived
-                  <span className="ml-auto font-semibold tracking-normal opacity-80">
-                    {archived.length}
-                  </span>
+                  <span className="ml-auto font-mono font-semibold tracking-normal">{archived.length}</span>
                 </button>
                 {archivedOpen
                   ? archived.map((thread) => (
-                      <ThreadLink
+                      <Row
                         key={thread.id}
                         thread={thread}
                         active={thread.id === activeId}
                         now={at}
+                        worker={worker}
                         muted
                       />
                     ))
@@ -204,8 +220,6 @@ export function ChatSidebar({
               </>
             ) : null}
           </div>
-
-          <UsageMeters usage={usage} />
         </>
       ) : (
         <>
@@ -229,52 +243,160 @@ export function ChatSidebar({
   )
 }
 
-function ThreadLink({
+/** The heartbeat, at the top because it gates the queue. */
+function Worker({ worker }: { worker: WorkerStatus }) {
+  const online = worker.online
+  return (
+    <span
+      className="flex min-w-0 items-center gap-1.5 font-ui text-[11px] font-semibold text-ink-2"
+      title={
+        online
+          ? "The worker on the Mac that runs turns is listening."
+          : "No worker is listening. Turns queue until one starts."
+      }
+    >
+      <span
+        className={cn(
+          "size-[7px] shrink-0 rounded-full",
+          online ? "bg-good ring-[3px] ring-good-soft" : "bg-warn ring-[3px] ring-warn-soft"
+        )}
+        aria-hidden
+      />
+      <span className="truncate">{online ? worker.name : worker.lastSeenAt ? "Worker offline" : "No worker"}</span>
+      {worker.secondsAgo != null ? (
+        <span className="shrink-0 font-mono font-medium text-ink-3">· {agoLabel(worker.secondsAgo)}</span>
+      ) : null}
+    </span>
+  )
+}
+
+function Group({
+  label,
+  state,
+  rows,
+  activeId,
+  now,
+  worker,
+}: {
+  label: string
+  state: ThreadState
+  rows: ThreadRow[]
+  activeId: string | null
+  now: Date
+  worker: WorkerStatus
+}) {
+  if (rows.length === 0) return null
+  return (
+    <>
+      <div className="flex items-center gap-2 px-2 pb-1 pt-3 font-ui text-[10px] font-bold uppercase tracking-[0.1em] text-ink-3">
+        <StateDot state={state} />
+        {label}
+        <span className="ml-auto font-mono font-semibold tracking-normal">{rows.length}</span>
+      </div>
+      {rows.map((thread) => (
+        <Row key={thread.id} thread={thread} active={thread.id === activeId} now={now} worker={worker} />
+      ))}
+    </>
+  )
+}
+
+function Row({
   thread,
   active,
   now,
+  worker,
   muted,
 }: {
   thread: ThreadRow
   active: boolean
   now: Date
+  worker: WorkerStatus
   /** Archived rows read a step quieter until they are brought back. */
   muted?: boolean
 }) {
+  const { pulse, state } = thread
+  const desk = thread.agent && PERSONAS[thread.agent] ? monogram(thread.agent) : null
+  const when =
+    state === "running" && pulse.live
+      ? durationLabel(Math.max(0, now.getTime() - new Date(pulse.live.since).getTime()))
+      : state === "queued"
+        ? "next"
+        : listStamp(thread.lastMessageAt, now)
+
   return (
     <Link
-      href={`${ROUTES.chat}?thread=${thread.id}`}
+      href={ROUTES.chatThread(thread.id)}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "block rounded-lg px-2 py-[7px]",
-        active ? "bg-accent-soft" : "hover:bg-well"
+        "grid grid-cols-[minmax(0,1fr)_auto] gap-x-2 gap-y-0.5 rounded-[9px] px-2 py-[7px]",
+        active ? "bg-card shadow-card" : "hover:bg-well"
       )}
     >
       <span
         className={cn(
-          "block truncate text-[12.5px] font-medium",
-          active ? "font-semibold text-accent-ink" : muted ? "text-ink-2" : "text-tk-onyx"
+          "truncate text-[12.5px] font-semibold leading-[1.3]",
+          active ? "text-accent-ink" : muted ? "text-ink-2" : "text-tk-onyx"
         )}
       >
         {thread.title}
       </span>
-      <span className="mt-0.5 flex items-center gap-1.5 font-ui text-[11px] text-ink-3">
-        {thread.needsYou ? (
+      <span className="pt-0.5 font-mono text-[10.5px] font-medium tabular-nums text-ink-3">{when}</span>
+      <span className="col-span-2 flex min-w-0 items-center gap-1.5 truncate font-ui text-[11px] font-medium text-ink-3">
+        {desk ? (
           <>
-            <span className="size-1.5 rounded-full bg-warn" aria-hidden />
-            <span className="font-semibold text-warn">Needs you</span>
-            <span aria-hidden>·</span>
+            <b className="font-mono font-semibold text-ink-2">{desk}</b>
+            <Dot />
           </>
         ) : null}
-        {thread.agent && PERSONAS[thread.agent] ? (
+        {pulse.waiting ? (
           <>
-            <span className="font-semibold text-ink-2">{PERSONAS[thread.agent].label}</span>
-            <span aria-hidden>·</span>
+            <span className="truncate font-semibold text-warn">
+              {pulse.waiting} waiting{pulse.waitingCount > 1 ? ` +${pulse.waitingCount - 1}` : ""}
+            </span>
+            {pulse.live ? <Dot /> : null}
           </>
         ) : null}
-        <span>{listStamp(thread.lastMessageAt, now)}</span>
+        {pulse.live ? (
+          pulse.live.status === "queued" ? (
+            <span className="truncate">{worker.online ? "waits for the running turn" : "waiting for a worker"}</span>
+          ) : (
+            <span className="inline-flex min-w-0 items-center gap-1 truncate font-semibold text-accent-ink">
+              {modelLabel(pulse.live.model)}
+              {pulse.live.rung > 0 ? (
+                <>
+                  <span className="font-medium text-ink-3">· rung {pulse.live.rung + 1}</span>
+                  {pulse.live.detector ? (
+                    <span className="inline-flex items-center gap-0.5">
+                      <ArrowUpRight className="size-[11px]" aria-hidden />
+                      {pulse.live.detector}
+                    </span>
+                  ) : null}
+                </>
+              ) : null}
+            </span>
+          )
+        ) : null}
+        {!pulse.waiting && !pulse.live ? (
+          <>
+            {pulse.lastModel && modelPool(pulse.lastModel) === "other" ? (
+              <>
+                <span className="truncate text-warn">{modelLabel(pulse.lastModel)}</span>
+                <Dot />
+              </>
+            ) : null}
+            <span className="font-mono">{pulse.cents > 0 ? dollars(pulse.cents) : desk ? "" : "no turns yet"}</span>
+          </>
+        ) : null}
       </span>
     </Link>
+  )
+}
+
+function Dot() {
+  return (
+    <span aria-hidden className="opacity-60">
+      ·
+    </span>
   )
 }
 
@@ -320,8 +442,8 @@ function TabButton({
       aria-selected={on}
       onClick={onClick}
       className={cn(
-        "inline-flex h-[26px] flex-1 items-center justify-center gap-1.5 rounded-[7px] font-ui text-xs font-semibold",
-        on ? "bg-card text-tk-onyx shadow-card" : "text-ink-3 hover:text-tk-onyx"
+        "inline-flex h-[24px] flex-1 items-center justify-center gap-1.5 rounded-[6px] font-ui text-[11.5px] font-semibold",
+        on ? "bg-well text-tk-onyx ring-1 ring-line" : "text-ink-3 hover:text-tk-onyx"
       )}
     >
       {children}
@@ -339,7 +461,7 @@ function SearchBox({
   placeholder: string
 }) {
   return (
-    <label className="mx-3 mb-1.5 flex h-8 items-center gap-2 rounded-[10px] border border-line bg-well px-2.5 text-ink-3 focus-within:border-line-strong focus-within:bg-card">
+    <label className="mx-3 mb-1.5 flex h-[30px] items-center gap-2 rounded-[9px] border border-line bg-card px-2.5 text-ink-3 focus-within:border-line-strong">
       <Search className="size-3.5 shrink-0" aria-hidden />
       <input
         type="search"

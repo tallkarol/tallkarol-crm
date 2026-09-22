@@ -2,14 +2,16 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Bookmark, Check, Sparkles, Terminal, ThumbsDown, X } from "lucide-react"
+import { Bookmark, Check, Terminal, ThumbsDown, X } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { decideApprovals, giveFeedback } from "@/lib/chat/actions"
 import { modelLabel, modelPool, resultCount, timeLabel } from "@/lib/chat/format"
+import type { RequestGroup } from "@/lib/chat/requests"
 import { parseCommand } from "@/lib/chat/skills"
 import { ApprovalCard } from "@/components/chat/ApprovalCard"
-import { LadderTrace } from "@/components/chat/LadderTrace"
+import { Mark, speakerFor } from "@/components/chat/Marks"
 import { Prose } from "@/components/chat/Prose"
+import { Receipt } from "@/components/chat/Receipt"
 import { ReplyActions } from "@/components/chat/ReplyActions"
 import type { ChatMessageView } from "@/components/chat/types"
 import type { ChatToolCall } from "@/db/schema"
@@ -17,173 +19,166 @@ import { stripReplyActions, viaReplyAction } from "@/lib/chat/reply-actions"
 import { attachmentPath } from "@/lib/chat/attachments"
 
 /**
- * One message.
+ * One request, as a section of the ledger.
  *
- * Karol's side is a soft bubble on the right. The assistant's side is prose
- * on the canvas — a mark, a name, the model that answered, and the text —
- * because a reply is something to read, not a speech balloon. What the
- * assistant DID sits between the two: reads as quiet chips, writes as the
- * approval card, and the rungs it climbed as a footnote.
+ * Karol's line is the heading. Under it the receipt: state, rungs, reads,
+ * writes, cost. Then the steps the rungs took, then each reply as prose with
+ * the model that wrote it, the gate cards for anything it wants to write, and
+ * what Karol thought of it. No bubbles — a reply is something to read, and a
+ * request is something to track.
  */
-export function Message({ message }: { message: ChatMessageView }) {
-  if (message.role === "tool") return null
+export function RequestSection({ group, compact }: { group: RequestGroup; compact?: boolean }) {
+  const { ask, replies, notes, reads, writes } = group
+  const command = ask ? parseCommand(ask.body) : null
+  const handed = Boolean(ask && ask.agent && ask.agent !== "Karol")
+  // A write parked by a rung that never replied — failed, or still running —
+  // has nowhere else to show; it hangs under the line that asked for it.
+  const orphans = replies.length === 0 ? writes : []
 
-  if (message.role === "system") {
-    return (
-      <p className="self-center rounded-full bg-well px-3 py-1 text-center text-[11px] text-ink-3">
-        {message.body}
-      </p>
-    )
-  }
-
-  if (message.role === "user") {
-    const command = parseCommand(message.body)
-    const failedOutright =
-      message.chain.length > 0 &&
-      message.chain.every((t) => t.status === "failed" || t.status === "cancelled")
-    /**
-     * A line a desk handed over (route_to's brief) is stored as a user row
-     * under the desk's name. It is not Karol speaking, and must not look it.
-     */
-    const handed = Boolean(message.agent && message.agent !== "Karol")
-    // Calls from turns that never produced a reply — a write parked in a rung
-    // that then failed — used to render nowhere while lighting "Needs you".
-    const orphanReads = message.calls.filter((c) => !c.mutating)
-    const orphanWrites = message.calls.filter((c) => c.mutating && !viaReplyAction(c.args))
-    return (
-      <div className="group flex flex-col items-end gap-1.5">
-        {handed ? (
-          <span className="pr-1 font-ui text-[10.5px] font-semibold text-ink-3">
-            {message.agent} · handed over, not Karol
-          </span>
-        ) : null}
-        <Screenshots attachments={message.attachments} />
-        {message.body ? (
-          <div
-            className={cn(
-              "max-w-[72%] whitespace-pre-wrap rounded-[18px] rounded-br-[6px] px-3.5 py-2.5 text-[14.5px] leading-[1.5] text-tk-onyx [overflow-wrap:anywhere]",
-              handed ? "border border-line bg-well" : "bg-accent-soft"
-            )}
-          >
-            {command ? (
-              <span className="font-mono text-[13px]">
-                <span className="text-accent-ink">/{command.name}</span>
-                {command.args ? ` ${command.args}` : ""}
-              </span>
-            ) : (
-              message.body
-            )}
+  return (
+    <article className="grid grid-cols-[26px_minmax(0,1fr)] gap-x-3.5 gap-y-2.5">
+      {ask ? (
+        <>
+          <div className="flex justify-center pt-px">
+            <Mark speaker={speakerFor("user", ask.agent)} />
           </div>
-        ) : null}
-        <span className="pr-1 font-ui text-[10.5px] text-ink-3 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none">
-          {timeLabel(message.createdAt)}
-        </span>
-        {orphanReads.length || orphanWrites.length ? (
-          <div className="flex w-full flex-col gap-2">
-            {orphanReads.length ? (
-              <div className="flex flex-wrap gap-1.5 pl-8">
-                {orphanReads.map((call) => (
-                  <ReadChip key={call.id} call={call} />
-                ))}
-              </div>
+          <div className="flex min-w-0 flex-col gap-2.5">
+            {handed ? (
+              <span className="font-ui text-[10.5px] font-semibold text-ink-3">
+                {ask.agent} · handed over, not Karol
+              </span>
             ) : null}
-            {orphanWrites.map((call) => (
+            <Screenshots attachments={ask.attachments} />
+            {ask.body ? (
+              <h2
+                className={cn(
+                  "m-0 whitespace-pre-wrap font-display font-semibold tracking-[-0.012em] text-tk-onyx [overflow-wrap:anywhere]",
+                  compact ? "text-[15px] leading-[1.35]" : "text-[17px] leading-[1.3]"
+                )}
+              >
+                {command ? (
+                  <span className="font-mono text-[15px] font-medium tracking-[-0.01em]">
+                    <span className="font-semibold text-accent-ink">/{command.name}</span>
+                    {command.args ? ` ${command.args}` : ""}
+                  </span>
+                ) : (
+                  ask.body
+                )}
+              </h2>
+            ) : null}
+            <Receipt group={group} />
+            {reads.length ? <Steps reads={reads} /> : null}
+            {orphans.map((call) => (
               <ApprovalCard key={call.id} call={call} />
             ))}
           </div>
-        ) : null}
-        {failedOutright ? (
-          <div className="w-full">
-            <LadderTrace turns={message.chain} />
-          </div>
-        ) : null}
-      </div>
-    )
-  }
-
-  const turn = message.chain.find((t) => t.id === message.turnId) ?? null
-  const reads = message.calls.filter((c) => !c.mutating)
-  const writes = message.calls.filter((c) => c.mutating && !viaReplyAction(c.args))
-  const skill = message.agent.startsWith("/")
-  const prose = stripReplyActions(message.body)
-
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        {skill ? (
-          <span
-            className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-soft font-ui text-[10px] font-bold uppercase text-accent-ink"
-            aria-hidden
-          >
-            {message.agent.slice(1, 3)}
-          </span>
-        ) : (
-          <span
-            className="grid size-6 shrink-0 place-items-center rounded-full bg-rail text-[--rail-active-icon]"
-            aria-hidden
-          >
-            <Sparkles className="size-3" />
-          </span>
-        )}
-        <span className={cn("font-ui text-[12.5px] font-semibold text-tk-onyx", skill && "font-mono")}>
-          {message.agent}
-        </span>
-        {turn ? (
-          <span
-            className={cn(
-              "rounded-md border px-1.5 py-0.5 font-mono text-[10.5px]",
-              modelPool(turn.model) === "other"
-                ? "border-transparent bg-warn-soft text-warn"
-                : "border-line bg-card text-ink-3"
-            )}
-          >
-            {modelLabel(turn.model)}
-          </span>
-        ) : null}
-        <span className="font-ui text-[10.5px] text-ink-3">{timeLabel(message.createdAt)}</span>
-      </div>
-
-      {reads.length ? (
-        <div className="flex flex-wrap gap-1.5 pl-8">
-          {reads.map((call) => (
-            <ReadChip key={call.id} call={call} />
-          ))}
-        </div>
+        </>
       ) : null}
 
-      {prose ? (
-        <div className="max-w-[66ch] pl-8 text-[14.5px] leading-[1.6] text-tk-onyx">
-          <Prose text={prose} />
-        </div>
-      ) : null}
-
-      <ReplyActions
-        messageId={message.id}
-        body={message.body}
-        context={message.actionsContext}
-        calls={message.calls}
-      />
-
-      {writes.filter((c) => c.status === "pending").length > 1 ? (
-        <BulkDecide callIds={writes.filter((c) => c.status === "pending").map((c) => c.id)} />
-      ) : null}
-
-      {writes.map((call) => (
-        <ApprovalCard key={call.id} call={call} />
+      {notes.map((note) => (
+        <p
+          key={note.id}
+          className="col-span-2 ml-10 justify-self-start rounded-full bg-well px-3 py-1 text-[11px] text-ink-3"
+        >
+          {note.body}
+        </p>
       ))}
 
-      {message.chain.length ? <LadderTrace turns={message.chain} /> : null}
+      {replies.map((reply) => (
+        <Reply key={reply.id} reply={reply} showReads={!ask} />
+      ))}
+    </article>
+  )
+}
 
-      {message.agent !== "Assistant" && !skill ? <Feedback message={message} /> : null}
+function Reply({ reply, showReads }: { reply: ChatMessageView; showReads: boolean }) {
+  const turn = reply.chain.find((t) => t.id === reply.turnId) ?? null
+  const reads = reply.calls.filter((c) => !c.mutating)
+  const writes = reply.calls.filter((c) => c.mutating && !viaReplyAction(c.args))
+  const pending = writes.filter((c) => c.status === "pending")
+  const skill = reply.agent.startsWith("/")
+  const prose = stripReplyActions(reply.body)
+
+  return (
+    <>
+      <div className="flex justify-center pt-px">
+        <Mark speaker={speakerFor("assistant", reply.agent)} />
+      </div>
+      <div className="group/fb flex min-w-0 flex-col gap-2.5">
+        <div className="flex items-center gap-2 font-ui text-[12px] font-semibold text-tk-onyx">
+          <span className={cn("truncate", skill && "font-mono")}>{reply.agent}</span>
+          {turn ? (
+            <span
+              className={cn(
+                "shrink-0 rounded-[5px] border px-1.5 py-px font-mono text-[10.5px] font-medium",
+                modelPool(turn.model) === "other"
+                  ? "border-transparent bg-warn-soft text-warn"
+                  : "border-line bg-card text-ink-3"
+              )}
+            >
+              {modelLabel(turn.model)}
+            </span>
+          ) : null}
+          <span className="ml-auto shrink-0 font-mono text-[10.5px] font-medium text-ink-3">
+            {timeLabel(reply.createdAt)}
+          </span>
+        </div>
+
+        {showReads && reads.length ? <Steps reads={reads} /> : null}
+
+        {prose ? (
+          <div className="max-w-[62ch] text-[14px] leading-[1.6] text-tk-onyx">
+            <Prose text={prose} />
+          </div>
+        ) : null}
+
+        <ReplyActions
+          messageId={reply.id}
+          body={reply.body}
+          context={reply.actionsContext}
+          calls={reply.calls}
+        />
+
+        {pending.length > 1 ? <BulkDecide callIds={pending.map((c) => c.id)} /> : null}
+
+        {writes.map((call) => (
+          <ApprovalCard key={call.id} call={call} />
+        ))}
+
+        {reply.agent !== "Assistant" && !skill ? <Feedback message={reply} /> : null}
+      </div>
+    </>
+  )
+}
+
+const STEPS_SHOWN = 8
+
+/**
+ * What the rungs read, named and counted — the answer is in the reply. A
+ * long search folds after eight; the count on the fold is the receipt's.
+ */
+function Steps({ reads }: { reads: ChatToolCall[] }) {
+  const [all, setAll] = useState(false)
+  const shown = all || reads.length <= STEPS_SHOWN + 1 ? reads : reads.slice(0, STEPS_SHOWN)
+  const hidden = reads.length - shown.length
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {shown.map((call) => (
+        <ReadChip key={call.id} call={call} />
+      ))}
+      {hidden > 0 ? (
+        <button
+          type="button"
+          onClick={() => setAll(true)}
+          className="inline-flex h-[22px] items-center rounded-md px-2 font-mono text-[11px] font-medium text-accent-ink hover:bg-well"
+        >
+          +{hidden} more
+        </button>
+      ) : null}
     </div>
   )
 }
 
-/**
- * What Karol thought of a desk's reply — the cheapest signal `/train` gets.
- * Quiet until hovered, like the timestamp; once given it stays as a chip so
- * the thread reads as a record. "Not right" asks for one line on why.
- */
 /**
  * What Karol pasted, above what he typed. The width and height are the
  * stored image's, so the box is the right shape before a byte arrives;
@@ -193,7 +188,7 @@ function Screenshots({ attachments }: { attachments: ChatMessageView["attachment
   if (attachments.length === 0) return null
   const one = attachments.length === 1
   return (
-    <div className="flex max-w-[72%] flex-wrap justify-end gap-1.5">
+    <div className="flex max-w-full flex-wrap gap-1.5">
       {attachments.map((a) => (
         <a
           key={a.id}
@@ -201,7 +196,7 @@ function Screenshots({ attachments }: { attachments: ChatMessageView["attachment
           target="_blank"
           rel="noopener"
           title={a.name}
-          className="block max-w-full overflow-hidden rounded-[14px] border border-line bg-well outline-accent-ink"
+          className="block max-w-full overflow-hidden rounded-[12px] border border-line bg-well outline-accent-ink"
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- auth-gated bytes, no optimiser */}
           <img
@@ -219,6 +214,11 @@ function Screenshots({ attachments }: { attachments: ChatMessageView["attachment
   )
 }
 
+/**
+ * What Karol thought of a desk's reply — the cheapest signal `/train` gets.
+ * Quiet until the reply is hovered; once given it stays as a chip so the
+ * thread reads as a record. "Not right" asks for one line on why.
+ */
 function Feedback({ message }: { message: ChatMessageView }) {
   const router = useRouter()
   const [busy, startTransition] = useTransition()
@@ -245,7 +245,7 @@ function Feedback({ message }: { message: ChatMessageView }) {
   }
 
   return (
-    <div className="group/fb flex flex-wrap items-center gap-1.5 pl-8">
+    <div className="flex flex-wrap items-center gap-1.5">
       {down ? (
         <span
           className="inline-flex h-6 items-center gap-1.5 rounded-lg border border-line bg-bad-soft px-2 font-ui text-[11px] text-bad"
@@ -348,7 +348,7 @@ function BulkDecide({ callIds }: { callIds: string[] }) {
   }
 
   return (
-    <div className="ml-8 flex max-w-[36rem] flex-wrap items-center gap-2 rounded-xl border border-line bg-well px-3 py-2">
+    <div className="flex max-w-[36rem] flex-wrap items-center gap-2 rounded-xl border border-line bg-well px-3 py-2">
       <span className="font-ui text-[11.5px] font-semibold text-tk-onyx">{callIds.length} previews waiting</span>
       <button
         type="button"
@@ -380,17 +380,17 @@ function ReadChip({ call }: { call: ChatToolCall }) {
   return (
     <span
       className={cn(
-        "inline-flex h-6 items-center gap-1.5 rounded-lg border border-line bg-card pl-[7px] pr-[9px] font-mono text-[11px] tracking-[-0.01em]",
+        "inline-flex h-[22px] items-center gap-1.5 rounded-md border border-line bg-card pl-1.5 pr-2 font-mono text-[11px] font-medium tracking-[-0.01em]",
         failed ? "text-bad" : "text-ink-2"
       )}
       title={failed ? call.error : undefined}
     >
       {failed ? (
-        <X className="size-3" aria-hidden />
+        <X className="size-[11px]" aria-hidden />
       ) : call.status === "ran" ? (
-        <Check className="size-3 text-good" aria-hidden />
+        <Check className="size-[11px] text-good" aria-hidden />
       ) : (
-        <Terminal className="size-3 text-ink-3" aria-hidden />
+        <Terminal className="size-[11px] text-ink-3" aria-hidden />
       )}
       {call.name}
       {count != null ? <span className="text-ink-3">· {count}</span> : null}

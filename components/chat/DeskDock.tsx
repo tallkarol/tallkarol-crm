@@ -7,11 +7,11 @@ import { ArrowUp, Lock, MessagesSquare, Plus, X } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { DOCK_ORDER, deskFor, monogram, packLabel } from "@/lib/chat/desk-context"
 import { deskBadges, loadDeskThread, openDesk, sendToDesk, type DeskThreadView } from "@/lib/chat/dock-actions"
-import { dayLabel, modelLabel } from "@/lib/chat/format"
+import { dayLabel } from "@/lib/chat/format"
 import { packKindOf } from "@/lib/chat/pack-lines"
 import { PERSONAS } from "@/lib/chat/personas"
 import { ROUTES } from "@/lib/nav"
-import { Message } from "@/components/chat/Message"
+import { Ledger } from "@/components/chat/Ledger"
 import { AttachmentTray, useAttachments } from "@/components/chat/useAttachments"
 
 /**
@@ -23,7 +23,13 @@ import { AttachmentTray, useAttachments } from "@/components/chat/useAttachments
  * dock is a button and the panel a sheet. Hidden on /chat, where the
  * thread already says who is speaking.
  */
-export function DeskDock() {
+export function DeskDock({
+  onBadgesChange,
+}: {
+  /** The dock's one poll, reported up so the nav's Chat icon can wear the
+   *  same "needs a yes" total without a poll of its own. */
+  onBadgesChange?: (total: number) => void
+}) {
   const pathname = usePathname()
   const context = deskFor(pathname)
   const [open, setOpen] = useState<{ agent: string; pack: string } | null>(null)
@@ -35,7 +41,15 @@ export function DeskDock() {
   const [sending, setSending] = useState(false)
 
   const refreshBadges = useCallback(() => {
-    deskBadges().then(setBadges).catch(() => {})
+    deskBadges()
+      .then((next) => {
+        setBadges(next)
+        onBadgesChange?.(Object.values(next).reduce((sum, n) => sum + n, 0))
+      })
+      .catch(() => {})
+    // onBadgesChange is a setState setter from the caller — stable identity,
+    // and including it would re-arm the poll on every parent render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -190,7 +204,10 @@ export function DeskDock() {
         type="button"
         onClick={() => setSheet(true)}
         aria-label="Talk to a desk"
-        className="fixed bottom-4 right-4 z-40 grid size-12 place-items-center rounded-full bg-rail text-[--rail-active-icon] shadow-overlay lg:hidden"
+        // Phone's bottom-4 would sit inside the dock+panel nav's new 76px
+        // bottom bar; clear it there and only drop back to bottom-4 once the
+        // `rail` breakpoint puts the bar back on the dock's left edge.
+        className="fixed bottom-[92px] right-4 z-40 grid size-12 place-items-center rounded-full bg-rail text-[--rail-active-icon] shadow-overlay rail:bottom-4 lg:hidden"
       >
         {front ? <span className="font-ui text-[11px] font-bold">{monogram(front)}</span> : <MessagesSquare className="size-5" />}
       </button>
@@ -337,18 +354,14 @@ function Panel({
           </p>
         ) : null}
 
-        <div className="flex flex-col gap-4">
-          {(view?.messages ?? []).map((message) => (
-            <Message key={message.id} message={message} />
-          ))}
-          {pending ? (
-            <div className="flex items-center gap-2 pl-8 font-ui text-[11px] text-ink-3">
-              <span className="size-1.5 animate-pulse rounded-full bg-accent-ink" aria-hidden />
-              Thinking · {modelLabel(pending.model)}
-            </div>
-          ) : null}
-          {busy && !pending ? <div className="pl-8 font-ui text-[11px] text-ink-3">…</div> : null}
-        </div>
+        <Ledger
+          messages={view?.messages ?? []}
+          pending={pending}
+          speaker={persona.label}
+          now={now.toISOString()}
+          compact
+        />
+        {busy && !pending ? <div className="mt-3 pl-10 font-ui text-[11px] text-ink-3">…</div> : null}
         <div ref={foot} />
       </div>
 

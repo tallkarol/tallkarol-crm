@@ -26,7 +26,7 @@ export type ChatMessageView = {
   attachments: AttachmentView[]
 }
 
-/** A turn somebody is still running, for the thinking row. */
+/** A turn somebody is still running, for the working row. */
 export type PendingView = {
   model: string
   claimedBy: string
@@ -40,17 +40,46 @@ export type ThreadStats = {
   cents: number
   /** "Composer 2.5 → Fable 5.1 Max", or the one model used. */
   chain: string
+  /** The ladder the last turn ran on — `persona`, `skill`, `code_tested`. */
+  job: string
+  /** The model that answered last, as a registry key. */
+  model: string
 }
+
+/**
+ * What the queue knows about a thread without opening it: a write parked
+ * for Karol, a turn a worker holds, what it has cost. Built server-side by
+ * `threadPulses` in lib/chat/turns.ts from the same rows the ledger reads.
+ */
+export type ThreadPulse = {
+  /** The tool name of the oldest write waiting for Karol, or null. */
+  waiting: string | null
+  waitingCount: number
+  live: {
+    status: "queued" | "claimed" | "running"
+    model: string
+    rung: number
+    detector: string
+    since: string
+    claimedBy: string
+  } | null
+  /** The model of the newest finished turn, as a registry key. */
+  lastModel: string
+  cents: number
+}
+
+export type ThreadState = "needs" | "running" | "queued" | "idle"
 
 export type ThreadRow = {
   id: string
   title: string
   /** The desk the thread is addressed to, or "". */
   agent: string
+  /** `clients/<slug>`, `products/<slug>`, `me`, or "". */
+  pack: string
   lastMessageAt: string
-  /** A write is parked for Karol in this thread. */
-  needsYou: boolean
   /** Stamped out of the main list; lives in the Archived group until restored. */
   archived: boolean
+  state: ThreadState
+  pulse: ThreadPulse
 }
-
