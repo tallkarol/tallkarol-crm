@@ -82,6 +82,38 @@ export type NavGroup = {
   items: readonly NavLink[]
 }
 
+/**
+ * The rooms a client's panel lists while you are inside that client —
+ * `/clients/[slug]` is the Board (the landing room), the rest are children.
+ * Signed off 23 Sep 2026 from `~/Work/tallkarol/crm-hub-b-rooms.html`.
+ */
+export const CLIENT_ROOMS = [
+  { id: "board", label: "Board", icon: "projects" },
+  { id: "calendar", label: "Calendar", icon: "calendar" },
+  { id: "inbox", label: "Inbox", icon: "inbox" },
+  { id: "monitors", label: "Monitors", icon: "uptime" },
+  { id: "dashboards", label: "Dashboards", icon: "analytics" },
+] as const satisfies readonly { id: string; label: string; icon: NavIconName }[]
+export type ClientRoomId = (typeof CLIENT_ROOMS)[number]["id"]
+
+/**
+ * The client a pathname is inside, or null. `/clients` (the roster) is not
+ * inside a client; `/clients/[slug]/anything` is, including the codebase
+ * pages, so the panel stays in client mode there too.
+ */
+export function clientSlugOf(pathname: string): string | null {
+  const m = /^\/clients\/([^/]+)(?:\/|$)/.exec(pathname)
+  return m ? decodeURIComponent(m[1]) : null
+}
+
+export function clientRoomOf(pathname: string): ClientRoomId | null {
+  const m = /^\/clients\/[^/]+(?:\/([^/]+))?/.exec(pathname)
+  if (!m) return null
+  const seg = m[1]
+  if (!seg) return "board"
+  return CLIENT_ROOMS.some((r) => r.id === seg) ? (seg as ClientRoomId) : null
+}
+
 export const ROUTES = {
   home: "/",
   chat: "/chat",
@@ -143,6 +175,8 @@ export const ROUTES = {
   settingsDevices: "/settings/integrations/devices",
   settingsCalendar: "/settings/integrations/calendar",
   client: (slug: string) => `/clients/${slug}`,
+  clientRoom: (slug: string, room: ClientRoomId) =>
+    room === "board" ? `/clients/${slug}` : `/clients/${slug}/${room}`,
   notebook: (slug: string) => `/notebooks/${slug}`,
   retainer: (slug: string) => `/retainers/${slug}`,
   project: (slug: string) => `/projects/${slug}`,

@@ -12,6 +12,9 @@ import { PERSONAS } from "@/lib/chat/personas"
  */
 export type DeskContext = { agent: string; pack: string }
 
+/** Dispatched on `window` by a page ("Ask the desk") to open the route's default desk in the dock. */
+export const DESK_OPEN_EVENT = "tk:desk-open"
+
 const ORDER: string[] = Object.keys(PERSONAS)
 
 export function deskFor(pathname: string): DeskContext | null {

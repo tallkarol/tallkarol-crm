@@ -6,11 +6,11 @@ type Db = PostgresJsDatabase<typeof schema>
 
 declare global {
   // eslint-disable-next-line no-var
-  var __tk_crm_db_v26: Db | undefined
+  var __tk_crm_db_v27: Db | undefined
 }
 
 export function getDb(): Db {
-  if (global.__tk_crm_db_v26) return global.__tk_crm_db_v26
+  if (global.__tk_crm_db_v27) return global.__tk_crm_db_v27
 
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {
@@ -40,7 +40,7 @@ export function getDb(): Db {
   // `db.query…` — none of them ever closed — until Postgres answered
   // `too many clients already` and every page 500'd. Dev needs the global too:
   // it is what survives HMR (bump the name when the schema changes).
-  global.__tk_crm_db_v26 = db
+  global.__tk_crm_db_v27 = db
   return db
 }
 

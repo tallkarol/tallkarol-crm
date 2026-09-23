@@ -25,6 +25,10 @@ type Result = { ok: true } | { ok: false; error: string }
 function touch() {
   revalidatePath(ROUTES.inbox)
   revalidatePath(ROUTES.home)
+  // The Inbox room (this client's slice of the same triage state) and the
+  // Board's Signals card, which reads the same "needs you" rule.
+  revalidatePath("/clients/[slug]/inbox", "page")
+  revalidatePath("/clients/[slug]", "page")
 }
 
 export const markReadAction = tracked("inbox.markReadAction", async function markReadAction(key: string) {

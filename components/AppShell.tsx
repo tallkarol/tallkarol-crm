@@ -1,13 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
 import { DeskDock } from "@/components/chat/DeskDock"
 import { DockRail } from "@/components/nav/DockRail"
 import { HubPanel } from "@/components/nav/HubPanel"
 import { MobileNav } from "@/components/nav/MobileNav"
+import { PanelSlotContext } from "@/components/nav/PanelSlot"
 import { cn } from "@/lib/cn"
-import { DOCK_NAV, ROUTES, resolveActiveNav, type NavBadge } from "@/lib/nav"
+import { DOCK_NAV, ROUTES, clientSlugOf, resolveActiveNav, type NavBadge } from "@/lib/nav"
 import { primeHideMoney } from "@/lib/money-privacy"
 import type { Theme } from "@/lib/theme"
 
@@ -56,7 +57,12 @@ export function AppShell({
   primeHideMoney(hideMoney)
 
   const pathname = usePathname()
-  const fullBleed = FULL_BLEED.has(pathname)
+  // The client rooms own their scrolling too: a fixed header, a scrolling
+  // room, and the focus strip docked underneath (app/(admin)/clients/[slug]/layout.tsx).
+  const fullBleed = FULL_BLEED.has(pathname) || clientSlugOf(pathname) !== null
+  // A route may put its own content in the dock's panel — the client rooms do.
+  const [panelOverride, setPanelOverride] = useState<ReactNode | null>(null)
+  const panelSlot = useMemo(() => ({ setOverride: setPanelOverride }), [])
   const [pinned, setPinned] = useState(true)
   const [lastGroupId, setLastGroupId] = useState<string>(DOCK_NAV[0].id)
   // The dock's Chat icon can wear the desks' "needs a yes" total, but the
@@ -109,6 +115,7 @@ export function AppShell({
   const openGroup = DOCK_NAV.find((g) => g.id === activeGroupId) ?? DOCK_NAV[0]
 
   return (
+    <PanelSlotContext.Provider value={panelSlot}>
     <div className="flex h-[100dvh] min-w-0 flex-1 flex-col overflow-hidden rail:flex-row">
       <a
         href="#main"
@@ -130,7 +137,9 @@ export function AppShell({
         hideMoney={hideMoney}
         theme={theme}
       />
-      {pinned ? (
+      {pinned && panelOverride ? (
+        panelOverride
+      ) : pinned ? (
         <HubPanel
           group={openGroup}
           activeHref={activeNav?.item.href ?? null}
@@ -174,5 +183,6 @@ export function AppShell({
         </div>
       </div>
     </div>
+    </PanelSlotContext.Provider>
   )
 }

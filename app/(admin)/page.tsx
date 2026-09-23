@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation"
 import { Forecast } from "@/components/dashboard/Forecast"
+import { cookies } from "next/headers"
 import { HomeHeader, type StatusPill } from "@/components/dashboard/HomeHeader"
+import { GlobalFocus } from "@/components/focus/GlobalFocus"
+import { FOCUS_MODE_COOKIE, isFocusMode } from "@/lib/focus"
+import { globalFocus } from "@/lib/focus-data"
 import { LeftOffBoard } from "@/components/dashboard/LeftOffBoard"
 import { MonthBilled } from "@/components/dashboard/MonthBilled"
 import {
@@ -460,6 +464,10 @@ export default async function DashboardPage({
 
   const rise = (i: number) => ({ "--i": i } as React.CSSProperties)
 
+  const globalCards = await globalFocus(now)
+  const focusModeRaw = cookies().get(FOCUS_MODE_COOKIE)?.value
+  const focusMode = isFocusMode(focusModeRaw) ? focusModeRaw : "three"
+
   return (
     <>
       <HomeHeader
@@ -473,6 +481,7 @@ export default async function DashboardPage({
       {searchParams.peek ? (
         <PeekRouter peek={searchParams.peek} closeHref="/" />
       ) : null}
+      <GlobalFocus cards={globalCards} mode={focusMode} />
       <LeftOffBoard payload={leftoff} waiting={waitingQueue} />
 
       <div className="mt-6 grid grid-cols-[minmax(0,1fr)] min-w-0 gap-3.5 xl:grid-cols-[minmax(0,8fr)_minmax(300px,4fr)]">

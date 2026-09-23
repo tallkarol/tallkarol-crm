@@ -101,6 +101,19 @@
   --rail-2-rgb: 20 29 28;
   --rail-ink-rgb: 241 234 220;
   --rail-active: rgb(0 159 154 / 0.18);
+  /* Post-it paper for the Focus tray — physical objects, so they stay paper in
+     both themes (deeper in dark). Ink on paper is fixed and never inverts. */
+  --paper-task: #ffec85;
+  --paper-ticket: #ffc0cb;
+  --paper-deliverable: #bfdfff;
+  --paper-punch: #c6f0ce;
+  --paper-note: #e2d3ff;
+  --paper-money: #ffd597;
+  --paper-ink: #241f14;
+  --paper-ink-2: rgb(36 31 20 / 0.66);
+  --paper-ink-3: rgb(36 31 20 / 0.48);
+  --paper-line: rgb(36 31 20 / 0.14);
+  --pin: #c8322b;
 
   /* The rail is onyx in BOTH themes, so everything below is declared once and
      never appears in a dark block — that is not drift, it is the point.
@@ -288,6 +301,12 @@
     --rail-rgb: 11 16 15;
     --rail-2-rgb: 15 22 21;
     --rail-active: rgb(0 159 154 / 0.2);
+    --paper-task: #e2cc5e;
+    --paper-ticket: #e3a1ad;
+    --paper-deliverable: #9ec2e5;
+    --paper-punch: #a5d8ad;
+    --paper-note: #c2b0e5;
+    --paper-money: #e5b77a;
 
     --viz-agent: #3987e5;
     --viz-skill: #d95926;
@@ -409,6 +428,12 @@
   --rail-rgb: 11 16 15;
   --rail-2-rgb: 15 22 21;
   --rail-active: rgb(0 159 154 / 0.2);
+  --paper-task: #e2cc5e;
+  --paper-ticket: #e3a1ad;
+  --paper-deliverable: #9ec2e5;
+  --paper-punch: #a5d8ad;
+  --paper-note: #c2b0e5;
+  --paper-money: #e5b77a;
 
   --viz-agent: #3987e5;
   --viz-skill: #d95926;
@@ -825,4 +850,66 @@ html[data-embed="settings"] main h1 {
   [data-chrome] {
     display: none !important;
   }
+}
+
+/* ------------------------------------------------------------------
+   Focus post-its (components/focus). Paper colour comes in on --paper; the
+   fold and the tape are pseudo-elements so the component stays a plain box.
+------------------------------------------------------------------ */
+.tk-note {
+  position: relative;
+  background: var(--paper);
+  color: var(--paper-ink);
+  border-radius: 2px;
+  box-shadow: 0 1px 1px rgb(0 0 0 / 0.08), 0 10px 20px -10px rgb(0 0 0 / 0.35);
+}
+.tk-note::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 0 0 2px 0;
+  background: linear-gradient(225deg, rgb(var(--canvas-rgb)) 0 50%, rgb(0 0 0 / 0.16) 50%, rgb(0 0 0 / 0.06));
+}
+.tk-note::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 46px;
+  height: 14px;
+  margin-left: -23px;
+  background: rgb(255 255 255 / 0.55);
+  border: 1px solid rgb(0 0 0 / 0.06);
+  transform: rotate(-1.5deg);
+}
+.tk-note[data-global="true"]::before { display: none; }
+.tk-pinhead {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  z-index: 2;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff7b73, var(--pin) 60%, #8f1f1a);
+  box-shadow: 0 2px 3px rgb(0 0 0 / 0.35);
+}
+.tk-pinhead::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 14px;
+  width: 2px;
+  height: 8px;
+  background: linear-gradient(#777, #333);
+}
+.tk-qnote {
+  background: var(--paper);
+  color: var(--paper-ink);
+  border-radius: 2px;
+  box-shadow: 0 1px 1px rgb(0 0 0 / 0.08), 0 5px 10px -6px rgb(0 0 0 / 0.3);
 }

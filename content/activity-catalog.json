@@ -10,7 +10,11 @@
     "/chat",
     "/clients",
     "/clients/[slug]",
+    "/clients/[slug]/calendar",
     "/clients/[slug]/codebases/[codebase]",
+    "/clients/[slug]/dashboards",
+    "/clients/[slug]/inbox",
+    "/clients/[slug]/monitors",
     "/contacts",
     "/contracts",
     "/contracts/[slug]",
@@ -282,8 +286,8 @@
     }
   ],
   "actions": {
-    "total": 187,
-    "wrapped": 69,
+    "total": 195,
+    "wrapped": 77,
     "files": [
       {
         "file": "app/(admin)/delivery/actions.ts",
@@ -429,6 +433,11 @@
         "file": "lib/experiments/actions.ts",
         "total": 2,
         "wrapped": 0
+      },
+      {
+        "file": "lib/focus-actions.ts",
+        "total": 8,
+        "wrapped": 8
       },
       {
         "file": "lib/insights/actions.ts",

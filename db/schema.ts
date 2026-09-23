@@ -3752,3 +3752,40 @@ export const activityDaily = pgTable(
 
 export type ActivityEvent = typeof activityEvents.$inferSelect
 export type ActivityDaily = typeof activityDaily.$inferSelect
+
+/**
+ * Focus — the post-its on a client's Board. One row per item in a client's
+ * focus set, ordered by `position`: the first few (3 or 1, a per-user view
+ * setting) are the showing slots and the rest is the queue. `global` lifts a
+ * row onto the dashboard's set without leaving the client, so the global set
+ * is a subset of the client sets by construction. Clearing deletes the row —
+ * the underlying task, ticket or deliverable keeps its own history.
+ */
+export const focusItems = pgTable(
+  "focus_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    /** task | ticket | deliverable | mail */
+    refKind: text("ref_kind").notNull(),
+    refId: uuid("ref_id").notNull(),
+    position: integer("position").notNull().default(0),
+    global: boolean("global").notNull().default(false),
+    /** Paper colour override; null = the kind's own. */
+    color: text("color"),
+    addedAt: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byClient: index("focus_items_client_idx").on(table.clientId, table.position),
+    ref: uniqueIndex("focus_items_ref_unique").on(table.clientId, table.refKind, table.refId),
+  })
+)
+
+export type FocusItem = typeof focusItems.$inferSelect
+
+export const focusItemsRelations = relations(focusItems, ({ one }) => ({
+  client: one(clients, { fields: [focusItems.clientId], references: [clients.id] }),
+}))

@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ArrowUp, Lock, MessagesSquare, Plus, X } from "lucide-react"
 import { cn } from "@/lib/cn"
-import { DOCK_ORDER, deskFor, monogram, packLabel } from "@/lib/chat/desk-context"
+import { DESK_OPEN_EVENT, DOCK_ORDER, deskFor, monogram, packLabel } from "@/lib/chat/desk-context"
 import { deskBadges, loadDeskThread, openDesk, sendToDesk, type DeskThreadView } from "@/lib/chat/dock-actions"
 import { dayLabel } from "@/lib/chat/format"
 import { packKindOf } from "@/lib/chat/pack-lines"
@@ -100,6 +100,18 @@ export function DeskDock({
     }, inFlight ? 3000 : 8000)
     return () => clearInterval(timer)
   }, [open, threadId, inFlight])
+
+  // "Ask the desk" on a client page (and the client panel's desk row) opens
+  // the route's default desk here rather than navigating to /chat.
+  useEffect(() => {
+    function onOpen() {
+      if (!context) return
+      show(context.agent)
+      setSheet(true)
+    }
+    window.addEventListener(DESK_OPEN_EVENT, onOpen)
+    return () => window.removeEventListener(DESK_OPEN_EVENT, onOpen)
+  }, [context, show])
 
   function close() {
     setOpen(null)
