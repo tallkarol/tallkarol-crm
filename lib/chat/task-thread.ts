@@ -68,10 +68,13 @@ export async function loadTaskBrief(taskId: string): Promise<LoadedTask | null> 
  * thread per task: a second click lands in the same conversation instead of
  * starting a twin, the way a second "Request test" returns the run already
  * queued. An archived thread does not count — archiving is "start over".
+ * `fromThreadId` is the thread that handed the task over (`solve_task`), so
+ * the solver can `hand_back` to it; an open thread keeps the one it had.
  */
 export async function startTaskThread(
   userId: string,
-  taskId: string
+  taskId: string,
+  fromThreadId?: string
 ): Promise<{ threadId: string; created: boolean }> {
   const existing = await db.query.chatThreads.findFirst({
     where: and(
@@ -82,14 +85,22 @@ export async function startTaskThread(
     orderBy: [desc(chatThreads.lastMessageAt)],
     columns: { id: true },
   })
-  if (existing) return { threadId: existing.id, created: false }
+  if (existing) {
+    if (fromThreadId) {
+      await db
+        .update(chatThreads)
+        .set({ fromThreadId })
+        .where(and(eq(chatThreads.id, existing.id), isNull(chatThreads.fromThreadId)))
+    }
+    return { threadId: existing.id, created: false }
+  }
 
   const brief = await loadTaskBrief(taskId)
   if (!brief) throw new Error("That task does not exist.")
 
   const [thread] = await db
     .insert(chatThreads)
-    .values({ userId, title: "", taskId, clientId: brief.clientId })
+    .values({ userId, title: "", taskId, clientId: brief.clientId, fromThreadId: fromThreadId ?? null })
     .returning({ id: chatThreads.id })
 
   await send({ userId, threadId: thread.id, text: taskBrief(brief) })

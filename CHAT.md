@@ -179,6 +179,8 @@ never writes SQL and cannot reach anything not on this list.
 | `reschedule_task` | direct `tasks` update | **yes** |
 | `propose_pack_line` | `pack-lines.ts`, written by the **worker** on the Mac | **yes** |
 | `route_to` | `send()` — a new thread addressed to another desk, the brief as its first message | **yes** |
+| `solve_task` | `insertTaskRow` + `startTaskThread` — files the task (or takes `taskId`) and opens its Solve thread, pointed back here | **yes** |
+| `hand_back` | a note from this desk into the thread that handed the work (`from_thread_id`); no turn | **yes** |
 | `log_time` | `logAgentTime` (`lib/punches.ts`) | **yes** |
 | `list_punches` | `findPunches` — any state: review, running, approved, discarded | no |
 | `edit_punch` | `revisePunch` — an approved punch's timesheet line follows | **yes** |
@@ -512,15 +514,22 @@ evidence — so the coach knows last week's commitment and the client
 manager knows Tuesday's *Next:* on Thursday. A digest run is not a chat
 turn: no ledger row, no tools, no reply; it shows only in the worker log.
 
-**Handoffs.** `route_to` lets a desk hand the conversation to another desk
-with a brief, along the org chart's edges only (pm and dreamer reach any
-desk; an account desk reaches the pm; the product owner briefs developer,
-designer and marketer; the marketer briefs the copywriter). Previewed like
-every write; on Confirm `send()` opens a new thread addressed to that desk
-— the brief as its first message, shown as from the handing desk, the
-pack carried when the kinds match, `from_thread_id` pointing back — and
-the desk answers there. A conversation travels with a brief; work products
-never do.
+**Handoffs.** Any thread can open the thread that does the work, and hear
+back from it. `route_to` hands the conversation to any desk — the coach
+included, both ways — or, with `command`, to a slash command (`/follow-up
+zemvelo`), the brief riding along as its context. `solve_task` is the path
+for anything that needs a repo, the CRM itself included: it files a task
+(or takes `taskId`) and opens its Solve thread in one card. Each is
+previewed like every write; on Confirm the card follows the new thread
+(`decideApproval` returns its `url`), and a decided card keeps an *Open
+thread* link. The new thread's first message shows as from the handing
+desk, the pack carries when the kinds match — never the coach's `me` — and
+`from_thread_id` points back. When the work is done or blocked the thread
+calls `hand_back`, which posts a note under its own name into the thread
+that handed it; no turn runs there until Karol writes. Until 2026-09-23
+handoffs ran along the org chart's edges only and the coach had none;
+Karol lifted that — his Confirm on the card is the gate, not the chart. A
+conversation travels with a brief; work products never do.
 
 ### The dock
 

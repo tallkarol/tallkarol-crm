@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Check, Wrench, X } from "lucide-react"
+import { ArrowRight, Check, Wrench, X } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { decideApproval, triageFailedCall } from "@/lib/chat/actions"
 import { timeLabel } from "@/lib/chat/format"
@@ -27,6 +28,8 @@ const VERB: Record<string, string> = {
   reschedule_task: "Reschedule it",
   propose_pack_line: "Write it to the pack",
   route_to: "Hand it over",
+  solve_task: "Open the solve thread",
+  hand_back: "Hand it back",
   edit_punch: "Change the punch",
   split_punch: "Split the punch",
   drop_punch: "Drop the punch",
@@ -64,6 +67,7 @@ export function ApprovalCard({ call }: { call: ChatToolCall }) {
     startTransition(async () => {
       const result = await decideApproval({ callId: call.id, approve })
       if (!result.ok) setError(result.error)
+      else if (result.url) router.push(result.url)
       else router.refresh()
     })
   }
@@ -181,6 +185,15 @@ export function ApprovalCard({ call }: { call: ChatToolCall }) {
                       ? call.error || "Skipped. Nothing was written."
                       : tag.label}
           </span>
+          {call.status === "ran" && openedThread(call) ? (
+            <Link
+              href={openedThread(call)!}
+              className="ml-auto inline-flex h-[26px] items-center gap-1.5 rounded-[8px] border border-line px-2.5 font-ui text-[11px] font-semibold text-ink-2 outline-accent-ink hover:border-line-strong hover:text-tk-onyx"
+            >
+              Open thread
+              <ArrowRight className="size-3" aria-hidden />
+            </Link>
+          ) : null}
           {call.status === "failed" ? (
             <button
               type="button"
@@ -197,6 +210,12 @@ export function ApprovalCard({ call }: { call: ChatToolCall }) {
       )}
     </Card>
   )
+}
+
+/** The thread a handoff opened, when its result names one. */
+function openedThread(call: ChatToolCall): string | null {
+  const url = call.result && typeof call.result === "object" ? (call.result as { url?: unknown }).url : null
+  return typeof url === "string" && url.startsWith("/chat?thread=") ? url : null
 }
 
 /** An approved pack line is either waiting for a Mac or held by one — say which, so a hung claim is visible. */

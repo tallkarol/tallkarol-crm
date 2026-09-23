@@ -185,7 +185,7 @@ export async function triageFailedCall(input: {
 export async function decideApproval(input: {
   callId: string
   approve: boolean
-}): Promise<ActionResult<{ status: string }>> {
+}): Promise<ActionResult<{ status: string; url?: string }>> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
 
@@ -203,7 +203,9 @@ export async function decideApproval(input: {
   revalidatePath("/")
 
   if (!outcome.ok) return { ok: false, error: outcome.error }
-  return { ok: true, status: outcome.call.status }
+  // A handoff opened a thread; the card follows it there.
+  const url = threadUrl(outcome.call.result)
+  return { ok: true, status: outcome.call.status, ...(url ? { url } : {}) }
 }
 
 /**
@@ -326,4 +328,10 @@ export async function runReplyAction(input: {
 
   if (!outcome.ok) return { ok: false, error: outcome.error }
   return { ok: true, label: action.label }
+}
+
+/** `/chat?thread=…` when a write's result names a thread it opened (route_to, solve_task, hand_back). */
+function threadUrl(result: unknown): string | null {
+  const url = result && typeof result === "object" ? (result as { url?: unknown }).url : null
+  return typeof url === "string" && url.startsWith("/chat?thread=") ? url : null
 }

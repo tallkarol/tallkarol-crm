@@ -495,14 +495,49 @@ async function run(
   }
   check("feedback on Karol's own message is refused", refusedUser)
 
-  /* --- a handoff only along an edge --- */
-  const noEdge = await invokeTool({
+  /* --- any desk hands to any desk, a command or a solve thread; parked, never taken here --- */
+  const fromCoach = await invokeTool({
     userId: admin.id,
     turnId: coach.turn.id,
     name: "route_to",
-    args: { desk: "copywriter", brief: "smoke — delete me" },
+    args: { desk: "pm", brief: "smoke — delete me" },
   })
-  check("coach cannot hand to anyone", noEdge.status === "failed", JSON.stringify(noEdge).slice(0, 120))
+  check("coach hands to the pm, parked", fromCoach.status === "pending", JSON.stringify(fromCoach).slice(0, 120))
+  check(
+    "the coach's me pack does not travel",
+    fromCoach.status === "pending" && !JSON.stringify(fromCoach.preview).includes("(me)")
+  )
+  const toCommand = await invokeTool({
+    userId: admin.id,
+    turnId: coach.turn.id,
+    name: "route_to",
+    args: { command: "/follow-up", brief: "smoke — delete me" },
+  })
+  check("a handoff can run a command, parked", toCommand.status === "pending", JSON.stringify(toCommand).slice(0, 120))
+  const noCommand = await invokeTool({
+    userId: admin.id,
+    turnId: coach.turn.id,
+    name: "route_to",
+    args: { command: "/no-such-command", brief: "smoke — delete me" },
+  })
+  check("an unknown command fails visibly", noCommand.status === "failed", JSON.stringify(noCommand).slice(0, 120))
+  const toSolve = await invokeTool({
+    userId: admin.id,
+    turnId: coach.turn.id,
+    name: "solve_task",
+    args: { title: "smoke — delete me", clientSlug: "tallkarol", notes: "crm" },
+  })
+  check("solve_task parks as pending", toSolve.status === "pending", JSON.stringify(toSolve).slice(0, 120))
+  const nothingBack = await invokeTool({
+    userId: admin.id,
+    turnId: coach.turn.id,
+    name: "hand_back",
+    args: { summary: "smoke — delete me" },
+  })
+  check("hand_back needs a thread that was handed work", nothingBack.status === "failed", JSON.stringify(nothingBack).slice(0, 120))
+  for (const call of (await threadDetail(admin.id, coach.threadId))?.calls ?? []) {
+    if (call.status === "pending") await decideToolCall({ userId: admin.id, callId: call.id, approve: false })
+  }
   const handed = await send({
     hold: "smoke",
     userId: admin.id,

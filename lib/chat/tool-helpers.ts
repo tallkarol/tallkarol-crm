@@ -103,6 +103,8 @@ export const CONFIRM_FROM_STRIP: readonly string[] = [
   "refresh_insights",
   "sync_inbox",
   "route_to",
+  "solve_task",
+  "hand_back",
 ]
 
 const STRIP_SET = new Set(CONFIRM_FROM_STRIP)
