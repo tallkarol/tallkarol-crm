@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process"
+import { spawn, spawnSync } from "node:child_process"
 import {
   closeSync,
   existsSync,
@@ -137,6 +137,13 @@ const PERSONAS_DIR = process.env.CHAT_WORKER_PERSONAS || (SKILLS ? join(SKILLS, 
 /** The packs a desk may load. `me` is a separate private repo, read by the coach alone. */
 const PACKS_DIR = process.env.DAEDALUS_CLIENT_PACKS || join(homedir(), "Work", "daedalus-client-packs")
 const ME_DIR = process.env.DAEDALUS_ME || join(homedir(), "Work", "daedalus-me")
+
+/** The Mac collector behind the Allowance rail. Only this machine can read
+ * Claude's Keychain and Cursor's IDE session, so the rail is only ever as
+ * fresh as the last run from here. */
+const VENDOR_CAPS =
+  process.env.CHAT_WORKER_VENDOR_CAPS ||
+  join(homedir(), "Work", "daedalus-hive-mind", "skills", "timeclock", "scripts", "vendor-caps.py")
 
 /** A task turn gets what a skill turn gets: it has code to read, run and change. */
 const SOLVE_TOOLS: ToolName[] = SKILL_TOOLS
@@ -1241,9 +1248,36 @@ function buildPrompt(claim: Claim): string {
   ].join("\n")
 }
 
+/**
+ * Refresh the vendor cap readings the Allowance rail draws. A CRM turn
+ * spends Cursor's pool, so the bar that moved is the one Karol is looking
+ * at; leaving it on the twice-daily sweep meant the rail described this
+ * morning, not this conversation.
+ *
+ * Detached and never awaited. cursor.com's usage endpoint has been seen
+ * taking a minute, and nothing about a turn that already succeeded may
+ * wait on it or fail because of it. --throttle 60 is what keeps a fast
+ * back-and-forth from stacking those calls on top of each other.
+ */
+function refreshCaps(): void {
+  try {
+    spawn("/usr/bin/python3", [VENDOR_CAPS, "--throttle", "60"], {
+      detached: true,
+      stdio: "ignore",
+    }).unref()
+  } catch {
+    // A collector that will not start is not a reason to fail a good turn.
+  }
+}
+
 async function runTurn(claim: Claim) {
   const turn = claim.turn
   if (!turn) return
+
+  // Once as the message lands and once when the reply is done: the first
+  // shows where the turn starts from, the second what it cost. The throttle
+  // collapses the pair into one call whenever they fall inside a minute.
+  refreshCaps()
 
   const label = turn.id.slice(0, 8)
   log(
@@ -1405,6 +1439,7 @@ async function runTurn(claim: Claim) {
     log(
       `[${label}] done${result.durationMs ? ` in ${(result.durationMs / 1000).toFixed(1)}s` : ""}${outcome === "sent" ? "" : ` (${outcome})`}`
     )
+    refreshCaps()
   } catch (err) {
     /**
      * A thrown CursorAgentError means the run never started — auth, config,
