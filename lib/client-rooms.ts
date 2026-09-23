@@ -132,7 +132,7 @@ export async function loadPanelMonitors(client: ClientShell): Promise<PanelMonit
 /* ------------------------------------------------------------ the week */
 
 export type WeekItem =
-  | { kind: "event"; id: string; day: number; startsAt: string; endsAt: string; title: string; mine: boolean; who: string | null; allDay: boolean; href: string | null }
+  | { kind: "event"; id: string; day: number; startsAt: string; endsAt: string; title: string; mine: boolean; who: string | null; allDay: boolean; href: string | null; /** The event's client colour, for the everyone view. */ color?: string }
   | { kind: "due"; id: string; day: number; title: string; flavour: "due" | "money" | "repeat"; href: string | null }
 
 export type WeekData = {
@@ -211,6 +211,7 @@ export async function loadWeek(client: ClientShell, now = new Date(), anchor?: s
       who: mine ? null : e.client?.name ?? null,
       allDay: e.allDay,
       href: e.url || null,
+      color: e.client ? clientColor(e.client.slug) : undefined,
     })
   }
   for (const d of dueDeliverables) {
@@ -246,6 +247,8 @@ export type SignalRow = {
   age: string
   late: boolean
   href: string
+  /** Set on the everyone view (the roster page); a client's own rooms leave it out. */
+  client?: { slug: string; name: string; color: string }
 }
 
 export type SignalsData = { rows: SignalRow[]; total: number }
@@ -300,6 +303,131 @@ export async function loadSignals(client: ClientShell, now = new Date()): Promis
         href: ROUTES.meetingNote(note.id),
       })
     }
+  }
+  rows.sort((a, b) => Number(b.late) - Number(a.late))
+  return { rows, total: rows.length }
+}
+
+
+/* ------------------------------------------------------------ everyone (the roster page) */
+
+/**
+ * The whole week across every client: each client's events in that client's
+ * colour (marked `mine` with `who` = the client, so the grid labels them),
+ * Karol's own blocks as "own", and every client's deadlines with the client
+ * name in front.
+ */
+export async function loadWeekAll(now = new Date(), anchor?: string): Promise<WeekData> {
+  const today = isoDay(now)
+  const start = weekStart(anchor ?? today)
+  const end = addDays(start, 7)
+  const from = new Date(`${start}T00:00:00`)
+  const to = new Date(`${end}T00:00:00`)
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const iso = addDays(start, i)
+    return { iso, num: Number(iso.slice(8, 10)), dow: DOWS[i] }
+  })
+  const dayIndex = (iso: string) => days.findIndex((d) => d.iso === iso)
+
+  const [events, dueDeliverables, dueTasks, activeRetainers, monthHours] = await Promise.all([
+    db.query.calendarEvents.findMany({
+      where: and(eq(calendarEvents.cancelled, false), gte(calendarEvents.startsAt, from), lt(calendarEvents.startsAt, to)),
+      with: { client: { columns: { slug: true, name: true } } },
+      orderBy: [asc(calendarEvents.startsAt)],
+    }),
+    db
+      .select({ id: deliverables.id, label: deliverables.label, title: deliverables.title, dueOn: deliverables.dueOn, projectSlug: projects.slug, clientName: clients.name })
+      .from(deliverables)
+      .innerJoin(projects, eq(projects.id, deliverables.projectId))
+      .innerJoin(clients, eq(clients.id, projects.clientId))
+      .where(and(eq(deliverables.status, "pending"), gte(deliverables.dueOn, start), lt(deliverables.dueOn, end))),
+    db
+      .select({ id: tasks.id, title: tasks.title, dueOn: tasks.dueOn, cadence: tasks.cadence, clientName: clients.name })
+      .from(tasks)
+      .leftJoin(clients, eq(clients.id, tasks.clientId))
+      .where(and(eq(tasks.status, "open"), gte(tasks.dueOn, start), lt(tasks.dueOn, end))),
+    db.query.retainers.findMany({ where: eq(retainers.status, "active"), with: { client: { columns: { id: true, name: true, slug: true } } } }),
+    db
+      .select({ clientId: timeEntries.clientId, hours: sql<string>`coalesce(sum(${timeEntries.hours}), 0)` })
+      .from(timeEntries)
+      .where(gte(timeEntries.occurredOn, `${today.slice(0, 7)}-01`))
+      .groupBy(timeEntries.clientId),
+  ])
+
+  const items: WeekItem[] = []
+  for (const e of events) {
+    const day = dayIndex(isoDay(e.startsAt))
+    if (day < 0) continue
+    items.push({
+      kind: "event",
+      id: e.id,
+      day,
+      startsAt: e.startsAt.toISOString(),
+      endsAt: e.endsAt.toISOString(),
+      title: e.title || "(untitled)",
+      mine: !!e.client,
+      who: e.client?.name ?? null,
+      allDay: e.allDay,
+      href: e.url || null,
+      color: e.client ? clientColor(e.client.slug) : undefined,
+    })
+  }
+  for (const d of dueDeliverables) {
+    if (!d.dueOn) continue
+    items.push({ kind: "due", id: `del:${d.id}`, day: dayIndex(d.dueOn), title: `${d.clientName} · ${d.label}${d.title ? ` · ${d.title}` : ""} due`, flavour: "due", href: ROUTES.project(d.projectSlug) })
+  }
+  for (const t of dueTasks) {
+    if (!t.dueOn) continue
+    const who = t.clientName ? `${t.clientName} · ` : ""
+    items.push({ kind: "due", id: `task:${t.id}`, day: dayIndex(t.dueOn), title: t.cadence !== "none" ? `${who}${t.title} ↻` : `${who}${t.title} due`, flavour: t.cadence !== "none" ? "repeat" : "due", href: ROUTES.task(t.id) })
+  }
+  const [y, m] = today.split("-").map(Number)
+  const lastDay = isoDay(new Date(y, m, 0))
+  const monthEndDay = dayIndex(lastDay)
+  if (monthEndDay >= 0) {
+    const hoursByClient = new Map(monthHours.map((r) => [r.clientId, Number(r.hours)]))
+    for (const r of activeRetainers) {
+      if (!r.client) continue
+      const unused = Math.max(0, r.hoursPerMonth - (hoursByClient.get(r.client.id) ?? 0))
+      items.push({ kind: "due", id: `retainer:${r.id}`, day: monthEndDay, title: `${r.client.name} · month end · ${unused % 1 ? unused.toFixed(1) : unused} h unused`, flavour: "money", href: ROUTES.retainer(r.slug) })
+    }
+  }
+  items.sort((a, b) => (a.day - b.day) || (a.kind === "due" ? -1 : b.kind === "due" ? 1 : a.startsAt < b.startsAt ? -1 : 1))
+  return { start, days, todayIndex: dayIndex(today), items }
+}
+
+/** What is waiting on you across every client, each row carrying its client. */
+export async function loadSignalsAll(now = new Date()): Promise<SignalsData> {
+  const [inbox, approvals] = await Promise.all([loadInbox(now).catch(() => null), approvalFacts().catch(() => [])])
+  const rows: SignalRow[] = []
+  if (inbox) {
+    const clientBySlug = new Map(inbox.clients.map((c) => [c.slug, c]))
+    for (const item of inbox.items) {
+      if (item.state === "archived" || item.state === "snoozed") continue
+      if (!item.needsReply) continue
+      const late = item.kind === "ticket" && item.ageDays >= ATTENTION_RULES.ticketReplyDays[ticketPriority(item.priority ?? "normal")]
+      const c = item.clientSlug ? clientBySlug.get(item.clientSlug) : null
+      rows.push({
+        key: item.key,
+        kind: item.kind,
+        title: item.title,
+        age: item.ageDays === 0 ? "today" : `${item.ageDays}d`,
+        late,
+        href: c ? `${ROUTES.clientRoom(c.slug, "inbox")}?item=${encodeURIComponent(item.key)}` : `${ROUTES.inbox}?item=${encodeURIComponent(item.key)}`,
+        client: c ? { slug: c.slug, name: c.name, color: c.color } : undefined,
+      })
+    }
+  }
+  for (const a of approvals) {
+    rows.push({
+      key: `approval:${a.callId}`,
+      kind: "approval",
+      title: approvalLine(a),
+      age: ageLabel(now.getTime() - a.parkedAt.getTime()),
+      late: false,
+      href: a.href,
+      client: a.client ? { slug: a.client.slug, name: a.client.name, color: a.client.color } : undefined,
+    })
   }
   rows.sort((a, b) => Number(b.late) - Number(a.late))
   return { rows, total: rows.length }

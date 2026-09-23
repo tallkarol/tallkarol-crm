@@ -2,11 +2,16 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { Plus } from "lucide-react"
 import type { ClientStatus } from "@/db/schema"
 import { createClient } from "@/lib/client-hub-actions"
 import { ROUTES } from "@/lib/nav"
 import { CLIENT_STATUS_LABEL, CLIENT_STATUSES } from "@/lib/work"
 
+/**
+ * "New client" — a 30px control, sized to sit in the Focus row beside the
+ * 3 | 1 switch on the roster. Opens into an inline name + status form.
+ */
 export function ClientComposer() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -36,25 +41,23 @@ export function ClientComposer() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-accent px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-tk-teal/90"
+        className="inline-flex h-[30px] shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-line bg-card px-2.5 font-ui text-[11px] font-semibold text-tk-onyx hover:bg-well"
       >
+        <Plus className="size-3" aria-hidden />
         New client
       </button>
     )
   }
 
   return (
-    <form
-      onSubmit={submit}
-      className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-card px-3 py-2 shadow-card"
-    >
+    <form onSubmit={submit} className="flex flex-wrap items-center gap-1.5 rounded-lg border border-line bg-card p-0.5">
       <input
         autoFocus
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Client name"
         aria-label="Client name"
-        className="w-44 rounded-lg border border-line bg-card px-2.5 py-1.5 text-sm text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal"
+        className="h-6 w-40 rounded-md border border-line bg-card px-2 font-ui text-[11px] text-tk-onyx placeholder:text-ink-3 focus:border-tk-teal"
       />
       <label className="sr-only" htmlFor="new-client-status">
         Status
@@ -63,7 +66,7 @@ export function ClientComposer() {
         id="new-client-status"
         value={status}
         onChange={(e) => setStatus(e.target.value as ClientStatus)}
-        className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-sm text-tk-onyx focus:border-tk-teal"
+        className="h-6 rounded-md border border-line bg-card px-1.5 font-ui text-[11px] text-tk-onyx focus:border-tk-teal"
       >
         {CLIENT_STATUSES.map((id) => (
           <option key={id} value={id}>
@@ -74,7 +77,7 @@ export function ClientComposer() {
       <button
         type="submit"
         disabled={pending || !name.trim()}
-        className="rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-tk-teal/90 disabled:opacity-50"
+        className="inline-flex h-6 items-center rounded-md bg-tk-onyx px-2 font-ui text-[11px] font-semibold text-tk-linen disabled:opacity-50"
       >
         {pending ? "Adding…" : "Add"}
       </button>
@@ -84,12 +87,12 @@ export function ClientComposer() {
           setOpen(false)
           setError(null)
         }}
-        className="text-sm font-semibold text-ink-3 hover:text-tk-onyx"
+        className="inline-flex h-6 items-center rounded-md px-2 font-ui text-[11px] font-semibold text-ink-3 hover:text-tk-onyx"
       >
         Cancel
       </button>
       {error ? (
-        <p role="status" className="w-full text-xs font-semibold text-bad">
+        <p role="status" className="w-full px-1.5 pb-0.5 text-[11px] font-semibold text-bad">
           {error}
         </p>
       ) : null}

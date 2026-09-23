@@ -1,38 +1,50 @@
+import { cookies } from "next/headers"
 import { ClientComposer } from "@/components/clients/ClientComposer"
-import { ClientRoster } from "@/components/clients/ClientRoster"
-import { StatusBoard } from "@/components/clients/StatusBoard"
-import { PageHeader } from "@/components/PageHeader"
+import { ClientsPanelMount } from "@/components/clients/ClientsPanel"
+import { SignalsCard } from "@/components/clients/SignalsCard"
+import { WeekAgenda } from "@/components/clients/WeekGrid"
+import { GlobalFocus } from "@/components/focus/GlobalFocus"
+import { isIsoDateString } from "@/lib/client-calendar"
+import { groupClients } from "@/lib/client-groups"
 import { loadClientRoster } from "@/lib/client-hub"
-import { formatMoney, plural } from "@/lib/work"
+import { isoDay, loadSignalsAll, loadWeekAll } from "@/lib/client-rooms"
+import { FOCUS_MODE_COOKIE, isFocusMode } from "@/lib/focus"
+import { globalFocus } from "@/lib/focus-data"
+import { ROUTES } from "@/lib/nav"
 
 export const metadata = { title: "Clients" }
+export const dynamic = "force-dynamic"
 
-export default async function ClientsPage() {
-  const { rows, totals } = await loadClientRoster()
+/**
+ * The clients overview. The client list itself is the panel beside the dock
+ * (grouped, `ClientsPanel`); the page is the across-clients desk with no
+ * title of its own: the global focus set on top ("New client" rides in its
+ * header row), then this week (every client, each in its colour) beside
+ * everything that needs you.
+ */
+export default async function ClientsPage({ searchParams }: { searchParams: { week?: string } }) {
+  const now = new Date()
+  const modeRaw = cookies().get(FOCUS_MODE_COOKIE)?.value
+  const mode = isFocusMode(modeRaw) ? modeRaw : "three"
+  const anchor = isIsoDateString(searchParams.week) ? searchParams.week : undefined
 
-  const subtitle = [
-    plural(totals.clients, "client"),
-    totals.retainerHours > 0 ? `${totals.retainerHours} hr/mo under retainer` : null,
-    totals.outstandingCents > 0
-      ? `${formatMoney(totals.outstandingCents)} outstanding`
-      : null,
-  ]
-    .filter(Boolean)
-    .join(" · ")
+  const [{ rows }, cards, week, signals] = await Promise.all([
+    loadClientRoster(now),
+    globalFocus(now),
+    loadWeekAll(now, anchor),
+    loadSignalsAll(now),
+  ])
 
   return (
     <>
-      <PageHeader title="Clients" actions={<ClientComposer />} />
-      <p className="mt-1 text-sm text-ink-3">{subtitle}</p>
-
-      {rows.length === 0 ? (
-        <p className="mt-8 text-sm text-ink-3">No clients yet.</p>
-      ) : (
-        <>
-          <StatusBoard rows={rows} />
-          <ClientRoster rows={rows} />
-        </>
-      )}
+      <ClientsPanelMount groups={groupClients(rows)} />
+      <div className="flex flex-col gap-6">
+        <GlobalFocus cards={cards} mode={mode} always actions={<ClientComposer />} />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <WeekAgenda week={week} today={isoDay(now)} nav={{ base: ROUTES.clients }} />
+          <SignalsCard signals={signals} max={14} stretch />
+        </div>
+      </div>
     </>
   )
 }

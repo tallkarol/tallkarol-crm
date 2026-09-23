@@ -51,8 +51,7 @@ function isTimedEvent(item: WeekItem): item is TimedEvent {
  */
 export function WeekGrid({ client, week, today }: { client: Client; week: WeekData; today: string }) {
   const base = ROUTES.clientRoom(client.slug, "calendar")
-  const prevHref = `${base}?week=${shiftWeekIso(week.start, -1)}`
-  const nextHref = `${base}?week=${shiftWeekIso(week.start, 1)}`
+  const paint = client.color
   const todayIndex = week.days.findIndex((d) => d.iso === today)
 
   const dueRow = week.items.filter((i) => i.kind === "due" || (i.kind === "event" && i.allDay))
@@ -72,17 +71,7 @@ export function WeekGrid({ client, week, today }: { client: Client; week: WeekDa
             <Legend swatch={<span aria-hidden className="size-2.5 rounded-[3px] border border-line-strong bg-well" />} label="Other clients" />
             <Legend swatch={<span aria-hidden className="size-2.5 rounded-[3px] border border-dashed border-accent-ink bg-accent-soft" />} label="Mine" />
           </span>
-          <Card surface="well" radius="lg" elevation="none" className="ml-auto inline-flex items-center gap-0.5 p-0.5" role="group" aria-label="Move the week">
-            <Link href={prevHref} aria-label="Previous week" className={navBtn}>
-              <ChevronLeft className="size-3.5" aria-hidden />
-            </Link>
-            <Link href={base} aria-label="Jump to this week" className={navBtn}>
-              Today
-            </Link>
-            <Link href={nextHref} aria-label="Next week" className={navBtn}>
-              <ChevronRight className="size-3.5" aria-hidden />
-            </Link>
-          </Card>
+          <WeekNav base={base} start={week.start} className="ml-auto" />
         </div>
 
         {/* day headers */}
@@ -111,7 +100,7 @@ export function WeekGrid({ client, week, today }: { client: Client; week: WeekDa
             return (
               <div key={d.iso} className={cn("flex min-h-[30px] flex-col gap-1 border-l border-line px-1 py-1", i >= 5 && WEEKEND_HIDDEN)}>
                 {items.map((item) => (
-                  <DueChip key={item.id} item={item} color={client.color} />
+                  <DueChip key={item.id} item={item} color={paint} />
                 ))}
               </div>
             )
@@ -146,7 +135,7 @@ export function WeekGrid({ client, week, today }: { client: Client; week: WeekDa
                 {timed
                   .filter((e) => e.day === i)
                   .map((e) => (
-                    <EventChip key={e.id} item={e} color={client.color} />
+                    <EventChip key={e.id} item={e} color={paint} />
                   ))}
               </div>
             ))}
@@ -155,35 +144,114 @@ export function WeekGrid({ client, week, today }: { client: Client; week: WeekDa
         </div>
       </Card>
 
-      <Card className="flex w-full flex-col gap-3 p-3 min-[720px]:w-[280px] min-[720px]:shrink-0">
-        <h2 className="font-ui text-[13px] font-bold text-tk-onyx">This week for {client.name}</h2>
-        <div className="flex flex-col gap-3">
-          {week.days.map((d, i) => {
-            const items = week.items.filter((item) => item.day === i)
-            return (
-              <div key={d.iso} className="flex flex-col gap-1">
-                <p className="flex items-baseline gap-1.5 font-ui text-[11px] font-bold text-ink-2">
-                  <b className={cn("font-display text-sm font-bold text-tk-onyx", i === todayIndex && "text-accent-ink")}>{d.num}</b>
-                  <span className={i === todayIndex ? "text-accent-ink" : undefined}>{i === todayIndex ? "Today" : d.dow}</span>
-                </p>
-                {items.length === 0 ? (
-                  <p className="px-1 font-ui text-[11px] italic text-ink-3 opacity-70">Nothing scheduled</p>
-                ) : (
-                  <div className="flex flex-col gap-1">
-                    {items.slice(0, AGENDA_MAX).map((item) => (
-                      <AgendaRow key={item.id} item={item} color={client.color} />
-                    ))}
-                    {items.length > AGENDA_MAX ? (
-                      <p className="px-1 font-ui text-[10.5px] italic text-ink-3 opacity-70">+{items.length - AGENDA_MAX} more</p>
-                    ) : null}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </Card>
+      <WeekAgenda client={client} week={week} today={today} className="min-[720px]:w-[280px] min-[720px]:shrink-0" />
     </div>
+  )
+}
+
+/** ‹ Today › — moves the week through `?week=` on `base`. */
+function WeekNav({ base, start, className }: { base: string; start: string; className?: string }) {
+  return (
+    <Card surface="well" radius="lg" elevation="none" className={cn("inline-flex items-center gap-0.5 p-0.5", className)} role="group" aria-label="Move the week">
+      <Link href={`${base}?week=${shiftWeekIso(start, -1)}`} aria-label="Previous week" className={navBtn}>
+        <ChevronLeft className="size-3.5" aria-hidden />
+      </Link>
+      <Link href={base} aria-label="Jump to this week" className={navBtn}>
+        Today
+      </Link>
+      <Link href={`${base}?week=${shiftWeekIso(start, 1)}`} aria-label="Next week" className={navBtn}>
+        <ChevronRight className="size-3.5" aria-hidden />
+      </Link>
+    </Card>
+  )
+}
+
+/**
+ * The "This week" agenda: the seven days as a list. Beside the grid in a
+ * client's Calendar room (no nav — the grid has it); on its own on the
+ * roster, where the headline moves above the card with ‹ Today › as plain
+ * text (`nav`, one line high like Signals) and every client's event wears
+ * that client's colour (`item.color`).
+ */
+export function WeekAgenda({
+  client,
+  week,
+  today,
+  nav,
+  max = AGENDA_MAX,
+  className,
+}: {
+  /** Absent on the roster: rows then colour themselves by their own client. */
+  client?: Client
+  week: WeekData
+  today: string
+  /** Where ‹ Today › navigate; leave out when a grid beside it already has them. */
+  nav?: { base: string }
+  /** Rows per day before "+n more". */
+  max?: number
+  className?: string
+}) {
+  const todayIndex = week.days.findIndex((d) => d.iso === today)
+  const paint = client?.color ?? ""
+  const days = (
+    <div className="flex flex-col gap-3">
+      {week.days.map((d, i) => {
+        const items = week.items.filter((item) => item.day === i)
+        return (
+          <div key={d.iso} className="flex flex-col gap-1">
+            <p className="flex items-baseline gap-1.5 font-ui text-[11px] font-bold text-ink-2">
+              <b className={cn("font-display text-sm font-bold text-tk-onyx", i === todayIndex && "text-accent-ink")}>{d.num}</b>
+              <span className={i === todayIndex ? "text-accent-ink" : undefined}>{i === todayIndex ? "Today" : d.dow}</span>
+            </p>
+            {items.length === 0 ? (
+              <p className="px-1 font-ui text-[11px] italic text-ink-3 opacity-70">Nothing scheduled</p>
+            ) : (
+              <div className="flex flex-col gap-1">
+                {items.slice(0, max).map((item) => (
+                  <AgendaRow key={item.id} item={item} color={item.kind === "event" && item.color ? item.color : paint} />
+                ))}
+                {items.length > max ? <p className="px-1 font-ui text-[10.5px] italic text-ink-3 opacity-70">+{items.length - max} more</p> : null}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+
+  // On its own (the roster): the headline sits above the card, like Signals.
+  if (nav) {
+    return (
+      <section className={cn("flex min-w-0 flex-col gap-1.5", className)} aria-label="This week">
+        <div className="flex items-center gap-2 px-0.5">
+          <h2 className="flex items-center gap-1.5 font-ui text-[13px] font-bold text-tk-onyx">
+            <Calendar className="size-3.5" aria-hidden />
+            This week
+          </h2>
+          <span className="truncate font-ui text-[11.5px] text-ink-3">{weekRangeLabel(week.days)}</span>
+          {/* plain text, one line high — the bordered group is the grid's */}
+          <nav className="ml-auto inline-flex shrink-0 items-center gap-1.5 font-ui text-[11px] font-semibold" aria-label="Move the week">
+            <Link href={`${nav.base}?week=${shiftWeekIso(week.start, -1)}`} aria-label="Previous week" className="text-ink-3 hover:text-tk-onyx">
+              <ChevronLeft className="size-3.5" aria-hidden />
+            </Link>
+            <Link href={nav.base} className="text-accent-ink hover:underline">
+              Today
+            </Link>
+            <Link href={`${nav.base}?week=${shiftWeekIso(week.start, 1)}`} aria-label="Next week" className="text-ink-3 hover:text-tk-onyx">
+              <ChevronRight className="size-3.5" aria-hidden />
+            </Link>
+          </nav>
+        </div>
+        <Card className="flex flex-1 flex-col gap-3 p-3">{days}</Card>
+      </section>
+    )
+  }
+
+  return (
+    <Card className={cn("flex w-full flex-col gap-3 p-3", className)}>
+      <h2 className="font-ui text-[13px] font-bold text-tk-onyx">{client ? `This week for ${client.name}` : "This week"}</h2>
+      {days}
+    </Card>
   )
 }
 
@@ -225,6 +293,7 @@ function DueChip({ item, color }: { item: WeekItem; color: string }) {
   }
 
   const lane = eventLaneOf(item)
+  color = item.color ?? color
   const cls = cn(
     "flex min-w-0 items-center gap-1 truncate rounded-md px-1.5 py-0.5 font-ui text-[10.5px] font-semibold",
     lane === "other" && "border border-line bg-well text-ink-3",
@@ -233,7 +302,7 @@ function DueChip({ item, color }: { item: WeekItem; color: string }) {
   const style = lane === "mine" ? ({ backgroundColor: eventTint(color), color: inkColor(color) } as React.CSSProperties) : undefined
   const body = (
     <span className="truncate">
-      {lane === "other" && item.who ? (
+      {item.who ? (
         <>
           <b className="font-bold">{item.who}</b> · {item.title}
         </>
@@ -257,9 +326,10 @@ function DueChip({ item, color }: { item: WeekItem; color: string }) {
 /** A timed block inside the hour grid, positioned by `eventTop`/`eventHeight`. */
 function EventChip({ item, color }: { item: TimedEvent; color: string }) {
   const lane = eventLaneOf(item)
+  color = item.color ?? color
   const short = isShortEvent(item.startsAt, item.endsAt)
   const timeLabel = fmtHour(item.startsAt)
-  const titleLabel = lane === "other" && item.who ? `${item.who} · ${item.title}` : item.title
+  const titleLabel = item.who ? `${item.who} · ${item.title}` : item.title
   const style: React.CSSProperties = { top: eventTop(item.startsAt), height: eventHeight(item.startsAt, item.endsAt) }
   if (lane === "mine") {
     style.backgroundColor = eventTint(color)
@@ -323,6 +393,7 @@ function AgendaRow({ item, color }: { item: WeekItem; color: string }) {
   }
 
   const lane = eventLaneOf(item)
+  color = item.color ?? color
   const cls = cn(
     "flex min-w-0 items-center gap-1.5 rounded-[6px] px-1.5 py-1 text-[11px] leading-[1.2]",
     lane === "mine" && "border border-line bg-card font-semibold text-tk-onyx",
@@ -334,7 +405,7 @@ function AgendaRow({ item, color }: { item: WeekItem; color: string }) {
     <>
       {!item.allDay ? <span className="shrink-0 font-mono text-[9.5px] font-medium">{fmtHour(item.startsAt)}</span> : null}
       <span className="min-w-0 truncate">{item.title}</span>
-      {lane === "other" && item.who ? <span className="ml-auto shrink-0 font-ui text-[9px] font-semibold uppercase tracking-[0.04em]">{item.who}</span> : null}
+      {item.who ? <span className="ml-auto shrink-0 font-ui text-[9px] font-semibold uppercase tracking-[0.04em]">{item.who}</span> : null}
       {lane === "own" ? <span className="ml-auto shrink-0 font-ui text-[9px] font-semibold uppercase tracking-[0.04em]">Me</span> : null}
     </>
   )
