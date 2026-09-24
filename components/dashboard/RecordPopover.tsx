@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useTransition } from "react"
+import { useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Mic, Square } from "lucide-react"
@@ -10,35 +10,24 @@ import { Card } from "@/components/ui/Card"
 import { clientColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { formatClock } from "@/lib/meeting-note"
-import { discardNoteAction, liveRecordingNow, startRecordingAction, stopRecordingAction } from "@/lib/meeting-note-actions"
-import type { LiveView } from "@/lib/meeting-notes"
+import { discardNoteAction, startRecordingAction, stopRecordingAction } from "@/lib/meeting-note-actions"
 import { ROUTES } from "@/lib/nav"
 import { announcePunchChange } from "@/lib/punch-signal"
+import { useRunningClock } from "@/components/timesheet/RunningClockProvider"
 
 /**
  * Record a meeting from the homepage toolbar — the clock's sibling. Nothing
  * live: pick a client (or none), a title, Start. Something live: see it and
- * Stop. The live state is fetched when the popover opens, so the header
- * needs no new prop.
+ * Stop. The live state is the shell's one clock poll (RunningClockProvider),
+ * so the header needs no new prop and this adds no poll of its own.
  */
 export function RecordPopover({ clients }: { clients: ClockClient[] }) {
   const router = useRouter()
   const [clientId, setClientId] = useState<string>("")
   const [title, setTitle] = useState("")
-  const [live, setLive] = useState<LiveView | null>(null)
+  const { recording: live } = useRunningClock()
   const [error, setError] = useState<string | null>(null)
   const [pending, start] = useTransition()
-
-  useEffect(() => {
-    let alive = true
-    const load = () => liveRecordingNow().then((v) => alive && setLive(v)).catch(() => undefined)
-    void load()
-    const timer = window.setInterval(load, 15_000)
-    return () => {
-      alive = false
-      window.clearInterval(timer)
-    }
-  }, [])
 
   function begin(close: () => void) {
     setError(null)
@@ -52,9 +41,9 @@ export function RecordPopover({ clients }: { clients: ClockClient[] }) {
         setError(result.error)
         return
       }
+      // Tells the shell's clock poll to re-read, which updates `live` here too.
       announcePunchChange()
       setTitle("")
-      setLive(await liveRecordingNow())
       close()
       router.refresh()
     })
@@ -70,7 +59,6 @@ export function RecordPopover({ clients }: { clients: ClockClient[] }) {
         return
       }
       announcePunchChange()
-      setLive(await liveRecordingNow())
       close()
       router.refresh()
     })

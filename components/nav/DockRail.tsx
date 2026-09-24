@@ -106,6 +106,7 @@ export function DockRail({
   badges,
   chatNeedsYou,
   activeGroupId,
+  hasPanel = true,
   pinned,
   onTogglePinned,
   email,
@@ -115,6 +116,8 @@ export function DockRail({
   badges: Record<string, NavBadge>
   chatNeedsYou: number
   activeGroupId: string | null
+  /** False on the dashboard, which has no panel — the toggle would do nothing. */
+  hasPanel?: boolean
   pinned: boolean
   onTogglePinned: () => void
   email: string
@@ -162,6 +165,7 @@ export function DockRail({
         {/* 44px, not the desktop artboard's 40x36 — Dock-Tablet.dc.html draws
             this same toggle at 44x44, and a tablet (or any coarse pointer at
             this width) gets the touch floor rather than the mouse one. */}
+        {hasPanel ? (
         <button
           type="button"
           aria-expanded={pinned}
@@ -175,6 +179,7 @@ export function DockRail({
             <PanelLeftOpen className="size-[18px]" aria-hidden />
           )}
         </button>
+        ) : null}
       </div>
 
       <div aria-hidden className="my-1 w-8 border-t border-rail-line" />

@@ -27,12 +27,23 @@ export function getDb(): Db {
     )
   }
 
-  // Railway's hobby cap is tight. Leftover Next processes used to open 10
-  // each and trip `too many clients already` — a 500 on every page.
+  // Railway's hobby cap used to be tight: leftover Next processes opened 10
+  // each and tripped `too many clients already` — a 500 on every page. The
+  // server allows 500 now (18 in use, 24 Sep 2026), and at 3 a dashboard's
+  // ~37 reads queued in a dozen waves of ~150 ms from the laptop. 8 halves
+  // that and still leaves room for every stray process.
   const client = postgres(connectionString, {
-    max: 3,
+    max: 8,
     idle_timeout: 20,
     max_lifetime: 60 * 30,
+    // TK_DB_TRACE=1 prints every query as it is sent, with the ms since the
+    // process started — gaps between lines are the waterfalls a page waits on.
+    ...(process.env.TK_DB_TRACE
+      ? {
+          debug: (_conn: number, query: string) =>
+            console.log(`[db] ${Math.round(performance.now())} ${query.replace(/\s+/g, " ").slice(0, 140)}`),
+        }
+      : {}),
   })
   const db = drizzle(client, { schema })
   // Cache in EVERY environment. `db` below is a proxy that calls getDb() on

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { SWEEP_MS, oncePer } from "@/lib/once-per"
 import { Forecast } from "@/components/dashboard/Forecast"
 import { cookies } from "next/headers"
 import { HomeHeader, type StatusPill } from "@/components/dashboard/HomeHeader"
@@ -82,13 +83,22 @@ export default async function DashboardPage({
     redirect(`${ROUTES.inquiries}?status=${searchParams.status}`)
   }
 
-  await ensureRenewalTasks()
-  // One helper, everywhere tasks are read — so the dashboard and the hub
-  // cannot disagree about whether a repeat is open.
-  await reopenDueRecurring()
-  const stalled = await waitingTooLong()
+  // The lazy sweeps go first because the reads below must see what they
+  // write, but at most once per five minutes (the cron tick covers the gaps)
+  // and side by side. One helper, everywhere tasks are read — so the
+  // dashboard and the hub cannot disagree about whether a repeat is open.
+  await Promise.all([
+    oncePer("renewals", SWEEP_MS, () => ensureRenewalTasks()),
+    oncePer("reopen", SWEEP_MS, () => reopenDueRecurring()),
+  ])
+  // Request-cached: the layout already read it.
   const sessionUser = await getSessionUser()
+  const now = new Date()
   const [
+    stalled,
+    goals,
+    greeting,
+    globalCards,
     invoices,
     openTasks,
     retainers,
@@ -102,6 +112,10 @@ export default async function DashboardPage({
     running,
     timezone,
   ] = await Promise.all([
+    waitingTooLong(),
+    getGoals(),
+    greetingFor(sessionUser),
+    globalFocus(now),
     db.query.invoices.findMany({ with: { client: true } }),
     db.query.tasks.findMany({ with: { client: true } }).then((rows) =>
       rows.filter((t) => t.status === "open")
@@ -121,9 +135,6 @@ export default async function DashboardPage({
     workspaceTimezone(),
   ])
 
-  const goals = await getGoals()
-  const greeting = await greetingFor(sessionUser)
-  const now = new Date()
   const thisMonth = monthKey(now)
 
   /* ---- KPIs ---- */
@@ -464,7 +475,6 @@ export default async function DashboardPage({
 
   const rise = (i: number) => ({ "--i": i } as React.CSSProperties)
 
-  const globalCards = await globalFocus(now)
   const focusModeRaw = cookies().get(FOCUS_MODE_COOKIE)?.value
   const focusMode = isFocusMode(focusModeRaw) ? focusModeRaw : "three"
 

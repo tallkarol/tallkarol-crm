@@ -84,11 +84,13 @@ export function AppShell({
 
   // The pathname is the source of truth for which group is current — a
   // group opened by clicking its dock icon before navigating away must not
-  // outlive the navigation. Only chrome-only routes (the dashboard, /chat, a
-  // parked settings page) fall back to whichever group was last real, so the
-  // panel has something sensible to show rather than nothing.
+  // outlive the navigation. The dashboard has no panel and no current group
+  // at all (Karol, 23 Sep); the other chrome-only routes (/chat, a parked
+  // settings page) fall back to whichever group was last real, so the panel
+  // has something sensible to show rather than nothing.
+  const onDashboard = pathname === ROUTES.home
   const activeNav = resolveActiveNav(pathname)
-  const activeGroupId = activeNav?.group.id ?? lastGroupId
+  const activeGroupId = onDashboard ? null : (activeNav?.group.id ?? lastGroupId)
 
   useEffect(() => {
     if (!activeNav) return
@@ -131,15 +133,16 @@ export function AppShell({
         badges={badges}
         chatNeedsYou={chatNeedsYou}
         activeGroupId={activeGroupId}
+        hasPanel={!onDashboard}
         pinned={pinned}
         onTogglePinned={togglePinned}
         email={email}
         hideMoney={hideMoney}
         theme={theme}
       />
-      {pinned && panelOverride ? (
+      {onDashboard || !pinned ? null : panelOverride ? (
         panelOverride
-      ) : pinned ? (
+      ) : (
         <HubPanel
           group={openGroup}
           activeHref={activeNav?.item.href ?? null}
@@ -148,7 +151,7 @@ export function AppShell({
           onTogglePinned={togglePinned}
           className="hidden w-[236px] shrink-0 flex-col gap-3.5 border-r border-rail-line bg-rail-2 px-3 py-5 rail:flex"
         />
-      ) : null}
+      )}
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <MobileNav

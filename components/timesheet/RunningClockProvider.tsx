@@ -2,9 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
-import { liveRecordingNow } from "@/lib/meeting-note-actions"
 import type { LiveView } from "@/lib/meeting-notes"
-import { runningNow } from "@/lib/punch-actions"
 import { onPunchChange } from "@/lib/punch-signal"
 import type { PunchView } from "@/lib/punches"
 
@@ -50,9 +48,12 @@ export function RunningClockProvider({
 
   const refresh = useCallback(async () => {
     try {
-      const [punches, live] = await Promise.all([runningNow(), liveRecordingNow()])
-      setRunning(punches)
-      setRecording(live)
+      // A fetch, not the server actions it used to call — see app/api/shell/clock.
+      const res = await fetch("/api/shell/clock", { cache: "no-store" })
+      if (!res.ok) return
+      const next = (await res.json()) as { running: PunchView[]; recording: LiveView | null }
+      setRunning(next.running)
+      setRecording(next.recording)
     } catch {
       /* transient — the next poll retries */
     }

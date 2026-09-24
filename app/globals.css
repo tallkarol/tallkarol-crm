@@ -656,6 +656,73 @@ body {
   }
 }
 
+/* Route loader (components/BrandLoader.tsx). Artist House's timeline in CSS:
+   fill up 1.4s, hold 0.2s, drain 0.9s — 2.5s a loop — with the glow and the
+   mark breathing on their own clocks so the three never lock into step. The
+   whole thing waits 150ms before showing, so a fast page never flashes it. */
+@keyframes tk-loader-fill {
+  0% {
+    clip-path: inset(100% 0 0 0);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  56%,
+  64% {
+    clip-path: inset(0 0 0 0);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  100% {
+    clip-path: inset(100% 0 0 0);
+  }
+}
+@keyframes tk-loader-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+}
+@keyframes tk-loader-breathe {
+  0%,
+  100% {
+    transform: scale(0.97);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+.tk-loader {
+  animation: tk-fade-in 0.25s ease-out 150ms both;
+}
+.tk-loader-fill {
+  clip-path: inset(100% 0 0 0);
+  animation: tk-loader-fill 2.5s infinite;
+  will-change: clip-path;
+}
+.tk-loader-glow {
+  /* The monogram's own teal, not --accent: the accent darkens in dark mode
+     and the glow all but vanished against the onyx canvas. */
+  background: rgb(0 159 154 / 0.24);
+  animation: tk-loader-glow 2.2s ease-in-out infinite;
+}
+.tk-loader-mark {
+  animation: tk-loader-breathe 2.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* A still, full mark: the caption and aria-busy carry the meaning. */
+  .tk-loader-fill {
+    animation: none;
+    clip-path: none;
+  }
+  .tk-loader-glow,
+  .tk-loader-mark {
+    animation: none;
+  }
+}
+
 /* Ticket payloads — the small highlighter in lib/payload-highlight.ts.
    Tuned for the dark block inside an otherwise light detail pane. */
 .tk-payload .tk-key {

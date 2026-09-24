@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { cookies } from "next/headers"
 import { eq, and, gt, isNull } from "drizzle-orm"
 import { db } from "@/db"
@@ -145,7 +146,17 @@ export async function consumeMagicLink(token: string) {
   return { sessionToken, expiresAt, user }
 }
 
-export async function getSessionUser() {
+/**
+ * The signed-in admin, or null. Request-cached: the admin layout, the page
+ * and every loader under them used to read the session separately, one
+ * round trip each. `cache` only exists inside Next's React build — the Mac
+ * worker and tsx scripts load this file on plain React 18, where it is
+ * undefined, so they get the uncached function instead of a crash on import.
+ */
+const requestCache: <F extends (...args: never[]) => unknown>(fn: F) => F =
+  typeof cache === "function" ? cache : (fn) => fn
+
+export const getSessionUser = requestCache(async function getSessionUser() {
   const jar = cookies()
   const raw = jar.get(SESSION_COOKIE)?.value
   if (!raw) return null
@@ -179,7 +190,7 @@ export async function getSessionUser() {
   }
 
   return row.user
-}
+})
 
 export async function destroySession() {
   const jar = cookies()

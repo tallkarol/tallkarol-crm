@@ -15,7 +15,7 @@ import { clientColor } from "@/lib/client-colors"
 import { ensureClientColors } from "@/lib/client-colors-store"
 import { deriveState, LEFTOFF_RULES, type NoteState } from "@/lib/leftoff"
 import { ROUTES } from "@/lib/nav"
-import { loadPunchlist } from "@/lib/punchlists"
+import { loadPunchlistItems } from "@/lib/punchlists"
 import { ticketNumber, ticketOpenedAt, ticketPriority, ticketSlug, ticketState } from "@/lib/support"
 import { daysBetween, isoDay } from "@/lib/task-view"
 import { widgetAgent } from "@/lib/widget-agent"
@@ -162,18 +162,19 @@ async function sessionFacts(now: Date): Promise<SessionFacts[]> {
  * (f) — the punch-list widget's index says which lists are open; the list
  * loader says what is on them.
  *
- * `loadPunchlist` rather than `widgetPunchlist`, because the widget's detail
- * payload drops done items and the untested kind lives exactly there: an item
+ * `loadPunchlistItems` (the full item list) rather than `widgetPunchlist`,
+ * because the widget's detail payload drops done items and the untested kind lives exactly there: an item
  * ticked done whose test never ran. Both go through `itemState()` over the
  * item's task, so a row cannot read `todo` here and `done` on the page.
  */
 async function punchItemFacts(): Promise<PunchItemFacts[]> {
   const index = await widgetPunchlists()
   const out: PunchItemFacts[] = []
+  // One query for every open list's items — per-list loads were two round
+  // trips each, back to back, the slowest stretch of the dashboard render.
+  const lists = await loadPunchlistItems(index.lists.map((list) => list.slug))
 
-  for (const list of index.lists) {
-    const loaded = await loadPunchlist(list.slug)
-    if (!loaded) continue
+  for (const loaded of lists) {
     const client: WaitingClient = {
       slug: loaded.client.slug,
       name: loaded.client.name,

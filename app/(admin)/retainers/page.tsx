@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { SWEEP_MS, oncePer } from "@/lib/once-per"
 import { PageHeader } from "@/components/PageHeader"
 import { MiniBars } from "@/components/engagements/MiniBars"
 import { PeekRouter } from "@/components/peek/PeekRouter"
@@ -28,7 +29,7 @@ export default async function RetainersPage({
 }: {
   searchParams: { peek?: string }
 }) {
-  await ensureRenewalTasks()
+  await oncePer("renewals", SWEEP_MS, () => ensureRenewalTasks())
   const [retainers, invoices, entries, openTasks, sites, expenses, writeoffs] =
     await Promise.all([
       db.query.retainers.findMany({ with: { client: true } }),

@@ -378,6 +378,29 @@ export async function loadPunchlist(slug: string): Promise<PunchlistView | null>
   }
 }
 
+/**
+ * Several lists' items in ONE query, in the order the slugs were given —
+ * for readers that need what is on the lists but not their test history
+ * (the dashboard's waiting strip). `loadPunchlist` per slug was two round
+ * trips per open list, back to back.
+ */
+export async function loadPunchlistItems(slugs: string[]) {
+  if (slugs.length === 0) return []
+  const rows = await db.query.punchlists.findMany({
+    where: inArray(punchlists.slug, slugs),
+    columns: { id: true, slug: true, title: true, createdAt: true },
+    with: {
+      client: { columns: { id: true, name: true, slug: true } },
+      items: {
+        with: { task: { columns: { status: true, boardStage: true } } },
+        orderBy: [asc(punchlistItems.sectionSort), asc(punchlistItems.sort)],
+      },
+    },
+  })
+  const bySlug = new Map(rows.map((row) => [row.slug, { ...row, items: row.items.map(toItemView) }]))
+  return slugs.flatMap((slug) => bySlug.get(slug) ?? [])
+}
+
 export type PunchlistSummary = Punchlist & {
   client: { id: string; name: string; slug: string }
   project: { id: string; name: string; slug: string } | null

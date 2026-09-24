@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { SWEEP_MS, oncePer } from "@/lib/once-per"
 import { and, asc, eq, gte, lte } from "drizzle-orm"
 import { PageHeader } from "@/components/PageHeader"
 import { PeekRouter } from "@/components/peek/PeekRouter"
@@ -47,7 +48,7 @@ export default async function TasksPage({
   if (!user) redirect("/login")
 
   // Repeats reopen on read — one helper, comparing real completion dates.
-  await reopenDueRecurring()
+  await oncePer("reopen", SWEEP_MS, () => reopenDueRecurring())
   await ensureDefaultViews(user.id)
 
   const [views, tasks, targets] = await Promise.all([

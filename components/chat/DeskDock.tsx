@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import { ArrowUp, Lock, MessagesSquare, Plus, X } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { DESK_OPEN_EVENT, DOCK_ORDER, deskFor, monogram, packLabel } from "@/lib/chat/desk-context"
-import { deskBadges, loadDeskThread, openDesk, sendToDesk, type DeskThreadView } from "@/lib/chat/dock-actions"
+import { loadDeskThread, openDesk, sendToDesk, type ActionResult, type DeskThreadView } from "@/lib/chat/dock-actions"
 import { dayLabel } from "@/lib/chat/format"
 import { packKindOf } from "@/lib/chat/pack-lines"
 import { PERSONAS } from "@/lib/chat/personas"
@@ -41,7 +41,10 @@ export function DeskDock({
   const [sending, setSending] = useState(false)
 
   const refreshBadges = useCallback(() => {
-    deskBadges()
+    // The polls are fetches, not server actions: Next 14 queues navigation
+    // behind a running action, so a poll that fired mid-click held the page.
+    fetch("/api/shell/desk-badges", { cache: "no-store" })
+      .then((res) => (res.ok ? (res.json() as Promise<Record<string, number>>) : Promise.reject()))
       .then((next) => {
         setBadges(next)
         onBadgesChange?.(Object.values(next).reduce((sum, n) => sum + n, 0))
@@ -95,7 +98,10 @@ export function DeskDock({
     if (!open || !threadId) return
     const { agent, pack } = open
     const timer = setInterval(async () => {
-      const result = await loadDeskThread({ threadId, agent, pack })
+      const query = new URLSearchParams({ thread: threadId, agent, pack })
+      const res = await fetch(`/api/shell/desk-thread?${query}`, { cache: "no-store" }).catch(() => null)
+      if (!res?.ok) return
+      const result = (await res.json()) as ActionResult<{ view: DeskThreadView }>
       if (result.ok) setView(result.view)
     }, inFlight ? 3000 : 8000)
     return () => clearInterval(timer)
