@@ -12,6 +12,9 @@ import { hashToken, newToken } from "@/lib/crypto"
 
 export type DeviceAuth = { user: User; deviceId: string }
 
+/** How old a device's last-used stamp may be before a call refreshes it. */
+const STAMP_EVERY_MS = 60_000
+
 export function bearerFrom(request: Request): string | null {
   const header = request.headers.get("authorization") || ""
   if (!header.toLowerCase().startsWith("bearer ")) return null
@@ -42,12 +45,20 @@ export async function authenticateDevice(
   if (!row) return null
   if (row.user.role !== "admin") return null
 
-  // Best-effort — a failed stamp must never cost someone their clock-in.
-  void db
-    .update(deviceTokens)
-    .set({ lastUsedAt: new Date() })
-    .where(eq(deviceTokens.id, row.device.id))
-    .catch(() => {})
+  // Stamp last-used at most once a minute per device. Every call used to
+  // write it: 706k updates in twelve days, a quarter of all the time the
+  // database spent on anything, for a value the devices page shows as
+  // "4m ago". The row just read carries the last stamp, so the check costs
+  // nothing and holds across processes. Best-effort: a failed stamp must
+  // never cost someone their clock-in.
+  const lastUsed = row.device.lastUsedAt?.getTime() ?? 0
+  if (Date.now() - lastUsed >= STAMP_EVERY_MS) {
+    void db
+      .update(deviceTokens)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(deviceTokens.id, row.device.id))
+      .catch(() => {})
+  }
 
   return { user: row.user, deviceId: row.device.id }
 }

@@ -37,10 +37,15 @@ export default async function TasksPage({
   if (!user) redirect("/login")
 
   // Repeats reopen on read — one helper, comparing real completion dates.
+  // It has to finish before the tasks are read; between sweeps the throttle
+  // makes it free.
   await oncePer("reopen", SWEEP_MS, () => reopenDueRecurring())
-  await ensureDefaultViews(user.id)
 
-  const [views, tasks, targets, events] = await Promise.all([
+  // Everything else in one round trip. Seeding the default views used to run
+  // ahead of these reads as two round trips of its own; it now runs beside
+  // them, and the views are listed again only when it added one.
+  const [seeded, firstViews, tasks, targets, events] = await Promise.all([
+    ensureDefaultViews(user.id),
     listViews(user.id),
     allTasks(),
     taskTargets(),
@@ -57,6 +62,7 @@ export default async function TasksPage({
       })
       .catch(() => []),
   ])
+  const views = seeded > 0 ? await listViews(user.id) : firstViews
 
   // The card closes back to the filtered list it was opened from.
   const kept = new URLSearchParams(

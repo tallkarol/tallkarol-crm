@@ -1,30 +1,24 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { eq } from "drizzle-orm"
 import { ArrowLeft } from "lucide-react"
 import { PageHeader } from "@/components/PageHeader"
 import { TaskDetailBody } from "@/components/tasks/TaskDetail"
-import { db } from "@/db"
-import { tasks } from "@/db/schema"
 import { ROUTES } from "@/lib/nav"
+import { loadTaskDetail } from "@/lib/task-detail"
 import { Card } from "@/components/ui/Card"
 
 export const dynamic = "force-dynamic"
 
+// Request-cached with the page and the body below: one read serves the
+// title, the existence check and the card, where there were three.
 export async function generateMetadata({ params }: { params: { id: string } }) {
-  const task = await db.query.tasks.findFirst({
-    where: eq(tasks.id, params.id),
-    columns: { title: true },
-  })
+  const task = await loadTaskDetail(params.id)
   return { title: task?.title ?? "Task" }
 }
 
 /** The same detail as the peek, with room for a long checklist. */
 export default async function TaskPage({ params }: { params: { id: string } }) {
-  const task = await db.query.tasks.findFirst({
-    where: eq(tasks.id, params.id),
-    columns: { id: true },
-  })
+  const task = await loadTaskDetail(params.id)
   if (!task) notFound()
 
   return (

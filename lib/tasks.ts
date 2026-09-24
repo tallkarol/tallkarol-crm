@@ -163,20 +163,27 @@ export const DEFAULT_VIEW_SLUG = "needs-me"
  * Seeds the default lenses the first time someone opens the hub, plus one per
  * client that is actually live. Only missing slugs are added, so a rename or a
  * reorder survives.
+ *
+ * Returns how many views it added, so the hub can list its views again only
+ * when something changed. Its two reads run side by side, and the hub runs it
+ * beside the page's other reads rather than ahead of them: it used to cost
+ * every visit two round trips before a single task was read.
  */
-export async function ensureDefaultViews(userId: string) {
-  const existing = await db.query.taskViews.findMany({
-    where: eq(taskViews.userId, userId),
-    columns: { slug: true },
-  })
+export async function ensureDefaultViews(userId: string): Promise<number> {
+  const [existing, live] = await Promise.all([
+    db.query.taskViews.findMany({
+      where: eq(taskViews.userId, userId),
+      columns: { slug: true },
+    }),
+    db.query.clients.findMany({
+      with: { retainers: true, projects: true, products: true },
+      orderBy: [asc(clients.name)],
+    }),
+  ])
   const have = new Set(existing.map((row) => row.slug))
 
   const wanted: Omit<ViewRow, "id">[] = [...BUILT_IN]
 
-  const live = await db.query.clients.findMany({
-    with: { retainers: true, projects: true, products: true },
-    orderBy: [asc(clients.name)],
-  })
   let position = BUILT_IN.length
   for (const client of live) {
     const active =
@@ -197,11 +204,13 @@ export async function ensureDefaultViews(userId: string) {
   }
 
   const missing = wanted.filter((view) => !have.has(view.slug))
-  if (missing.length === 0) return
-  await db
+  if (missing.length === 0) return 0
+  const added = await db
     .insert(taskViews)
     .values(missing.map((view) => ({ ...view, userId })))
     .onConflictDoNothing()
+    .returning({ id: taskViews.id })
+  return added.length
 }
 
 export async function listViews(userId: string): Promise<ViewRow[]> {

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { asc, eq } from "drizzle-orm"
+import { asc } from "drizzle-orm"
 import { EntityLink, Fact, Facts, PeekSection } from "@/components/peek/bits"
 import {
   DueDateControl,
@@ -12,12 +12,13 @@ import { TaskChecklist } from "@/components/tasks/TaskChecklist"
 import { TaskClientMenu } from "@/components/tasks/TaskClientMenu"
 import { TaskTargetPicker } from "@/components/tasks/TaskTargetPicker"
 import { db } from "@/db"
-import { clients, deliverables, products, projects, tasks } from "@/db/schema"
+import { clients, deliverables, products, projects } from "@/db/schema"
 import { solveTaskAction } from "@/lib/chat/task-actions"
 import { threadForTask, type TaskThreadState } from "@/lib/chat/task-thread"
 import { clientColor } from "@/lib/client-colors"
 import { ROUTES } from "@/lib/nav"
 import { punchlistForTask } from "@/lib/punchlists"
+import { loadTaskDetail } from "@/lib/task-detail"
 import { completionHistory, taskChecklist } from "@/lib/tasks"
 import {
   setTaskCadenceAction,
@@ -72,15 +73,15 @@ function solveState(thread: TaskThreadState | null): SolveState | null {
 }
 
 export async function TaskDetailBody({ id }: { id: string }) {
-  const task = await db.query.tasks.findFirst({
-    where: eq(tasks.id, id),
-    with: { client: true, retainer: true, project: true, product: true, deliverable: true },
-  })
+  // Request-cached: the peek or the page has already read this row.
+  const task = await loadTaskDetail(id)
   if (!task) return null
-  const onList = task.source === "punchlist" ? await punchlistForTask(task.id) : null
 
-  const [clientRows, projectRows, productRows, deliverableRows, items, history, solve] =
+  const [onList, clientRows, projectRows, productRows, deliverableRows, items, history, solve] =
     await Promise.all([
+      // Only punch-list tasks sit on a list. The read used to run on its own,
+      // ahead of everything below, as a round trip of its own.
+      task.source === "punchlist" ? punchlistForTask(task.id) : Promise.resolve(null),
       db.query.clients.findMany({ orderBy: [asc(clients.name)] }),
       db
         .select({ id: projects.id, name: projects.name, clientId: projects.clientId })
