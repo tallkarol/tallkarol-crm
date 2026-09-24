@@ -81,15 +81,27 @@ export function FocusTray({
       ) : null}
 
       <div className={cn("grid items-start gap-3.5", compact ? "" : "lg:grid-cols-[minmax(0,1fr)_248px]")}>
+        {/* A phone swipes the slots one at a time, the next one peeking;
+            empty slots past the first stay off it (three "drop here" boxes
+            in a row said nothing a single one does not). */}
         <div
           className={cn(
-            "grid gap-3.5 px-1 pb-2 pt-2",
+            "grid gap-3.5 px-1 pb-2 pt-2 max-rail:-mx-1 max-rail:flex max-rail:snap-x max-rail:snap-mandatory max-rail:overflow-x-auto max-rail:[scrollbar-width:none] max-rail:[&::-webkit-scrollbar]:hidden",
             mode === "one" ? "grid-cols-1" : "grid-cols-3",
             compact && mode === "three" && "gap-7 px-2.5 pt-5"
           )}
         >
           {Array.from({ length: max }, (_, i) => (
-            <Slot key={i} index={i} card={showing[i] ?? null} mode={mode} ops={ops} compact={compact} flag={flag} />
+            <Slot
+              key={i}
+              index={i}
+              card={showing[i] ?? null}
+              mode={mode}
+              ops={ops}
+              compact={compact}
+              flag={flag}
+              phoneHidden={!showing[i] && i > showing.length}
+            />
           ))}
         </div>
         {!compact ? <Queue queue={queue} onPromote={onPromote} onAdd={onAdd} hint={queueHint} /> : null}
@@ -134,6 +146,7 @@ function Slot({
   ops,
   compact,
   flag,
+  phoneHidden = false,
 }: {
   index: number
   card: FocusCard | null
@@ -141,13 +154,17 @@ function Slot({
   ops: NoteOps
   compact: boolean
   flag: "global" | "client"
+  /** An empty slot past the first one: a phone leaves it out. */
+  phoneHidden?: boolean
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: `slot:${index}`, data: { zone: "slot", index } })
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        "relative min-w-0 rounded-md",
+        "relative min-w-0 rounded-md max-rail:shrink-0 max-rail:snap-start",
+        mode === "one" ? "max-rail:w-full" : "max-rail:w-[86%]",
+        phoneHidden && "max-rail:hidden",
         isOver && "outline outline-2 outline-offset-4 outline-dashed outline-accent-ink",
         !card && "grid min-h-[150px] place-items-center border-[1.5px] border-dashed border-line-strong px-3 text-center font-ui text-[11.5px] font-semibold text-ink-3",
         !card && compact && "min-h-[280px]"

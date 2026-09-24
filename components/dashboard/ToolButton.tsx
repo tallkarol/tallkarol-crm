@@ -19,6 +19,8 @@ export function ToolButton({
   onClick,
   width = 360,
   track,
+  wide = false,
+  text,
   children,
 }: {
   label: string
@@ -32,6 +34,14 @@ export function ToolButton({
   width?: number
   /** Names the button on /activity (see ACTIVITY.md). */
   track?: string
+  /**
+   * The phone's quick-action row: a full-width labelled button, and the
+   * popover spans the row (the wrapper goes static, the row is `relative`)
+   * rather than hanging off a third-width button.
+   */
+  wide?: boolean
+  /** The label on a wide button, when shorter than the accessible one. */
+  text?: string
   children?: (close: () => void) => ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -61,7 +71,7 @@ export function ToolButton({
   const close = () => setOpen(false)
 
   return (
-    <div ref={box} className="relative">
+    <div ref={box} className={wide ? "static" : "relative"}>
       <button
         type="button"
         data-trigger
@@ -73,7 +83,9 @@ export function ToolButton({
         aria-expanded={children ? open : undefined}
         aria-controls={children ? id : undefined}
         className={cn(
-          "relative grid size-10 place-items-center rounded-xl border transition-[transform,box-shadow,border-color] duration-150",
+          wide
+            ? "relative flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] border font-ui text-[14px] font-bold transition-[transform,box-shadow,border-color] duration-150"
+            : "relative grid size-10 place-items-center rounded-xl border transition-[transform,box-shadow,border-color] duration-150",
           "hover:-translate-y-px hover:shadow-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tk-teal",
           primary
             ? "border-transparent bg-accent text-tk-linen shadow-card"
@@ -81,7 +93,8 @@ export function ToolButton({
           open && !primary && "border-tk-teal"
         )}
       >
-        <span className="[&>svg]:size-[17px]">{icon}</span>
+        <span className={wide ? "[&>svg]:size-[18px]" : "[&>svg]:size-[17px]"}>{icon}</span>
+        {wide ? <span>{text ?? label}</span> : null}
         {badge ? (
           <span
             aria-hidden
@@ -98,7 +111,17 @@ export function ToolButton({
         ) : null}
       </button>
       {children && open ? (
-        <Card elevation="none" className="absolute right-0 top-[calc(100%+8px)] z-[65] max-w-[calc(100vw-2rem)] p-4 text-tk-onyx shadow-hover motion-safe:animate-[tk-rise_.18s_ease_both]" id={id} role="dialog" aria-label={label} style={{ width }}>
+        <Card
+          elevation="none"
+          className={cn(
+            "absolute top-[calc(100%+8px)] z-[65] max-w-[calc(100vw-2rem)] p-4 text-tk-onyx shadow-hover motion-safe:animate-[tk-rise_.18s_ease_both]",
+            wide ? "inset-x-0" : "right-0"
+          )}
+          id={id}
+          role="dialog"
+          aria-label={label}
+          style={wide ? undefined : { width }}
+        >
           {children(close)}
         </Card>
       ) : null}

@@ -5,6 +5,7 @@ import { db } from "@/db"
 import { sites } from "@/db/schema"
 import { ClientHeader } from "@/components/clients/ClientHeader"
 import { ClientPanelMount } from "@/components/clients/ClientPanelMount"
+import { ClientRoomTabs } from "@/components/clients/ClientRoomTabs"
 import { FocusStrip } from "@/components/clients/FocusStrip"
 import { loadClientPanel, loadClientShell } from "@/lib/client-rooms"
 import { FOCUS_MODE_COOKIE, isFocusMode, windowOf } from "@/lib/focus"
@@ -44,6 +45,7 @@ export default async function ClientLayout(
       <ClientPanelMount client={client} data={panel} />
       <div className="flex min-h-0 flex-1 flex-col">
         <ClientHeader client={client} siteSlug={site?.slug ?? null} />
+        <ClientRoomTabs slug={client.slug} badges={panel.badges} />
         <div className="tk-main-scroll min-h-0 flex-1 overflow-y-auto px-4 py-3.5 sm:px-5">{children}</div>
         <FocusStrip cards={showing} queued={queue.length} client={client} />
       </div>

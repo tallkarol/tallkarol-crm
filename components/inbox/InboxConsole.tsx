@@ -65,6 +65,10 @@ function Kind({ kind }: { kind: InboxKind }) {
 
 /* ------------------------------------------------------------------ console */
 
+/** What each rail button gains on a phone, where the rail is chip rows (24 Sep 2026). */
+const CHIP =
+  " max-rail:h-9 max-rail:w-auto max-rail:shrink-0 max-rail:whitespace-nowrap max-rail:rounded-full max-rail:border max-rail:border-line max-rail:bg-card max-rail:px-3.5 max-rail:py-0 max-rail:text-[13px] max-rail:font-semibold"
+
 export function InboxConsole({ data }: { data: InboxData }) {
   const router = useRouter()
   const search = useSearchParams()
@@ -155,8 +159,9 @@ export function InboxConsole({ data }: { data: InboxData }) {
           pending && "opacity-90"
         )}
       >
-        {/* ---- lens rail ---- */}
-        <nav className="overflow-hidden rounded-2xl border border-line bg-card p-1.5">
+        {/* ---- lens rail — on a phone (24 Sep 2026) three chip rows: lenses, kinds, clients ---- */}
+        <nav className="overflow-hidden rounded-2xl border border-line bg-card p-1.5 max-rail:flex max-rail:flex-col max-rail:gap-2 max-rail:overflow-visible max-rail:rounded-none max-rail:border-0 max-rail:bg-transparent max-rail:p-0">
+          <div className="contents max-rail:-mx-5 max-rail:flex max-rail:gap-2 max-rail:overflow-x-auto max-rail:px-5 max-rail:[scrollbar-width:none] max-rail:[&::-webkit-scrollbar]:hidden">
           {INBOX_LENSES.map((item) => {
             const on = item.id === lens
             const count = data.counts[item.id]
@@ -169,8 +174,8 @@ export function InboxConsole({ data }: { data: InboxData }) {
                 data-track-from={lens}
                 onClick={() => setQuery({ lens: item.id === "unread" ? null : item.id, item: null })}
                 className={cn(
-                  "flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12.5px]",
-                  on ? "bg-accent-mark font-semibold text-tk-linen" : "text-tk-slate hover:bg-well transition-colors duration-[120ms]"
+                  "flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12.5px]" + CHIP,
+                  on ? "bg-accent-mark font-semibold text-tk-linen max-rail:border-transparent max-rail:bg-accent-mark" : "text-tk-slate hover:bg-well transition-colors duration-[120ms]"
                 )}
               >
                 {item.label}
@@ -181,9 +186,11 @@ export function InboxConsole({ data }: { data: InboxData }) {
             )
           })}
 
-          <p className="px-2.5 pb-1 pt-3 text-[9.5px] font-bold uppercase tracking-[0.1em] text-ink-3">
+          </div>
+          <p className="px-2.5 pb-1 pt-3 text-[9.5px] font-bold uppercase tracking-[0.1em] text-ink-3 max-rail:hidden">
             By kind
           </p>
+          <div className="contents max-rail:-mx-5 max-rail:flex max-rail:gap-2 max-rail:overflow-x-auto max-rail:px-5 max-rail:[scrollbar-width:none] max-rail:[&::-webkit-scrollbar]:hidden">
           {INBOX_KINDS.map((k) => {
             const on = kind === k
             return (
@@ -194,8 +201,8 @@ export function InboxConsole({ data }: { data: InboxData }) {
                 data-track-value={k}
                 onClick={() => setQuery({ kind: on ? null : k, item: null })}
                 className={cn(
-                  "flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12.5px]",
-                  on ? "bg-accent-mark font-semibold text-tk-linen" : "text-tk-slate hover:bg-well transition-colors duration-[120ms]"
+                  "flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12.5px]" + CHIP,
+                  on ? "bg-accent-mark font-semibold text-tk-linen max-rail:border-transparent max-rail:bg-accent-mark" : "text-tk-slate hover:bg-well transition-colors duration-[120ms]"
                 )}
               >
                 {KIND_LABEL[k]}
@@ -206,11 +213,13 @@ export function InboxConsole({ data }: { data: InboxData }) {
             )
           })}
 
+          </div>
           {railClients.length > 0 ? (
             <>
-              <p className="px-2.5 pb-1 pt-3 text-[9.5px] font-bold uppercase tracking-[0.1em] text-ink-3">
+              <p className="px-2.5 pb-1 pt-3 text-[9.5px] font-bold uppercase tracking-[0.1em] text-ink-3 max-rail:hidden">
                 By client
               </p>
+              <div className="contents max-rail:-mx-5 max-rail:flex max-rail:gap-2 max-rail:overflow-x-auto max-rail:px-5 max-rail:[scrollbar-width:none] max-rail:[&::-webkit-scrollbar]:hidden">
               {railClients.map((c) => {
                 const on = clientSlug === c.slug
                 return (
@@ -220,8 +229,8 @@ export function InboxConsole({ data }: { data: InboxData }) {
                     data-track="inbox.client"
                     onClick={() => setQuery({ client: on ? null : c.slug, item: null })}
                     className={cn(
-                      "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12.5px]",
-                      on ? "bg-accent-mark font-semibold text-tk-linen" : "text-tk-slate hover:bg-well transition-colors duration-[120ms]"
+                      "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[12.5px]" + CHIP,
+                      on ? "bg-accent-mark font-semibold text-tk-linen max-rail:border-transparent max-rail:bg-accent-mark" : "text-tk-slate hover:bg-well transition-colors duration-[120ms]"
                     )}
                   >
                     <span
@@ -233,6 +242,7 @@ export function InboxConsole({ data }: { data: InboxData }) {
                   </button>
                 )
               })}
+              </div>
             </>
           ) : null}
         </nav>

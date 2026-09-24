@@ -84,8 +84,10 @@ export function FloatingClock() {
   const grab = useRef<{ dx: number; dy: number } | null>(null)
 
   useLayoutEffect(() => {
+    // On a phone the clock is a strip docked above the tab bar, not a pill
+    // to drag about — a spot saved on a wider window is ignored there.
     const saved = readPosition()
-    if (saved) setPosition(clamp(saved, ref.current))
+    if (saved && window.matchMedia("(min-width: 700px)").matches) setPosition(clamp(saved, ref.current))
     setPlaced(true)
   }, [])
 
@@ -185,8 +187,12 @@ export function FloatingClock() {
       }
       className={cn(
         // Above everything the app draws — menus, peeks, modals, toasts.
-        "fixed right-4 top-[4.25rem] z-[100] flex max-w-[calc(100vw-2rem)] items-stretch md:right-6 md:top-4",
-        "rounded-full bg-accent text-xs font-semibold text-tk-linen shadow-[0_6px_20px_rgba(15,22,21,0.28)]",
+        // A strip docked above the phone's tab bar; the draggable pill from
+        // the `rail` breakpoint up.
+        "fixed z-[100] flex items-stretch",
+        "inset-x-3 bottom-[calc(var(--tk-tabbar)+8px)] top-auto rounded-[13px]",
+        "rail:inset-x-auto rail:bottom-auto rail:right-4 rail:top-[4.25rem] rail:max-w-[calc(100vw-2rem)] rail:rounded-full md:right-6 md:top-4",
+        "bg-accent text-xs font-semibold text-tk-linen shadow-[0_6px_20px_rgba(15,22,21,0.28)]",
         dragging ? "cursor-grabbing select-none" : "transition-shadow",
         !placed && "invisible"
       )}
@@ -202,7 +208,7 @@ export function FloatingClock() {
         onPointerCancel={onPointerUp}
         onKeyDown={onKeyDown}
         className={cn(
-          "flex shrink-0 touch-none items-center rounded-l-full pl-2 pr-1 text-tk-linen/60 hover:bg-tk-linen/10 hover:text-tk-linen",
+          "hidden shrink-0 touch-none items-center rounded-l-full pl-2 pr-1 text-tk-linen/60 hover:bg-tk-linen/10 hover:text-tk-linen rail:flex",
           showRecording && "bg-tk-onyx",
           "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tk-teal",
           dragging ? "cursor-grabbing" : "cursor-grab"
@@ -210,7 +216,7 @@ export function FloatingClock() {
       >
         <GripVertical className="size-3.5" aria-hidden />
       </button>
-      <div className="flex min-w-0 flex-col divide-y divide-[#F1EADC]/20">
+      <div className="flex min-w-0 flex-1 flex-col divide-y divide-[#F1EADC]/20">
         {error ? (
           <p role="status" className="px-3 py-1.5 text-[11px] font-medium text-tk-linen/85">
             {error}
@@ -242,14 +248,14 @@ function RunningPill({
     <div className="flex min-w-0 items-stretch">
       <Link
         href={ROUTES.timesheetLive}
-        className="flex min-w-0 items-center gap-2 py-1.5 pl-1.5 pr-2"
+        className="flex min-w-0 flex-1 items-center gap-2 py-2.5 pl-3.5 pr-2 rail:py-1.5 rail:pl-1.5"
       >
         <span
           aria-hidden
           className="size-2 shrink-0 rounded-full bg-tk-linen/90 ring-4 ring-tk-linen/25"
         />
         <span className="tabular-nums">{clockLabel(seconds)}</span>
-        <span className="max-w-[12rem] truncate font-medium opacity-80">{name}</span>
+        <span className="min-w-0 truncate font-medium opacity-80 rail:max-w-[12rem]">{name}</span>
       </Link>
       <button
         type="button"
@@ -265,10 +271,10 @@ function RunningPill({
             else announcePunchChange()
           })
         }}
-        className="inline-flex shrink-0 items-center gap-1 rounded-r-full border-l border-tk-linen/25 py-1.5 pl-2 pr-3 hover:bg-tk-linen/15 disabled:opacity-50"
+        className="inline-flex shrink-0 items-center gap-1 rounded-r-[13px] border-l border-tk-linen/25 py-1.5 pl-3 pr-4 hover:bg-tk-linen/15 disabled:opacity-50 rail:rounded-r-full rail:pl-2 rail:pr-3"
       >
         <Square className="size-3" aria-hidden />
-        <span className="sr-only sm:not-sr-only">{busy ? "Stopping…" : "Out"}</span>
+        <span>{busy ? "Stopping…" : "Out"}</span>
       </button>
     </div>
   )
@@ -295,8 +301,8 @@ function RecordingPill({
   const stopping = live.status === "stopping"
 
   return (
-    <div className="flex min-w-0 items-stretch bg-tk-onyx text-tk-linen ring-1 ring-inset ring-tk-linen/10">
-      <Link href={`${ROUTES.timesheetLive}#record`} className="flex min-w-0 items-center gap-2 py-1.5 pl-1.5 pr-2">
+    <div className="flex min-w-0 items-stretch rounded-[13px] bg-tk-onyx text-tk-linen ring-1 ring-inset ring-tk-linen/10 rail:rounded-none">
+      <Link href={`${ROUTES.timesheetLive}#record`} className="flex min-w-0 flex-1 items-center gap-2 py-2.5 pl-3.5 pr-2 rail:py-1.5 rail:pl-1.5">
         <span
           aria-hidden
           className={cn("size-2 shrink-0 rounded-full", !stopping && "animate-pulse motion-reduce:animate-none")}
@@ -313,7 +319,7 @@ function RecordingPill({
         ) : (
           <span className="tabular-nums">{formatClock(stopping ? live.durationSec || seconds : seconds)}</span>
         )}
-        <span className="max-w-[12rem] truncate font-medium opacity-90">{name}</span>
+        <span className="min-w-0 truncate font-medium opacity-90 rail:max-w-[12rem]">{name}</span>
       </Link>
       <button
         type="button"
@@ -330,10 +336,10 @@ function RecordingPill({
             onChanged()
           })
         }}
-        className="inline-flex shrink-0 items-center gap-1 rounded-r-full border-l border-tk-linen/25 py-1.5 pl-2 pr-3 hover:bg-tk-linen/15 disabled:opacity-50"
+        className="inline-flex shrink-0 items-center gap-1 rounded-r-[13px] border-l border-tk-linen/25 py-1.5 pl-3 pr-4 hover:bg-tk-linen/15 disabled:opacity-50 rail:rounded-r-full rail:pl-2 rail:pr-3"
       >
         <Square className="size-3" aria-hidden />
-        <span className="sr-only sm:not-sr-only">{stopping ? "Finishing…" : starting ? "Cancel" : "Stop"}</span>
+        <span>{stopping ? "Finishing…" : starting ? "Cancel" : "Stop"}</span>
       </button>
     </div>
   )

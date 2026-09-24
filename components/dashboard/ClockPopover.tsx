@@ -19,9 +19,12 @@ export type ClockClient = { id: string; name: string; slug: string }
  * clock elsewhere in the app keeps polling, so both agree within a poll.
  */
 export function ClockPopover({
+  wide = false,
   clients,
   running,
 }: {
+  /** The phone's quick-action row — see ToolButton. */
+  wide?: boolean
   clients: ClockClient[]
   running: PunchView[]
 }) {
@@ -62,7 +65,7 @@ export function ClockPopover({
   }
 
   return (
-    <ToolButton label={live ? `Running: ${live.clientName}` : "Clock in"} icon={<Clock />} dot={Boolean(live)} track="home.clock">
+    <ToolButton label={live ? `Running: ${live.clientName}` : "Clock in"} text={live ? "Running" : "Clock in"} icon={<Clock />} dot={Boolean(live)} primary={wide && !live} wide={wide} track="home.clock">
       {(close) => (
         <div className="grid gap-3">
           <div className="flex items-center gap-2 font-ui">

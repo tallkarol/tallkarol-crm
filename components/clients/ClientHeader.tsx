@@ -13,9 +13,9 @@ export function ClientHeader({ client, siteSlug }: { client: ClientShell; siteSl
   return (
     <header className="flex shrink-0 items-center gap-3 border-b border-line px-4 py-2.5 sm:px-5">
       <ClientAvatar name={client.name} slug={client.slug} size="md" />
-      <h1 className="flex min-w-0 flex-1 items-center gap-2 font-display text-[19px] font-bold leading-tight tracking-[-0.02em] text-tk-onyx">
-        <span className="min-w-0 truncate">{client.name}</span>
-        <span className="hidden shrink-0 sm:inline-flex">
+      <h1 className="flex min-w-0 flex-1 flex-col items-start gap-1 font-display text-[19px] font-bold leading-tight tracking-[-0.02em] text-tk-onyx rail:flex-row rail:items-center rail:gap-2">
+        <span className="min-w-0 max-w-full truncate">{client.name}</span>
+        <span className="inline-flex shrink-0">
           <ClientStatusMenu clientId={client.id} status={client.status as ClientStatus} />
         </span>
       </h1>

@@ -398,12 +398,15 @@ export default async function DashboardPage(
       {/* The tray and the cards under it share one drag context: a task or a
           deliverable in Needs attention drags straight up onto a slot. */}
       <GlobalFocus cards={globalCards} mode={focusMode}>
-        <div className="mt-6 grid grid-cols-[minmax(0,1fr)] min-w-0 gap-3.5 xl:grid-cols-[minmax(0,8fr)_minmax(300px,4fr)]">
-          <div className="grid min-w-0 content-start gap-3.5">
-            <div className="tk-rise min-w-0" style={rise(1)}>
+        {/* On a phone the grid and its columns dissolve (display: contents)
+            and each card orders itself in GlobalFocus's column: Needs
+            attention first, the focus tray (order 2) under it, then the rest. */}
+        <div className="mt-6 grid grid-cols-[minmax(0,1fr)] min-w-0 gap-3.5 max-rail:contents xl:grid-cols-[minmax(0,8fr)_minmax(300px,4fr)]">
+          <div className="grid min-w-0 content-start gap-3.5 max-rail:contents">
+            <div className="tk-rise min-w-0 max-rail:order-1" style={rise(1)}>
               <NeedsAttention groups={groups} more={more} unread={unread.ready ? unread : null} pulse={pulse} />
             </div>
-            <div className="tk-rise min-w-0" style={rise(2)}>
+            <div className="tk-rise min-w-0 max-rail:order-3" style={rise(2)}>
               <WeekBoard
                 configured={meetings.configured}
                 meetings={meetings.meetings}
@@ -412,9 +415,9 @@ export default async function DashboardPage(
             </div>
           </div>
 
-          <div className="grid min-w-0 content-start gap-3.5">
+          <div className="grid min-w-0 content-start gap-3.5 max-rail:contents">
             {/* One tap per active retainer, stacked above the month — see RetainerClockRow. */}
-            <div className="tk-rise min-w-0" style={rise(2)}>
+            <div className="tk-rise min-w-0 max-rail:order-4" style={rise(2)}>
               <RetainerClockRow
                 stacked
                 retainers={retainers
@@ -430,7 +433,7 @@ export default async function DashboardPage(
                   .sort((a, b) => a.clientName.localeCompare(b.clientName))}
               />
             </div>
-            <div className="tk-rise min-w-0" style={rise(3)}>
+            <div className="tk-rise min-w-0 max-rail:order-5" style={rise(3)}>
               <MonthBilled
                 monthLabel={now.toLocaleDateString("en-US", { month: "long" })}
                 billedCents={billedCents}
@@ -446,7 +449,7 @@ export default async function DashboardPage(
                 expectedTotalCents={billedCents + currentRemainderCents}
               />
             </div>
-            <div className="tk-rise min-w-0" style={rise(4)}>
+            <div className="tk-rise min-w-0 max-rail:order-6" style={rise(4)}>
               <Forecast months={forecast.months} />
             </div>
           </div>

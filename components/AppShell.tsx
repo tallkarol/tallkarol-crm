@@ -29,18 +29,6 @@ const GROUP_KEY = "tk-crm-panel-group"
  */
 const FULL_BLEED = new Set<string>([ROUTES.chat])
 
-/** "Review" on /timesheet/review, "Dashboard" on the monogram, "Chat" on
- *  /chat — the phone header's title. Falls back to the last path segment
- *  for a parked page, which has no row in the dock to read a label from. */
-function titleFor(pathname: string, itemLabel: string | undefined): string {
-  if (itemLabel) return itemLabel
-  if (pathname === "/") return "Dashboard"
-  if (pathname === ROUTES.chat) return "Chat"
-  const last = pathname.split("/").filter(Boolean).pop() ?? ""
-  const words = last.replace(/-/g, " ")
-  return words ? words.charAt(0).toUpperCase() + words.slice(1) : "Tall Karol"
-}
-
 export function AppShell({
   email,
   badges = {},
@@ -79,11 +67,9 @@ export function AppShell({
   const panelSlot = useMemo(() => ({ setOverride: setPanelOverride }), [])
   const [pinned, setPinned] = useState(true)
   const [lastGroupId, setLastGroupId] = useState<string>(FIRST_PANEL_GROUP.id)
-  // The dock's Chat icon can wear the desks' "needs a yes" total, but the
-  // count has to come up from DeskDock's own 30s poll rather than a second
-  // one. That prop is waiting on the chat session's in-flight work, so the
-  // dot stays dark until it lands.
-  const [chatNeedsYou] = useState(0)
+  // The Chat icon's "needs a yes" dot: the total comes up from DeskDock's
+  // own 30s badge poll rather than a second one.
+  const [chatNeedsYou, setChatNeedsYou] = useState(0)
 
   useEffect(() => {
     try {
@@ -149,7 +135,7 @@ export function AppShell({
 
       {/* Desktop and tablet: the 76px dock, then the panel beside it when
           pinned open. Below the `rail` breakpoint both are replaced by
-          MobileNav's top bar, bottom bar and sheet. */}
+          MobileNav's tab bar and its More sheet. */}
       <DockRail
         badges={badges}
         chatNeedsYou={chatNeedsYou}
@@ -182,11 +168,12 @@ export function AppShell({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <MobileNav
           activeHref={activeNav?.item.href ?? null}
-          title={titleFor(pathname, activeNav?.item.label)}
           activeGroupId={activeNav ? activeGroupId : null}
           badges={badges}
           chatNeedsYou={chatNeedsYou}
-          clientGroups={clientGroups}
+          email={email}
+          hideMoney={hideMoney}
+          theme={theme}
         />
 
         {/* The page and, on the right edge, the desk dock — a panel when a desk is open. */}
@@ -194,7 +181,7 @@ export function AppShell({
           <main
             id="main"
             className={cn(
-              "relative min-w-0 flex-1 pb-[76px] rail:pb-0",
+              "relative min-w-0 flex-1 pb-[var(--tk-tabbar)] rail:pb-0",
               fullBleed
                 ? "flex min-h-0 flex-col overflow-hidden"
                 : "tk-main-scroll overflow-x-hidden overflow-y-auto"
@@ -209,7 +196,7 @@ export function AppShell({
               {children}
             </div>
           </main>
-          <DeskDock />
+          <DeskDock onBadgesChange={setChatNeedsYou} />
         </div>
       </div>
       {/* The card frame that opens on the click — see PeekPending. Suspense

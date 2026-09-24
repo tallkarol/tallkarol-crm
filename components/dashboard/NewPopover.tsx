@@ -42,7 +42,7 @@ function todayIso() {
  * day, so it gets a quick form here; the other kinds have their own pages
  * and this hands you to them.
  */
-export function NewPopover({ clients }: { clients: NewClient[] }) {
+export function NewPopover({ clients, wide = false }: { clients: NewClient[]; wide?: boolean }) {
   const router = useRouter()
   const [kind, setKind] = useState<Kind>("task")
   const [title, setTitle] = useState("")
@@ -74,7 +74,7 @@ export function NewPopover({ clients }: { clients: NewClient[] }) {
   const current = KINDS.find((k) => k.id === kind)!
 
   return (
-    <ToolButton label="New" icon={<Plus />} primary width={380} track="home.new">
+    <ToolButton label="New" icon={<Plus />} primary={!wide} width={380} wide={wide} track="home.new">
       {(close) => (
         <div className="grid gap-3">
           <div className="flex items-center gap-2 font-ui">

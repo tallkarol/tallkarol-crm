@@ -21,7 +21,7 @@ import { useRunningClock } from "@/components/timesheet/RunningClockProvider"
  * Stop. The live state is the shell's one clock poll (RunningClockProvider),
  * so the header needs no new prop and this adds no poll of its own.
  */
-export function RecordPopover({ clients }: { clients: ClockClient[] }) {
+export function RecordPopover({ clients, wide = false }: { clients: ClockClient[]; wide?: boolean }) {
   const router = useRouter()
   const [clientId, setClientId] = useState<string>("")
   const [title, setTitle] = useState("")
@@ -65,7 +65,7 @@ export function RecordPopover({ clients }: { clients: ClockClient[] }) {
   }
 
   return (
-    <ToolButton label={live ? `Recording: ${live.title || live.client?.name || "meeting"}` : "Record a meeting"} icon={<Mic />} dot={Boolean(live)} track="home.record">
+    <ToolButton label={live ? `Recording: ${live.title || live.client?.name || "meeting"}` : "Record a meeting"} text={live ? "Recording" : "Record"} icon={<Mic />} dot={Boolean(live)} wide={wide} track="home.record">
       {(close) => (
         <div className="grid gap-3">
           <div className="flex items-center gap-2 font-ui">

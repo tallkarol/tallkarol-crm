@@ -147,7 +147,7 @@ export function ApprovalCard({ call }: { call: ChatToolCall }) {
             type="button"
             disabled={busy}
             onClick={() => decide(true)}
-            className="inline-flex h-[30px] items-center gap-1.5 rounded-[9px] bg-accent px-3 font-ui text-xs font-semibold text-on-accent outline-accent-ink disabled:opacity-60"
+            className="inline-flex h-[30px] items-center gap-1.5 rounded-[9px] bg-accent px-3 font-ui text-xs font-semibold text-on-accent outline-accent-ink disabled:opacity-60 max-rail:h-11 max-rail:flex-1 max-rail:justify-center max-rail:rounded-xl max-rail:text-[13px]"
           >
             <Check className="size-3.5" aria-hidden />
             {VERB[call.name] ?? "Confirm"}
@@ -156,12 +156,12 @@ export function ApprovalCard({ call }: { call: ChatToolCall }) {
             type="button"
             disabled={busy}
             onClick={() => decide(false)}
-            className="inline-flex h-[30px] items-center gap-1.5 rounded-[9px] border border-line px-3 font-ui text-xs font-semibold text-ink-2 outline-accent-ink hover:border-line-strong hover:text-tk-onyx disabled:opacity-60"
+            className="inline-flex h-[30px] items-center gap-1.5 rounded-[9px] border border-line px-3 font-ui text-xs font-semibold text-ink-2 outline-accent-ink hover:border-line-strong hover:text-tk-onyx disabled:opacity-60 max-rail:h-11 max-rail:flex-1 max-rail:justify-center max-rail:rounded-xl max-rail:text-[13px]"
           >
             <X className="size-3.5" aria-hidden />
             Discard
           </button>
-          <span className="ml-auto font-ui text-[11px] text-ink-3">
+          <span className="ml-auto font-ui text-[11px] text-ink-3 max-rail:ml-0 max-rail:basis-full max-rail:text-center">
             Same preview the write uses
           </span>
         </div>

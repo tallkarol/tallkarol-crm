@@ -30,7 +30,7 @@ export function WeekStrip({ week, client }: { week: WeekData; client: { slug: st
           Calendar <ArrowRight className="size-2.5" aria-hidden />
         </Link>
       </div>
-      <div className="grid flex-1 grid-cols-3 gap-2">
+      <div className="grid flex-1 grid-cols-1 gap-2 rail:grid-cols-3">
         <DayCard head={String(week.days[t]?.num ?? "")} sub="Today" today>
           {today.map((i) => (
             <Row key={i.id} item={i} color={client.color} />
@@ -57,15 +57,17 @@ function DayCard({ head, sub, today = false, children }: { head: string; sub: st
   return (
     <div
       className={cn(
-        "flex min-h-[120px] min-w-0 flex-col gap-1 rounded-[10px] border border-line bg-card px-2 pb-2 pt-1.5 shadow-card",
+        "flex min-h-[120px] min-w-0 flex-col gap-1 rounded-[10px] border border-line bg-card px-2 pb-2 pt-1.5 shadow-card max-rail:min-h-0 max-rail:flex-row max-rail:items-start max-rail:gap-3 max-rail:px-3 max-rail:py-2.5",
         today && "shadow-[inset_0_0_0_1.5px_rgb(var(--accent-ink-rgb))]"
       )}
     >
-      <div className={cn("mb-0.5 flex items-baseline gap-1.5 font-ui text-[10.5px] font-semibold text-ink-3", today && "text-accent-ink")}>
+      <div className={cn("mb-0.5 flex items-baseline gap-1.5 font-ui text-[10.5px] font-semibold text-ink-3 max-rail:mb-0 max-rail:w-[76px] max-rail:shrink-0 max-rail:flex-col max-rail:items-start max-rail:gap-0 max-rail:pt-0.5", today && "text-accent-ink")}>
         <b className={cn("font-display text-sm font-bold text-tk-onyx", today && "text-accent-ink")}>{head}</b>
         {sub}
       </div>
-      {empty ? <p className="px-1.5 text-[11px] italic text-ink-3 opacity-60">Nothing scheduled</p> : children}
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        {empty ? <p className="px-1.5 text-[11px] italic text-ink-3 opacity-60 max-rail:px-0">Nothing scheduled</p> : children}
+      </div>
     </div>
   )
 }

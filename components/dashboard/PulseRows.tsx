@@ -91,7 +91,7 @@ function Row({ row, folded, onToggle, onGroup }: { row: PulseRow; folded: boolea
         <span className="min-w-0">
           <span className="flex items-center gap-1.5 font-ui text-[13.5px] font-bold tracking-[-0.01em] text-tk-onyx">
             {row.name}
-            <ChevronDown className={cn("size-2.5 shrink-0 text-ink-3 transition-transform", folded && "-rotate-90")} aria-hidden />
+            <ChevronDown className={cn("size-2.5 shrink-0 text-ink-3 transition-transform max-rail:hidden", folded && "-rotate-90")} aria-hidden />
           </span>
           <span className={cn("mt-0.5 block truncate text-[11.5px] leading-[1.3]", STATE[row.tone])}>{row.state}</span>
         </span>
@@ -107,8 +107,15 @@ function Row({ row, folded, onToggle, onGroup }: { row: PulseRow; folded: boolea
         <ChevronRight className="size-4" aria-hidden />
       </Link>
 
-      {folded ? (
-        <div className="col-span-2 flex min-w-0 items-center gap-1.5 truncate px-4 py-2.5 text-[12.5px] text-ink-3 sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:py-0">
+      {/* Both are in the tree: a phone always shows the digest and never the
+          stats (the row is one line there, the pulse card a list), whatever
+          the fold says. */}
+      <div
+        className={cn(
+          "col-span-2 flex min-w-0 items-center gap-1.5 truncate px-4 py-2.5 text-[12.5px] text-ink-3 sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:py-0",
+          !folded && "hidden max-rail:flex"
+        )}
+      >
           {digest.length === 0 ? (
             <span className="text-good">nothing needs you</span>
           ) : (
@@ -120,13 +127,16 @@ function Row({ row, folded, onToggle, onGroup }: { row: PulseRow; folded: boolea
             ))
           )}
         </div>
-      ) : (
-        <div className="col-span-2 grid grid-cols-2 sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:auto-cols-[minmax(0,1fr)] sm:grid-flow-col sm:grid-cols-none">
-          {row.stats.map((stat, i) => (
-            <Stat key={stat.key} stat={stat} row={row.key} index={i} onGroup={onGroup} />
-          ))}
-        </div>
-      )}
+      <div
+        className={cn(
+          "col-span-2 grid grid-cols-2 max-rail:hidden sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:auto-cols-[minmax(0,1fr)] sm:grid-flow-col sm:grid-cols-none",
+          folded && "hidden"
+        )}
+      >
+        {row.stats.map((stat, i) => (
+          <Stat key={stat.key} stat={stat} row={row.key} index={i} onGroup={onGroup} />
+        ))}
+      </div>
     </div>
   )
 }

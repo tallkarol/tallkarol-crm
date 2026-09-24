@@ -281,19 +281,26 @@ export function GlobalFocus({
         onDragEnd={onDragEnd}
         onDragCancel={() => setActive(null)}
       >
-        <FocusTray
-          showing={showing}
-          queue={queue}
-          mode={mode}
-          ops={ops}
-          onMode={changeMode}
-          onPromote={onPromote}
-          actions={actions}
-          hint={hint}
-          flag="client"
-          queueHint="Queue is empty — drag a card up from Needs attention"
-        />
-        {children}
+        {/* Nothing on a desktop (display: contents). On a phone a flex column,
+            so the page can put a card above the tray with `order` — the
+            dashboard leads with Needs attention there. */}
+        <div className="contents max-rail:flex max-rail:flex-col max-rail:gap-3.5">
+          <div className="contents max-rail:order-2 max-rail:block">
+            <FocusTray
+              showing={showing}
+              queue={queue}
+              mode={mode}
+              ops={ops}
+              onMode={changeMode}
+              onPromote={onPromote}
+              actions={actions}
+              hint={hint}
+              flag="client"
+              queueHint="Queue is empty — drag a card up from Needs attention"
+            />
+          </div>
+          {children}
+        </div>
         <DragOverlay modifiers={[snapToCursor]} dropAnimation={null}>
           {active ? (
             <div

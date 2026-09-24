@@ -496,6 +496,9 @@ body {
    lever that works. */
 :root {
   accent-color: rgb(var(--accent-rgb));
+  /* The phone's tab bar (components/nav/MobileNav.tsx): 58px of tabs over the
+     home-indicator inset. Pages pad by it, the clock strip and sheets sit on it. */
+  --tk-tabbar: calc(58px + max(8px, env(safe-area-inset-bottom)));
 }
 ::selection {
   background: rgb(var(--accent-ink-rgb) / 0.22);

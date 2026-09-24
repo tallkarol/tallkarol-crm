@@ -161,14 +161,14 @@ function Row({
   return (
     <div
       className={cn(
-        "grid grid-cols-[3px_auto_minmax(0,1fr)_auto] items-stretch border-b border-line last:border-b-0",
+        "grid grid-cols-[3px_auto_minmax(0,1fr)] items-stretch border-b border-line last:border-b-0 rail:grid-cols-[3px_auto_minmax(0,1fr)_auto]",
         row.band === 1 ? "bg-well" : "bg-card",
         row.first && "border-t border-line first:border-t-0"
       )}
     >
-      <span aria-hidden style={{ backgroundColor: markColor(color) }} />
+      <span aria-hidden className="max-rail:row-span-2" style={{ backgroundColor: markColor(color) }} />
 
-      <span className="flex items-start pl-3 pt-[11px]">
+      <span className="flex items-start pl-3 pt-[11px] max-rail:row-span-2">
         <button
           type="button"
           onClick={toggle}
@@ -193,7 +193,7 @@ function Row({
         </button>
       </span>
 
-      <span className="min-w-0 px-3 py-2.5">
+      <span className="min-w-0 px-3 py-2.5 max-rail:pb-0">
         <Link
           href={`${peekBase}${join}peek=task:${row.id}`}
           scroll={false}
@@ -269,12 +269,13 @@ function Row({
             </span>
           ) : null}
           {row.notes ? (
-            <span className="min-w-0 truncate text-ink-3">· {row.notes}</span>
+            // A phone's meta line is the client's — the note would squeeze the name to a letter.
+            <span className="min-w-0 truncate text-ink-3 max-rail:hidden">· {row.notes}</span>
           ) : null}
         </span>
       </span>
 
-      <span className="flex items-center gap-1.5 px-2 py-2.5 sm:gap-2 sm:px-3">
+      <span className="flex items-center gap-1.5 px-2 py-2.5 max-rail:col-start-3 max-rail:row-start-2 max-rail:flex-wrap max-rail:px-3 max-rail:pb-2.5 max-rail:pt-1.5 sm:gap-2 sm:px-3">
         <span
           aria-hidden
           title={row.priority === 1 ? "High priority" : undefined}
@@ -303,7 +304,7 @@ function Row({
         {row.cadence !== "none" && row.status === "open" ? (
           <Pill tone="rep">{CADENCE_LABEL[row.cadence].toLowerCase()}</Pill>
         ) : null}
-        <span className="hidden w-[52px] shrink-0 text-right font-mono text-[11px] text-ink-3 sm:block">
+        <span className="hidden w-[52px] shrink-0 text-right font-mono text-[11px] text-ink-3 max-rail:block max-rail:w-auto max-rail:text-left sm:block">
           {dueLabel(row)}
         </span>
       </span>

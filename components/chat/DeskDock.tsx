@@ -222,10 +222,10 @@ export function DeskDock({
         type="button"
         onClick={() => setSheet(true)}
         aria-label="Talk to a desk"
-        // Phone's bottom-4 would sit inside the dock+panel nav's new 76px
-        // bottom bar; clear it there and only drop back to bottom-4 once the
-        // `rail` breakpoint puts the bar back on the dock's left edge.
-        className="fixed bottom-[92px] right-4 z-40 grid size-12 place-items-center rounded-full bg-rail text-[--rail-active-icon] shadow-overlay rail:bottom-4 lg:hidden"
+        // Tablet only. On a phone there is no floating button (the 24 Sep
+        // 2026 chrome): Chat is a tab, and a client's or product's header
+        // has "Ask the desk", which opens this same sheet.
+        className="fixed bottom-4 right-4 z-40 hidden size-12 place-items-center rounded-full bg-rail text-[--rail-active-icon] shadow-overlay rail:grid lg:hidden"
       >
         {front ? <span className="font-ui text-[11px] font-bold">{monogram(front)}</span> : <MessagesSquare className="size-5" />}
       </button>

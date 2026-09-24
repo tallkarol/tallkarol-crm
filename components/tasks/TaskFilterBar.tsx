@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Columns3, Rows3, CalendarDays, Search, X } from "lucide-react"
+import { Columns3, Rows3, CalendarDays, Search, SlidersHorizontal, X } from "lucide-react"
 import {
   Dropdown,
   MenuHead,
@@ -61,6 +61,8 @@ export function TaskFilterBar({
   dirty: boolean
 }) {
   const router = useRouter()
+  // A phone keeps the client / project / state menus behind one Filter button.
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [q, setQ] = useState(bar.q)
   const [saving, setSaving] = useState(false)
 
@@ -205,6 +207,8 @@ export function TaskFilterBar({
   // No overflow-hidden on the shell: the dropdowns are absolutely positioned
   // and have to escape it. The pill strip rounds its own bottom corners, and
   // z-20 lifts the open menus above the composer and rows below.
+  const filterCount = pills.filter((p) => p.key !== "view" && p.key !== "q").length
+
   return (
     <Card className="relative z-20 mt-5">
       <div className="flex flex-wrap items-center gap-1.5 px-2.5 py-2">
@@ -268,6 +272,7 @@ export function TaskFilterBar({
           </kbd>
         </label>
 
+        <div className={cn("contents", !filtersOpen && "max-rail:hidden")}>
         <Dropdown label={clientLabel} on={bar.clients.length > 0} count={bar.clients.length}>
           {() => (
             <>
@@ -368,6 +373,20 @@ export function TaskFilterBar({
           )}
         </Dropdown>
 
+        </div>
+        <button
+          type="button"
+          onClick={() => setFiltersOpen((v) => !v)}
+          aria-expanded={filtersOpen}
+          className={cn(
+            "inline-flex h-9 items-center gap-1.5 rounded-full border px-3 font-ui text-[13px] font-semibold rail:hidden",
+            filtersOpen || filterCount > 0 ? "border-transparent bg-accent-soft text-accent-ink" : "border-line bg-card text-ink-2"
+          )}
+        >
+          <SlidersHorizontal className="size-3.5" aria-hidden />
+          Filter
+          {filterCount > 0 ? <span className="font-bold">{filterCount}</span> : null}
+        </button>
         <Card surface="well" radius="lg" elevation="none" className="ml-auto flex p-0.5" role="group" aria-label="Layout">
           {(
             [
