@@ -4,6 +4,12 @@ const nextConfig = {
   // Same escape hatch as the marketing site: NEXT_DIST_DIR=.next-build lets a
   // one-off `next build` run while `next dev` holds .next.
   distDir: process.env.NEXT_DIST_DIR || ".next",
+  experimental: {
+    // Next 15 stopped reusing a visited dynamic page (Next 14 kept it 30 s).
+    // Back-navigation, reopening a card and the Tasks page's pushState
+    // filters were instant because of that cache — keep it.
+    staleTimes: { dynamic: 30 },
+  },
   /**
    * Recipient-facing slink pages.
    *
