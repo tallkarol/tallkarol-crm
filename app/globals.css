@@ -723,6 +723,17 @@ body {
   }
 }
 
+/* Instant card frame (components/peek/PeekPending.tsx). Warm: the frame has
+   already slid in, so the real card must not slide in again under it.
+   Closing: the card goes the moment it is dismissed, not when the page under
+   it finishes re-rendering. Both flags are cleared from the URL. */
+:root[data-peek-warm] [data-nav="peek"] > * {
+  animation: none;
+}
+:root[data-peek-closing] [data-nav="peek"] {
+  display: none;
+}
+
 /* Ticket payloads — the small highlighter in lib/payload-highlight.ts.
    Tuned for the dark block inside an otherwise light detail pane. */
 .tk-payload .tk-key {

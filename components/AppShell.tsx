@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect, useMemo, useState, type ReactNode } from "react"
+import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
 import { DeskDock } from "@/components/chat/DeskDock"
 import { DockRail } from "@/components/nav/DockRail"
 import { HubPanel } from "@/components/nav/HubPanel"
 import { MobileNav } from "@/components/nav/MobileNav"
 import { PanelSlotContext } from "@/components/nav/PanelSlot"
+import { PeekPending } from "@/components/peek/PeekPending"
 import { cn } from "@/lib/cn"
 import { DOCK_NAV, ROUTES, clientSlugOf, resolveActiveNav, type NavBadge } from "@/lib/nav"
 import { primeHideMoney } from "@/lib/money-privacy"
@@ -185,6 +186,11 @@ export function AppShell({
           <DeskDock />
         </div>
       </div>
+      {/* The card frame that opens on the click — see PeekPending. Suspense
+          because it reads the search params. */}
+      <Suspense fallback={null}>
+        <PeekPending />
+      </Suspense>
     </div>
     </PanelSlotContext.Provider>
   )

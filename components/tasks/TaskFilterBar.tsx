@@ -34,7 +34,11 @@ export type BarOption = { id: string; label: string; count: number; swatch?: str
  * filter states what it is doing while closed; and the second line only exists
  * when something is actually applied.
  *
- * Every control writes to the URL, so a view is a link.
+ * Every control writes to the URL, so a view is a link — with
+ * history.pushState, not router.push: TaskHubView filters in the browser from
+ * useSearchParams (which Next keeps in step with pushState), so a click never
+ * waits on the server. Only saving a new view goes through the router, because
+ * the new view has to come back from the server with the list of views.
  */
 export function TaskFilterBar({
   views,
@@ -78,7 +82,11 @@ export function TaskFilterBar({
     return () => document.removeEventListener("keydown", onKey)
   }, [])
 
-  function push(next: Partial<BarState>) {
+  function go(url: string) {
+    window.history.pushState(null, "", url)
+  }
+
+  function hrefFor(next: Partial<BarState>) {
     const merged = { ...bar, ...next }
     const params = new URLSearchParams()
     if (merged.view) params.set("view", merged.view)
@@ -90,7 +98,11 @@ export function TaskFilterBar({
     if (merged.sort) params.set("sort", merged.sort)
     if (merged.layout) params.set("layout", merged.layout)
     const query = params.toString()
-    router.push(query ? `/tasks?${query}` : "/tasks")
+    return query ? `/tasks?${query}` : "/tasks"
+  }
+
+  function push(next: Partial<BarState>) {
+    go(hrefFor(next))
   }
 
   function toggle(key: "clients" | "projects", value: string) {
@@ -187,7 +199,7 @@ export function TaskFilterBar({
       sortBy: bar.sort,
     })
     setSaving(false)
-    if (result.ok) push({ view: result.data.slug })
+    if (result.ok) router.push(hrefFor({ view: result.data.slug }))
   }
 
   // No overflow-hidden on the shell: the dropdowns are absolutely positioned
@@ -212,7 +224,7 @@ export function TaskFilterBar({
                   onSelect={() => {
                     close()
                     // A lens resets the ad-hoc filters; its own criteria take over.
-                    router.push(`/tasks?view=${encodeURIComponent(view.slug)}`)
+                    go(`/tasks?view=${encodeURIComponent(view.slug)}`)
                   }}
                 />
               ))}
@@ -415,7 +427,7 @@ export function TaskFilterBar({
 
           <button
             type="button"
-            onClick={() => router.push("/tasks?view=all")}
+            onClick={() => go("/tasks?view=all")}
             className="text-[11.5px] font-semibold text-tk-teal hover:underline"
           >
             Clear all

@@ -1,4 +1,5 @@
 import { PeekShell } from "@/components/peek/PeekShell"
+import { parsePeek, peekEyebrow } from "@/components/peek/frame"
 import { AppHealthPeek } from "@/components/peek/AppHealthPeek"
 import { SiteUptimePeek } from "@/components/peek/SiteUptimePeek"
 import { GonePeek } from "@/components/peek/bits"
@@ -27,16 +28,16 @@ export async function PeekRouter({
   peek: string
   closeHref: string
 }) {
-  const idx = peek.indexOf(":")
-  const type = idx === -1 ? peek : peek.slice(0, idx)
-  const id = idx === -1 ? "" : decodeURIComponent(peek.slice(idx + 1))
+  const { type, id } = parsePeek(peek)
+  // Shared with the instant frame (PeekPending), so the swap reads as one card.
+  const eyebrow = peekEyebrow(type, id)
 
   switch (type) {
     case "invoice":
       return (
         <PeekShell
           closeHref={closeHref}
-          eyebrow={`Invoice · ${id}`}
+          eyebrow={eyebrow}
           footer={{ href: ROUTES.invoice(id), label: "Open full invoice" }}
         >
           <InvoicePeek number={id} />
@@ -46,7 +47,7 @@ export async function PeekRouter({
       return (
         <PeekShell
           closeHref={closeHref}
-          eyebrow="Task"
+          eyebrow={eyebrow}
           footer={{ href: ROUTES.tasks, label: "Open tasks board" }}
         >
           <TaskPeek id={id} />
@@ -54,7 +55,7 @@ export async function PeekRouter({
       )
     case "deliverable":
       return (
-        <PeekShell closeHref={closeHref} eyebrow="Deliverable">
+        <PeekShell closeHref={closeHref} eyebrow={eyebrow}>
           <DeliverablePeek id={id} />
         </PeekShell>
       )
@@ -62,7 +63,7 @@ export async function PeekRouter({
       return (
         <PeekShell
           closeHref={closeHref}
-          eyebrow="App health"
+          eyebrow={eyebrow}
           footer={{ href: ROUTES.client(id), label: "Open client" }}
         >
           <AppHealthPeek slug={id} />
@@ -70,7 +71,7 @@ export async function PeekRouter({
       )
     case "site":
       return (
-        <PeekShell closeHref={closeHref} eyebrow="Site uptime">
+        <PeekShell closeHref={closeHref} eyebrow={eyebrow}>
           <SiteUptimePeek slug={id} />
         </PeekShell>
       )
@@ -78,7 +79,7 @@ export async function PeekRouter({
       return (
         <PeekShell
           closeHref={closeHref}
-          eyebrow="Project"
+          eyebrow={eyebrow}
           footer={{ href: ROUTES.project(id), label: "Open full project" }}
         >
           <ProjectPeek slug={id} />
@@ -88,7 +89,7 @@ export async function PeekRouter({
       return (
         <PeekShell
           closeHref={closeHref}
-          eyebrow="Punch list"
+          eyebrow={eyebrow}
           footer={{ href: ROUTES.punchlist(id), label: "Open full list" }}
         >
           <PunchlistPeek slug={id} base={closeHref.split("?")[0]} />
@@ -96,19 +97,19 @@ export async function PeekRouter({
       )
     case "run":
       return (
-        <PeekShell closeHref={closeHref} eyebrow="Test run">
+        <PeekShell closeHref={closeHref} eyebrow={eyebrow}>
           <RunPeek id={id} />
         </PeekShell>
       )
     case "session":
       return (
-        <PeekShell closeHref={closeHref} eyebrow="Agent session">
+        <PeekShell closeHref={closeHref} eyebrow={eyebrow}>
           <SessionPeek sessionRef={id} />
         </PeekShell>
       )
     default:
       return (
-        <PeekShell closeHref={closeHref} eyebrow="Not found">
+        <PeekShell closeHref={closeHref} eyebrow={eyebrow}>
           <GonePeek />
         </PeekShell>
       )
