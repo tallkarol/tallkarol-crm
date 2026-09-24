@@ -5,6 +5,7 @@ import { isIsoDateString } from "@/lib/client-calendar"
 import { isoDay } from "@/lib/client-rooms"
 import { ROUTES } from "@/lib/nav"
 import { loadProductShell, loadProductWeek } from "@/lib/product-rooms"
+import { workspaceTimezone } from "@/lib/timezone"
 
 export const dynamic = "force-dynamic"
 
@@ -29,10 +30,16 @@ export default async function ProductCalendarPage({
   if (!product) notFound()
   const now = new Date()
   const anchor = isIsoDateString(searchParams.week) ? searchParams.week : undefined
-  const { week, linkable } = await loadProductWeek(product, now, anchor)
+  const [{ week, linkable }, tz] = await Promise.all([loadProductWeek(product, now, anchor), workspaceTimezone()])
+  // Labels are made here, in the workspace's zone, so server and browser render the same text.
+  const day = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short", month: "short", day: "numeric" })
+  const time = new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" })
+  const when = (startsAt: string, allDay: boolean) =>
+    `${day.format(new Date(startsAt))} · ${allDay ? "all day" : time.format(new Date(startsAt))}`
   const mine = week.items.flatMap((i) =>
-    i.kind === "event" && i.mine ? [{ id: i.id, title: i.title, startsAt: i.startsAt, allDay: i.allDay }] : []
+    i.kind === "event" && i.mine ? [{ id: i.id, title: i.title, when: when(i.startsAt, i.allDay) }] : []
   )
+  const unfiled = linkable.map((e) => ({ id: e.id, title: e.title, when: when(e.startsAt, e.allDay), client: e.client }))
 
   return (
     <div className="flex flex-col gap-3">
@@ -42,7 +49,7 @@ export default async function ProductCalendarPage({
         today={isoDay(now)}
         base={ROUTES.productRoom(product.slug, "calendar")}
       />
-      <EventLinker productId={product.id} productName={product.name} mine={mine} linkable={linkable} />
+      <EventLinker productId={product.id} productName={product.name} mine={mine} linkable={unfiled} />
     </div>
   )
 }

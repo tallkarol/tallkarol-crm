@@ -3,16 +3,14 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/Card"
-import type { LinkableEvent } from "@/lib/product-rooms"
 import { setEventProductAction } from "@/lib/product-hub-actions"
 
-type Row = { id: string; title: string; startsAt: string; allDay: boolean; client?: string | null }
-
-function when(row: Row) {
-  const d = new Date(row.startsAt)
-  const day = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
-  return row.allDay ? `${day} · all day` : `${day} · ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
-}
+/**
+ * `when` arrives formatted from the server, in the workspace's time zone:
+ * formatting here would use the browser's zone while the server rendered in
+ * UTC, and the two texts would not hydrate (React #425 on production).
+ */
+export type LinkerRow = { id: string; title: string; when: string; client?: string | null }
 
 /**
  * Filing the week's events onto the product. Calendar events arrive from
@@ -27,8 +25,8 @@ export function EventLinker({
 }: {
   productId: string
   productName: string
-  mine: Row[]
-  linkable: LinkableEvent[]
+  mine: LinkerRow[]
+  linkable: LinkerRow[]
 }) {
   const router = useRouter()
   const [busy, start] = useTransition()
@@ -60,7 +58,7 @@ export function EventLinker({
                 <li key={e.id} className="flex items-center gap-3 py-1.5">
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-tk-onyx">{e.title}</span>
-                    <span className="block font-ui text-[11px] text-ink-3">{when(e)}</span>
+                    <span className="block font-ui text-[11px] text-ink-3">{e.when}</span>
                   </span>
                   <button
                     type="button"
@@ -86,7 +84,7 @@ export function EventLinker({
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-tk-onyx">{e.title}</span>
                     <span className="block font-ui text-[11px] text-ink-3">
-                      {when(e)}
+                      {e.when}
                       {e.client ? ` · ${e.client}` : ""}
                     </span>
                   </span>
