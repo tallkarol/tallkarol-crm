@@ -20,11 +20,12 @@ function isStatus(v: string | undefined): v is InquiryStatus {
   return v === "new" || v === "contacted" || v === "closed"
 }
 
-export default async function InboxPage({
-  searchParams,
-}: {
-  searchParams: { status?: string }
-}) {
+export default async function InboxPage(
+  props: {
+    searchParams: Promise<{ status?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   const statusFilter = searchParams.status
   const rows = isStatus(statusFilter)
     ? await db

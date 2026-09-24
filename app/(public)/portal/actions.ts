@@ -49,6 +49,7 @@ export async function submitPortalTicket(formData: FormData) {
 }
 
 export async function exitPortalPreview() {
-  cookies().set(PORTAL_PREVIEW_COOKIE, "", { path: "/", maxAge: 0 })
+  const jar = await cookies()
+  jar.set(PORTAL_PREVIEW_COOKIE, "", { path: "/", maxAge: 0 })
   redirect("/settings/portals")
 }

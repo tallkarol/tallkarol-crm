@@ -12,11 +12,12 @@ export const dynamic = "force-dynamic"
  * The event is logged BEFORE the secret is returned, so a reveal cannot be
  * read without leaving a trace even if the response never arrives.
  */
-export async function POST(request: Request, { params }: { params: { publicId: string } }) {
+export async function POST(request: Request, props: { params: Promise<{ publicId: string }> }) {
+  const params = await props.params
   if (!isPublicId(params.publicId)) {
     return new NextResponse("Not found", { status: 404, headers: SLINK_HEADERS })
   }
-  const auth = await authorize(params.publicId, readSlinkCookie())
+  const auth = await authorize(params.publicId, await readSlinkCookie())
   if (!auth) {
     return new NextResponse("Unauthorized", { status: 401, headers: SLINK_HEADERS })
   }
@@ -25,7 +26,7 @@ export async function POST(request: Request, { params }: { params: { publicId: s
   const blockId = typeof body?.blockId === "string" ? body.blockId : ""
   if (!blockId) return new NextResponse("Bad request", { status: 400, headers: SLINK_HEADERS })
 
-  const { ip, userAgent } = requestFingerprint()
+  const { ip, userAgent } = await requestFingerprint()
   await logEvent({
     slinkId: auth.slink.id,
     recipientId: auth.recipient.id,

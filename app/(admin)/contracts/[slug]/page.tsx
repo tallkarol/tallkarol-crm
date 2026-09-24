@@ -16,19 +16,21 @@ import {
   formatMoney,
 } from "@/lib/work"
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+) {
+  const params = await props.params
   return { title: params.slug }
 }
 
-export default async function ContractDetailPage({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export default async function ContractDetailPage(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+) {
+  const params = await props.params
   const contract = await db.query.contracts.findFirst({
     where: eq(contracts.slug, params.slug),
     with: {

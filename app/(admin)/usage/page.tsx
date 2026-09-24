@@ -39,7 +39,8 @@ export const dynamic = "force-dynamic"
  * dollars — never sum into one figure. A dead source is an empty tile,
  * never a broken page: each loader is caught on its own.
  */
-export default async function UsagePage({ searchParams }: { searchParams: { days?: string } }) {
+export default async function UsagePage(props: { searchParams: Promise<{ days?: string }> }) {
+  const searchParams = await props.searchParams
   const user = await getSessionUser()
   if (!user) redirect("/login")
 

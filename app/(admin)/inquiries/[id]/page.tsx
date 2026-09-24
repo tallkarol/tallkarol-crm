@@ -11,11 +11,12 @@ import { Card } from "@/components/ui/Card"
 
 export const metadata = { title: "Inquiry" }
 
-export default async function InquiryDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function InquiryDetailPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params
   const [row] = await db
     .select()
     .from(inquiries)

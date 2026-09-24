@@ -32,7 +32,7 @@ export async function requestAccessAction(formData: FormData) {
   const slink = await slinkByPublicId(publicId)
   if (!slink || slink.status !== "active") redirect(done)
 
-  const { ip } = requestFingerprint()
+  const { ip } = await requestFingerprint()
   if (ip) {
     const recent = await recentRequestCount(slink.id, ip)
     if (recent >= SLINK_RULES.maxRequestsPerHour) redirect(done)
@@ -46,7 +46,7 @@ export async function requestAccessAction(formData: FormData) {
     redirect(done)
   }
 
-  const auth = await authorize(publicId, readSlinkCookie())
+  const auth = await authorize(publicId, await readSlinkCookie())
 
   await fileAccessRequest({
     slinkId: slink.id,

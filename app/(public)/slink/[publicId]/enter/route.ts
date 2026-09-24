@@ -17,7 +17,8 @@ export const dynamic = "force-dynamic"
  * Every failure lands on the same page with a reason the recipient can act on.
  * Nothing here confirms whether a slink exists to somebody without a token.
  */
-export async function GET(request: Request, { params }: { params: { publicId: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ publicId: string }> }) {
+  const params = await props.params
   const notFound = new NextResponse("Not found", { status: 404, headers: SLINK_HEADERS })
   if (!isPublicId(params.publicId)) return notFound
 
@@ -35,7 +36,7 @@ export async function GET(request: Request, { params }: { params: { publicId: st
   // A token minted for one slink must not open another.
   if (result.slinkId !== slink.id) return notFound
 
-  const { ip, userAgent } = requestFingerprint()
+  const { ip, userAgent } = await requestFingerprint()
   await logEvent({
     slinkId: slink.id,
     recipientId: result.recipientId,
@@ -44,6 +45,6 @@ export async function GET(request: Request, { params }: { params: { publicId: st
     userAgent,
   })
 
-  setSlinkCookie(result.session)
+  await setSlinkCookie(result.session)
   return NextResponse.redirect(base, { headers: SLINK_HEADERS })
 }

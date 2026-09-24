@@ -14,7 +14,8 @@ export const maxDuration = 300
  * The text twin is derived here and the notes are written before this returns —
  * the worker gives this call three minutes.
  */
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(request)
   if (!caller) return unauthorized()
   const raw = await request.text()

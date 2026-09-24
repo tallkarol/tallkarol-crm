@@ -18,8 +18,9 @@ export const dynamic = "force-dynamic"
  */
 export async function POST(
   request: Request,
-  { params }: { params: { id: string; itemId: string } }
+  props: { params: Promise<{ id: string; itemId: string }> }
 ) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(request)
   if (!caller) return unauthorized()
 

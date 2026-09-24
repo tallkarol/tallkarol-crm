@@ -11,11 +11,12 @@ import { Card as TkCard } from "@/components/ui/Card"
 export const metadata = { title: "Traffic · Insights" }
 export const dynamic = "force-dynamic"
 
-export default async function InsightsTrafficPage({
-  params,
-}: {
-  params: { site: string }
-}) {
+export default async function InsightsTrafficPage(
+  props: {
+    params: Promise<{ site: string }>
+  }
+) {
+  const params = await props.params
   const ctx = await getInsightsContext(params.site)
   if (!ctx) notFound()
   const { site, snapshot } = ctx

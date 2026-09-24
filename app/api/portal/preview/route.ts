@@ -22,7 +22,8 @@ export async function GET(request: Request) {
     ? await db.query.clients.findFirst({ where: eq(clients.id, clientId), columns: { id: true } })
     : null
   if (!row) return NextResponse.redirect(new URL("/clients", url))
-  cookies().set(PORTAL_PREVIEW_COOKIE, row.id, {
+  const jar = await cookies()
+  jar.set(PORTAL_PREVIEW_COOKIE, row.id, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

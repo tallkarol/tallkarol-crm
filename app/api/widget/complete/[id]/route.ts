@@ -15,10 +15,8 @@ export const dynamic = "force-dynamic"
  * Answers with the refreshed list so the widget can redraw from this response
  * rather than immediately polling again.
  */
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   if (!authenticateWidget(request)) return unauthorized()
 
   let done = true

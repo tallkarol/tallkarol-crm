@@ -3,11 +3,12 @@ import { getPortalScope } from "@/lib/portal"
 
 export const metadata = { title: "Insights · TALLKAROL Portal" }
 
-export default async function PortalInsightsPage({
-  searchParams,
-}: {
-  searchParams: { site?: string; range?: string }
-}) {
+export default async function PortalInsightsPage(
+  props: {
+    searchParams: Promise<{ site?: string; range?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   const scope = (await getPortalScope())!
   return (
     <>

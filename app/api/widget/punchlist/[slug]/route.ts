@@ -12,10 +12,8 @@ export const dynamic = "force-dynamic"
  * `?limit=` trims the items, clamped to 1..40; the medium tile asks for three
  * and the large one for eight. Read-only — nothing here completes anything.
  */
-export async function GET(
-  request: Request,
-  { params }: { params: { slug: string } }
-) {
+export async function GET(request: Request, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   if (!authenticateWidget(request)) return unauthorized()
 
   const raw = new URL(request.url).searchParams.get("limit")

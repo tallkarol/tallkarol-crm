@@ -8,11 +8,12 @@ import { ROUTES } from "@/lib/nav"
 
 export const metadata = { title: "Invoices" }
 
-export default async function InvoicesPage({
-  searchParams,
-}: {
-  searchParams: { peek?: string }
-}) {
+export default async function InvoicesPage(
+  props: {
+    searchParams: Promise<{ peek?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   const rows = await db.query.invoices.findMany({
     orderBy: [desc(invoices.issuedOn)],
     with: { client: true },

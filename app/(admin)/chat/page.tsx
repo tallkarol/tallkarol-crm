@@ -38,11 +38,12 @@ export const dynamic = "force-dynamic"
  *   /chat?thread=<id>  that thread
  *   /chat?new          the launcher; the first line starts a thread
  */
-export default async function ChatPage({
-  searchParams,
-}: {
-  searchParams: { thread?: string; new?: string }
-}) {
+export default async function ChatPage(
+  props: {
+    searchParams: Promise<{ thread?: string; new?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   const user = await getSessionUser()
   if (!user) redirect("/login")
 

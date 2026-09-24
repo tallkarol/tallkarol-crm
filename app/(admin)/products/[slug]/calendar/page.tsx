@@ -9,7 +9,8 @@ import { workspaceTimezone } from "@/lib/timezone"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   const product = await loadProductShell(params.slug)
   return { title: product ? `${product.name} · Calendar` : params.slug }
 }
@@ -19,13 +20,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
  * product's events in its colour and its tasks on the Due row, and under it
  * the week's events to file onto the product. `?week=` pages the window.
  */
-export default async function ProductCalendarPage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string }
-  searchParams: { week?: string }
-}) {
+export default async function ProductCalendarPage(
+  props: {
+    params: Promise<{ slug: string }>
+    searchParams: Promise<{ week?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const product = await loadProductShell(params.slug)
   if (!product) notFound()
   const now = new Date()

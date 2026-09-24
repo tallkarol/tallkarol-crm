@@ -9,7 +9,8 @@ import { getSessionUser } from "@/lib/auth"
  * now; when storage is provisioned this reads `storageKey` and redirects
  * instead, with no change to the pages that link here.
  */
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const user = await getSessionUser()
   if (!user) return new NextResponse("Unauthorized", { status: 401 })
 

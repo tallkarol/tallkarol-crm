@@ -27,7 +27,8 @@ function commitments(text: string, at: string, who: string, source: string) {
     .map((s) => ({ at, who, text: s, source }))
 }
 
-export async function GET(request: Request, { params }: { params: { slug: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(request)
   if (!caller) return unauthorized()
 

@@ -30,11 +30,12 @@ import { formatMoney } from "@/lib/work"
 export const metadata = { title: "Revenue" }
 export const dynamic = "force-dynamic"
 
-export default async function RevenuePage({
-  searchParams,
-}: {
-  searchParams: { range?: string; peek?: string }
-}) {
+export default async function RevenuePage(
+  props: {
+    searchParams: Promise<{ range?: string; peek?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   const range = parseRevenueRange(searchParams.range)
   const [
     invoices,

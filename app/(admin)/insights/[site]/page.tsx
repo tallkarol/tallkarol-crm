@@ -26,13 +26,14 @@ import type { TrendMetric } from "@/lib/insights/chart"
 export const metadata = { title: "Insights" }
 export const dynamic = "force-dynamic"
 
-export default async function InsightsOverviewPage({
-  params,
-  searchParams,
-}: {
-  params: { site: string }
-  searchParams: { range?: string }
-}) {
+export default async function InsightsOverviewPage(
+  props: {
+    params: Promise<{ site: string }>
+    searchParams: Promise<{ range?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const ctx = await getInsightsContext(params.site)
   if (!ctx) notFound()
   const { site, snapshot } = ctx

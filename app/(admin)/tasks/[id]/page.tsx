@@ -11,13 +11,15 @@ export const dynamic = "force-dynamic"
 
 // Request-cached with the page and the body below: one read serves the
 // title, the existence check and the card, where there were three.
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const task = await loadTaskDetail(params.id)
   return { title: task?.title ?? "Task" }
 }
 
 /** The same detail as the peek, with room for a long checklist. */
-export default async function TaskPage({ params }: { params: { id: string } }) {
+export default async function TaskPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const task = await loadTaskDetail(params.id)
   if (!task) notFound()
 

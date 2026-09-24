@@ -14,13 +14,14 @@ import { Card as TkCard } from "@/components/ui/Card"
 export const metadata = { title: "Search · Insights" }
 export const dynamic = "force-dynamic"
 
-export default async function InsightsSearchPage({
-  params,
-  searchParams,
-}: {
-  params: { site: string }
-  searchParams: { range?: string }
-}) {
+export default async function InsightsSearchPage(
+  props: {
+    params: Promise<{ site: string }>
+    searchParams: Promise<{ range?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const ctx = await getInsightsContext(params.site)
   if (!ctx) notFound()
   const { site, snapshot } = ctx

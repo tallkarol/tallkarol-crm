@@ -9,13 +9,18 @@ import { ROUTES } from "@/lib/nav"
 
 export const dynamic = "force-dynamic"
 
-export default async function PaidAdsSiteLayout({
-  params,
-  children,
-}: {
-  params: { site: string }
-  children: React.ReactNode
-}) {
+export default async function PaidAdsSiteLayout(
+  props: {
+    params: Promise<{ site: string }>
+    children: React.ReactNode
+  }
+) {
+  const params = await props.params
+
+  const {
+    children
+  } = props
+
   const [adsSites, ctx] = await Promise.all([
     getAdsSites(),
     getInsightsContext(params.site),

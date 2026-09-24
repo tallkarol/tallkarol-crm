@@ -11,8 +11,9 @@ const KINDS = new Set(["reports", "proposals", "worksheets"])
 
 export async function GET(
   request: Request,
-  { params }: { params: { kind: string; slug: string } }
+  props: { params: Promise<{ kind: string; slug: string }> }
 ) {
+  const params = await props.params
   const user = await getSessionUser()
   if (!user) {
     return NextResponse.redirect(new URL("/login", request.url))

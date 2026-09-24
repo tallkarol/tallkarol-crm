@@ -134,17 +134,18 @@ function Row({
   )
 }
 
-export default async function SessionsPage({
-  searchParams,
-}: {
-  searchParams: {
-    q?: string
-    client?: string
-    surface?: string
-    since?: string
-    peek?: string
+export default async function SessionsPage(
+  props: {
+    searchParams: Promise<{
+      q?: string
+      client?: string
+      surface?: string
+      since?: string
+      peek?: string
+    }>
   }
-}) {
+) {
+  const searchParams = await props.searchParams
   const now = new Date()
   const q = (searchParams.q ?? "").trim()
   const since = isSince(searchParams.since) ? searchParams.since : "7d"

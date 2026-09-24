@@ -17,10 +17,8 @@ export const dynamic = "force-dynamic"
  * The tool runs here, in the CRM, under Karol's user — never on the worker,
  * which holds no database credentials.
  */
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(request)
   if (!caller) return unauthorized()
 

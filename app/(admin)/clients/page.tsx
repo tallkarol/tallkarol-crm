@@ -20,9 +20,10 @@ export const dynamic = "force-dynamic"
  * header row), then this week (every client, each in its colour) beside
  * everything that needs you.
  */
-export default async function ClientsPage({ searchParams }: { searchParams: { week?: string } }) {
+export default async function ClientsPage(props: { searchParams: Promise<{ week?: string }> }) {
+  const searchParams = await props.searchParams
   const now = new Date()
-  const modeRaw = cookies().get(FOCUS_MODE_COOKIE)?.value
+  const modeRaw = (await cookies()).get(FOCUS_MODE_COOKIE)?.value
   const mode = isFocusMode(modeRaw) ? modeRaw : "three"
   const anchor = isIsoDateString(searchParams.week) ? searchParams.week : undefined
 

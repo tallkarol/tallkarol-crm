@@ -19,11 +19,12 @@ function dayKey(date: Date) {
   return date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })
 }
 
-export default async function LogsPage({
-  searchParams,
-}: {
-  searchParams: { kind?: string; client?: string }
-}) {
+export default async function LogsPage(
+  props: {
+    searchParams: Promise<{ kind?: string; client?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   const kindFilter = searchParams.kind ?? ""
   const clientFilter = searchParams.client ?? ""
 

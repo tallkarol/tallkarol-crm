@@ -24,17 +24,19 @@ import { Card } from "@/components/ui/Card"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   return { title: `Retainer · ${params.slug}` }
 }
 
-export default async function RetainerDetailPage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string }
-  searchParams: { peek?: string }
-}) {
+export default async function RetainerDetailPage(
+  props: {
+    params: Promise<{ slug: string }>
+    searchParams: Promise<{ peek?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const [retainers, invoices, entries] = await Promise.all([
     db.query.retainers.findMany({ with: { client: true } }),
     db.query.invoices.findMany(),

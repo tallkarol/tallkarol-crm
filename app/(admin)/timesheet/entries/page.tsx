@@ -25,19 +25,20 @@ const SOURCE_LABEL: Record<string, string> = {
  * it is the only view that answers "when did I do that, and how long did it
  * take" without knowing the month first.
  */
-export default async function LedgerPage({
-  searchParams,
-}: {
-  searchParams: {
-    q?: string
-    client?: string
-    from?: string
-    to?: string
-    source?: string
-    missing?: string
-    peek?: string
+export default async function LedgerPage(
+  props: {
+    searchParams: Promise<{
+      q?: string
+      client?: string
+      from?: string
+      to?: string
+      source?: string
+      missing?: string
+      peek?: string
+    }>
   }
-}) {
+) {
+  const searchParams = await props.searchParams
   const clientRows = await db.query.clients.findMany({
     orderBy: [asc(clients.name)],
   })

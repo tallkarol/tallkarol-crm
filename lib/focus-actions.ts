@@ -46,13 +46,14 @@ function touch(slug: string | null) {
 export type FocusTarget = { slot: number } | { queue: number | null } | { front: true }
 
 async function currentMode(): Promise<FocusMode> {
-  const raw = cookies().get(FOCUS_MODE_COOKIE)?.value
+  const raw = (await cookies()).get(FOCUS_MODE_COOKIE)?.value
   return isFocusMode(raw) ? raw : "three"
 }
 
 export const setFocusModeAction = tracked("focus.setMode", async function setFocusModeAction(mode: FocusMode): Promise<Result> {
   if (!isFocusMode(mode)) return { ok: false, error: "Unknown mode." }
-  cookies().set(FOCUS_MODE_COOKIE, mode, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" })
+  const jar = await cookies()
+  jar.set(FOCUS_MODE_COOKIE, mode, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" })
   return { ok: true }
 })
 

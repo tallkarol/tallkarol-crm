@@ -8,7 +8,8 @@ import { setProductNotes } from "../../actions"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   const product = await loadProductShell(params.slug)
   return { title: product ? `${product.name} · Notes` : params.slug }
 }
@@ -18,7 +19,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
  * filed to it. A meeting note joins a product from its own page — the
  * Product select beside Client and Project.
  */
-export default async function ProductNotesPage({ params }: { params: { slug: string } }) {
+export default async function ProductNotesPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   const product = await loadProductShell(params.slug)
   if (!product) notFound()
   const [row, meetings] = await Promise.all([

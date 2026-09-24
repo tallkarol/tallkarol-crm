@@ -20,18 +20,20 @@ export const dynamic = "force-dynamic"
 
 const RATE_TARGET_CENTS = 6000
 
-export async function generateMetadata({ params }: { params: { slug: string; project: string } }) {
+export async function generateMetadata(props: { params: Promise<{ slug: string; project: string }> }) {
+  const params = await props.params
   return { title: `Project · ${params.project}` }
 }
 
-export default async function ProjectDetailPage({
-  params,
-  searchParams,
-}: {
-  /** `slug` is the client (the layout's segment), `project` the project. */
-  params: { slug: string; project: string }
-  searchParams: { peek?: string }
-}) {
+export default async function ProjectDetailPage(
+  props: {
+    /** `slug` is the client (the layout's segment), `project` the project. */
+    params: Promise<{ slug: string; project: string }>
+    searchParams: Promise<{ peek?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const [projects, invoices, entries] = await Promise.all([
     db.query.projects.findMany({
       with: {

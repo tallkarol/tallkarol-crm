@@ -22,7 +22,8 @@ import type { TrendMetric } from "@/lib/insights/chart"
 import { ROUTES } from "@/lib/nav"
 import { Card as TkCard } from "@/components/ui/Card"
 
-export async function generateMetadata({ params }: { params: { site: string } }) {
+export async function generateMetadata(props: { params: Promise<{ site: string }> }) {
+  const params = await props.params
   const ctx = await getInsightsContext(params.site)
   const name = ctx?.snapshot?.ads.accountName || ctx?.site.client?.name || ctx?.site.name
   return { title: name ? `Paid Ads · ${name}` : "Paid Ads" }
@@ -30,13 +31,14 @@ export async function generateMetadata({ params }: { params: { site: string } })
 
 export const dynamic = "force-dynamic"
 
-export default async function PaidAdsPage({
-  params,
-  searchParams,
-}: {
-  params: { site: string }
-  searchParams: { range?: string }
-}) {
+export default async function PaidAdsPage(
+  props: {
+    params: Promise<{ site: string }>
+    searchParams: Promise<{ range?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const ctx = await getInsightsContext(params.site)
   if (!ctx || !ctx.site.adsCustomerId) notFound()
   const { site, snapshot } = ctx

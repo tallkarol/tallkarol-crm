@@ -30,10 +30,8 @@ export const dynamic = "force-dynamic"
  * connection, a bad token — and stops there, because paying for a bigger
  * model to hit the same wall is how a ladder turns into a bonfire.
  */
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(request)
   if (!caller) return unauthorized()
 

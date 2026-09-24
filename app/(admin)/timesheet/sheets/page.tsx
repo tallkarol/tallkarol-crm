@@ -60,11 +60,12 @@ const GROUPS: Group[] = [
   },
 ]
 
-export default async function SheetsPage({
-  searchParams,
-}: {
-  searchParams: { year?: string; client?: string; show?: string }
-}) {
+export default async function SheetsPage(
+  props: {
+    searchParams: Promise<{ year?: string; client?: string; show?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   const [sheets, years] = await Promise.all([listSheets(), sheetYears()])
 
   const thisYear = String(new Date().getFullYear())

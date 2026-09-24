@@ -14,13 +14,14 @@ export const metadata = { title: "Ask for access", robots: { index: false, follo
  * asking properly took longer than forwarding, people would forward — so it is
  * three fields and a button, and Karol decides.
  */
-export default async function RequestAccessPage({
-  params,
-  searchParams,
-}: {
-  params: { publicId: string }
-  searchParams: { done?: string }
-}) {
+export default async function RequestAccessPage(
+  props: {
+    params: Promise<{ publicId: string }>
+    searchParams: Promise<{ done?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   if (!isPublicId(params.publicId)) notFound()
   const slink = await slinkByPublicId(params.publicId)
   const title = slink && slink.status === "active" ? slink.title : ""

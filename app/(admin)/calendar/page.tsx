@@ -9,11 +9,12 @@ import { Card } from "@/components/ui/Card"
 export const metadata = { title: "Calendar" }
 export const dynamic = "force-dynamic"
 
-export default async function CalendarPage({
-  searchParams,
-}: {
-  searchParams: { month?: string }
-}) {
+export default async function CalendarPage(
+  props: {
+    searchParams: Promise<{ month?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   const month = isMonthKey(searchParams.month)
     ? searchParams.month
     : currentMonth()

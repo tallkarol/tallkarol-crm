@@ -57,18 +57,19 @@ function Stat({
  * The downloadable artifact: a client-safe, print-ready month report rendered
  * from a frozen archive row. PDF = the browser's Save as PDF.
  */
-export default async function InsightsReportPage({
-  params,
-  searchParams,
-}: {
-  params: { site: string }
-  searchParams: { period?: string; sections?: string }
-}) {
+export default async function InsightsReportPage(
+  props: {
+    params: Promise<{ site: string }>
+    searchParams: Promise<{ period?: string; sections?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   // Admins see every site; portal customers only the sites of clients they
   // hold grants for — the portal Reports tab links straight here.
   const user = await getSessionUser()
   // Outside the admin layout — see the same note in /invoice-print.
-  const hideAmounts = readHideMoneyCookie()
+  const hideAmounts = await readHideMoneyCookie()
 
   const site = await db.query.sites.findFirst({ where: eq(sites.slug, params.site) })
   if (!site) notFound()

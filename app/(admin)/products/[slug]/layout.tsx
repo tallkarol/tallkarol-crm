@@ -8,13 +8,18 @@ import { loadProductPanel, loadProductShell } from "@/lib/product-rooms"
  * products (24 Sep 2026): the panel swaps into product mode, the header names
  * the product, and the room scrolls on its own.
  */
-export default async function ProductLayout({
-  params,
-  children,
-}: {
-  params: { slug: string }
-  children: React.ReactNode
-}) {
+export default async function ProductLayout(
+  props: {
+    params: Promise<{ slug: string }>
+    children: React.ReactNode
+  }
+) {
+  const params = await props.params
+
+  const {
+    children
+  } = props
+
   const product = await loadProductShell(params.slug)
   if (!product) notFound()
   const panel = await loadProductPanel(product)

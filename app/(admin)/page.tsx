@@ -65,11 +65,12 @@ function whenLabel(diff: number, dueOn: string) {
   return `${date.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })} ${d}`
 }
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: { status?: string; peek?: string }
-}) {
+export default async function DashboardPage(
+  props: {
+    searchParams: Promise<{ status?: string; peek?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   if (searchParams.status) {
     redirect(`${ROUTES.inquiries}?status=${searchParams.status}`)
   }
@@ -381,7 +382,7 @@ export default async function DashboardPage({
 
   const rise = (i: number) => ({ "--i": i } as React.CSSProperties)
 
-  const focusModeRaw = cookies().get(FOCUS_MODE_COOKIE)?.value
+  const focusModeRaw = (await cookies()).get(FOCUS_MODE_COOKIE)?.value
   const focusMode = isFocusMode(focusModeRaw) ? focusModeRaw : "three"
 
   return (

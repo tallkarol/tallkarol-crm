@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   try {
     const result = await ingestBatch(body, {
       userAgent: request.headers.get("user-agent") ?? "",
-      sessionToken: cookies().get(SESSION_COOKIE)?.value,
+      sessionToken: (await cookies()).get(SESSION_COOKIE)?.value,
     })
     if (result.status === 204) return new NextResponse(null, { status: 204 })
     return NextResponse.json(

@@ -7,11 +7,12 @@ import { loadQueue, parseQueueParams, queueQueryString, type SearchParams } from
 export const metadata = { title: "Support" }
 export const dynamic = "force-dynamic"
 
-export default async function SupportPage({
-  searchParams,
-}: {
-  searchParams: SearchParams
-}) {
+export default async function SupportPage(
+  props: {
+    searchParams: Promise<SearchParams>
+  }
+) {
+  const searchParams = await props.searchParams
   const [queue, clients, config] = await Promise.all([
     loadQueue(),
     db.query.clients.findMany({

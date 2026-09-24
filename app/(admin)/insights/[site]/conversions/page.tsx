@@ -19,13 +19,14 @@ const QUAL_TONE: Record<string, "teal" | "neutral" | "muted"> = {
   pass: "muted",
 }
 
-export default async function InsightsConversionsPage({
-  params,
-  searchParams,
-}: {
-  params: { site: string }
-  searchParams: { range?: string }
-}) {
+export default async function InsightsConversionsPage(
+  props: {
+    params: Promise<{ site: string }>
+    searchParams: Promise<{ range?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const ctx = await getInsightsContext(params.site)
   if (!ctx) notFound()
   const { site, snapshot } = ctx

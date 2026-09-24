@@ -7,7 +7,8 @@ import { authenticateTimeRequest, badRequest, readJson, readString, unauthorized
 export const dynamic = "force-dynamic"
 
 /** POST { worker, stage: "capture" | "transcript", error } */
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(request)
   if (!caller) return unauthorized()
   const body = await readJson(request)

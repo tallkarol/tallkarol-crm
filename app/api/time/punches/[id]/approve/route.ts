@@ -18,10 +18,8 @@ export const dynamic = "force-dynamic"
  * 422 when the punch cannot be billed as it stands — no client, or no project
  * and no summary to explain the work.
  */
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(request)
   if (!caller) return unauthorized()
 

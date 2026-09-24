@@ -5,7 +5,8 @@ import { findScaffold, SCAFFOLDS } from "@/content/scaffolds"
 import { ROUTES } from "@/lib/nav"
 import { Card } from "@/components/ui/Card"
 
-export function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   const scaffold = findScaffold(params.slug)
   return { title: scaffold ? `${scaffold.name} · Scaffolds` : "Scaffolds" }
 }
@@ -14,11 +15,12 @@ export function generateStaticParams() {
   return SCAFFOLDS.map((s) => ({ slug: s.slug }))
 }
 
-export default function ScaffoldPage({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export default async function ScaffoldPage(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+) {
+  const params = await props.params
   const scaffold = findScaffold(params.slug)
   if (!scaffold) notFound()
 

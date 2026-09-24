@@ -15,12 +15,14 @@ import { ROUTES } from "@/lib/nav"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const note = await loadNote(params.id)
   return { title: note?.title || "Meeting note" }
 }
 
-export default async function MeetingNotePage({ params }: { params: { id: string } }) {
+export default async function MeetingNotePage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const user = await getSessionUser()
   if (!user) return null
   const [note, options, products] = await Promise.all([

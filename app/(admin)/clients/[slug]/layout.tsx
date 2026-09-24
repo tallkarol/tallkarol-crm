@@ -15,16 +15,21 @@ import { focusFor } from "@/lib/focus-data"
  * names the client, the room scrolls on its own, and the focus strip docks
  * under it on every room but the Board.
  */
-export default async function ClientLayout({
-  params,
-  children,
-}: {
-  params: { slug: string }
-  children: React.ReactNode
-}) {
+export default async function ClientLayout(
+  props: {
+    params: Promise<{ slug: string }>
+    children: React.ReactNode
+  }
+) {
+  const params = await props.params
+
+  const {
+    children
+  } = props
+
   const client = await loadClientShell(params.slug)
   if (!client) notFound()
-  const modeRaw = cookies().get(FOCUS_MODE_COOKIE)?.value
+  const modeRaw = (await cookies()).get(FOCUS_MODE_COOKIE)?.value
   const mode = isFocusMode(modeRaw) ? modeRaw : "three"
 
   const [panel, focus, site] = await Promise.all([

@@ -10,17 +10,21 @@ export const dynamic = "force-dynamic"
  * belongs to, so a file id from one slink cannot be pulled through another.
  * Bytes come from Postgres today; `storage_key` is the seam for moving them.
  */
-export async function GET(_request: Request, { params }: { params: { publicId: string; fileId: string } }) {
+export async function GET(
+  _request: Request,
+  props: { params: Promise<{ publicId: string; fileId: string }> }
+) {
+  const params = await props.params
   const notFound = new NextResponse("Not found", { status: 404, headers: SLINK_HEADERS })
   if (!isPublicId(params.publicId)) return notFound
 
-  const auth = await authorize(params.publicId, readSlinkCookie())
+  const auth = await authorize(params.publicId, await readSlinkCookie())
   if (!auth) return new NextResponse("Unauthorized", { status: 401, headers: SLINK_HEADERS })
 
   const file = await readFile(params.fileId, auth.slink.id)
   if (!file) return notFound
 
-  const { ip, userAgent } = requestFingerprint()
+  const { ip, userAgent } = await requestFingerprint()
   await logEvent({
     slinkId: auth.slink.id,
     recipientId: auth.recipient.id,

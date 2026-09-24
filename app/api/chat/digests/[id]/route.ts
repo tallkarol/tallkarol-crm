@@ -7,7 +7,8 @@ import { authenticateTimeRequest, readJson, readString, unauthorized } from "@/l
 export const dynamic = "force-dynamic"
 
 /** The worker hands back a thread's digest: `{ "digest": "…" }`. */
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(request)
   if (!caller) return unauthorized()
 

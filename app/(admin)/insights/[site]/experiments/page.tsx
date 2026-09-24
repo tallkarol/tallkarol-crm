@@ -264,11 +264,12 @@ function ExperimentCard({
   )
 }
 
-export default async function InsightsExperimentsPage({
-  params,
-}: {
-  params: { site: string }
-}) {
+export default async function InsightsExperimentsPage(
+  props: {
+    params: Promise<{ site: string }>
+  }
+) {
+  const params = await props.params
   const ctx = await getInsightsContext(params.site)
   if (!ctx) notFound()
   const { site } = ctx

@@ -12,7 +12,8 @@ import { Card } from "@/components/ui/Card"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   const product = await loadProductShell(params.slug)
   return { title: product ? `${product.name} · Board` : params.slug }
 }
@@ -22,13 +23,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
  * a composer that files onto it, and its links. Notes, the calendar and punch
  * lists are rooms of their own (the hub's layout and panel hold the rest).
  */
-export default async function ProductBoardPage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string }
-  searchParams: { peek?: string }
-}) {
+export default async function ProductBoardPage(
+  props: {
+    params: Promise<{ slug: string }>
+    searchParams: Promise<{ peek?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const now = new Date()
   const product = await loadProductShell(params.slug)
   if (!product) notFound()

@@ -14,7 +14,8 @@ export const dynamic = "force-dynamic"
  * device: the token is not required to belong to whoever pasted, because
  * the worker's token is issued once per Mac, not per person.
  */
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(request)
   if (!caller) return unauthorized()
 

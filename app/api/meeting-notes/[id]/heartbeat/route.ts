@@ -10,13 +10,14 @@ export const dynamic = "force-dynamic"
  * on this channel, never as a queue item, because only the process holding
  * the helper can stop it.
  */
-export async function POST(request: Request, { params }: { params: { id: string } }) {
-  const caller = await authenticateTimeRequest(request)
-  if (!caller) return unauthorized()
-  const body = await readJson(request)
-  const worker = readString(body, "worker")
-  if (!worker) return badRequest("Send `worker`.")
-  const result = await recordHeartbeat({ noteId: params.id, worker, levels: body.levels })
-  if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
-  return NextResponse.json(result.data, { headers: { "cache-control": "no-store" } })
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+ const params = await props.params
+ const caller = await authenticateTimeRequest(request)
+ if (!caller) return unauthorized()
+ const body = await readJson(request)
+ const worker = readString(body, "worker")
+ if (!worker) return badRequest("Send `worker`.")
+ const result = await recordHeartbeat({ noteId: params.id, worker, levels: body.levels })
+ if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
+ return NextResponse.json(result.data, { headers: { "cache-control": "no-store" } })
 }

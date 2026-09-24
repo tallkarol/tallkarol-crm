@@ -51,7 +51,8 @@ export async function removePortalGrant(grantId: string) {
 export async function previewPortal(clientId: string) {
   const user = await getSessionUser()
   if (!user) return
-  cookies().set(PORTAL_PREVIEW_COOKIE, clientId, {
+  const jar = await cookies()
+  jar.set(PORTAL_PREVIEW_COOKIE, clientId, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -68,7 +69,8 @@ export async function previewPortalCombined(clientIds: string[]) {
   const rows = await db.query.clients.findMany()
   const valid = clientIds.filter((id) => rows.some((c) => c.id === id))
   if (valid.length === 0) return
-  cookies().set(PORTAL_PREVIEW_COOKIE, valid.join(","), {
+  const jar = await cookies()
+  jar.set(PORTAL_PREVIEW_COOKIE, valid.join(","), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

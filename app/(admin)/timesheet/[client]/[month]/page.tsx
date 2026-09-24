@@ -10,11 +10,12 @@ import { currentMonth, isMonthKey, monthBounds, monthLong } from "@/lib/timeshee
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { client: string; month: string }
-}) {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ client: string; month: string }>
+  }
+) {
+  const params = await props.params
   const client = await db.query.clients.findFirst({
     where: eq(clients.slug, params.client),
   })
@@ -27,11 +28,12 @@ export async function generateMetadata({
  * `3-Aug` dates, hours from start and end — but it now knows whether the month
  * is still open, and shows where each row came from.
  */
-export default async function SheetPage({
-  params,
-}: {
-  params: { client: string; month: string }
-}) {
+export default async function SheetPage(
+  props: {
+    params: Promise<{ client: string; month: string }>
+  }
+) {
+  const params = await props.params
   if (!isMonthKey(params.month)) {
     redirect(ROUTES.timesheetFor(params.client, currentMonth()))
   }

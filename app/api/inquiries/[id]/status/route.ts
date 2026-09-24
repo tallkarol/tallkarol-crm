@@ -6,10 +6,8 @@ import { getSessionUser } from "@/lib/auth"
 
 const ALLOWED: InquiryStatus[] = ["new", "contacted", "closed"]
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const user = await getSessionUser()
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

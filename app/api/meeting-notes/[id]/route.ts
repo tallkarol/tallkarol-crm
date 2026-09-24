@@ -5,7 +5,8 @@ import { authenticateTimeRequest, unauthorized } from "@/lib/time-api"
 export const dynamic = "force-dynamic"
 
 /** One note, for the worker's salvage pass after a restart. */
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(request)
   if (!caller) return unauthorized()
   const note = await loadNote(params.id)

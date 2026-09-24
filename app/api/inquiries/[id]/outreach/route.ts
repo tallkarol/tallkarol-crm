@@ -7,10 +7,8 @@ import { getSessionUser } from "@/lib/auth"
 import { mergeLeadPayload, readLead, toLeadListItem } from "@/lib/lead"
 import { renderTemplate, templateById } from "@/lib/lead-templates"
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const user = await getSessionUser()
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

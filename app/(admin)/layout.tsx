@@ -35,12 +35,12 @@ export default async function AdminLayout({
 
   // Demo mode — see `lib/money-privacy.ts`. Read here for the script tag and
   // the shell's switch; server components read the same cookie themselves.
-  const hideMoney = readHideMoneyCookie()
+  const hideMoney = await readHideMoneyCookie()
   // Appearance — see `lib/theme.ts`. Stamped on <html> by the server below,
   // so there is no boot script and no flash: the bytes that leave the server
   // already carry the user's choice. "system" stamps nothing and lets the
   // prefers-color-scheme block in globals.css decide.
-  const theme = readThemeCookie()
+  const theme = await readThemeCookie()
 
   // One read behind every badge and behind the dashboard's Unread card, so a
   // badge can never disagree with the card or the page it points at. The call

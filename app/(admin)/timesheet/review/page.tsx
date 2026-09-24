@@ -19,11 +19,12 @@ export const dynamic = "force-dynamic"
  * The approval gate. Clock-outs and matched meetings both land here, because
  * they are the same decision: is this hour billable, and what does it say?
  */
-export default async function ReviewPage({
-  searchParams,
-}: {
-  searchParams: { tab?: string; peek?: string }
-}) {
+export default async function ReviewPage(
+  props: {
+    searchParams: Promise<{ tab?: string; peek?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   const user = await getSessionUser()
   if (!user) redirect("/login")
 

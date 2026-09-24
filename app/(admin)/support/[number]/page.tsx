@@ -16,17 +16,19 @@ export const dynamic = "force-dynamic"
 
 const TABS: DetailTab[] = ["thread", "payload", "env", "related"]
 
-export async function generateMetadata({ params }: { params: { number: string } }) {
+export async function generateMetadata(props: { params: Promise<{ number: string }> }) {
+  const params = await props.params
   return { title: `Ticket ${decodeURIComponent(params.number).toUpperCase()}` }
 }
 
-export default async function TicketPage({
-  params,
-  searchParams,
-}: {
-  params: { number: string }
-  searchParams: SearchParams
-}) {
+export default async function TicketPage(
+  props: {
+    params: Promise<{ number: string }>
+    searchParams: Promise<SearchParams>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const slug = decodeURIComponent(params.number).toUpperCase()
 
   const [queue, clients, config] = await Promise.all([

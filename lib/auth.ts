@@ -149,15 +149,10 @@ export async function consumeMagicLink(token: string) {
 /**
  * The signed-in admin, or null. Request-cached: the admin layout, the page
  * and every loader under them used to read the session separately, one
- * round trip each. `cache` only exists inside Next's React build — the Mac
- * worker and tsx scripts load this file on plain React 18, where it is
- * undefined, so they get the uncached function instead of a crash on import.
+ * round trip each.
  */
-const requestCache: <F extends (...args: never[]) => unknown>(fn: F) => F =
-  typeof cache === "function" ? cache : (fn) => fn
-
-export const getSessionUser = requestCache(async function getSessionUser() {
-  const jar = cookies()
+export const getSessionUser = cache(async function getSessionUser() {
+  const jar = await cookies()
   const raw = jar.get(SESSION_COOKIE)?.value
   if (!raw) return null
 
@@ -193,7 +188,7 @@ export const getSessionUser = requestCache(async function getSessionUser() {
 })
 
 export async function destroySession() {
-  const jar = cookies()
+  const jar = await cookies()
   const raw = jar.get(SESSION_COOKIE)?.value
   if (raw) {
     await db.delete(sessions).where(eq(sessions.tokenHash, hashToken(raw)))

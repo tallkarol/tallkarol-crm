@@ -5,7 +5,8 @@ import { punchlistsFor } from "@/lib/punchlists"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   const product = await loadProductShell(params.slug)
   return { title: product ? `${product.name} · Punch lists` : params.slug }
 }
@@ -15,7 +16,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
  * product when the /punchlist skill names one (`productSlug`), or from the
  * Product select on the list's own page.
  */
-export default async function ProductPunchlistsPage({ params }: { params: { slug: string } }) {
+export default async function ProductPunchlistsPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   const product = await loadProductShell(params.slug)
   if (!product) notFound()
   const lists = await punchlistsFor({ productId: product.id })

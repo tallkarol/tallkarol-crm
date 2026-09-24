@@ -39,7 +39,8 @@ type View = (typeof VIEWS)[number][0]
  * queries, and a view whose queries fail says so in place instead of taking
  * the page down.
  */
-export default async function ActivityPage({ searchParams }: { searchParams: Record<string, string | undefined> }) {
+export default async function ActivityPage(props: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const searchParams = await props.searchParams
   const user = await getSessionUser()
   if (!user) redirect("/login")
 

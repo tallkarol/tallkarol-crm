@@ -16,7 +16,7 @@ export type PortalScope = {
 
 /** Session user of ANY role — the portal accepts customers; the CRM does not. */
 async function sessionUserAnyRole() {
-  const raw = cookies().get("tk_crm_session")?.value
+  const raw = (await cookies()).get("tk_crm_session")?.value
   if (!raw) return null
   const [row] = await db
     .select({ user: users })
@@ -45,7 +45,7 @@ export async function getPortalScope(): Promise<PortalScope | null> {
   const displayName = user.name || user.email.split("@")[0]
 
   if (user.role === "admin") {
-    const previewIds = (cookies().get(PORTAL_PREVIEW_COOKIE)?.value ?? "")
+    const previewIds = ((await cookies()).get(PORTAL_PREVIEW_COOKIE)?.value ?? "")
       .split(",")
       .filter(Boolean)
     if (previewIds.length === 0) {

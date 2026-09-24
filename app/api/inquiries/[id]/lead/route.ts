@@ -14,10 +14,8 @@ function isQualification(value: unknown): value is Qualification {
   return QUALIFICATIONS.includes(value as Qualification)
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const user = await getSessionUser()
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

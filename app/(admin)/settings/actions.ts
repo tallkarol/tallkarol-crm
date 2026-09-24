@@ -41,7 +41,8 @@ export async function setHideMoney(
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Not signed in" }
-  cookies().set(HIDE_MONEY_COOKIE, on ? "1" : "", {
+  const jar = await cookies()
+  jar.set(HIDE_MONEY_COOKIE, on ? "1" : "", {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -62,7 +63,8 @@ export async function setTheme(
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Not signed in" }
   if (!isTheme(theme)) return { ok: false, error: "Unknown theme" }
-  cookies().set(THEME_COOKIE, theme, {
+  const jar = await cookies()
+  jar.set(THEME_COOKIE, theme, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

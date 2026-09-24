@@ -19,7 +19,8 @@ export const dynamic = "force-dynamic"
  * a late report from a worker whose claim went stale and was retried by
  * another cannot overwrite the retry's outcome.
  */
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(request)
   if (!caller) return unauthorized()
 

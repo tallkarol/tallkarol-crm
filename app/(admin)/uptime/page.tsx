@@ -15,11 +15,12 @@ import { Card } from "@/components/ui/Card"
 export const metadata = { title: "Uptime" }
 export const dynamic = "force-dynamic"
 
-export default async function UptimePage({
-  searchParams,
-}: {
-  searchParams: { peek?: string }
-}) {
+export default async function UptimePage(
+  props: {
+    searchParams: Promise<{ peek?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   const [board, sites] = await Promise.all([loadMonitorBoard(), loadSiteUptimeBoard()])
   const openIds = board.map((b) => b.monitor.openTicketId).filter(Boolean) as string[]
   const tickets = openIds.length

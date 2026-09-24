@@ -21,13 +21,14 @@ function fmtCapture(pct: number | null) {
   return `${pct < 10 ? pct.toFixed(1) : Math.round(pct)}%`
 }
 
-export default async function InsightsUnfilteredPage({
-  params,
-  searchParams,
-}: {
-  params: { site: string }
-  searchParams: { range?: string }
-}) {
+export default async function InsightsUnfilteredPage(
+  props: {
+    params: Promise<{ site: string }>
+    searchParams: Promise<{ range?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const ctx = await getInsightsContext(params.site)
   if (!ctx) notFound()
   const { site, snapshot } = ctx

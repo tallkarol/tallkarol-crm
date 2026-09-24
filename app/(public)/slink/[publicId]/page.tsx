@@ -41,16 +41,17 @@ const REASONS: Record<string, string> = {
  * as anyone with a bad handle: a way to ask for a link, and nothing that
  * confirms what is behind the door.
  */
-export default async function SlinkPage({
-  params,
-  searchParams,
-}: {
-  params: { publicId: string }
-  searchParams: { e?: string }
-}) {
+export default async function SlinkPage(
+  props: {
+    params: Promise<{ publicId: string }>
+    searchParams: Promise<{ e?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   if (!isPublicId(params.publicId)) notFound()
 
-  const session = readSlinkCookie()
+  const session = await readSlinkCookie()
   const auth = await authorize(params.publicId, session)
 
   if (!auth) {
@@ -68,7 +69,7 @@ export default async function SlinkPage({
 
   const { slink, recipient } = auth
   const now = new Date()
-  const { ip, userAgent } = requestFingerprint()
+  const { ip, userAgent } = await requestFingerprint()
   await logEvent({ slinkId: slink.id, recipientId: recipient.id, kind: "viewed", ip, userAgent })
 
   const [blocks, files] = await Promise.all([listBlocks(slink.id), listFiles(slink.id)])

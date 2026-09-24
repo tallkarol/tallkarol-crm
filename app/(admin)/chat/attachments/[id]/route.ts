@@ -5,7 +5,8 @@ import { attachmentFile, imageResponse } from "@/lib/chat/attachment-data"
 export const dynamic = "force-dynamic"
 
 /** A pasted screenshot, for the thumbnail and the full-size tab. Its owner only. */
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const user = await getSessionUser()
   if (!user) return new NextResponse("Unauthorized", { status: 401 })
 

@@ -18,12 +18,13 @@ export const SLINK_COOKIE = "tk_slink"
 /** Cookie lifetime matches the longest a session may live; the row still rules. */
 const COOKIE_TTL_SEC = SLINK_RULES.maxSessionDays * 24 * 60 * 60
 
-export function readSlinkCookie() {
-  return cookies().get(SLINK_COOKIE)?.value
+export async function readSlinkCookie() {
+  return (await cookies()).get(SLINK_COOKIE)?.value
 }
 
-export function setSlinkCookie(token: string) {
-  cookies().set(SLINK_COOKIE, token, {
+export async function setSlinkCookie(token: string) {
+  const jar = await cookies()
+  jar.set(SLINK_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -32,13 +33,9 @@ export function setSlinkCookie(token: string) {
   })
 }
 
-export function clearSlinkCookie() {
-  cookies().delete(SLINK_COOKIE)
-}
-
 /** Who asked, for the audit trail. Never used to make a decision. */
-export function requestFingerprint() {
-  const h = headers()
+export async function requestFingerprint() {
+  const h = await headers()
   const forwarded = h.get("x-forwarded-for") ?? ""
   const ip = forwarded.split(",")[0]?.trim() || h.get("x-real-ip") || ""
   return { ip: ip.slice(0, 90), userAgent: (h.get("user-agent") ?? "").slice(0, 300) }

@@ -14,19 +14,21 @@ import { setInvoiceNotesAction, setInvoiceStatusAction } from "@/lib/peek-action
 import { updateInvoiceDetails } from "../edit-actions"
 import { formatDay, formatHours, formatMoney } from "@/lib/work"
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { number: string }
-}) {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ number: string }>
+  }
+) {
+  const params = await props.params
   return { title: `Invoice ${params.number}` }
 }
 
-export default async function InvoiceDetailPage({
-  params,
-}: {
-  params: { number: string }
-}) {
+export default async function InvoiceDetailPage(
+  props: {
+    params: Promise<{ number: string }>
+  }
+) {
+  const params = await props.params
   const invoice = await db.query.invoices.findFirst({
     where: eq(invoices.number, params.number),
     with: {

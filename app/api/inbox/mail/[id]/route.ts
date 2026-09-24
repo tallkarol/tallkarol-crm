@@ -11,7 +11,8 @@ export const dynamic = "force-dynamic"
  * else — `punchlist.py ingest --mail <id>` reads it here. Device token, like
  * every other agent door.
  */
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(_request)
   if (!caller) return unauthorized()
 

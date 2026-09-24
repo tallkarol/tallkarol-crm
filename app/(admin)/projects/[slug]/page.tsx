@@ -13,13 +13,14 @@ export const dynamic = "force-dynamic"
  * widgets and old tabs still land. A 307, not a 308: a project can move
  * to another client, and a cached permanent redirect would not follow it.
  */
-export default async function ProjectShortLink({
-  params,
-  searchParams,
-}: {
-  params: { slug: string }
-  searchParams: Record<string, string | string[] | undefined>
-}) {
+export default async function ProjectShortLink(
+  props: {
+    params: Promise<{ slug: string }>
+    searchParams: Promise<Record<string, string | string[] | undefined>>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const row = await db.query.projects.findFirst({
     where: eq(projects.slug, params.slug),
     columns: { slug: true },

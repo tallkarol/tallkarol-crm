@@ -13,7 +13,8 @@ import { ROUTES } from "@/lib/nav"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({ params }: { params: { number: string } }) {
+export async function generateMetadata(props: { params: Promise<{ number: string }> }) {
+  const params = await props.params
   return { title: `Invoice ${params.number}` }
 }
 
@@ -31,11 +32,12 @@ function fmtDate(iso: string) {
  * The invoice, laid out like the PDFs Karol has always sent — the browser's
  * Save-as-PDF is the delivery artifact. Same pattern as /insights-report.
  */
-export default async function InvoicePrintPage({
-  params,
-}: {
-  params: { number: string }
-}) {
+export default async function InvoicePrintPage(
+  props: {
+    params: Promise<{ number: string }>
+  }
+) {
+  const params = await props.params
   const invoice = await db.query.invoices.findFirst({
     where: eq(invoices.number, decodeURIComponent(params.number)),
     with: { client: true, retainer: true },
@@ -44,7 +46,7 @@ export default async function InvoicePrintPage({
 
   // Outside the admin layout, so read the demo-mode cookie here. That also
   // registers the resolver on a cold start whose first hit is this page.
-  const hideAmounts = readHideMoneyCookie()
+  const hideAmounts = await readHideMoneyCookie()
 
   // Admins see everything; portal users only their own clients' invoices.
   const user = await getSessionUser()

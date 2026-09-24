@@ -11,7 +11,8 @@ export const dynamic = "force-dynamic"
  * POST { worker, durationSec, tracks: ["mic","system"], recordingPath }
  * 200 { replayed } — the row is `recorded`, transcription queued for this worker.
  */
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(request)
   if (!caller) return unauthorized()
   const body = await readJson(request)

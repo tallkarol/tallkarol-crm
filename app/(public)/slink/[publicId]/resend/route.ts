@@ -18,7 +18,8 @@ export const dynamic = "force-dynamic"
  * A lapsed grant is deliberately NOT renewed here — that would make expiry
  * meaningless. It goes back to Karol through the access-request queue.
  */
-export async function POST(request: Request, { params }: { params: { publicId: string } }) {
+export async function POST(request: Request, props: { params: Promise<{ publicId: string }> }) {
+  const params = await props.params
   const done = NextResponse.redirect(`${slinkUrl(params.publicId)}?sent=1`, {
     status: 303,
     headers: SLINK_HEADERS,

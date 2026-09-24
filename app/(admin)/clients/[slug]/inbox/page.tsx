@@ -5,7 +5,8 @@ import { loadClientShell } from "@/lib/client-rooms"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   const client = await loadClientShell(params.slug)
   return { title: client ? `${client.name} · Inbox` : params.slug }
 }
@@ -15,13 +16,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
  * approvals and proposed meeting-note items. Signed off 23 Sep 2026 from
  * `~/Work/tallkarol/hub-mockup-src` (`renderInboxList()` / `renderReading()`).
  */
-export default async function ClientInboxPage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string }
-  searchParams: { lens?: string; kind?: string; item?: string }
-}) {
+export default async function ClientInboxPage(
+  props: {
+    params: Promise<{ slug: string }>
+    searchParams: Promise<{ lens?: string; kind?: string; item?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const client = await loadClientShell(params.slug)
   if (!client) notFound()
 

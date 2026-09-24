@@ -41,11 +41,12 @@ function Setup({ title, children }: { title: string; children: React.ReactNode }
   )
 }
 
-export default async function InsightsHealthPage({
-  params,
-}: {
-  params: { site: string }
-}) {
+export default async function InsightsHealthPage(
+  props: {
+    params: Promise<{ site: string }>
+  }
+) {
+  const params = await props.params
   const ctx = await getInsightsContext(params.site)
   if (!ctx) notFound()
   const { site, snapshot, refreshedAt } = ctx

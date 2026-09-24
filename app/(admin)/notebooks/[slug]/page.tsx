@@ -33,13 +33,14 @@ function treeOrder(pages: NotionPage[]): { page: NotionPage; depth: number }[] {
   return out
 }
 
-export default async function NotebookPage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string }
-  searchParams: { page?: string }
-}) {
+export default async function NotebookPage(
+  props: {
+    params: Promise<{ slug: string }>
+    searchParams: Promise<{ page?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const client = await db.query.clients.findFirst({
     where: eq(clients.slug, params.slug),
     with: { notionLinks: true },

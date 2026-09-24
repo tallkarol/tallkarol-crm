@@ -5,10 +5,8 @@ import { widgetClient } from "@/lib/widget"
 export const dynamic = "force-dynamic"
 
 /** One client's tasks, tickets, vitals and flags — the extra-large widget. */
-export async function GET(
-  request: Request,
-  { params }: { params: { slug: string } }
-) {
+export async function GET(request: Request, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   if (!authenticateWidget(request)) return unauthorized()
 
   const now = new Date()

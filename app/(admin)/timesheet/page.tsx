@@ -10,11 +10,12 @@ import { timesheetDashboard } from "@/lib/timesheet-dashboard"
 export const metadata = { title: "Timesheet" }
 export const dynamic = "force-dynamic"
 
-export default async function TimesheetPage({
-  searchParams,
-}: {
-  searchParams: { client?: string; month?: string }
-}) {
+export default async function TimesheetPage(
+  props: {
+    searchParams: Promise<{ client?: string; month?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   // The sheet used to be a query string. Keep old links and bookmarks working.
   if (searchParams.client) {
     const month = isMonthKey(searchParams.month)

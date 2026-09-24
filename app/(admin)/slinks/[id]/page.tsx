@@ -47,7 +47,8 @@ const GRANTS = [
  * together — deciding whether to re-share someone means looking at when they
  * last opened it.
  */
-export default async function SlinkEditor({ params }: { params: { id: string } }) {
+export default async function SlinkEditor(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const user = await getSessionUser()
   if (!user) redirect("/login")
 

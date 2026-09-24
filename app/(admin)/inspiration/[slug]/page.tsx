@@ -9,20 +9,22 @@ import { plural } from "@/lib/work"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+) {
+  const params = await props.params
   const board = await loadBoard(params.slug)
   return { title: board ? board.title : "Inspiration" }
 }
 
-export default async function InspirationBoardPage({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export default async function InspirationBoardPage(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+) {
+  const params = await props.params
   const board = await loadBoard(params.slug)
   if (!board) notFound()
 

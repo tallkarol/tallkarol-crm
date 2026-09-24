@@ -15,11 +15,12 @@ import { Card } from "@/components/ui/Card"
 export const metadata = { title: "Vault" }
 export const dynamic = "force-dynamic"
 
-export default async function VaultPage({
-  searchParams,
-}: {
-  searchParams: { q?: string; client?: string }
-}) {
+export default async function VaultPage(
+  props: {
+    searchParams: Promise<{ q?: string; client?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   const q = searchParams.q?.trim() ?? ""
   const clientSlug = searchParams.client?.trim() ?? ""
   const [entries, clients] = await Promise.all([

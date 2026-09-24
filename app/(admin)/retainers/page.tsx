@@ -24,11 +24,12 @@ import { Card } from "@/components/ui/Card"
 export const metadata = { title: "Retainers" }
 export const dynamic = "force-dynamic"
 
-export default async function RetainersPage({
-  searchParams,
-}: {
-  searchParams: { peek?: string }
-}) {
+export default async function RetainersPage(
+  props: {
+    searchParams: Promise<{ peek?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   await oncePer("renewals", SWEEP_MS, () => ensureRenewalTasks())
   const [retainers, invoices, entries, openTasks, sites, expenses, writeoffs] =
     await Promise.all([

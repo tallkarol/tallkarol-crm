@@ -9,13 +9,18 @@ import { fmtInt } from "@/lib/insights/derive"
 
 export const dynamic = "force-dynamic"
 
-export default async function InsightsSiteLayout({
-  params,
-  children,
-}: {
-  params: { site: string }
-  children: React.ReactNode
-}) {
+export default async function InsightsSiteLayout(
+  props: {
+    params: Promise<{ site: string }>
+    children: React.ReactNode
+  }
+) {
+  const params = await props.params
+
+  const {
+    children
+  } = props
+
   const [all, ctx] = await Promise.all([
     getAllSites(),
     getInsightsContext(params.site),

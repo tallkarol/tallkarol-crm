@@ -24,11 +24,12 @@ export const dynamic = "force-dynamic"
 
 const STALE_DAYS = 14
 
-export default async function ProductsPage({
-  searchParams,
-}: {
-  searchParams: { peek?: string }
-}) {
+export default async function ProductsPage(
+  props: {
+    searchParams: Promise<{ peek?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
   const now = new Date()
   const [studios, tasks] = await Promise.all([
     studiosWithProducts(),

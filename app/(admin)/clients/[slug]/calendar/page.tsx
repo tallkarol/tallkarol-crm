@@ -5,7 +5,8 @@ import { isoDay, loadClientShell, loadWeek } from "@/lib/client-rooms"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   const client = await loadClientShell(params.slug)
   return { title: client ? `${client.name} · Calendar` : params.slug }
 }
@@ -18,13 +19,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
  * and focus strip already work here. Signed off 23 Sep 2026 from
  * `~/Work/tallkarol/crm-hub-b-rooms.html`.
  */
-export default async function ClientCalendarPage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string }
-  searchParams: { week?: string }
-}) {
+export default async function ClientCalendarPage(
+  props: {
+    params: Promise<{ slug: string }>
+    searchParams: Promise<{ week?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const client = await loadClientShell(params.slug)
   if (!client) notFound()
 

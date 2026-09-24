@@ -7,7 +7,8 @@ import { ROUTES } from "@/lib/nav"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   const client = await loadClientShell(params.slug)
   return { title: client ? `${client.name} · Monitors` : params.slug }
 }
@@ -18,13 +19,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
  * Assembly lives in `lib/client-monitors.ts`; this page only fetches and
  * hands the result to `SystemsAccordion`.
  */
-export default async function ClientMonitorsPage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string }
-  searchParams: { peek?: string }
-}) {
+export default async function ClientMonitorsPage(
+  props: {
+    params: Promise<{ slug: string }>
+    searchParams: Promise<{ peek?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const client = await loadClientShell(params.slug)
   if (!client) notFound()
 

@@ -47,7 +47,7 @@ export function tracked<A extends unknown[], R>(
 ): (...args: A) => Promise<R> {
   return async (...args: A): Promise<R> => {
     const startedAt = Date.now()
-    const context = requestContext()
+    const context = await requestContext()
     try {
       const result = await action(...args)
       note(context, name, startedAt, failureOf(result))
@@ -59,12 +59,12 @@ export function tracked<A extends unknown[], R>(
   }
 }
 
-function requestContext(): { tokenHash: string; path: string; envelope: BatchEnvelope } | null {
+async function requestContext(): Promise<{ tokenHash: string; path: string; envelope: BatchEnvelope } | null> {
   try {
-    const jar = cookies()
+    const jar = await cookies()
     const token = jar.get(SESSION_COOKIE)?.value
     if (!token) return null
-    const h = headers()
+    const h = await headers()
     const act = parseActivityCookie(jar.get(ACTIVITY_COOKIE)?.value)
     let path = "/"
     const referer = h.get("referer")
@@ -109,7 +109,7 @@ function firstLine(err: unknown): string {
 
 /** failure: undefined = succeeded; a string (possibly empty) = failed with that message. */
 function note(
-  context: ReturnType<typeof requestContext>,
+  context: Awaited<ReturnType<typeof requestContext>>,
   name: string,
   startedAt: number,
   failure: string | null | undefined

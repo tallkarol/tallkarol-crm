@@ -16,13 +16,14 @@ export const dynamic = "force-dynamic"
  * One codebase of a client: the latest sheet of each kind the tools have
  * produced, the spec sheet rendered in full, and the run history behind it.
  */
-export default async function CodebasePage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string; codebase: string }
-  searchParams: { kind?: string; view?: string }
-}) {
+export default async function CodebasePage(
+  props: {
+    params: Promise<{ slug: string; codebase: string }>
+    searchParams: Promise<{ kind?: string; view?: string }>
+  }
+) {
+  const searchParams = await props.searchParams
+  const params = await props.params
   const client = await db.query.clients.findFirst({ where: eq(clients.slug, params.slug) })
   if (!client) notFound()
 

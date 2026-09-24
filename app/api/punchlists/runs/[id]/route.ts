@@ -14,7 +14,8 @@ import {
 
 export const dynamic = "force-dynamic"
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(_request)
   if (!caller) return unauthorized()
   const run = await loadRun(params.id)
@@ -39,7 +40,8 @@ function cleanList(value: unknown, max = 40): string[] {
  *        evidence[], fixes[], raw? }, sessionRef?, force? }
  * 200 { run, replayed }
  */
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const caller = await authenticateTimeRequest(request)
   if (!caller) return unauthorized()
 

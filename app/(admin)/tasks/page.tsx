@@ -27,12 +27,13 @@ export const dynamic = "force-dynamic"
  * layout are applied in TaskHubView from the URL, so changing them never
  * comes back here — only a peek, a write (router.refresh) or a hard load does.
  */
-export default async function TasksPage({
-  searchParams,
-}: {
-  /** Only `peek` is read here; the rest ride along into the card's close link. */
-  searchParams: Record<string, string | undefined>
-}) {
+export default async function TasksPage(
+  props: {
+    /** Only `peek` is read here; the rest ride along into the card's close link. */
+    searchParams: Promise<Record<string, string | undefined>>
+  }
+) {
+  const searchParams = await props.searchParams
   const user = await getSessionUser()
   if (!user) redirect("/login")
 
