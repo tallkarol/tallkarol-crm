@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache"
 import { eq } from "drizzle-orm"
 import { db } from "@/db"
 import { punchlistItems } from "@/db/schema"
-import { ROUTES } from "@/lib/nav"
+import { CLIENT_PAGES } from "@/lib/nav"
 import { requestTestRun, setItemTest } from "@/lib/punchlists"
 import { authenticateTimeRequest, readJson, unauthorized } from "@/lib/time-api"
 
@@ -46,6 +46,6 @@ export async function POST(
     runId = run.data.runId
   }
 
-  revalidatePath(ROUTES.punchlist(item.punchlist.slug))
+  revalidatePath(CLIENT_PAGES, "layout")
   return NextResponse.json({ spec, runId })
 }

@@ -29,6 +29,20 @@ const nextConfig = {
     return [
       // The Analytics page became the Insights hub.
       { source: "/analytics", destination: "/insights", permanent: true },
+      // Sessions left the Timesheet for Admin (24 Sep 2026). The query
+      // string (filters, a peek) carries over. /admin has no page of its
+      // own; its landing is Settings, as the rail's Admin icon is.
+      { source: "/timesheet/sessions", destination: "/admin/sessions", permanent: true },
+      { source: "/admin", destination: "/settings", permanent: false },
+      // Delivery was deleted (24 Sep 2026) — Karol: dead weight — and the
+      // project and punch list lists went the same day: both live inside
+      // their client now. Old links and the Mac app's Go menu land on the
+      // client roster; /projects/[slug] and /punchlists/[slug] are pages
+      // that redirect into the right client.
+      { source: "/delivery", destination: "/clients", permanent: false },
+      { source: "/pipeline", destination: "/clients", permanent: false },
+      { source: "/projects", destination: "/clients", permanent: false },
+      { source: "/punchlists", destination: "/clients", permanent: false },
     ]
   },
 }

@@ -218,7 +218,7 @@ export function PunchlistBody({
               {draft ? (
                 <AcceptDraftButton
                   count={list.items.filter((i) => !i.taskId).length}
-                  action={acceptDraftAction.bind(null, list.id, list.slug)}
+                  action={acceptDraftAction.bind(null, list.id)}
                 />
               ) : null}
             </div>
@@ -299,8 +299,8 @@ export function PunchlistBody({
                         : null
                     }
                     setState={setItemStateAction.bind(null, item.id)}
-                    requestTest={requestTestAction.bind(null, item.id, list.slug)}
-                    saveTest={setItemTestAction.bind(null, item.id, list.slug)}
+                    requestTest={requestTestAction.bind(null, item.id)}
+                    saveTest={setItemTestAction.bind(null, item.id)}
                   />
                 )
               })}

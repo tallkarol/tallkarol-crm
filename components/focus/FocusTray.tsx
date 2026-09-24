@@ -29,6 +29,10 @@ export function FocusTray({
   onPromote,
   onAdd,
   compact = false,
+  actions,
+  hint,
+  flag = "global",
+  queueHint = "Queue is empty — drag from the board or the inbox",
 }: {
   showing: FocusCard[]
   queue: FocusCard[]
@@ -40,6 +44,13 @@ export function FocusTray({
   onAdd?: (title: string) => Promise<void>
   /** The takeover: no header controls, bigger cards. */
   compact?: boolean
+  /** Controls beside the 3 | 1 switch (the roster puts "New client" here). */
+  actions?: React.ReactNode
+  /** The line after the title — "3 pinned across 2 clients". */
+  hint?: React.ReactNode
+  /** What the notes' top-right badge says — see FocusNote. */
+  flag?: "global" | "client"
+  queueHint?: string
 }) {
   const max = FOCUS_MAX[mode]
   return (
@@ -50,7 +61,9 @@ export function FocusTray({
             <StickyNote className="size-3.5" aria-hidden />
             Focus
           </h2>
+          {hint ? <span className="hidden min-w-0 truncate text-[11.5px] text-ink-3 md:inline">{hint}</span> : null}
           <div className="ml-auto flex items-center gap-1.5">
+            {actions}
             <ModeSwitch mode={mode} onMode={onMode} />
             {onTakeover ? (
               <button
@@ -76,10 +89,10 @@ export function FocusTray({
           )}
         >
           {Array.from({ length: max }, (_, i) => (
-            <Slot key={i} index={i} card={showing[i] ?? null} mode={mode} ops={ops} compact={compact} />
+            <Slot key={i} index={i} card={showing[i] ?? null} mode={mode} ops={ops} compact={compact} flag={flag} />
           ))}
         </div>
-        {!compact ? <Queue queue={queue} onPromote={onPromote} onAdd={onAdd} /> : null}
+        {!compact ? <Queue queue={queue} onPromote={onPromote} onAdd={onAdd} hint={queueHint} /> : null}
       </div>
     </section>
   )
@@ -120,12 +133,14 @@ function Slot({
   mode,
   ops,
   compact,
+  flag,
 }: {
   index: number
   card: FocusCard | null
   mode: FocusMode
   ops: NoteOps
   compact: boolean
+  flag: "global" | "client"
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: `slot:${index}`, data: { zone: "slot", index } })
   return (
@@ -139,7 +154,7 @@ function Slot({
       )}
     >
       {card ? (
-        <FocusNote card={card} size={mode === "one" ? "sheet" : "slot"} tilt={mode === "one" ? -0.3 : TILT[index] ?? 0} ops={ops}>
+        <FocusNote card={card} size={mode === "one" ? "sheet" : "slot"} tilt={mode === "one" ? -0.3 : TILT[index] ?? 0} ops={ops} flag={flag}>
           {mode === "one" ? <SheetBody card={card} /> : null}
         </FocusNote>
       ) : (
@@ -211,10 +226,12 @@ function Queue({
   queue,
   onPromote,
   onAdd,
+  hint,
 }: {
   queue: FocusCard[]
   onPromote: (id: string) => void
   onAdd?: (title: string) => Promise<void>
+  hint: string
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: "queue", data: { zone: "queue" } })
   const [title, setTitle] = useState("")
@@ -237,9 +254,7 @@ function Queue({
           <QueueSlot key={card.id} card={card} index={i} onPromote={onPromote} />
         ))}
         {queue.length === 0 ? (
-          <p className="rounded-md border border-dashed border-line-strong px-3 py-2.5 text-center text-[11.5px] text-ink-3">
-            Queue is empty — drag from the board or the inbox
-          </p>
+          <p className="rounded-md border border-dashed border-line-strong px-3 py-2.5 text-center text-[11.5px] text-ink-3">{hint}</p>
         ) : null}
       </div>
       {onAdd ? (

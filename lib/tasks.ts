@@ -394,13 +394,14 @@ export async function taskTargets(): Promise<ParseTarget[]> {
 export async function waitingTooLong(now = new Date()) {
   const rows = await db.query.tasks.findMany({
     where: and(eq(tasks.status, "open"), eq(tasks.boardStage, "waiting")),
-    with: { client: { columns: { name: true, slug: true } } },
+    with: { client: { columns: { id: true, name: true, slug: true } } },
   })
   const today = isoDay(now)
   return rows
     .map((row) => ({
       id: row.id,
       title: row.title,
+      clientId: row.client?.id ?? null,
       clientName: row.client?.name ?? null,
       clientSlug: row.client?.slug ?? null,
       days: daysBetween(isoDay(row.updatedAt), today),

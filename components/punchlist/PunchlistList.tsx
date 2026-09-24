@@ -5,6 +5,12 @@ import type { PunchlistSummary } from "@/lib/punchlists"
 import { formatDay } from "@/lib/work"
 import { Card } from "@/components/ui/Card"
 
+/** The list's page: in its product's hub when it has one, else inside its client. */
+function pageOf(row: PunchlistSummary) {
+  if (row.product) return ROUTES.productPunchlist(row.product.slug, row.slug)
+  return row.client ? ROUTES.clientPunchlist(row.client.slug, row.slug) : ROUTES.punchlist(row.slug)
+}
+
 /** The rows a client hub or project page shows — title, progress, tests. */
 export function PunchlistList({
   rows,
@@ -19,7 +25,7 @@ export function PunchlistList({
         <div key={row.id} className="flex items-center justify-between gap-4 px-5 py-3">
           <div className="min-w-0">
             <Link
-              href={peekBase ? `${peekBase}?peek=punchlist:${row.slug}` : ROUTES.punchlist(row.slug)}
+              href={peekBase ? `${peekBase}?peek=punchlist:${row.slug}` : pageOf(row)}
               scroll={false}
               className="truncate text-[13.5px] font-semibold text-tk-onyx hover:text-tk-teal hover:underline"
             >
@@ -54,7 +60,7 @@ export function PunchlistList({
               <span className="block h-full rounded-full bg-accent" style={{ width: `${row.progress.pct}%` }} />
             </span>
             <Link
-              href={ROUTES.punchlist(row.slug)}
+              href={pageOf(row)}
               className="text-[11px] font-semibold text-tk-teal hover:underline"
             >
               Open

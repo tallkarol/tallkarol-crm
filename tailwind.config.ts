@@ -291,7 +291,7 @@ const config: Config = {
          the one affordance that must never be the weakest line on the page.
          Mapping to --accent-ink is byte-identical in light and takes dark to
          #4FC9BE (9.10 canvas / 8.25 card). Sites: FloatingClock:221,
-         ToolButton:72, LeftOffBoard:159, :161, :340, :434. */
+         ToolButton:72. */
       outlineColor: {
         "tk-teal": rgb("accent-ink"),
         "accent-ink": rgb("accent-ink"),

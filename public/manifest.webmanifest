@@ -3,7 +3,7 @@
   "short_name": "TallKarol",
   "id": "/timesheet/live",
   "description": "Clear what is waiting on you, clock in and out, and get told when something needs you.",
-  "start_url": "/#leftoff",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",

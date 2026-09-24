@@ -3,6 +3,7 @@
   "routes": [
     "/",
     "/activity",
+    "/admin/sessions",
     "/ads",
     "/ads/[site]",
     "/attribution",
@@ -15,10 +16,11 @@
     "/clients/[slug]/dashboards",
     "/clients/[slug]/inbox",
     "/clients/[slug]/monitors",
+    "/clients/[slug]/projects/[project]",
+    "/clients/[slug]/punchlists/[list]",
     "/contacts",
     "/contracts",
     "/contracts/[slug]",
-    "/delivery",
     "/emails",
     "/expenses",
     "/hivemind",
@@ -48,7 +50,6 @@
     "/meeting-notes/[id]",
     "/notebooks",
     "/notebooks/[slug]",
-    "/pipeline",
     "/portal",
     "/portal/insights",
     "/portal/invoices",
@@ -56,10 +57,12 @@
     "/portal/tickets",
     "/products",
     "/products/[slug]",
-    "/projects",
+    "/products/[slug]/calendar",
+    "/products/[slug]/notes",
+    "/products/[slug]/punchlists",
+    "/products/[slug]/punchlists/[list]",
     "/projects/[slug]",
     "/proposals",
-    "/punchlists",
     "/punchlists/[slug]",
     "/reports",
     "/retainers",
@@ -91,7 +94,6 @@
     "/timesheet/live",
     "/timesheet/meetings",
     "/timesheet/review",
-    "/timesheet/sessions",
     "/timesheet/sheets",
     "/uptime",
     "/usage",
@@ -115,21 +117,6 @@
       "file": "components/timesheet/FloatingClock.tsx"
     },
     {
-      "id": "delivery.row.chevron",
-      "label": null,
-      "file": "components/delivery/DeliveryLedger.tsx"
-    },
-    {
-      "id": "delivery.row.open",
-      "label": null,
-      "file": "components/delivery/DeliveryLedger.tsx"
-    },
-    {
-      "id": "delivery.status",
-      "label": null,
-      "file": "components/delivery/StatusMenu.tsx"
-    },
-    {
       "id": "home.attention.complete",
       "label": null,
       "file": "components/dashboard/NeedsAttention.tsx"
@@ -141,6 +128,11 @@
     },
     {
       "id": "home.attention.layout",
+      "label": null,
+      "file": "components/dashboard/NeedsAttention.tsx"
+    },
+    {
+      "id": "home.attention.view",
       "label": null,
       "file": "components/dashboard/NeedsAttention.tsx"
     },
@@ -170,9 +162,14 @@
       "file": "components/dashboard/NewPopover.tsx"
     },
     {
-      "id": "home.pill",
+      "id": "home.pulse.fold",
       "label": null,
-      "file": "components/dashboard/HomeHeader.tsx"
+      "file": "components/dashboard/PulseRows.tsx"
+    },
+    {
+      "id": "home.pulse.open",
+      "label": null,
+      "file": "components/dashboard/PulseRows.tsx"
     },
     {
       "id": "home.record.start",
@@ -286,14 +283,9 @@
     }
   ],
   "actions": {
-    "total": 195,
-    "wrapped": 77,
+    "total": 194,
+    "wrapped": 80,
     "files": [
-      {
-        "file": "app/(admin)/delivery/actions.ts",
-        "total": 4,
-        "wrapped": 4
-      },
       {
         "file": "app/(admin)/expenses/actions.ts",
         "total": 3,
@@ -436,17 +428,12 @@
       },
       {
         "file": "lib/focus-actions.ts",
-        "total": 8,
-        "wrapped": 8
+        "total": 10,
+        "wrapped": 10
       },
       {
         "file": "lib/insights/actions.ts",
         "total": 3,
-        "wrapped": 0
-      },
-      {
-        "file": "lib/leftoff-actions.ts",
-        "total": 4,
         "wrapped": 0
       },
       {
@@ -463,6 +450,11 @@
         "file": "lib/peek-actions.ts",
         "total": 11,
         "wrapped": 11
+      },
+      {
+        "file": "lib/product-hub-actions.ts",
+        "total": 3,
+        "wrapped": 3
       },
       {
         "file": "lib/punch-actions.ts",
@@ -493,6 +485,11 @@
         "file": "lib/usage/actions.ts",
         "total": 1,
         "wrapped": 0
+      },
+      {
+        "file": "lib/workstream-actions.ts",
+        "total": 2,
+        "wrapped": 2
       }
     ]
   }

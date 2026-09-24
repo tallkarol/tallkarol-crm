@@ -3,9 +3,8 @@
  *
  * The Skills tab and the empty-thread starters live in different client
  * trees from the textarea, and lifting their state to a common parent would
- * mean the whole page re-rendering for every keystroke. A window event is
- * the same mechanism the dashboard uses for the left-off board
- * (`tk:leftoff-open`), so it is one idiom, not a second one.
+ * mean the whole page re-rendering for every keystroke. A window event
+ * keeps them apart.
  */
 
 export type ComposeRequest = {

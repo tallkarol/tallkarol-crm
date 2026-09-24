@@ -64,6 +64,7 @@
     "chat:worker": "tsx scripts/chat-worker.ts",
     "check:theme": "tsx scripts/check-theme.ts",
     "check:focus": "tsx scripts/check-focus.ts",
+    "check:pulse": "tsx scripts/check-pulse.ts",
     "check:theme:update": "tsx scripts/check-theme.ts --update",
     "check:slink:db": "tsx scripts/check-slink-db.ts",
     "check:meeting-notes": "tsx scripts/check-meeting-notes.ts",

@@ -75,9 +75,9 @@ export type FocusCard = {
   notes: string
   /** Where "Open" goes. */
   href: string
-  /** The client that owns the row — the flag on a global note. */
-  clientSlug: string
-  clientName: string
+  /** The client that owns the row — the flag on a global note. Null for a house row (no client). */
+  clientSlug: string | null
+  clientName: string | null
 }
 
 export function paperFor(kind: FocusKind, override: string | null | undefined, source?: string | null): Paper {

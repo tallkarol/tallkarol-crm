@@ -31,16 +31,25 @@ menu, Timesheet, Insights, Ask the desk), mounts the panel, and docks the
 (`AppShell` treats `clientSlugOf(pathname)` like `/chat`), so each room scrolls
 on its own.
 
-## The panel on the roster
+## The panel on the Clients group
 
-`/clients` swaps the group panel for the client list itself
-(`components/clients/ClientsPanel.tsx`, grouped by `lib/client-groups.ts`):
+The Clients group's panel is the client list itself, not the group's rows
+(`components/clients/ClientsPanel.tsx`, grouped by `lib/client-groups.ts`;
+`NavGroup.clientList` in `lib/nav.ts`). The admin layout reads the roster
+(`loadClientRoster()`) beside the badges and hands the groups to `AppShell`,
+which renders the list for the group on desktop and `MobileNav` in the phone
+sheet — so it is beside `/clients`, Insights, Reports, … from the first paint.
+(Until 24 Sep 2026 the roster page mounted it through `PanelSlot` after
+render, and the group's ten rows — the old submenu — showed for a beat first.)
+The groups:
 **Active retainer** (an active retainer), **Active project** (no retainer, a
 project not complete), **Completed** (everything else — finished, in contact,
 lapsed), **Internal** (status `internal`). A row carries the client's colour
 dot and, when true, a red dot (tickets past their reply window) and an amber
-dot (overdue tasks). Nothing else is in that panel; the group's other pages
-(Insights, Reports, Proposals, …) stay reachable from their own routes and ⌘K.
+dot (overdue tasks). Nothing else is in that panel; the group's rows in
+`DOCK_NAV` are only what lights the dock icon and what ⌘K searches, and the
+group's other pages (Insights, Reports, Proposals, …) stay reachable from
+their own routes and ⌘K.
 
 The page itself is the across-clients desk, not a launcher, and has no page
 title: **Focus** (the global set, `GlobalFocus … always`, so the empty slots
@@ -51,7 +60,11 @@ every client's event in that client's colour, deadlines and month-ends for all
 of them; `loadWeekAll()`) beside **Signals** across every client, each row
 carrying its client's dot and name (`loadSignalsAll()`, 14 lines then "+n more
 in the inbox" → `/inbox`). No calendar grid here — the grid lives in a
-client's Calendar room.
+client's Calendar room. Pinned cards come first, empty slots trail. Because
+the page has no title row, it steps down 2rem (md+) while the floating clock
+rests at its top-right spot — `FloatingClock` sets `<html data-tk-clock="home">`
+there and clears it once dragged — so a running punch never covers New client
+or the 3 | 1 switch.
 
 ## The panel in client mode
 
@@ -129,6 +142,53 @@ from the columns (`bandBoard(tasks, today, focusedTaskIds)`).
 `components/clients/BoardRoom.tsx` is the one `DndContext` over the tray and
 the columns. It keeps a local copy of the server's data, applies the pure rule
 on drop, fires the action, then `router.refresh()`.
+
+## The dashboard desk
+
+`/` mounts the global set as a full tray (`components/focus/GlobalFocus.tsx`
+→ `FocusTray` with `flag="client"`, so each note wears its client's name):
+the 3 | 1 slots and an **Up next** queue, in the tray's own order
+(`focus_items.global_position`, `lib/focus-data.ts` `globalOrder()`), which a
+client's Board never sees. `GlobalFocus` owns one `DndContext` and renders the
+rest of the page inside it, so **Needs attention** can drag straight up — a
+row or a card, by itself (the grip only says so; the title link is marked
+`draggable={false}` so the browser's link-drag never steals the pointer, and
+the six-pixel activation distance keeps a plain click a click) — onto a slot,
+the queue, or before a queued note. Drops go **where the pointer is**
+(`pointerWithin`, boxes as the keyboard fallback): a row is as wide as the
+card, so box overlap always chose the first slot. The overlay chip rides under
+the cursor (`snapToCursor`). Dropping on Up next while a slot is free fills the
+slot — the queue is what is beyond the window, the same rule as a Board. `useDeskDnd()` gives the cards `focus(pick, target)` for the
+verbs (pin → first slot, ⤶ → the queue) and `focusedRefIds` for the pinned
+mark; a drop on another row comes back through `setDropHandler("attention")`
+for the reorder. A dragged record joins its client's set too
+(`addGlobalFocusAction`: on the client, elevated, placed) — or the **house
+set** when it has no client: since migration 0063 `client_id` is nullable, a
+house row lives only on the tray and is deleted when unpinned. One row per
+record (`focus_items_ref_unique` on ref_kind + ref_id).
+
+**Needs attention** is the Unread card too (24 Sep 2026; `Unread.tsx` is
+gone). Folded — the default, remembered in localStorage — it is **the pulse**:
+four row cards in Karol's order, Tickets · Mail · Tasks · Pipeline
+(`components/dashboard/PulseRows.tsx`; rules in `lib/pulse.ts`, facts in
+`lib/pulse-data.ts`, `npm run check:pulse`). A row's left block names it and
+says its state in one phrase ("9 need you now", "caught up"); the stats read
+left to right — number, name, one line of why — zeros dimmed in place so the
+row keeps its shape. Colour means one thing: red is past a line (a reply
+window, a due date), amber needs you but in time, green is the only good news
+(done, accepted, caught up). The left block **folds** the row to a one-line
+digest of only the stats that need you (`digestOf`); folded rows are
+remembered per browser (`dashboard-pulse-folded`). The › at a row's end opens
+its page; a stat is a page (support lens, inbox lens, leads, proposals) or,
+for the task buckets, the expanded list filtered to that group. Nothing the
+other cards say is here: unpaid is Month billed and Forecast, events are the
+Calendar. Mail "waiting on them / got back to you" is the one stat still
+missing — it needs the thread's last outbound vs inbound, not tracked yet.
+Tickets already have it (state = waiting). Expanded it is the
+full list as before, with the arrivals as a chip strip under the header, and
+card view draws post-its like the tray's (kind paper, client flag, the tray's
+verbs: done, pin, queue, open). Tasks and deliverables can go on the tray;
+invoices and blocked projects cannot (no focus kind) and are not draggable.
 
 ## Signals and the week
 

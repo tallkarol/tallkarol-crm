@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { asc } from "drizzle-orm"
+import { PageHeader } from "@/components/PageHeader"
 import { PeekRouter } from "@/components/peek/PeekRouter"
 import { SessionFilters } from "@/components/timesheet/SessionFilters"
 import { db } from "@/db"
@@ -23,10 +24,10 @@ export const metadata = { title: "Sessions" }
 export const dynamic = "force-dynamic"
 
 /**
- * Every conversation, kept. The board upstairs is the present tense — this is
- * the same rows read backwards, plus the prompts and replies themselves, so
- * "what was I doing on Tuesday" and "where did I say that" are answerable
- * without opening a chat history in another app.
+ * Every conversation, kept — the prompts and replies themselves, so "what
+ * was I doing on Tuesday" and "where did I say that" are answerable without
+ * opening a chat history in another app. Its own page under Admin since
+ * 24 Sep 2026; it used to sit in the Timesheet's tabs at /timesheet/sessions.
  */
 
 const CHIP: Record<NoteState, string> = {
@@ -172,8 +173,8 @@ export default async function SessionsPage({
     if (key !== "peek" && value) query.set(key, value)
   }
   const closeHref = query.toString()
-    ? `${ROUTES.timesheetSessions}?${query.toString()}`
-    : ROUTES.timesheetSessions
+    ? `${ROUTES.sessions}?${query.toString()}`
+    : ROUTES.sessions
   const peekHref = (ref: string) =>
     `${closeHref}${closeHref.includes("?") ? "&" : "?"}peek=session:${encodeURIComponent(ref)}`
 
@@ -183,6 +184,7 @@ export default async function SessionsPage({
 
   return (
     <>
+      <PageHeader title="Sessions" />
       {searchParams.peek ? <PeekRouter peek={searchParams.peek} closeHref={closeHref} /> : null}
       <SessionFilters
         clients={clientRows.map((row) => ({ slug: row.slug, name: row.name }))}

@@ -6,7 +6,7 @@ import { db } from "@/db"
 import { chatThreads, taskItems, taskViews, tasks } from "@/db/schema"
 import type { Cadence } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
-import { ROUTES } from "@/lib/nav"
+import { CLIENT_PAGES, ROUTES } from "@/lib/nav"
 import { completeTask } from "@/lib/task-complete"
 import { cleanLabels, resolveTaskTarget } from "@/lib/task-insert"
 
@@ -21,7 +21,7 @@ const STAGES = ["queue", "doing", "waiting"] as const
 function touch(taskId?: string) {
   revalidatePath(ROUTES.tasks)
   revalidatePath(ROUTES.home)
-  revalidatePath(ROUTES.projects)
+  revalidatePath(CLIENT_PAGES, "layout")
   revalidatePath(ROUTES.retainers)
   revalidatePath(ROUTES.clients)
   revalidatePath(ROUTES.products)

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
-import { ROUTES } from "@/lib/nav"
+import { CLIENT_PAGES, ROUTES } from "@/lib/nav"
 import { createPunchlist, listPunchlists, type NewPunchlistItem } from "@/lib/punchlists"
 import {
   authenticateTimeRequest,
@@ -53,6 +53,8 @@ export async function POST(request: Request) {
     clientSlug: readString(body, "clientSlug"),
     projectId: readString(body, "projectId"),
     projectSlug: readString(body, "projectSlug"),
+    productId: readString(body, "productId"),
+    productSlug: readString(body, "productSlug"),
     intro: readString(body, "intro") ?? "",
     sourceKind: readString(body, "sourceKind") ?? "doc",
     sourceRef: readString(body, "sourceRef") ?? "",
@@ -67,7 +69,7 @@ export async function POST(request: Request) {
   })
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
 
-  revalidatePath(ROUTES.punchlists)
+  revalidatePath(CLIENT_PAGES, "layout")
   revalidatePath(ROUTES.tasks)
   revalidatePath(ROUTES.home)
 

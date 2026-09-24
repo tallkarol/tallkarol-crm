@@ -1,59 +1,31 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
-import { Calendar, Layers } from "lucide-react"
+import { Search } from "lucide-react"
 import { ClockPopover, type ClockClient } from "@/components/dashboard/ClockPopover"
-import { CommandPalette, type PaletteEntry } from "@/components/dashboard/CommandPalette"
-import { LEFTOFF_OPEN_EVENT } from "@/components/dashboard/LeftOffBoard"
 import { NewPopover, type NewClient } from "@/components/dashboard/NewPopover"
 import { RecordPopover } from "@/components/dashboard/RecordPopover"
 import { ToolButton } from "@/components/dashboard/ToolButton"
-import { cn } from "@/lib/cn"
+import { openPalette } from "@/components/nav/CommandPalette"
 import type { PunchView } from "@/lib/punches"
 
-export type PillTone = "bad" | "warn" | "ok" | "neutral"
-
-/** One status pill under the greeting. `board` opens the left-off board. */
-export type StatusPill = {
-  label: string
-  tone: PillTone
-  href?: string
-  board?: boolean
-  icon?: "calendar"
-}
-
-const PILL: Record<PillTone, string> = {
-  bad: "bg-bad/10 text-bad",
-  warn: "bg-warn/10 text-warn",
-  ok: "bg-ok/10 text-ok",
-  neutral: "border border-line bg-card text-tk-slate",
-}
-
-function openBoard() {
-  window.dispatchEvent(new CustomEvent(LEFTOFF_OPEN_EVENT))
-}
-
 /**
- * The homepage header: date and a live clock, the greeting, a status line
- * built from the same loaders as the cards, and the four tools as icon
- * buttons — search, clock, the left-off board, new.
+ * The homepage header: date and a live clock, the greeting, and the tools
+ * as icon buttons on the greeting's own line — search, clock, record, new.
+ * Search opens the app-wide ⌘K palette the shell mounts; it is only a button here.
+ * One row, never wrapping, so nothing below moves. (The status pills that
+ * used to sit under the greeting left on 24 Sep 2026; the cards say the
+ * same facts where they are acted on. The left-off board button left the
+ * same day — Karol will redo that feature later.)
  */
 export function HomeHeader({
   greeting,
-  pills,
-  leftOff,
   clients,
   running,
-  palette,
 }: {
   greeting: string
-  pills: StatusPill[]
-  /** Null until the left-off tables exist. */
-  leftOff: { blocked: number; working: number; parked: number; done: number } | null
   clients: (ClockClient & NewClient)[]
   running: PunchView[]
-  palette: PaletteEntry[]
 }) {
   const [now, setNow] = useState<Date | null>(null)
 
@@ -73,9 +45,12 @@ export function HomeHeader({
 
   return (
     /* z-10 so the popovers under the toolbar paint above the cards, whose
-       entrance animation would otherwise promote them over the header. */
-    <div className="tk-rise relative z-10 flex flex-wrap items-end justify-between gap-x-6 gap-y-4" style={{ "--i": 0 } as React.CSSProperties}>
-      <div className="min-w-0">
+       entrance animation would otherwise promote them over the header.
+       mb-14: Karol wants 50px+ of air before the focus row; the margin
+       collapses with the grid's mt-6 when there is no focus row, so it is
+       56px either way. */
+    <div className="tk-rise relative z-10 mb-14 flex items-end justify-between gap-x-4" style={{ "--i": 0 } as React.CSSProperties}>
+      <div className="min-w-0 flex-1">
         <p className="font-ui text-[11px] font-bold uppercase tracking-[0.14em] text-ink-3">
           {date}
           {now ? (
@@ -87,64 +62,15 @@ export function HomeHeader({
             </>
           ) : null}
         </p>
-        <h1 className="mt-1.5 font-display text-[30px] font-semibold leading-[1.05] tracking-[-0.03em] text-tk-onyx">
+        <h1 className="mt-1.5 truncate font-display text-[30px] font-semibold leading-[1.05] tracking-[-0.03em] text-tk-onyx">
           {greeting}
         </h1>
-        {pills.length ? (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {pills.map((pill) => {
-              const body = (
-                <>
-                  {pill.icon === "calendar" ? (
-                    <Calendar className="size-3" aria-hidden />
-                  ) : (
-                    <span aria-hidden className="size-1.5 rounded-full bg-current" />
-                  )}
-                  {pill.label}
-                </>
-              )
-              const className = cn(
-                "inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 font-ui text-[11.5px] font-semibold transition-[filter] hover:brightness-95",
-                PILL[pill.tone]
-              )
-              if (pill.board) {
-                return (
-                  <button key={pill.label} type="button" onClick={openBoard} className={className} data-track="home.pill">
-                    {body}
-                  </button>
-                )
-              }
-              if (pill.href) {
-                return (
-                  <Link key={pill.label} href={pill.href} className={className} data-track="home.pill">
-                    {body}
-                  </Link>
-                )
-              }
-              return (
-                <span key={pill.label} className={className}>
-                  {body}
-                </span>
-              )
-            })}
-          </div>
-        ) : null}
       </div>
 
-      <div className="flex items-center gap-2">
-        <CommandPalette entries={palette} />
+      <div className="flex shrink-0 items-center gap-2">
+        <ToolButton label="Search or jump to… (⌘K)" icon={<Search />} onClick={openPalette} track="home.palette" />
         <ClockPopover clients={clients} running={running} />
         <RecordPopover clients={clients} />
-        {leftOff ? (
-          <ToolButton
-            label={`Where I left off — ${leftOff.blocked} need a yes, ${leftOff.working} working, ${leftOff.parked} parked, ${leftOff.done} done today`}
-            icon={<Layers />}
-            badge={leftOff.blocked}
-            dot={leftOff.blocked === 0 && leftOff.working > 0}
-            onClick={openBoard}
-            track="home.leftoff"
-          />
-        ) : null}
         <NewPopover clients={clients} />
       </div>
     </div>

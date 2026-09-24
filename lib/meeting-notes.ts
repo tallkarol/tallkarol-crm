@@ -121,6 +121,8 @@ export type NoteRow = {
   heartbeatAt: string | null
   client: Party | null
   project: Party | null
+  /** The product it is filed to, if any — the product hub's Notes room lists it. */
+  productId: string | null
   items: ItemCounts
   createdAt: string
 }
@@ -213,6 +215,7 @@ function toRow(note: NoteWithParties, items: { kind: string; state: string }[]):
     heartbeatAt: iso(note.heartbeatAt),
     client: note.client,
     project: note.project,
+    productId: note.productId,
     items: countItems(items),
     createdAt: note.createdAt.toISOString(),
   }
@@ -309,6 +312,17 @@ export async function listNotes(userId: string, limit = 200): Promise<NoteRow[]>
 export async function notesForClient(clientId: string, limit = 6): Promise<NoteRow[]> {
   const rows = await db.query.meetingNotes.findMany({
     where: and(eq(meetingNotes.clientId, clientId), sql`${meetingNotes.status} <> 'discarded'`),
+    with: { ...withParties, items: { columns: { kind: true, state: true } } },
+    orderBy: [desc(meetingNotes.startedAt)],
+    limit,
+  })
+  return rows.map((row) => toRow(row, row.items))
+}
+
+/** A product hub's Notes room: the product's meeting notes, newest first. */
+export async function notesForProduct(productId: string, limit = 30): Promise<NoteRow[]> {
+  const rows = await db.query.meetingNotes.findMany({
+    where: and(eq(meetingNotes.productId, productId), sql`${meetingNotes.status} <> 'discarded'`),
     with: { ...withParties, items: { columns: { kind: true, state: true } } },
     orderBy: [desc(meetingNotes.startedAt)],
     limit,

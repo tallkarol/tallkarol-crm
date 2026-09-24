@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
-import { ROUTES } from "@/lib/nav"
+import { CLIENT_PAGES } from "@/lib/nav"
 import { RUN_STATUSES, type RunStatus } from "@/lib/punchlist"
 import { loadRun, runJson, transitionRun } from "@/lib/punchlists"
 import type { PunchlistTestReport } from "@/db/schema"
@@ -73,8 +73,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   const run = await loadRun(params.id)
   if (run) {
-    revalidatePath(ROUTES.punchlist(run.item.punchlist.slug))
-    revalidatePath(ROUTES.punchlists)
+    revalidatePath(CLIENT_PAGES, "layout")
   }
   return NextResponse.json({ run: run ? runJson(run) : null, replayed: result.data.replayed })
 }

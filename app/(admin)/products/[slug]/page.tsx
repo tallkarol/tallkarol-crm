@@ -1,26 +1,28 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import { PeekRouter } from "@/components/peek/PeekRouter"
-import { StatusSelect } from "../StatusSelect"
 import { TaskComposer } from "@/components/tasks/TaskComposer"
 import { TaskRows } from "@/components/tasks/TaskRows"
 import { db } from "@/db"
-import { clientColor, markColor } from "@/lib/client-colors"
 import { daysSince, readLinks } from "@/lib/engagements"
 import { ROUTES } from "@/lib/nav"
-import { studiosWithProducts } from "@/lib/products"
+import { loadProductShell } from "@/lib/product-rooms"
 import { clientsFromTargets, tasksFor, taskTargets } from "@/lib/tasks"
-import { studioCaption } from "@/lib/work"
-import { addProductLink, removeProductLink, setProductNotes } from "../actions"
+import { addProductLink, removeProductLink } from "../actions"
 import { Card } from "@/components/ui/Card"
 
 export const dynamic = "force-dynamic"
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
-  return { title: `Product · ${params.slug}` }
+  const product = await loadProductShell(params.slug)
+  return { title: product ? `${product.name} · Board` : params.slug }
 }
 
-export default async function ProductDetailPage({
+/**
+ * The Board — a product's landing room: where it stands, its open tasks with
+ * a composer that files onto it, and its links. Notes, the calendar and punch
+ * lists are rooms of their own (the hub's layout and panel hold the rest).
+ */
+export default async function ProductBoardPage({
   params,
   searchParams,
 }: {
@@ -28,19 +30,13 @@ export default async function ProductDetailPage({
   searchParams: { peek?: string }
 }) {
   const now = new Date()
-  const studios = await studiosWithProducts()
-  const studio = studios.find((s) =>
-    s.products.some((p) => p.slug === params.slug)
-  )
-  const product = studio?.products.find((p) => p.slug === params.slug)
-  if (!studio || !product) notFound()
-
+  const product = await loadProductShell(params.slug)
+  if (!product) notFound()
   const row = await db.query.products.findFirst({
     where: (p, { eq }) => eq(p.id, product.id),
   })
   if (!row) notFound()
 
-  const color = clientColor(product.slug)
   const [productTasks, targets] = await Promise.all([
     tasksFor({ productId: product.id }),
     taskTargets(),
@@ -49,7 +45,7 @@ export default async function ProductDetailPage({
   const overdue = open.filter((t) => (t.overdueDays ?? 0) > 0)
   const links = readLinks(row.links)
   const lastMoved = Math.max(
-    product.updatedAt.getTime(),
+    row.updatedAt.getTime(),
     ...open.map((task) => new Date(task.updatedAt).getTime())
   )
   const quiet = daysSince(new Date(lastMoved), now)
@@ -62,70 +58,7 @@ export default async function ProductDetailPage({
           closeHref={ROUTES.productPage(product.slug)}
         />
       ) : null}
-      <Link
-        href={ROUTES.products}
-        className="text-sm font-semibold text-tk-teal hover:underline"
-      >
-        ← Products
-      </Link>
-
-      <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span
-              className="size-2.5 rounded-full"
-              style={{ background: markColor(color) }}
-            />
-            <h1 className="text-2xl font-semibold tracking-tight text-tk-onyx">
-              {product.name}
-            </h1>
-          </div>
-          <p className="mt-1 text-sm text-ink-3">
-            {studioCaption(studio)}
-            {product.tagline ? ` · ${product.tagline}` : ""}
-            {product.clientName ? ` · ${product.clientName}` : ""}
-          </p>
-        </div>
-        <StatusSelect productId={product.id} status={product.status} />
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        {studios.map((group, index) => (
-          <span key={group.id} className="flex flex-wrap items-center gap-2">
-            {index > 0 ? (
-              <span
-                aria-hidden
-                className="mx-0.5 hidden h-4 w-px bg-well sm:block"
-              />
-            ) : null}
-            {group.products.map((item) => {
-              const on = item.id === product.id
-              return (
-                <Link
-                  key={item.id}
-                  href={ROUTES.productPage(item.slug)}
-                  aria-current={on ? "page" : undefined}
-                  className={
-                    on
-                      ? "flex items-center gap-2 rounded-xl border border-tk-teal bg-accent px-3 py-1.5 text-sm font-semibold text-tk-linen"
-                      : "flex items-center gap-2 rounded-xl border border-line bg-card px-3 py-1.5 text-sm font-semibold text-tk-onyx hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-                  }
-                >
-                  <span
-                    className="h-2 w-2 rounded-[3px]"
-                    style={{
-                      background: on ? "#F1EADC" : clientColor(item.slug),
-                    }}
-                  />
-                  {item.name}
-                </Link>
-              )
-            })}
-          </span>
-        ))}
-      </div>
-
-      <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Stat
           label="Open tasks"
           value={String(open.length)}
@@ -253,21 +186,6 @@ export default async function ProductDetailPage({
             </form>
           </Card>
 
-          <Card className="p-5">
-            <h2 className="text-[13px] font-bold text-tk-onyx">Notes</h2>
-            <form action={setProductNotes} className="mt-2">
-              <input type="hidden" name="productId" value={product.id} />
-              <textarea
-                name="notes"
-                defaultValue={row.notes}
-                rows={5}
-                className="w-full resize-y rounded-lg border border-line bg-well px-3 py-2 text-sm text-tk-slate focus:border-tk-teal"
-              />
-              <button className="mt-2 rounded-full border border-line px-3 py-1 text-xs font-semibold text-tk-slate hover:border-line-strong hover:-translate-y-px transition-[transform,box-shadow,border-color,color] duration-150 motion-reduce:transition-none motion-reduce:hover:translate-y-0 hover:text-tk-teal">
-                Save notes
-              </button>
-            </form>
-          </Card>
         </div>
       </div>
     </>

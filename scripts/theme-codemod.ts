@@ -195,9 +195,6 @@ const SITE_RULES: Record<string, [string, string][]> = {
   /* Role 1 — meter/progress TRACKS -> bg-well (a blanket bg-line would turn
      every track into a hairline). */
   "components/clients/HoursMeter.tsx": [["bg-tk-slate/10", "bg-well"]],
-  /* :411 is a band-header rule; bg-line/[0.09] holds the light weight where a
-     plain bg-well would paint linen on linen at 1.03:1 and vanish. */
-  "components/delivery/DeliveryLedger.tsx": [["bg-tk-slate/[0.09]", "bg-line"]],
   "components/punchlist/PunchlistList.tsx": [["bg-tk-slate/10", "bg-well"]],
   "components/punchlist/PunchlistBody.tsx": [["bg-tk-slate/12", "bg-well"]],
 

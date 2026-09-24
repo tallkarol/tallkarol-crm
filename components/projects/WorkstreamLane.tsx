@@ -13,8 +13,8 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core"
-import { setWorkstreamStageAction } from "@/app/(admin)/delivery/actions"
-import { AddWorkstream } from "@/components/delivery/ModalControls"
+import { setWorkstreamStageAction } from "@/lib/workstream-actions"
+import { AddWorkstream } from "@/components/projects/AddWorkstream"
 import { clientColor, markColor } from "@/lib/client-colors"
 import { cn } from "@/lib/cn"
 import { WORKSTREAM_STAGES, ordinal } from "@/lib/pipeline"

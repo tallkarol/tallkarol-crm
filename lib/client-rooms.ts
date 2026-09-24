@@ -160,17 +160,28 @@ export function weekStart(today: string) {
   return isoDay(date)
 }
 
-export async function loadWeek(client: ClientShell, now = new Date(), anchor?: string): Promise<WeekData> {
+/** The Mon–Sun frame a week view reads: its bounds, its days, and a day's index. Shared with the product hub. */
+export function weekFrame(now: Date, anchor?: string) {
   const today = isoDay(now)
   const start = weekStart(anchor ?? today)
   const end = addDays(start, 7)
-  const from = new Date(`${start}T00:00:00`)
-  const to = new Date(`${end}T00:00:00`)
   const days = Array.from({ length: 7 }, (_, i) => {
     const iso = addDays(start, i)
     return { iso, num: Number(iso.slice(8, 10)), dow: DOWS[i] }
   })
-  const dayIndex = (iso: string) => days.findIndex((d) => d.iso === iso)
+  return {
+    today,
+    start,
+    end,
+    from: new Date(`${start}T00:00:00`),
+    to: new Date(`${end}T00:00:00`),
+    days,
+    dayIndex: (iso: string) => days.findIndex((d) => d.iso === iso),
+  }
+}
+
+export async function loadWeek(client: ClientShell, now = new Date(), anchor?: string): Promise<WeekData> {
+  const { today, start, end, from, to, days, dayIndex } = weekFrame(now, anchor)
 
   const [events, dueDeliverables, dueTasks, activeRetainers, monthHours] = await Promise.all([
     db.query.calendarEvents.findMany({

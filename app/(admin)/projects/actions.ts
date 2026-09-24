@@ -6,7 +6,7 @@ import { db } from "@/db"
 import { invoices, projects } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { readLinks } from "@/lib/engagements"
-import { ROUTES } from "@/lib/nav"
+import { CLIENT_PAGES, ROUTES } from "@/lib/nav"
 
 /** Draft an invoice from a deliverable's fee. Number: CLIENT-LABEL, editable later. */
 export async function draftDeliverableInvoice(deliverableId: string) {
@@ -36,10 +36,8 @@ export async function draftDeliverableInvoice(deliverableId: string) {
     description: `${deliverable.label} — ${title}`,
     notes: "Auto-drafted from the deliverable. Review number and description before sending.",
   })
-  revalidatePath(ROUTES.projects)
-  revalidatePath(ROUTES.project(deliverable.project.slug))
+  revalidatePath(CLIENT_PAGES, "layout")
   revalidatePath(ROUTES.invoices)
-  revalidatePath(ROUTES.delivery)
 }
 
 export async function addProjectLink(formData: FormData) {
@@ -57,7 +55,7 @@ export async function addProjectLink(formData: FormData) {
   if (!project) return
   const links = [...readLinks(project.links), { label, url }]
   await db.update(projects).set({ links, updatedAt: new Date() }).where(eq(projects.id, projectId))
-  revalidatePath(ROUTES.project(project.slug))
+  revalidatePath(CLIENT_PAGES, "layout")
 }
 
 export async function removeProjectLink(formData: FormData) {
@@ -71,5 +69,5 @@ export async function removeProjectLink(formData: FormData) {
   if (!project || !Number.isInteger(index)) return
   const links = readLinks(project.links).filter((_, i) => i !== index)
   await db.update(projects).set({ links, updatedAt: new Date() }).where(eq(projects.id, projectId))
-  revalidatePath(ROUTES.project(project.slug))
+  revalidatePath(CLIENT_PAGES, "layout")
 }

@@ -3,6 +3,7 @@ import { db } from "@/db"
 import {
   agentSessions,
   clients,
+  products,
   projects,
   punchlistItems,
   punchlistTestRuns,
@@ -64,6 +65,9 @@ export type NewPunchlist = {
   clientSlug?: string | null
   projectId?: string | null
   projectSlug?: string | null
+  /** One of Karol's products — the list then lives in that product's hub; its client defaults to the product's. */
+  productId?: string | null
+  productSlug?: string | null
   intro?: string
   sourceKind?: string
   sourceRef?: string
@@ -124,6 +128,15 @@ function taskNotes(item: { reported?: string; outcome?: string }) {
   return parts.join("\n\n").slice(0, 4000)
 }
 
+/**
+ * A product's punch list keeps its client (the hub needs one) and files its
+ * tasks onto the product as well, so they land on the product's Board. A
+ * project, when named, still wins — the task belongs to the project's work.
+ */
+function withProduct<T extends { projectId: string | null; productId: string | null }>(target: T, productId: string | null): T {
+  return productId && !target.projectId ? { ...target, productId } : target
+}
+
 export async function createPunchlist(
   input: NewPunchlist
 ): Promise<PunchlistResult<CreatedPunchlist>> {
@@ -156,6 +169,16 @@ export async function createPunchlist(
 
   let clientId = input.clientId ?? null
   let projectId = input.projectId ?? null
+  let productId = input.productId ?? null
+  if (productId || input.productSlug) {
+    const product = await db.query.products.findFirst({
+      where: productId ? eq(products.id, productId) : eq(products.slug, input.productSlug!),
+      columns: { id: true, clientId: true },
+    })
+    if (!product) return { ok: false, status: 404, error: `No product "${productId ?? input.productSlug}".` }
+    productId = product.id
+    if (!clientId && !input.clientSlug) clientId = product.clientId
+  }
   if (!clientId && input.clientSlug) {
     const client = await db.query.clients.findFirst({ where: eq(clients.slug, input.clientSlug) })
     if (!client) return { ok: false, status: 404, error: `No client with slug "${input.clientSlug}".` }
@@ -171,6 +194,7 @@ export async function createPunchlist(
   if (!target.clientId) {
     return { ok: false, status: 422, error: "A punch list always names a client." }
   }
+  const taskTarget = withProduct(target, productId)
 
   // Validate every item before touching the database.
   const sections: string[] = []
@@ -223,6 +247,7 @@ export async function createPunchlist(
         clientId: target.clientId!,
         projectId: target.projectId,
         retainerId: target.retainerId,
+        productId,
         status,
         intro: (input.intro ?? "").trim().slice(0, 2000),
         sourceKind: (input.sourceKind ?? "doc").trim().slice(0, 20) || "doc",
@@ -246,7 +271,7 @@ export async function createPunchlist(
         taskId = await insertTaskRow(tx, {
           title: item.title,
           userId: input.userId,
-          target,
+          target: taskTarget,
           notes: taskNotes(item),
           labels: item.kind ? [item.kind] : [],
           source: PUNCHLIST_SOURCE,
@@ -274,8 +299,9 @@ export async function acceptDraft(
   })
   if (!list) return { ok: false, status: 404, error: "That punch list does not exist." }
   if (list.status === "void") return { ok: false, status: 409, error: "That punch list is void." }
-  const target = await resolveTaskTarget({ clientId: list.clientId, projectId: list.projectId })
-  if ("error" in target) return { ok: false, status: 400, error: target.error }
+  const resolved = await resolveTaskTarget({ clientId: list.clientId, projectId: list.projectId })
+  if ("error" in resolved) return { ok: false, status: 400, error: resolved.error }
+  const target = withProduct(resolved, list.productId)
 
   let created = 0
   await db.transaction(async (tx) => {
@@ -321,6 +347,7 @@ export async function setListStatus(id: string, status: "open" | "void") {
 export type PunchlistView = Punchlist & {
   client: { id: string; name: string; slug: string }
   project: { id: string; name: string; slug: string } | null
+  product: { id: string; name: string; slug: string } | null
   items: ItemView[]
   effectiveStatus: "draft" | "open" | "done" | "void"
   progress: { done: number; total: number; pct: number }
@@ -352,6 +379,7 @@ export async function loadPunchlist(slug: string): Promise<PunchlistView | null>
     with: {
       client: { columns: { id: true, name: true, slug: true } },
       project: { columns: { id: true, name: true, slug: true } },
+      product: { columns: { id: true, name: true, slug: true } },
       items: {
         with: { task: { columns: { status: true, boardStage: true } } },
         orderBy: [asc(punchlistItems.sectionSort), asc(punchlistItems.sort)],
@@ -404,6 +432,7 @@ export async function loadPunchlistItems(slugs: string[]) {
 export type PunchlistSummary = Punchlist & {
   client: { id: string; name: string; slug: string }
   project: { id: string; name: string; slug: string } | null
+  product: { id: string; name: string; slug: string } | null
   effectiveStatus: "draft" | "open" | "done" | "void"
   progress: { done: number; total: number; pct: number }
   testSummary: { pass: number; fail: number; pending: number }
@@ -413,6 +442,7 @@ function summarize(
   list: Punchlist & {
     client: { id: string; name: string; slug: string }
     project: { id: string; name: string; slug: string } | null
+    product: { id: string; name: string; slug: string } | null
     items: (PunchlistItem & { task: { status: "open" | "done"; boardStage: "queue" | "doing" | "waiting" } | null })[]
   }
 ): PunchlistSummary {
@@ -436,6 +466,7 @@ function summarize(
 const summaryWith = {
   client: { columns: { id: true, name: true, slug: true } },
   project: { columns: { id: true, name: true, slug: true } },
+  product: { columns: { id: true, name: true, slug: true } },
   items: { with: { task: { columns: { status: true, boardStage: true } } } },
 } as const
 
@@ -447,12 +478,15 @@ export async function listPunchlists(): Promise<PunchlistSummary[]> {
   return rows.map(summarize)
 }
 
-/** Lists filed against one client or one project — the entity-page blocks. */
+/** Lists filed against one client, one project or one product — the entity-page blocks. */
 export async function punchlistsFor(scope: {
   clientId?: string
   projectId?: string
+  productId?: string
 }): Promise<PunchlistSummary[]> {
-  const where = scope.projectId
+  const where = scope.productId
+    ? eq(punchlists.productId, scope.productId)
+    : scope.projectId
     ? eq(punchlists.projectId, scope.projectId)
     : scope.clientId
       ? eq(punchlists.clientId, scope.clientId)

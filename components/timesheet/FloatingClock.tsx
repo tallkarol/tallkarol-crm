@@ -156,7 +156,21 @@ export function FloatingClock() {
   // that punch is hidden and Stop on the recording stops both.
   const shownPunches = running.filter((punch) => !recording || punch.id !== recording.punchId)
   const showRecording = recording && (recording.status === "recording" || recording.status === "stopping" || recording.status === "requested")
-  if (shownPunches.length === 0 && !showRecording) return null
+  const shown = shownPunches.length > 0 || !!showRecording
+
+  // `<html data-tk-clock="home">` while the pill rests at its top-right spot,
+  // so a page whose first row has controls there (the roster's Focus row)
+  // can step down under it. Dragged anywhere else, the flag comes off.
+  const atHome = shown && !position
+  useEffect(() => {
+    if (!atHome) return
+    document.documentElement.dataset.tkClock = "home"
+    return () => {
+      delete document.documentElement.dataset.tkClock
+    }
+  }, [atHome])
+
+  if (!shown) return null
 
   return (
     <div

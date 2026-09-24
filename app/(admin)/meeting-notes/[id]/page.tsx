@@ -9,6 +9,7 @@ import { TimeCard } from "@/components/meeting-notes/TimeCard"
 import { TranscriptPane } from "@/components/meeting-notes/TranscriptPane"
 import { getSessionUser } from "@/lib/auth"
 import { formatClock } from "@/lib/meeting-note"
+import { db } from "@/db"
 import { loadNote, targetOptions } from "@/lib/meeting-notes"
 import { ROUTES } from "@/lib/nav"
 
@@ -22,7 +23,11 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 export default async function MeetingNotePage({ params }: { params: { id: string } }) {
   const user = await getSessionUser()
   if (!user) return null
-  const [note, options] = await Promise.all([loadNote(params.id), targetOptions()])
+  const [note, options, products] = await Promise.all([
+    loadNote(params.id),
+    targetOptions(),
+    db.query.products.findMany({ columns: { id: true, name: true }, orderBy: (p, { asc }) => [asc(p.sort), asc(p.name)] }),
+  ])
   if (!note) notFound()
 
   const a = note.analysis
@@ -39,7 +44,7 @@ export default async function MeetingNotePage({ params }: { params: { id: string
         Meeting notes
       </Link>
 
-      <NoteHeader note={note} clients={options.clients} projects={options.projects} />
+      <NoteHeader note={note} clients={options.clients} projects={options.projects} products={products} />
       <PhaseLine note={note} />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">

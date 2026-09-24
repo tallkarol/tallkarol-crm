@@ -7,8 +7,8 @@
  *   export const setStatus = tracked("peek.setStatus", async function setStatus(id: string) { … })
  *
  * The name keeps its function name for stack traces and recursion. The
- * namespace is the file: lib/peek-actions.ts → peek, app/(admin)/delivery/actions.ts
- * → delivery. Overloaded and default exports are skipped and named. A file
+ * namespace is the file: lib/peek-actions.ts → peek, app/(admin)/projects/actions.ts
+ * → projects. Overloaded and default exports are skipped and named. A file
  * that is not "use server" is refused. AST-based: a regex cannot find a
  * function's closing brace.
  *

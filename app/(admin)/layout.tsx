@@ -11,6 +11,8 @@ import { RunningClockProvider } from "@/components/timesheet/RunningClockProvide
 import { getSessionUser } from "@/lib/auth"
 import { ROUTES } from "@/lib/nav"
 import { COLOR_GLOBAL } from "@/lib/client-colors"
+import { groupClients } from "@/lib/client-groups"
+import { loadClientRoster } from "@/lib/client-hub"
 import { hydrateClientColors } from "@/lib/client-colors-store"
 import { HIDE_MONEY_GLOBAL } from "@/lib/money-privacy"
 import { readHideMoneyCookie } from "@/lib/money-privacy-server"
@@ -43,7 +45,7 @@ export default async function AdminLayout({
   // One read behind every badge and behind the dashboard's Unread card, so a
   // badge can never disagree with the card or the page it points at. The call
   // is request-cached, so the dashboard shares this one rather than repeating it.
-  const [unread, pendingPunches, colors, running, recording, activity] = await Promise.all([
+  const [unread, pendingPunches, colors, running, recording, activity, roster] = await Promise.all([
     loadUnread(),
     // A plain count(*) — same cost class as the unread/leads/tickets reads
     // below, so the Time hub's Review badge costs nothing extra to add.
@@ -55,7 +57,11 @@ export default async function AdminLayout({
     // Activity module switches (cached in-process for a minute). A failed read
     // means no probe on this page, never a failed page.
     activityFlags().catch(() => null),
+    // The Clients group's panel is the client list (see `NavGroup.clientList`),
+    // read here so the shell has it from the first paint on every page.
+    loadClientRoster(),
   ])
+  const clientGroups = groupClients(roster.rows)
 
   const badges = {
     [ROUTES.inbox]: {
@@ -112,6 +118,7 @@ export default async function AdminLayout({
         badges={badges}
         hideMoney={hideMoney}
         theme={theme}
+        clientGroups={clientGroups}
       >
         {children}
       </AppShell>

@@ -58,7 +58,7 @@ export function SessionFilters({
       if (value && !(key === "since" && value === "7d")) search.set(key, value)
     }
     const query = search.toString()
-    router.push(query ? `${ROUTES.timesheetSessions}?${query}` : ROUTES.timesheetSessions)
+    router.push(query ? `${ROUTES.sessions}?${query}` : ROUTES.sessions)
   }
 
   const filtered = Boolean(q || clientSlug || surface || (since && since !== "7d"))
@@ -128,7 +128,7 @@ export function SessionFilters({
       {filtered ? (
         <button
           type="button"
-          onClick={() => router.push(ROUTES.timesheetSessions)}
+          onClick={() => router.push(ROUTES.sessions)}
           className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-ink-3 hover:text-tk-onyx"
         >
           <X className="size-3.5" />

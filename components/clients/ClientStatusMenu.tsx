@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Dropdown, MenuLabel, MenuOption } from "@/components/ui/Dropdown"
-import { TONE_CLASS } from "@/components/delivery/StatusMenu"
 import type { ClientStatus } from "@/db/schema"
 import { updateClientStatus } from "@/lib/client-hub-actions"
 import { cn } from "@/lib/cn"
@@ -12,6 +11,17 @@ import {
   CLIENT_STATUS_LABEL,
   CLIENT_STATUS_TONE,
 } from "@/lib/work"
+
+type StatusTone = "progress" | "waiting" | "open" | "done" | "flat"
+
+/** The status pill's tones — moved here from the Delivery page's menu when that page went (24 Sep 2026). */
+const TONE_CLASS: Record<StatusTone, string> = {
+  progress: "border-tk-teal/25 bg-tk-teal/10 text-tk-teal",
+  waiting: "border-line bg-well text-ink-3",
+  open: "border-transparent bg-warn-soft text-warn",
+  done: "border-transparent bg-good-soft text-good",
+  flat: "border-line bg-card text-ink-3",
+}
 
 /**
  * Lifecycle status as a chip that opens its own menu — same control as the

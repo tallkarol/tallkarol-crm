@@ -16,7 +16,7 @@ import {
   type FocusKind,
   type FocusMode,
 } from "@/lib/focus"
-import { focusOrder, focusRowClient, writeOrder } from "@/lib/focus-data"
+import { focusOrder, focusRowClient, globalOrder, writeGlobalOrder, writeOrder } from "@/lib/focus-data"
 import { isoDay, weekEnd, type Horizon } from "@/lib/horizon"
 import { setInboxItemState } from "@/lib/inbox-triage"
 import { ROUTES } from "@/lib/nav"
@@ -37,9 +37,10 @@ function pass(r: { ok: boolean; error?: string }): Result {
  * cannot leave a gap or a duplicate position.
  */
 
-function touch(slug: string) {
-  revalidatePath(ROUTES.client(slug))
+function touch(slug: string | null) {
+  if (slug) revalidatePath(ROUTES.client(slug))
   revalidatePath(ROUTES.home)
+  revalidatePath(ROUTES.clients)
 }
 
 export type FocusTarget = { slot: number } | { queue: number | null } | { front: true }
@@ -95,10 +96,10 @@ export const moveFocusAction = tracked("focus.move", async function moveFocusAct
   if (!user) return { ok: false, error: "Sign in first." }
   const found = await focusRowClient(id)
   if (!found) return { ok: false, error: "That card is gone." }
-  const order = await focusOrder(found.client.id)
+  const order = await focusOrder(found.row.clientId)
   const mode = await currentMode()
-  await writeOrder(found.client.id, placeInOrder(order, id, target, mode))
-  touch(found.client.slug)
+  await writeOrder(found.row.clientId, placeInOrder(order, id, target, mode))
+  touch(found.client?.slug ?? null)
   return { ok: true }
 })
 
@@ -108,9 +109,9 @@ export const removeFocusAction = tracked("focus.remove", async function removeFo
   const found = await focusRowClient(id)
   if (!found) return { ok: true }
   await db.delete(focusItems).where(eq(focusItems.id, id))
-  const order = (await focusOrder(found.client.id)).filter((x) => x !== id)
-  await writeOrder(found.client.id, order)
-  touch(found.client.slug)
+  const order = (await focusOrder(found.row.clientId)).filter((x) => x !== id)
+  await writeOrder(found.row.clientId, order)
+  touch(found.client?.slug ?? null)
   return { ok: true }
 })
 
@@ -119,8 +120,64 @@ export const setFocusGlobalAction = tracked("focus.setGlobal", async function se
   if (!user) return { ok: false, error: "Sign in first." }
   const found = await focusRowClient(id)
   if (!found) return { ok: false, error: "That card is gone." }
-  await db.update(focusItems).set({ global }).where(eq(focusItems.id, id))
-  touch(found.client.slug)
+  if (!global && !found.row.clientId) {
+    // A house row has no Board to fall back to: off the tray means gone.
+    await db.delete(focusItems).where(eq(focusItems.id, id))
+    await writeOrder(null, (await focusOrder(null)).filter((x) => x !== id))
+  } else {
+    // Elevated: joins the end of the tray's order; the next drop there places it.
+    await db.update(focusItems).set({ global, globalPosition: null }).where(eq(focusItems.id, id))
+  }
+  await writeGlobalOrder(await globalOrder())
+  touch(found.client?.slug ?? null)
+  return { ok: true }
+})
+
+/**
+ * A card dragged onto the dashboard tray from Needs attention. The record
+ * joins its client's set (a global note is always on its client too — the
+ * rule from 23 Sep) or the house set when it has no client, is elevated,
+ * and takes the dropped place in the tray's order.
+ */
+export const addGlobalFocusAction = tracked("focus.addGlobal", async function addGlobalFocusAction(input: {
+  clientId: string | null
+  clientSlug: string | null
+  refKind: FocusKind
+  refId: string
+  target?: FocusTarget
+}): Promise<Result> {
+  const user = await getSessionUser()
+  if (!user) return { ok: false, error: "Sign in first." }
+  if (!isFocusKind(input.refKind)) return { ok: false, error: "Unknown kind." }
+  const existing = await db.query.focusItems.findFirst({
+    where: and(eq(focusItems.refKind, input.refKind), eq(focusItems.refId, input.refId)),
+  })
+  let id = existing?.id
+  if (!id) {
+    const order = await focusOrder(input.clientId)
+    const [row] = await db
+      .insert(focusItems)
+      .values({ userId: user.id, clientId: input.clientId, refKind: input.refKind, refId: input.refId, position: order.length, global: true })
+      .returning({ id: focusItems.id })
+    id = row.id
+  } else if (!existing?.global) {
+    await db.update(focusItems).set({ global: true, globalPosition: null }).where(eq(focusItems.id, id))
+  }
+  const mode = await currentMode()
+  await writeGlobalOrder(placeInOrder(await globalOrder(), id, input.target ?? { queue: null }, mode))
+  touch(input.clientSlug)
+  return { ok: true }
+})
+
+/** A card moved within the dashboard tray — into a slot, or to a place in the queue. */
+export const moveGlobalFocusAction = tracked("focus.moveGlobal", async function moveGlobalFocusAction(id: string, target: FocusTarget): Promise<Result> {
+  const user = await getSessionUser()
+  if (!user) return { ok: false, error: "Sign in first." }
+  const found = await focusRowClient(id)
+  if (!found || !found.row.global) return { ok: false, error: "That card is gone." }
+  const mode = await currentMode()
+  await writeGlobalOrder(placeInOrder(await globalOrder(), id, target, mode))
+  touch(found.client?.slug ?? null)
   return { ok: true }
 })
 
@@ -143,8 +200,8 @@ export const completeFocusAction = tracked("focus.complete", async function comp
   else if (row.refKind === "mail") result = pass(await setInboxItemState(`mail:${row.refId}`, "archived", null))
   if (!result.ok) return result
   await db.delete(focusItems).where(eq(focusItems.id, id))
-  await writeOrder(found.client.id, (await focusOrder(found.client.id)).filter((x) => x !== id))
-  touch(found.client.slug)
+  await writeOrder(found.row.clientId, (await focusOrder(found.row.clientId)).filter((x) => x !== id))
+  touch(found.client?.slug ?? null)
   return { ok: true }
 })
 
@@ -163,8 +220,8 @@ export const deferFocusAction = tracked("focus.defer", async function deferFocus
     if (!r.ok) return r
   }
   await db.delete(focusItems).where(eq(focusItems.id, id))
-  await writeOrder(found.client.id, (await focusOrder(found.client.id)).filter((x) => x !== id))
-  touch(found.client.slug)
+  await writeOrder(found.row.clientId, (await focusOrder(found.row.clientId)).filter((x) => x !== id))
+  touch(found.client?.slug ?? null)
   return { ok: true }
 })
 

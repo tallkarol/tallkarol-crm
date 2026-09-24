@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState, useTransition } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   Archive,
   ArchiveRestore,
@@ -387,6 +387,11 @@ function Pill({ tone, children }: { tone: "warn" | "run" | "mute"; children: Rea
 
 /* ---------- the launcher: a request that has not started ---------- */
 
+/** What picking a desk types: its address, plus the pack it needs ("me", or a blank to fill). */
+function deskAddress(desk: (typeof DESKS)[number]) {
+  return `@${desk.name} ${desk.pack && desk.pack !== "me" ? "[slug] " : desk.pack === "me" ? "me " : ""}`
+}
+
 function Launcher({
   onSend,
   busy,
@@ -402,6 +407,17 @@ function Launcher({
     if (starter.send) void onSend(starter.text)
     else requestCompose({ text: starter.text })
   }
+
+  // `?to=coach` (⌘K's "Talk to coach") picks that desk as its button would,
+  // then leaves the URL so a reload does not type it again.
+  const router = useRouter()
+  const to = useSearchParams().get("to")
+  useEffect(() => {
+    if (!to) return
+    const desk = DESKS.find((d) => d.name === to)
+    if (desk) requestCompose({ text: deskAddress(desk) })
+    router.replace(`${ROUTES.chat}?new`)
+  }, [to, router])
 
   return (
     <div className="tk-main-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-10 pt-6 sm:px-8 sm:pt-[6vh]">
@@ -424,11 +440,7 @@ function Launcher({
                 key={desk.name}
                 type="button"
                 title={desk.tagline}
-                onClick={() =>
-                  requestCompose({
-                    text: `@${desk.name} ${desk.pack && desk.pack !== "me" ? "[slug] " : desk.pack === "me" ? "me " : ""}`,
-                  })
-                }
+                onClick={() => requestCompose({ text: deskAddress(desk) })}
                 className="flex items-start gap-2.5 rounded-[10px] border border-line bg-card px-2.5 py-2.5 text-left hover:border-line-strong hover:bg-well"
               >
                 <Mark speaker={deskSpeaker(desk.name)} />

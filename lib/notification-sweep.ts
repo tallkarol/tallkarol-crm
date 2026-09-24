@@ -1,3 +1,4 @@
+import { ROUTES } from "@/lib/nav"
 import { occurredOnIn } from "@/lib/punch"
 import { workspaceTimezone } from "@/lib/timezone"
 import { approvalLine } from "@/lib/waiting"
@@ -69,7 +70,7 @@ export async function sweepNotifications(now = new Date()): Promise<SweepReport>
   for (const f of attention.flags) {
     candidates.push({
       kind: f.severity === "hot" ? "flag.hot" : "flag.warn", key: f.key,
-      body: `${f.short} · ${f.clients.join(", ") || "No client"}`, url: f.href ?? "/delivery",
+      body: `${f.short} · ${f.clients.join(", ") || "No client"}`, url: f.href ?? ROUTES.clients,
     })
   }
   for (const t of tasks.tasks) {

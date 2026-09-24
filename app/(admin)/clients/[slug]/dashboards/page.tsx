@@ -323,12 +323,6 @@ export default async function ClientDashboardsPage({
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
-                  <Link
-                    href={ROUTES.projects}
-                    className="text-[11px] font-semibold text-tk-teal hover:underline"
-                  >
-                    All projects →
-                  </Link>
                 </div>
 
                 {activeProjects.length > 0 || client.products.length > 0 ? (
@@ -344,7 +338,7 @@ export default async function ClientDashboardsPage({
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
                               <Link
-                                href={ROUTES.project(project.slug)}
+                                href={ROUTES.clientProject(client.slug, project.slug)}
                                 className="text-[14.5px] font-bold text-tk-onyx hover:text-tk-teal"
                               >
                                 {project.name}
@@ -458,12 +452,14 @@ export default async function ClientDashboardsPage({
                   <div className="mt-2.5 space-y-2">
                     {notStartedProjects.length > 0 ? (
                       <ProjectFold
+                        clientSlug={client.slug}
                         label={`${notStartedProjects.length} not started`}
                         projects={notStartedProjects}
                       />
                     ) : null}
                     {closedProjects.length > 0 ? (
                       <ProjectFold
+                        clientSlug={client.slug}
                         label={`${closedProjects.length} completed project${closedProjects.length === 1 ? "" : "s"}`}
                         projects={closedProjects}
                         showDate
@@ -1071,10 +1067,12 @@ function MiniCard({ title, children }: { title: string; children: React.ReactNod
 }
 
 function ProjectFold({
+  clientSlug,
   label,
   projects,
   showDate,
 }: {
+  clientSlug: string
   label: string
   projects: { id: string; slug: string; name: string; completedAt?: Date | null }[]
   showDate?: boolean
@@ -1097,7 +1095,7 @@ function ProjectFold({
               key={project.id}
               className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-[13px]"
             >
-              <Link href={ROUTES.project(project.slug)} className="text-tk-slate hover:text-tk-teal">
+              <Link href={ROUTES.clientProject(clientSlug, project.slug)} className="text-tk-slate hover:text-tk-teal">
                 {project.name}
               </Link>
               {showDate && project.completedAt ? (

@@ -2,11 +2,11 @@ import { redirect } from "next/navigation"
 import { SWEEP_MS, oncePer } from "@/lib/once-per"
 import { Forecast } from "@/components/dashboard/Forecast"
 import { cookies } from "next/headers"
-import { HomeHeader, type StatusPill } from "@/components/dashboard/HomeHeader"
+import { HomeHeader } from "@/components/dashboard/HomeHeader"
 import { GlobalFocus } from "@/components/focus/GlobalFocus"
 import { FOCUS_MODE_COOKIE, isFocusMode } from "@/lib/focus"
 import { globalFocus } from "@/lib/focus-data"
-import { LeftOffBoard } from "@/components/dashboard/LeftOffBoard"
+import { loadPulse } from "@/lib/pulse-data"
 import { MonthBilled } from "@/components/dashboard/MonthBilled"
 import {
   NeedsAttention,
@@ -14,9 +14,8 @@ import {
   type AttentionItem,
   type AttentionMore,
 } from "@/components/dashboard/NeedsAttention"
-import { Unread } from "@/components/dashboard/Unread"
+import { RetainerClockRow } from "@/components/dashboard/RetainerClockRow"
 import { WeekBoard } from "@/components/dashboard/WeekBoard"
-import type { PaletteEntry } from "@/components/dashboard/CommandPalette"
 import { PeekRouter, peekHref } from "@/components/peek/PeekRouter"
 import { db } from "@/db"
 import { getUpcomingMeetings } from "@/lib/calendar"
@@ -27,13 +26,9 @@ import { getGoals } from "@/lib/goals"
 import { ROUTES } from "@/lib/nav"
 import { getSessionUser } from "@/lib/auth"
 import { greetingFor } from "@/lib/greeting"
-import { loadLeftOff } from "@/lib/leftoff-data"
 import { runningPunches } from "@/lib/punches"
 import { ensureRenewalTasks } from "@/lib/renewals"
-import { workspaceTimezone } from "@/lib/timezone"
 import { loadUnread } from "@/lib/unread-data"
-import type { UnreadTone } from "@/lib/unread"
-import { loadWaiting } from "@/lib/waiting-data"
 import { reopenDueRecurring, waitingTooLong } from "@/lib/tasks"
 import { formatDay, formatMoney } from "@/lib/work"
 
@@ -70,10 +65,6 @@ function whenLabel(diff: number, dueOn: string) {
   return `${date.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })} ${d}`
 }
 
-function plural(n: number, word: string) {
-  return `${n} ${n === 1 ? word : `${word}s`}`
-}
-
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -106,11 +97,8 @@ export default async function DashboardPage({
     timeEntries,
     meetings,
     unread,
-    leftoff,
-    waitingQueue,
     clients,
     running,
-    timezone,
   ] = await Promise.all([
     waitingTooLong(),
     getGoals(),
@@ -126,13 +114,8 @@ export default async function DashboardPage({
     getUpcomingMeetings(),
     // Cached per request — the shell already loaded this for the badges.
     loadUnread(),
-    loadLeftOff().catch(() => null),
-    // The strip is the first thing read on this page, so it must never be the
-    // reason the page does not render — same treatment as the board above it.
-    loadWaiting().catch(() => null),
     db.query.clients.findMany({ orderBy: (c, { asc }) => [asc(c.name)] }),
     sessionUser ? runningPunches(sessionUser.id) : Promise.resolve([]),
-    workspaceTimezone(),
   ])
 
   const thisMonth = monthKey(now)
@@ -240,6 +223,8 @@ export default async function DashboardPage({
       color: t.client ? clientColor(t.client.slug) : "rgb(var(--ink-3-rgb))",
       title: t.title,
       meta: t.client?.name,
+      paper: t.source === "punchlist" ? ("punch" as const) : ("task" as const),
+      focus: { kind: "task" as const, clientId: t.client?.id ?? null, clientSlug: t.client?.slug ?? null, clientName: t.client?.name ?? null },
       detail:
         diff == null
           ? t.notes || undefined
@@ -317,6 +302,7 @@ export default async function DashboardPage({
                   : `sent ${-delta} ${delta === -1 ? "day" : "days"} ago`,
           amount: formatMoney(inv.amountCents, inv.currency),
           tone: overdue ? "bad" : "warn",
+          paper: "money" as const,
         }
       }),
     },
@@ -339,6 +325,8 @@ export default async function DashboardPage({
         meta: t.clientName ?? undefined,
         detail: `no movement for ${t.days} days`,
         tone: t.days >= 14 ? ("bad" as const) : ("warn" as const),
+        paper: "task" as const,
+        focus: { kind: "task" as const, clientId: t.clientId, clientSlug: t.clientSlug, clientName: t.clientName },
       })),
     },
     {
@@ -352,6 +340,8 @@ export default async function DashboardPage({
         meta: d.project.client.name,
         detail: d.project.name,
         tone: "ok" as const,
+        paper: "deliverable" as const,
+        focus: { kind: "deliverable" as const, clientId: d.project.client.id, clientSlug: d.project.client.slug, clientName: d.project.client.name },
       })),
     },
     {
@@ -366,112 +356,28 @@ export default async function DashboardPage({
         meta: p.client.name,
         detail: p.notes || "Waiting on client content",
         tone: "warn" as const,
+        paper: "note" as const,
       })),
     },
   ]
 
-  /* ---- header: status line, left-off counts, palette ---- */
-  const dayIn = (iso: string, tz: string) =>
-    new Intl.DateTimeFormat("en-CA", {
-      timeZone: tz,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(new Date(iso))
-  const todayKey = dayIn(now.toISOString(), timezone)
-  const meetingsToday = meetings.meetings.filter(
-    (m) => dayIn(m.startsAt, m.allDay ? "UTC" : timezone) === todayKey
-  ).length
-
-  const toneOf = (tone: UnreadTone): StatusPill["tone"] =>
-    tone === "bad" ? "bad" : tone === "warn" ? "warn" : "ok"
-  const leftOffCounts = leftoff
-    ? {
-        blocked: leftoff.counts.blocked,
-        working: leftoff.counts.working,
-        parked: leftoff.counts.parked,
-        done: leftoff.notes.filter((n) => n.state === "gone").length,
-      }
-    : null
-  const pills: StatusPill[] = []
-  if (leftOffCounts && leftOffCounts.blocked > 0) {
-    pills.push({
-      label: `${plural(leftOffCounts.blocked, "chat")} need${leftOffCounts.blocked === 1 ? "s" : ""} a yes`,
-      tone: "bad",
-      board: true,
-    })
-  }
-  if (unread.ready && unread.tickets.count > 0) {
-    pills.push({
-      label: `${plural(unread.tickets.count, "ticket")} · ${unread.tickets.state}`,
-      tone: toneOf(unread.tickets.tone),
-      href: unread.tickets.href,
-    })
-  }
-  if (unread.ready && unread.leads.count > 0) {
-    pills.push({
-      label: `${plural(unread.leads.count, "lead")} · ${unread.leads.state}`,
-      tone: toneOf(unread.leads.tone),
-      href: unread.leads.href,
-    })
-  }
-  if (overdueTasks.length > 0) {
-    pills.push({
-      label: `${plural(overdueTasks.length, "task")} overdue`,
-      tone: "warn",
-      href: ROUTES.tasks,
-    })
-  }
-  if (meetings.configured) {
-    pills.push({
-      label: meetingsToday === 0 ? "No meetings today" : `${plural(meetingsToday, "meeting")} today`,
-      tone: "neutral",
-      icon: "calendar",
-      href: ROUTES.calendar,
-    })
-  }
-  if (monthlyGoalCents) {
-    const pct = Math.round((billedCents / monthlyGoalCents) * 100)
-    const expectedPct = Math.round(((billedCents + currentRemainderCents) / monthlyGoalCents) * 100)
-    pills.push({
-      label: `${pct}% of month goal · on pace for ${expectedPct}%`,
-      tone: expectedPct >= 100 ? "ok" : "warn",
-      href: ROUTES.invoices,
-    })
-  }
-
-  const palette: PaletteEntry[] = [
-    { kind: "page", label: "Inbox", href: ROUTES.inbox, sub: unread.ready && unread.total ? `${unread.total} unread` : undefined },
-    { kind: "page", label: "Tasks", href: ROUTES.tasks, sub: `${actionTasks.length} open` },
-    { kind: "page", label: "Calendar", href: ROUTES.calendar },
-    { kind: "page", label: "Invoices", href: ROUTES.invoices, sub: unpaid.length ? `${unpaid.length} unpaid` : undefined },
-    { kind: "page", label: "Timesheet", href: ROUTES.timesheet },
-    { kind: "page", label: "Clients", href: ROUTES.clients },
-    { kind: "page", label: "Leads", href: ROUTES.leads },
-    { kind: "page", label: "Tickets", href: ROUTES.support },
-    { kind: "page", label: "Inspiration", href: ROUTES.inspiration },
-    { kind: "page", label: "Settings", href: ROUTES.settings },
-    ...clients.map((c) => ({
-      kind: "client" as const,
-      label: c.name,
-      href: ROUTES.client(c.slug),
-      slug: c.slug,
-    })),
-    ...projects.map((p) => ({
-      kind: "project" as const,
-      label: p.name,
-      href: ROUTES.project(p.slug),
-      sub: p.client.name,
-      slug: p.client.slug,
-    })),
-    ...retainers.map((r) => ({
-      kind: "retainer" as const,
-      label: r.name,
-      href: ROUTES.retainer(r.slug),
-      sub: r.client.name,
-      slug: r.client.slug,
-    })),
-  ]
+  /* ---- the pulse: the four rows on top of Needs attention ---- */
+  const todayTasks = actionTasks.filter((t) => taskDue(t.dueOn) === 0)
+  const weekSorted = [...weekTasks].sort((a, b) => (a.dueOn ?? "").localeCompare(b.dueOn ?? ""))
+  const oldestOverdueDays = overdueTasks.reduce<number | null>((max, t) => {
+    const diff = taskDue(t.dueOn)
+    return diff == null ? max : Math.max(max ?? 0, -diff)
+  }, null)
+  const pulse = await loadPulse(now, {
+    overdue: overdueTasks.length,
+    oldestOverdueDays,
+    dueToday: todayTasks.length,
+    dueTodayFirst: todayTasks[0]?.title ?? null,
+    week: weekTasks.length,
+    nextDue: weekSorted[0]?.dueOn ? whenLabel(taskDue(weekSorted[0].dueOn) ?? 0, weekSorted[0].dueOn) : null,
+    waiting: stalled.length,
+    waitingFirst: stalled[0] ? `${stalled[0].title} · ${stalled[0].days}d` : null,
+  })
 
   const rise = (i: number) => ({ "--i": i } as React.CSSProperties)
 
@@ -482,57 +388,69 @@ export default async function DashboardPage({
     <>
       <HomeHeader
         greeting={greeting}
-        pills={pills}
-        leftOff={leftOffCounts}
         clients={clients.map((c) => ({ id: c.id, name: c.name, slug: c.slug }))}
         running={running}
-        palette={palette}
       />
       {searchParams.peek ? (
         <PeekRouter peek={searchParams.peek} closeHref="/" />
       ) : null}
-      <GlobalFocus cards={globalCards} mode={focusMode} />
-      <LeftOffBoard payload={leftoff} waiting={waitingQueue} />
+      {/* The tray and the cards under it share one drag context: a task or a
+          deliverable in Needs attention drags straight up onto a slot. */}
+      <GlobalFocus cards={globalCards} mode={focusMode}>
+        <div className="mt-6 grid grid-cols-[minmax(0,1fr)] min-w-0 gap-3.5 xl:grid-cols-[minmax(0,8fr)_minmax(300px,4fr)]">
+          <div className="grid min-w-0 content-start gap-3.5">
+            <div className="tk-rise min-w-0" style={rise(1)}>
+              <NeedsAttention groups={groups} more={more} unread={unread.ready ? unread : null} pulse={pulse} />
+            </div>
+            <div className="tk-rise min-w-0" style={rise(2)}>
+              <WeekBoard
+                configured={meetings.configured}
+                meetings={meetings.meetings}
+                sources={meetings.sources}
+              />
+            </div>
+          </div>
 
-      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] min-w-0 gap-3.5 xl:grid-cols-[minmax(0,8fr)_minmax(300px,4fr)]">
-        <div className="grid min-w-0 content-start gap-3.5">
-          <div className="tk-rise min-w-0" style={rise(1)}>
-            <NeedsAttention groups={groups} more={more} />
+          <div className="grid min-w-0 content-start gap-3.5">
+            {/* One tap per active retainer, stacked above the month — see RetainerClockRow. */}
+            <div className="tk-rise min-w-0" style={rise(2)}>
+              <RetainerClockRow
+                stacked
+                retainers={retainers
+                  .filter((r) => r.status === "active")
+                  .map((r) => ({
+                    id: r.id,
+                    name: r.name,
+                    clientId: r.client.id,
+                    clientName: r.client.name,
+                    clientSlug: r.client.slug,
+                    hoursPerMonth: r.hoursPerMonth,
+                  }))
+                  .sort((a, b) => a.clientName.localeCompare(b.clientName))}
+              />
+            </div>
+            <div className="tk-rise min-w-0" style={rise(3)}>
+              <MonthBilled
+                monthLabel={now.toLocaleDateString("en-US", { month: "long" })}
+                billedCents={billedCents}
+                monthlyGoalCents={monthlyGoalCents}
+                invoices={billedThisMonth.map((i) => ({
+                  number: i.number,
+                  clientName: i.client.name,
+                  clientSlug: i.client.slug,
+                  amountCents: i.amountCents,
+                  status: i.status,
+                }))}
+                expected={monthExpectedLines}
+                expectedTotalCents={billedCents + currentRemainderCents}
+              />
+            </div>
+            <div className="tk-rise min-w-0" style={rise(4)}>
+              <Forecast months={forecast.months} />
+            </div>
           </div>
         </div>
-
-        <div className="grid min-w-0 content-start gap-3.5">
-          <div className="tk-rise min-w-0" style={rise(2)}>
-            <Unread summary={unread} />
-          </div>
-          <div className="tk-rise min-w-0" style={rise(3)}>
-            <WeekBoard
-              configured={meetings.configured}
-              meetings={meetings.meetings}
-              sources={meetings.sources}
-            />
-          </div>
-          <div className="tk-rise min-w-0" style={rise(4)}>
-            <MonthBilled
-              monthLabel={now.toLocaleDateString("en-US", { month: "long" })}
-              billedCents={billedCents}
-              monthlyGoalCents={monthlyGoalCents}
-              invoices={billedThisMonth.map((i) => ({
-                number: i.number,
-                clientName: i.client.name,
-                clientSlug: i.client.slug,
-                amountCents: i.amountCents,
-                status: i.status,
-              }))}
-              expected={monthExpectedLines}
-              expectedTotalCents={billedCents + currentRemainderCents}
-            />
-          </div>
-          <div className="tk-rise min-w-0" style={rise(5)}>
-            <Forecast months={forecast.months} />
-          </div>
-        </div>
-      </div>
+      </GlobalFocus>
     </>
   )
 }

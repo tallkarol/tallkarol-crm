@@ -2,11 +2,10 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { addWorkstreamAction } from "@/app/(admin)/delivery/actions"
-import { draftDeliverableInvoice } from "@/app/(admin)/projects/actions"
+import { addWorkstreamAction } from "@/lib/workstream-actions"
 import { cn } from "@/lib/cn"
 
-/** Add a workstream without leaving the modal. Collapsed until you need it. */
+/** Add a workstream from the project's lane. Collapsed until you need it. */
 export function AddWorkstream({ projectId }: { projectId: string }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -73,43 +72,5 @@ export function AddWorkstream({ projectId }: { projectId: string }) {
       </button>
       {error ? <span className="text-[10.5px] text-bad">{error}</span> : null}
     </span>
-  )
-}
-
-/**
- * Drafts the invoice for a finished deliverable — the action the ledger's
- * "done, not invoiced" flag exists to prompt.
- */
-export function DeliverableInvoiceButton({ deliverableId }: { deliverableId: string }) {
-  const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
-  const [pending, startTransition] = useTransition()
-
-  return (
-    <button
-      type="button"
-      disabled={pending}
-      title={error ?? "Draft the invoice for this deliverable"}
-      onClick={() =>
-        startTransition(async () => {
-          setError(null)
-          try {
-            await draftDeliverableInvoice(deliverableId)
-            router.refresh()
-          } catch {
-            setError("Couldn't draft it.")
-          }
-        })
-      }
-      className={cn(
-        "inline-flex h-[21px] shrink-0 items-center rounded-full px-2 text-[10.5px] font-semibold",
-        error
-          ? "bg-card text-bad ring-1 ring-transparent"
-          : "bg-warn text-canvas hover:brightness-110",
-        pending && "opacity-60"
-      )}
-    >
-      {pending ? "Drafting…" : error ? "Failed" : "Draft invoice"}
-    </button>
   )
 }

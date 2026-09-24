@@ -18,7 +18,7 @@ import { ROUTES } from "@/lib/nav"
 import { loadPunchlistItems } from "@/lib/punchlists"
 import { ticketNumber, ticketOpenedAt, ticketPriority, ticketSlug, ticketState } from "@/lib/support"
 import { daysBetween, isoDay } from "@/lib/task-view"
-import { widgetAgent } from "@/lib/widget-agent"
+import { sessionHref, widgetAgent } from "@/lib/widget-agent"
 import { widgetUserId } from "@/lib/widget-auth"
 import { widgetPunchlists } from "@/lib/widget-punchlists"
 import {
@@ -128,9 +128,9 @@ async function chatFacts(now: Date): Promise<ChatFacts[]> {
         lastPrompt: row.lastPrompt,
         eventAt: row.eventAt,
         client: clientOf(row),
-        // The board is where a chat is actually worked; the strip's own reply
-        // box is the fast path and this is the full one.
-        href: `${ROUTES.home}#leftoff`,
+        // The session peek: where it left off, the resume command, the
+        // transcript. (The home dashboard's left-off board left on 24 Sep 2026.)
+        href: sessionHref(row.sessionRef),
       },
     ]
   })

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { MessagesSquare, PanelLeftClose, PanelLeftOpen, Search } from "lucide-react"
 import { AccountMenu } from "@/components/nav/AccountMenu"
+import { openPalette } from "@/components/nav/CommandPalette"
 import { cn } from "@/lib/cn"
 import { navIcon } from "@/lib/nav-icons"
 import { DOCK_NAV, ROUTES, groupBadge, type NavBadge, type NavGroup } from "@/lib/nav"
@@ -42,7 +43,7 @@ export function HubBadge({ badge }: { badge?: NavBadge }) {
 }
 
 /**
- * One of the six group icons. Shared between the vertical dock (desktop and
+ * One of the group icons. Shared between the vertical dock (desktop and
  * tablet) and the phone's bottom bar — same row, different flex direction.
  *
  * A real link to the group's landing page, EXCEPT when it is already the
@@ -65,7 +66,7 @@ export function HubButton({
 }) {
   const Icon = navIcon(group.icon)
   const className = cn(
-    "relative flex w-[60px] flex-col items-center justify-center gap-1 rounded-xl py-2 pb-[7px] font-ui text-[10.5px] font-semibold transition-colors",
+    "relative flex w-[60px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl py-2 pb-[7px] font-ui text-[10.5px] font-semibold transition-colors",
     active ? "bg-[--rail-active] text-white" : "text-rail-ink-2 hover:bg-rail-hover hover:text-rail-ink"
   )
   const content = (
@@ -96,8 +97,10 @@ export function HubButton({
 }
 
 /**
- * The 76px onyx dock: monogram (the dashboard link), Chat, the panel toggle,
- * the six group icons, then search and the account avatar. Fixed width,
+ * The 76px onyx dock: monogram (the dashboard link) and the group icons up
+ * top — they scroll when the window is too short for all of them; at the
+ * foot, Admin, then Chat, the panel toggle, search and the account avatar
+ * (Karol, 24 Sep 2026). Fixed width,
  * never collapses — the old sidebar's expand/collapse toggle is gone; the
  * panel beside it is what now opens and closes. Hidden below the `rail`
  * breakpoint, where AppShell's phone chrome takes over.
@@ -149,6 +152,32 @@ export function DockRail({
         />
       </Link>
 
+      <div aria-hidden className="my-1 w-8 border-t border-rail-line" />
+
+      {/* In a short window the groups scroll; the fade says there is more
+          below, and the bottom padding lets the last one clear it. */}
+      <div className="tk-nav-scroll tk-nav-scroll--compact flex min-h-0 w-full flex-1 flex-col items-center gap-1 overflow-y-auto pb-6 [-webkit-mask-image:linear-gradient(to_bottom,#000_calc(100%-24px),transparent)] [mask-image:linear-gradient(to_bottom,#000_calc(100%-24px),transparent)]">
+        {DOCK_NAV.filter((group) => !group.bottom).map((group) => (
+          <HubButton
+            key={group.id}
+            group={group}
+            active={activeGroupId === group.id}
+            badge={groupBadge(group, badges)}
+          />
+        ))}
+      </div>
+
+      {DOCK_NAV.filter((group) => group.bottom).map((group) => (
+        <HubButton
+          key={group.id}
+          group={group}
+          active={activeGroupId === group.id}
+          badge={groupBadge(group, badges)}
+        />
+      ))}
+
+      <div aria-hidden className="my-1 w-8 border-t border-rail-line" />
+
       <div className="flex flex-col items-center gap-0.5">
         <Link
           href={ROUTES.chat}
@@ -166,45 +195,30 @@ export function DockRail({
             this same toggle at 44x44, and a tablet (or any coarse pointer at
             this width) gets the touch floor rather than the mouse one. */}
         {hasPanel ? (
+          <button
+            type="button"
+            aria-expanded={pinned}
+            aria-label={pinned ? "Hide the panel" : "Show the panel"}
+            onClick={onTogglePinned}
+            className="grid size-11 place-items-center rounded-lg text-rail-ink/60 hover:bg-rail-hover hover:text-rail-ink"
+          >
+            {pinned ? (
+              <PanelLeftClose className="size-[18px]" aria-hidden />
+            ) : (
+              <PanelLeftOpen className="size-[18px]" aria-hidden />
+            )}
+          </button>
+        ) : null}
         <button
           type="button"
-          aria-expanded={pinned}
-          aria-label={pinned ? "Hide the panel" : "Show the panel"}
-          onClick={onTogglePinned}
+          onClick={openPalette}
+          aria-label="Search (⌘K)"
+          title="Search (⌘K)"
           className="grid size-11 place-items-center rounded-lg text-rail-ink/60 hover:bg-rail-hover hover:text-rail-ink"
         >
-          {pinned ? (
-            <PanelLeftClose className="size-[18px]" aria-hidden />
-          ) : (
-            <PanelLeftOpen className="size-[18px]" aria-hidden />
-          )}
+          <Search className="size-[18px]" aria-hidden />
         </button>
-        ) : null}
       </div>
-
-      <div aria-hidden className="my-1 w-8 border-t border-rail-line" />
-
-      <div className="flex flex-col items-center gap-1">
-        {DOCK_NAV.map((group) => (
-          <HubButton
-            key={group.id}
-            group={group}
-            active={activeGroupId === group.id}
-            badge={groupBadge(group, badges)}
-          />
-        ))}
-      </div>
-
-      <div className="flex-1" />
-
-      <Link
-        href={ROUTES.home}
-        aria-label="Search (⌘K)"
-        title="Search (⌘K)"
-        className="grid size-11 place-items-center rounded-lg text-rail-ink/60 hover:bg-rail-hover hover:text-rail-ink"
-      >
-        <Search className="size-[18px]" aria-hidden />
-      </Link>
 
       <AccountMenu email={email} hideMoney={hideMoney} theme={theme} />
     </nav>

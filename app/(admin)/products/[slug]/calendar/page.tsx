@@ -1,0 +1,48 @@
+import { notFound } from "next/navigation"
+import { WeekGrid } from "@/components/clients/WeekGrid"
+import { EventLinker } from "@/components/products/EventLinker"
+import { isIsoDateString } from "@/lib/client-calendar"
+import { isoDay } from "@/lib/client-rooms"
+import { ROUTES } from "@/lib/nav"
+import { loadProductShell, loadProductWeek } from "@/lib/product-rooms"
+
+export const dynamic = "force-dynamic"
+
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+  const product = await loadProductShell(params.slug)
+  return { title: product ? `${product.name} · Calendar` : params.slug }
+}
+
+/**
+ * The product's Calendar room: the client Calendar's week grid, this
+ * product's events in its colour and its tasks on the Due row, and under it
+ * the week's events to file onto the product. `?week=` pages the window.
+ */
+export default async function ProductCalendarPage({
+  params,
+  searchParams,
+}: {
+  params: { slug: string }
+  searchParams: { week?: string }
+}) {
+  const product = await loadProductShell(params.slug)
+  if (!product) notFound()
+  const now = new Date()
+  const anchor = isIsoDateString(searchParams.week) ? searchParams.week : undefined
+  const { week, linkable } = await loadProductWeek(product, now, anchor)
+  const mine = week.items.flatMap((i) =>
+    i.kind === "event" && i.mine ? [{ id: i.id, title: i.title, startsAt: i.startsAt, allDay: i.allDay }] : []
+  )
+
+  return (
+    <div className="flex flex-col gap-3">
+      <WeekGrid
+        client={{ slug: product.slug, name: product.name, color: product.color }}
+        week={week}
+        today={isoDay(now)}
+        base={ROUTES.productRoom(product.slug, "calendar")}
+      />
+      <EventLinker productId={product.id} productName={product.name} mine={mine} linkable={linkable} />
+    </div>
+  )
+}

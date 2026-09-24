@@ -42,6 +42,9 @@ export type NavIconName =
   | "inspiration"
   | "product"
   | "settings"
+  | "notifications"
+  | "colors"
+  | "portals"
   | "team"
   | "email-settings"
   | "integrations"
@@ -70,7 +73,7 @@ export type NavSection = {
 export type NavBadge = { count: number; tone?: UnreadTone }
 
 /**
- * One of the six groups on the dock: an icon in the 76px rail, and the pages
+ * One of the groups on the dock: an icon in the 76px rail, and the pages
  * that live in its 236px panel. `href` is the group's landing page — the
  * dock icon is a real link there, not just a panel toggle.
  */
@@ -80,6 +83,30 @@ export type NavGroup = {
   icon: NavIconName
   href: string
   items: readonly NavLink[]
+  /**
+   * No panel: the group's pages carry their own tabs (Time → the Timesheet's
+   * Dashboard / Clock / Review / Sheets / Ledger), so the icon is a plain
+   * link to the landing page, like the monogram. The items stay listed —
+   * they are how a page knows its group, and what ⌘K searches.
+   */
+  noPanel?: boolean
+  /**
+   * The panel is the client list, not these rows. AppShell (and the phone
+   * sheet) render `ClientsPanel` from the roster the admin layout loads, so
+   * the list is there from the first paint beside every page in the group.
+   * Karol, 24 Sep 2026: the rows were the old submenu — they showed for a
+   * beat on /clients until the roster page could swap the list in. The rows
+   * stay for what `noPanel` keeps them for: the dock highlight and ⌘K.
+   */
+  clientList?: boolean
+  /**
+   * Docked at the foot of the rail, above the chrome (chat, the panel
+   * toggle, search), rather than in the group column. On the phone these
+   * come last in the bottom bar, in the same order.
+   */
+  bottom?: boolean
+  /** Phone only: an icon in the top bar beside Search and Chat instead of a bottom-bar tab. */
+  topBar?: boolean
 }
 
 /**
@@ -101,6 +128,33 @@ export type ClientRoomId = (typeof CLIENT_ROOMS)[number]["id"]
  * inside a client; `/clients/[slug]/anything` is, including the codebase
  * pages, so the panel stays in client mode there too.
  */
+/**
+ * A product's rooms — the product hub (24 Sep 2026, Karol: "products should
+ * run similar to clients"). `/products/[slug]` is the Board; the rest are
+ * children, and a punch list's page nests under Punch lists.
+ */
+export const PRODUCT_ROOMS = [
+  { id: "board", label: "Board", icon: "projects" },
+  { id: "calendar", label: "Calendar", icon: "calendar" },
+  { id: "notes", label: "Notes", icon: "notebooks" },
+  { id: "punchlists", label: "Punch lists", icon: "punchlists" },
+] as const satisfies readonly { id: string; label: string; icon: NavIconName }[]
+export type ProductRoomId = (typeof PRODUCT_ROOMS)[number]["id"]
+
+/** The product a pathname is inside, or null — `/products` (the list) is not inside one. */
+export function productSlugOf(pathname: string): string | null {
+  const m = /^\/products\/([^/]+)(?:\/|$)/.exec(pathname)
+  return m ? decodeURIComponent(m[1]) : null
+}
+
+export function productRoomOf(pathname: string): ProductRoomId | null {
+  const m = /^\/products\/[^/]+(?:\/([^/]+))?/.exec(pathname)
+  if (!m) return null
+  const seg = m[1]
+  if (!seg) return "board"
+  return PRODUCT_ROOMS.some((r) => r.id === seg) ? (seg as ProductRoomId) : null
+}
+
 export function clientSlugOf(pathname: string): string | null {
   const m = /^\/clients\/([^/]+)(?:\/|$)/.exec(pathname)
   return m ? decodeURIComponent(m[1]) : null
@@ -111,7 +165,22 @@ export function clientRoomOf(pathname: string): ClientRoomId | null {
   if (!m) return null
   const seg = m[1]
   if (!seg) return "board"
+  if (seg in ROOM_OF_SUBPAGE) return ROOM_OF_SUBPAGE[seg]
   return CLIENT_ROOMS.some((r) => r.id === seg) ? (seg as ClientRoomId) : null
+}
+
+/**
+ * Every page inside a client — the rooms, and the project and punch list
+ * pages that moved in on 24 Sep 2026 — as one revalidation target:
+ * `revalidatePath(CLIENT_PAGES, "layout")`. A mutation that knows only a
+ * project or a list, not its client, refreshes them all rather than guess.
+ */
+export const CLIENT_PAGES = "/clients/[slug]"
+
+/** A client's project and punch list pages belong to the room that lists them. */
+const ROOM_OF_SUBPAGE: Record<string, ClientRoomId> = {
+  projects: "dashboards",
+  punchlists: "dashboards",
 }
 
 export const ROUTES = {
@@ -120,11 +189,8 @@ export const ROUTES = {
   chatThread: (id: string) => `/chat?thread=${id}`,
   inbox: "/inbox",
   inquiries: "/inquiries",
-  pipeline: "/pipeline",
-  delivery: "/delivery",
   contacts: "/contacts",
   clients: "/clients",
-  projects: "/projects",
   retainers: "/retainers",
   leads: "/leads",
   calendar: "/calendar",
@@ -134,8 +200,13 @@ export const ROUTES = {
   emails: "/emails",
   proposals: "/proposals",
   worksheets: "/worksheets",
-  punchlists: "/punchlists",
+  /**
+   * A punch list's short link. Punch lists live inside their client
+   * (`clientPunchlist`); this path redirects there, which keeps every link
+   * already sent — notifications, the Mac widgets, push — working.
+   */
   punchlist: (slug: string) => `/punchlists/${slug}`,
+  clientPunchlist: (client: string, slug: string) => `/clients/${client}/punchlists/${slug}`,
   meetingNotes: "/meeting-notes",
   meetingNote: (id: string) => `/meeting-notes/${id}`,
   contracts: "/contracts",
@@ -146,7 +217,7 @@ export const ROUTES = {
   timesheetReview: "/timesheet/review",
   timesheetSheets: "/timesheet/sheets",
   timesheetEntries: "/timesheet/entries",
-  timesheetSessions: "/timesheet/sessions",
+  sessions: "/admin/sessions",
   usage: "/usage",
   timesheetMeetings: "/timesheet/review?tab=meetings",
   attribution: "/settings/attribution",
@@ -179,9 +250,14 @@ export const ROUTES = {
     room === "board" ? `/clients/${slug}` : `/clients/${slug}/${room}`,
   notebook: (slug: string) => `/notebooks/${slug}`,
   retainer: (slug: string) => `/retainers/${slug}`,
+  /** A project's short link — redirects into its client, as `punchlist` does. */
   project: (slug: string) => `/projects/${slug}`,
+  clientProject: (client: string, slug: string) => `/clients/${client}/projects/${slug}`,
   products: "/products",
   productPage: (slug: string) => `/products/${slug}`,
+  productRoom: (slug: string, room: ProductRoomId) =>
+    room === "board" ? `/products/${slug}` : `/products/${slug}/${room}`,
+  productPunchlist: (product: string, slug: string) => `/products/${product}/punchlists/${slug}`,
   invoice: (number: string) => `/invoices/${number}`,
   timesheetFor: (client: string, month: string) =>
     `/timesheet/${encodeURIComponent(client)}/${encodeURIComponent(month)}`,
@@ -199,15 +275,26 @@ export const ROUTES = {
  * sweep behind it are in the `crm-nav-dock-panel` memory note. Group order,
  * page order and labels are the signed-off list; do not re-sort by hand.
  *
- * Chrome, not a group: `/` (the monogram), `/chat` (an icon beside the panel
- * toggle), ⌘K search, and the avatar menu (theme, hide-money, sign out).
+ * 24 Sep 2026, Karol: Tasks, Calendar and Products left Work for icons of
+ * their own (`noPanel` — one page each, nothing for a panel to list);
+ * Delivery was deleted, Retainers moved to Money, and projects and punch
+ * lists moved inside their client (/clients/[slug]/projects/…,
+ * /clients/[slug]/punchlists/…) — which left Work empty, so it went too.
+ * Studio went the same way: HiveMind is an icon of its own, and Vault,
+ * Scaffolds and Slinks joined Products, which has a panel again.
  *
- * Parked — reachable by URL and ⌘K, not in the dock:
- *   /settings/notifications — Notifications
- *   /settings/colors — Colours
- *   /settings/portals — Client portals
- *   /settings/integrations — Integrations
- *   /settings/integrations/devices — Devices
+ * Time, Money and Admin sit at the foot of the rail (`bottom`), in that
+ * order, above the chrome. Admin holds Settings and its five pages (parked
+ * off the dock until then), Activity, Uptime and Logs (from the old Studio), and
+ * Sessions and Usage out of Time; Sessions left the Timesheet's tabs for a
+ * page of its own at /admin/sessions, and the old URL redirects.
+ *
+ * Chrome, not a group: `/` (the monogram), and at the foot of the rail
+ * under Admin: `/chat`, the panel toggle, ⌘K search, and the avatar menu
+ * (theme, hide-money, sign out).
+ *
+ * Parked — reachable by URL and ⌘K (`PARKED_NAV` below), not in the dock:
+ *   none since Admin gave the settings pages a home.
  *
  * Off every surface:
  *   /contacts — stub: ComingSoon, no contacts table
@@ -216,7 +303,11 @@ export const ROUTES = {
  *   /settings/email — stub: ComingSoon
  *   /settings/attribution — stub: ComingSoon
  *   /inquiries — redirect: → /inbox?kind=lead (same intake as Leads)
- *   /pipeline — redirect: → /delivery, kept for old bookmarks
+ *   /pipeline, /delivery, /projects, /punchlists — redirect (next.config):
+ *     → /clients. Delivery was deleted 24 Sep 2026 (its data layer,
+ *     lib/delivery.ts, still feeds the Mac widgets); the project and punch
+ *     list lists went the same day, their pages moved inside the client.
+ *   /projects/[slug], /punchlists/[slug] — redirect pages into the client.
  *   /analytics — redirect: → /insights
  *   /attribution — redirect: → /settings
  *   /timesheet/meetings — redirect: → /timesheet/review?tab=meetings
@@ -231,15 +322,16 @@ export const DOCK_NAV: readonly NavGroup[] = [
     id: "time",
     label: "Time",
     icon: "clock",
-    href: ROUTES.timesheetLive,
+    // Karol, 24 Sep 2026: the tabs are the menu; land on their Dashboard.
+    href: ROUTES.timesheet,
+    noPanel: true,
+    bottom: true,
     items: [
       { href: ROUTES.timesheetLive, label: "Clock", icon: "timer" },
       { href: ROUTES.timesheet, label: "Timesheet", icon: "clock" },
       { href: ROUTES.timesheetReview, label: "Review", icon: "review" },
       { href: ROUTES.timesheetSheets, label: "Sheets", icon: "sheets" },
       { href: ROUTES.timesheetEntries, label: "Ledger", icon: "list" },
-      { href: ROUTES.timesheetSessions, label: "Sessions", icon: "sessions" },
-      { href: ROUTES.usage, label: "Usage", icon: "usage" },
     ],
   },
   {
@@ -254,25 +346,27 @@ export const DOCK_NAV: readonly NavGroup[] = [
     ],
   },
   {
-    id: "work",
-    label: "Work",
+    id: "tasks",
+    label: "Tasks",
     icon: "tasks",
     href: ROUTES.tasks,
-    items: [
-      { href: ROUTES.tasks, label: "Tasks", icon: "tasks" },
-      { href: ROUTES.calendar, label: "Calendar", icon: "calendar" },
-      { href: ROUTES.delivery, label: "Delivery", icon: "delivery" },
-      { href: ROUTES.projects, label: "Projects", icon: "projects" },
-      { href: ROUTES.retainers, label: "Retainers", icon: "retainers" },
-      { href: ROUTES.punchlists, label: "Punch lists", icon: "punchlists" },
-      { href: ROUTES.products, label: "Products", icon: "product" },
-    ],
+    noPanel: true,
+    items: [{ href: ROUTES.tasks, label: "Tasks", icon: "tasks" }],
+  },
+  {
+    id: "calendar",
+    label: "Calendar",
+    icon: "calendar",
+    href: ROUTES.calendar,
+    noPanel: true,
+    items: [{ href: ROUTES.calendar, label: "Calendar", icon: "calendar" }],
   },
   {
     id: "clients",
     label: "Clients",
     icon: "clients",
     href: ROUTES.clients,
+    clientList: true,
     items: [
       { href: ROUTES.clients, label: "Clients", icon: "clients" },
       { href: ROUTES.insights, label: "Insights", icon: "analytics" },
@@ -287,33 +381,71 @@ export const DOCK_NAV: readonly NavGroup[] = [
     ],
   },
   {
+    id: "products",
+    label: "Products",
+    icon: "product",
+    href: ROUTES.products,
+    items: [
+      { href: ROUTES.products, label: "Products", icon: "product" },
+      { href: ROUTES.vault, label: "Vault", icon: "vault" },
+      { href: ROUTES.scaffolds, label: "Scaffolds", icon: "scaffolds" },
+      { href: ROUTES.slinks, label: "Slinks", icon: "slinks" },
+    ],
+  },
+  {
+    id: "hivemind",
+    label: "HiveMind",
+    icon: "hivemind",
+    href: ROUTES.hivemind,
+    noPanel: true,
+    items: [{ href: ROUTES.hivemind, label: "HiveMind", icon: "hivemind" }],
+  },
+  {
     id: "money",
     label: "Money",
     icon: "invoices",
     href: ROUTES.invoices,
+    bottom: true,
     items: [
       { href: ROUTES.invoices, label: "Invoices", icon: "invoices" },
+      { href: ROUTES.retainers, label: "Retainers", icon: "retainers" },
       { href: ROUTES.revenue, label: "Revenue", icon: "revenue" },
       { href: ROUTES.expenses, label: "Expenses", icon: "expenses" },
     ],
   },
   {
-    id: "studio",
-    label: "Studio",
-    icon: "scaffolds",
-    href: ROUTES.vault,
+    id: "admin",
+    label: "Admin",
+    icon: "settings",
+    href: ROUTES.settings,
+    bottom: true,
+    topBar: true,
     items: [
-      { href: ROUTES.vault, label: "Vault", icon: "vault" },
-      { href: ROUTES.hivemind, label: "HiveMind", icon: "hivemind" },
-      { href: ROUTES.scaffolds, label: "Scaffolds", icon: "scaffolds" },
+      { href: ROUTES.settings, label: "Settings", icon: "settings" },
+      { href: ROUTES.settingsNotifications, label: "Notifications", icon: "notifications" },
+      { href: ROUTES.settingsIntegrations, label: "Integrations", icon: "integrations" },
+      { href: ROUTES.settingsDevices, label: "Devices", icon: "devices" },
+      { href: ROUTES.settingsPortals, label: "Client portals", icon: "portals" },
+      { href: ROUTES.settingsColors, label: "Colours", icon: "colors" },
       { href: ROUTES.activity, label: "Activity", icon: "activity" },
+      { href: ROUTES.sessions, label: "Sessions", icon: "sessions" },
+      { href: ROUTES.usage, label: "Usage", icon: "usage" },
       { href: ROUTES.uptime, label: "Uptime", icon: "uptime" },
       { href: ROUTES.logs, label: "Logs", icon: "logs" },
-      { href: ROUTES.slinks, label: "Slinks", icon: "slinks" },
-      { href: ROUTES.settings, label: "Settings", icon: "settings" },
     ],
   },
 ] as const
+
+/**
+ * What ⌘K reaches besides the dock: the chrome routes and the parked pages
+ * listed above DOCK_NAV. Keep this and that list in step — a page parked
+ * there and missing here is reachable by URL only.
+ */
+export const CHROME_NAV: readonly { href: string; label: string }[] = [
+  { href: ROUTES.home, label: "Dashboard" },
+  { href: ROUTES.chat, label: "Chat" },
+]
+export const PARKED_NAV: readonly { href: string; label: string }[] = []
 
 function flattenNav(sections: readonly NavSection[]): NavLink[] {
   return sections.flatMap((section) => section.items)

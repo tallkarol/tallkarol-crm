@@ -595,6 +595,8 @@ export const brainstormNotes = pgTable(
     clientId: uuid("client_id").references(() => clients.id, {
       onDelete: "cascade",
     }),
+    /** Product hubs (24 Sep 2026): set when this belongs to one of Karol's products. */
+    productId: uuid("product_id").references(() => products.id, { onDelete: "set null" }),
     /** Shared name for a batch of ideas — e.g. "Chartmetric API scope". */
     topic: text("topic").notNull().default(""),
     body: text("body").notNull(),
@@ -1076,6 +1078,7 @@ export const brainstormNotesRelations = relations(brainstormNotes, ({ one }) => 
     fields: [brainstormNotes.clientId],
     references: [clients.id],
   }),
+  product: one(products, { fields: [brainstormNotes.productId], references: [products.id] }),
   proposal: one(proposals, {
     fields: [brainstormNotes.proposalId],
     references: [proposals.id],
@@ -1182,6 +1185,8 @@ export const calendarEvents = pgTable(
     clientId: uuid("client_id").references(() => clients.id, {
       onDelete: "set null",
     }),
+    /** Product hubs (24 Sep 2026): set when this belongs to one of Karol's products. */
+    productId: uuid("product_id").references(() => products.id, { onDelete: "set null" }),
     inquiryId: uuid("inquiry_id").references(() => inquiries.id, {
       onDelete: "set null",
     }),
@@ -1206,6 +1211,7 @@ export const calendarSourcesRelations = relations(
 )
 
 export const calendarEventsRelations = relations(calendarEvents, ({ one }) => ({
+  product: one(products, { fields: [calendarEvents.productId], references: [products.id] }),
   source: one(calendarSources, {
     fields: [calendarEvents.sourceId],
     references: [calendarSources.id],
@@ -2535,6 +2541,8 @@ export const punchlists = pgTable(
     clientId: uuid("client_id")
       .notNull()
       .references(() => clients.id, { onDelete: "cascade" }),
+    /** Product hubs (24 Sep 2026): set when this belongs to one of Karol's products. */
+    productId: uuid("product_id").references(() => products.id, { onDelete: "set null" }),
     projectId: uuid("project_id").references(() => projects.id, {
       onDelete: "set null",
     }),
@@ -2720,6 +2728,7 @@ export const punchlistsRelations = relations(punchlists, ({ one, many }) => ({
     fields: [punchlists.clientId],
     references: [clients.id],
   }),
+  product: one(products, { fields: [punchlists.productId], references: [products.id] }),
   project: one(projects, {
     fields: [punchlists.projectId],
     references: [projects.id],
@@ -3542,6 +3551,8 @@ export const meetingNotes = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     clientId: uuid("client_id").references(() => clients.id, { onDelete: "set null" }),
+    /** Product hubs (24 Sep 2026): set when this belongs to one of Karol's products. */
+    productId: uuid("product_id").references(() => products.id, { onDelete: "set null" }),
     projectId: uuid("project_id").references(() => projects.id, { onDelete: "set null" }),
     calendarEventId: uuid("calendar_event_id").references(() => calendarEvents.id, {
       onDelete: "set null",
@@ -3663,6 +3674,7 @@ export const meetingNoteItems = pgTable(
 export const meetingNotesRelations = relations(meetingNotes, ({ one, many }) => ({
   user: one(users, { fields: [meetingNotes.userId], references: [users.id] }),
   client: one(clients, { fields: [meetingNotes.clientId], references: [clients.id] }),
+  product: one(products, { fields: [meetingNotes.productId], references: [products.id] }),
   project: one(projects, { fields: [meetingNotes.projectId], references: [projects.id] }),
   calendarEvent: one(calendarEvents, {
     fields: [meetingNotes.calendarEventId],
@@ -3766,21 +3778,24 @@ export const focusItems = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
-    clientId: uuid("client_id")
-      .notNull()
-      .references(() => clients.id, { onDelete: "cascade" }),
+    /** Null for a record with no client (a house task): it lives only on the global tray. */
+    clientId: uuid("client_id").references(() => clients.id, { onDelete: "cascade" }),
     /** task | ticket | deliverable | mail */
     refKind: text("ref_kind").notNull(),
     refId: uuid("ref_id").notNull(),
+    /** Order within the client's set. */
     position: integer("position").notNull().default(0),
     global: boolean("global").notNull().default(false),
+    /** Order on the global tray (the dashboard); null = after the ordered ones. */
+    globalPosition: integer("global_position"),
     /** Paper colour override; null = the kind's own. */
     color: text("color"),
     addedAt: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
     byClient: index("focus_items_client_idx").on(table.clientId, table.position),
-    ref: uniqueIndex("focus_items_ref_unique").on(table.clientId, table.refKind, table.refId),
+    /** A record is on one set only — its client's, or the house set. */
+    ref: uniqueIndex("focus_items_ref_unique").on(table.refKind, table.refId),
   })
 )
 

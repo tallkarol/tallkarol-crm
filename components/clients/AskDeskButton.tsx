@@ -2,15 +2,18 @@
 
 import { DESK_OPEN_EVENT } from "@/lib/chat/desk-context"
 
-/** Opens the client-manager desk in the dock on the right — the same desk the panel row opens. */
-export function AskDeskButton() {
+/**
+ * Opens the route's desk in the dock on the right — the same desk the panel
+ * row opens: the client manager in a client, the product owner in a product.
+ */
+export function AskDeskButton({ monogram = "CM" }: { monogram?: string }) {
   return (
     <button
       type="button"
       onClick={() => window.dispatchEvent(new CustomEvent(DESK_OPEN_EVENT))}
       className="inline-flex h-[30px] items-center gap-1.5 rounded-lg border border-line bg-card px-2.5 font-ui text-xs font-semibold text-ink-2 hover:border-line-strong hover:text-tk-onyx"
     >
-      <span className="grid size-[18px] place-items-center rounded-full bg-rail font-ui text-[8px] font-extrabold text-[--rail-active-icon]">CM</span>
+      <span className="grid size-[18px] place-items-center rounded-full bg-rail font-ui text-[8px] font-extrabold text-[--rail-active-icon]">{monogram}</span>
       Ask the desk
     </button>
   )

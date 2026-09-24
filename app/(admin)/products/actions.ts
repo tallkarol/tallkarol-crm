@@ -12,7 +12,8 @@ const STATUSES: ProductStatus[] = ["idea", "building", "live", "paused"]
 
 function touch(slug: string) {
   revalidatePath(ROUTES.products)
-  revalidatePath(ROUTES.productPage(slug))
+  // The product hub's layout: every room under it, not only the Board.
+  revalidatePath(ROUTES.productPage(slug), "layout")
 }
 
 export async function setProductStatus(formData: FormData) {

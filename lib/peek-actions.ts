@@ -15,7 +15,7 @@ import {
   type ProjectStatus,
 } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
-import { ROUTES } from "@/lib/nav"
+import { CLIENT_PAGES, ROUTES } from "@/lib/nav"
 import { writeTrackerRowBack } from "@/lib/smartsheet-tracker"
 import { tracked } from "@/lib/activity/tracked"
 
@@ -82,10 +82,8 @@ export const setDeliverableStatusAction = tracked("peek.setDeliverableStatusActi
     .where(eq(deliverables.id, id))
     .returning()
   if (!row) return { ok: false as const, error: "Deliverable not found." }
-  const project = await db.query.projects.findFirst({
-    where: eq(projects.id, row.projectId),
-  })
-  touch([ROUTES.home, ROUTES.delivery, ROUTES.projects, project ? ROUTES.project(project.slug) : ROUTES.projects])
+  touch([ROUTES.home])
+  revalidatePath(CLIENT_PAGES, "layout")
   return { ok: true as const }
 })
 
@@ -116,7 +114,8 @@ export const setProjectStatusAction = tracked("peek.setProjectStatusAction", asy
   if (!row) return { ok: false as const, error: "Project not found." }
   // No-ops for projects typed here, and for tracker rows while write-back is off.
   const sheet = await writeTrackerRowBack(id)
-  touch([ROUTES.home, ROUTES.delivery, ROUTES.projects, ROUTES.project(row.slug)])
+  touch([ROUTES.home])
+  revalidatePath(CLIENT_PAGES, "layout")
   if (!sheet.ok) {
     return { ok: false as const, error: `Saved here — Smartsheet write failed: ${sheet.error}` }
   }
@@ -135,7 +134,8 @@ export const setProjectFeeStatusAction = tracked("peek.setProjectFeeStatusAction
     .where(eq(projects.id, id))
     .returning()
   if (!row) return { ok: false as const, error: "Project not found." }
-  touch([ROUTES.home, ROUTES.delivery, ROUTES.projects, ROUTES.project(row.slug)])
+  touch([ROUTES.home])
+  revalidatePath(CLIENT_PAGES, "layout")
   return { ok: true as const }
 })
 
@@ -148,7 +148,8 @@ export const setProjectNotesAction = tracked("peek.setProjectNotesAction", async
     .where(eq(projects.id, id))
     .returning()
   if (!row) return { ok: false as const, error: "Project not found." }
-  touch([ROUTES.home, ROUTES.delivery, ROUTES.projects, ROUTES.project(row.slug)])
+  touch([ROUTES.home])
+  revalidatePath(CLIENT_PAGES, "layout")
   return { ok: true as const }
 })
 

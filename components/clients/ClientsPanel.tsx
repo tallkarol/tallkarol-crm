@@ -1,28 +1,58 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect } from "react"
-import { usePanelSlot } from "@/components/nav/PanelSlot"
+import { X } from "lucide-react"
+import { cn } from "@/lib/cn"
 import type { ClientGroup } from "@/lib/client-groups"
 import { markColor } from "@/lib/client-colors"
 import { ROUTES } from "@/lib/nav"
 
 /**
- * The dock panel while you are on the roster: just the clients, grouped
- * (active retainer · active project · completed · internal). A row opens
- * that client's Board, where the panel switches into client mode.
+ * The Clients group's panel: just the clients, grouped (active retainer ·
+ * active project · completed · internal). The admin layout loads the roster
+ * and AppShell puts this beside every page in the group — the roster,
+ * Insights, Reports, … — so it is there from the first paint; nothing swaps
+ * it in after the fact (the group's own rows used to show for a beat first;
+ * Karol, 24 Sep 2026). A row opens that client's Board, where the panel
+ * switches into client mode. `onClose` marks the phone sheet, which gets an
+ * X in place of the count and the touch row height, as HubPanel does.
  */
-export function ClientsPanel({ groups }: { groups: ClientGroup[] }) {
+export function ClientsPanel({
+  groups,
+  onClose,
+  className,
+}: {
+  groups: ClientGroup[]
+  onClose?: () => void
+  /** The wrapper's own box — the desktop column or the phone sheet, see HubPanel. */
+  className: string
+}) {
   const total = groups.reduce((n, g) => n + g.rows.length, 0)
   return (
     <aside
       aria-label="Clients"
       data-chrome="sidebar"
-      className="hidden w-[236px] shrink-0 flex-col gap-2 overflow-y-auto border-r border-rail-line bg-rail-2 px-3 py-5 rail:flex"
+      role={onClose ? "dialog" : undefined}
+      aria-modal={onClose ? true : undefined}
+      className={cn("flex flex-col gap-2", className)}
     >
-      <div className="flex items-baseline justify-between px-2.5">
+      {onClose ? (
+        <span aria-hidden className="mx-auto -mt-1 h-1 w-9 shrink-0 rounded-full bg-rail-ink/[0.22]" />
+      ) : null}
+      <div className={cn("flex justify-between", onClose ? "items-center pl-2.5 pr-1" : "items-baseline px-2.5")}>
         <h2 className="font-display text-[17px] font-bold tracking-[-0.01em] text-rail-ink">Clients</h2>
-        <span className="font-mono text-[10.5px] text-rail-ink-3">{total}</span>
+        {onClose ? (
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={onClose}
+            className="grid size-11 place-items-center rounded-full bg-rail-ink/[0.08] text-rail-ink"
+          >
+            <X className="size-[18px]" aria-hidden />
+          </button>
+        ) : (
+          <span className="font-mono text-[10.5px] text-rail-ink-3">{total}</span>
+        )}
       </div>
 
       {groups.map((group) => (
@@ -35,7 +65,10 @@ export function ClientsPanel({ groups }: { groups: ClientGroup[] }) {
               <li key={c.slug}>
                 <Link
                   href={ROUTES.client(c.slug)}
-                  className="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 font-ui text-[13px] leading-[19px] text-rail-ink-2 transition-colors hover:bg-rail-hover hover:text-rail-ink"
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-lg px-2.5 font-ui text-[13px] leading-[19px] text-rail-ink-2 transition-colors hover:bg-rail-hover hover:text-rail-ink",
+                    onClose ? "py-3" : "py-1.5"
+                  )}
                 >
                   <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ backgroundColor: markColor(c.color) }} />
                   <span className="min-w-0 flex-1 truncate">{c.name}</span>
@@ -49,17 +82,6 @@ export function ClientsPanel({ groups }: { groups: ClientGroup[] }) {
           </ul>
         </section>
       ))}
-
     </aside>
   )
-}
-
-/** Puts the grouped client list into the dock while the roster is mounted. */
-export function ClientsPanelMount({ groups }: { groups: ClientGroup[] }) {
-  const { setOverride } = usePanelSlot()
-  useEffect(() => {
-    setOverride(<ClientsPanel groups={groups} />)
-    return () => setOverride(null)
-  }, [groups, setOverride])
-  return null
 }

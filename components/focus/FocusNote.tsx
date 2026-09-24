@@ -24,12 +24,15 @@ export function FocusNote({
   size,
   tilt = 0,
   ops,
+  flag = "global",
   children,
 }: {
   card: FocusCard
   size: "slot" | "sheet"
   tilt?: number
   ops: NoteOps
+  /** The top-right badge: "Global" on a Board (where the client is a given), the client's name on the global tray. */
+  flag?: "global" | "client"
   /** Sheet-only extras (checklist, chat) rendered by the tray. */
   children?: React.ReactNode
 }) {
@@ -40,7 +43,7 @@ export function FocusNote({
   const sheet = size === "sheet"
   const style = {
     "--paper": `var(--paper-${card.paper})`,
-    "--c": markColor(clientColor(card.clientSlug)),
+    "--c": card.clientSlug ? markColor(clientColor(card.clientSlug)) : "rgb(var(--ink-3-rgb))",
     transform: `rotate(${tilt}deg)`,
   } as React.CSSProperties
 
@@ -61,7 +64,18 @@ export function FocusNote({
 
       <div className="flex items-center gap-1.5 font-ui text-[9px] font-extrabold uppercase tracking-[0.12em] text-[--paper-ink-3]">
         {PAPER_LABEL[card.paper] ?? KIND_LABEL[card.refKind]}
-        {card.global ? (
+        {flag === "client" ? (
+          card.clientName ? (
+            <span
+              className="ml-auto inline-flex h-4 max-w-[60%] items-center truncate rounded-[3px] bg-[--c] px-1.5 font-ui text-[8.5px] font-extrabold uppercase tracking-[0.1em] text-white"
+              title={`${card.clientName} — on its Board too`}
+            >
+              {card.clientName}
+            </span>
+          ) : (
+            <span className="ml-auto font-ui text-[8.5px] font-extrabold uppercase tracking-[0.1em] text-[--paper-ink-3]">House</span>
+          )
+        ) : card.global ? (
           <span
             className="ml-auto inline-flex h-4 items-center gap-1 rounded-[3px] bg-[--c] px-1.5 font-ui text-[8.5px] font-extrabold uppercase tracking-[0.1em] text-white"
             title={`On the global set · ${card.clientName}`}
@@ -135,7 +149,7 @@ export function FocusNote({
   )
 }
 
-function NoteButton({
+export function NoteButton({
   label,
   onClick,
   on,

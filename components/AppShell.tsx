@@ -3,17 +3,22 @@
 import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
 import { DeskDock } from "@/components/chat/DeskDock"
+import { ClientsPanel } from "@/components/clients/ClientsPanel"
+import { CommandPalette } from "@/components/nav/CommandPalette"
 import { DockRail } from "@/components/nav/DockRail"
 import { HubPanel } from "@/components/nav/HubPanel"
 import { MobileNav } from "@/components/nav/MobileNav"
 import { PanelSlotContext } from "@/components/nav/PanelSlot"
 import { PeekPending } from "@/components/peek/PeekPending"
 import { cn } from "@/lib/cn"
-import { DOCK_NAV, ROUTES, clientSlugOf, resolveActiveNav, type NavBadge } from "@/lib/nav"
+import type { ClientGroup } from "@/lib/client-groups"
+import { DOCK_NAV, ROUTES, clientSlugOf, productSlugOf, resolveActiveNav, type NavBadge } from "@/lib/nav"
 import { primeHideMoney } from "@/lib/money-privacy"
 import type { Theme } from "@/lib/theme"
 
 const PINNED_KEY = "tk-crm-panel-pinned"
+/** What a chrome-only route shows before any group with a panel has been visited. */
+const FIRST_PANEL_GROUP = DOCK_NAV.find((g) => !g.noPanel) ?? DOCK_NAV[0]
 const GROUP_KEY = "tk-crm-panel-group"
 
 /**
@@ -41,6 +46,7 @@ export function AppShell({
   badges = {},
   hideMoney = false,
   theme = "system",
+  clientGroups = [],
   children,
 }: {
   email: string
@@ -50,6 +56,12 @@ export function AppShell({
   hideMoney?: boolean
   /** Appearance, from the cookie the admin layout read. */
   theme?: Theme
+  /**
+   * The Clients group's panel is the client list, grouped — loaded by the
+   * admin layout so it is beside every page in the group from the first
+   * paint (see `NavGroup.clientList`). The client rooms still override it.
+   */
+  clientGroups?: ClientGroup[]
   children: React.ReactNode
 }) {
   // Primes the server pass of every client component below this one, which
@@ -60,12 +72,13 @@ export function AppShell({
   const pathname = usePathname()
   // The client rooms own their scrolling too: a fixed header, a scrolling
   // room, and the focus strip docked underneath (app/(admin)/clients/[slug]/layout.tsx).
-  const fullBleed = FULL_BLEED.has(pathname) || clientSlugOf(pathname) !== null
+  // A product hub runs the same way (its layout mirrors the client one).
+  const fullBleed = FULL_BLEED.has(pathname) || clientSlugOf(pathname) !== null || productSlugOf(pathname) !== null
   // A route may put its own content in the dock's panel — the client rooms do.
   const [panelOverride, setPanelOverride] = useState<ReactNode | null>(null)
   const panelSlot = useMemo(() => ({ setOverride: setPanelOverride }), [])
   const [pinned, setPinned] = useState(true)
-  const [lastGroupId, setLastGroupId] = useState<string>(DOCK_NAV[0].id)
+  const [lastGroupId, setLastGroupId] = useState<string>(FIRST_PANEL_GROUP.id)
   // The dock's Chat icon can wear the desks' "needs a yes" total, but the
   // count has to come up from DeskDock's own 30s poll rather than a second
   // one. That prop is waiting on the chat session's in-flight work, so the
@@ -77,7 +90,7 @@ export function AppShell({
       const rawPinned = localStorage.getItem(PINNED_KEY)
       if (rawPinned !== null) setPinned(rawPinned === "true")
       const rawGroup = localStorage.getItem(GROUP_KEY)
-      if (rawGroup && DOCK_NAV.some((g) => g.id === rawGroup)) setLastGroupId(rawGroup)
+      if (rawGroup && DOCK_NAV.some((g) => g.id === rawGroup && !g.noPanel)) setLastGroupId(rawGroup)
     } catch {
       /* ignore */
     }
@@ -94,7 +107,8 @@ export function AppShell({
   const activeGroupId = onDashboard ? null : (activeNav?.group.id ?? lastGroupId)
 
   useEffect(() => {
-    if (!activeNav) return
+    // A group with no panel is never what /chat should fall back to showing.
+    if (!activeNav || activeNav.group.noPanel) return
     setLastGroupId(activeNav.group.id)
     try {
       localStorage.setItem(GROUP_KEY, activeNav.group.id)
@@ -115,7 +129,10 @@ export function AppShell({
     })
   }
 
-  const openGroup = DOCK_NAV.find((g) => g.id === activeGroupId) ?? DOCK_NAV[0]
+  const openGroup = DOCK_NAV.find((g) => g.id === activeGroupId) ?? FIRST_PANEL_GROUP
+  // The dashboard has no panel, and neither does a group whose pages carry
+  // their own tabs (Time) — no panel, and no toggle for one.
+  const panelless = onDashboard || openGroup.noPanel === true
 
   return (
     <PanelSlotContext.Provider value={panelSlot}>
@@ -127,6 +144,9 @@ export function AppShell({
         Skip to main content
       </a>
 
+      {/* ⌘K on every page; it portals itself to <body> when open. */}
+      <CommandPalette badges={badges} />
+
       {/* Desktop and tablet: the 76px dock, then the panel beside it when
           pinned open. Below the `rail` breakpoint both are replaced by
           MobileNav's top bar, bottom bar and sheet. */}
@@ -134,15 +154,20 @@ export function AppShell({
         badges={badges}
         chatNeedsYou={chatNeedsYou}
         activeGroupId={activeGroupId}
-        hasPanel={!onDashboard}
+        hasPanel={!panelless}
         pinned={pinned}
         onTogglePinned={togglePinned}
         email={email}
         hideMoney={hideMoney}
         theme={theme}
       />
-      {onDashboard || !pinned ? null : panelOverride ? (
+      {panelless || !pinned ? null : panelOverride ? (
         panelOverride
+      ) : openGroup.clientList ? (
+        <ClientsPanel
+          groups={clientGroups}
+          className="hidden w-[236px] shrink-0 overflow-y-auto border-r border-rail-line bg-rail-2 px-3 py-5 rail:flex"
+        />
       ) : (
         <HubPanel
           group={openGroup}
@@ -161,6 +186,7 @@ export function AppShell({
           activeGroupId={activeNav ? activeGroupId : null}
           badges={badges}
           chatNeedsYou={chatNeedsYou}
+          clientGroups={clientGroups}
         />
 
         {/* The page and, on the right edge, the desk dock — a panel when a desk is open. */}

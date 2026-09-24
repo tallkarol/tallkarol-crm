@@ -49,8 +49,18 @@ function isTimedEvent(item: WeekItem): item is TimedEvent {
  * "today" on every past or future week. Comparing the real ISO date against
  * `week.days` here gets that right without touching the shared loader.
  */
-export function WeekGrid({ client, week, today }: { client: Client; week: WeekData; today: string }) {
-  const base = ROUTES.clientRoom(client.slug, "calendar")
+export function WeekGrid({
+  client,
+  week,
+  today,
+  base = ROUTES.clientRoom(client.slug, "calendar"),
+}: {
+  client: Client
+  week: WeekData
+  today: string
+  /** Where ‹ Today › page to — a product hub passes its own Calendar room. */
+  base?: string
+}) {
   const paint = client.color
   const todayIndex = week.days.findIndex((d) => d.iso === today)
 

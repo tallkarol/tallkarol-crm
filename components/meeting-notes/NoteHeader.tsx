@@ -17,12 +17,24 @@ import {
   setNoteTargetAction,
   setNoteTitleAction,
 } from "@/lib/meeting-note-actions"
+import { setNoteProductAction } from "@/lib/product-hub-actions"
 import type { NoteDetail, Party, ProjectOption } from "@/lib/meeting-notes"
 import { ROUTES } from "@/lib/nav"
 
 const BTN = "inline-flex items-center gap-1.5 rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-semibold text-tk-onyx hover:border-line-strong disabled:opacity-60"
 
-export function NoteHeader({ note, clients, projects }: { note: NoteDetail; clients: Party[]; projects: ProjectOption[] }) {
+export function NoteHeader({
+  note,
+  clients,
+  projects,
+  products,
+}: {
+  note: NoteDetail
+  clients: Party[]
+  projects: ProjectOption[]
+  /** Karol's products — a note can be filed to one as well as to a client. */
+  products: { id: string; name: string }[]
+}) {
   const router = useRouter()
   const [busy, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -32,6 +44,7 @@ export function NoteHeader({ note, clients, projects }: { note: NoteDetail; clie
   const [menu, setMenu] = useState(false)
   const [picking, setPicking] = useState(false)
   const tz = note.timeZone || "UTC"
+  const productName = products.find((p) => p.id === note.productId)?.name ?? null
 
   function run(fn: () => Promise<{ ok: boolean; error?: string }>, after?: () => void) {
     setError(null)
@@ -133,12 +146,25 @@ export function NoteHeader({ note, clients, projects }: { note: NoteDetail; clie
                     ))}
                   </select>
                 ) : null}
+                <select
+                  defaultValue={note.productId ?? ""}
+                  onChange={(e) => run(() => setNoteProductAction(note.id, e.target.value || null), () => setPicking(false))}
+                  className="rounded-lg border border-line bg-card px-2 py-1 text-xs text-tk-onyx"
+                  aria-label="Product"
+                >
+                  <option value="">No product</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
                 <button type="button" onClick={() => setPicking(false)} className="text-[11px] font-semibold text-ink-3 hover:text-tk-onyx">
                   Done
                 </button>
               </span>
             ) : (
-              <button type="button" onClick={() => setPicking(true)} className="inline-flex items-center gap-1.5 hover:underline" title="Change client or project">
+              <button type="button" onClick={() => setPicking(true)} className="inline-flex items-center gap-1.5 hover:underline" title="Change client, project or product">
                 {note.client ? (
                   <>
                     <span aria-hidden className="size-2 rounded-full" style={{ backgroundColor: markColor(clientColor(note.client.slug)) }} />
@@ -150,6 +176,7 @@ export function NoteHeader({ note, clients, projects }: { note: NoteDetail; clie
                 ) : (
                   <span className="font-semibold text-warn">No client yet · pick one</span>
                 )}
+                {productName ? <span>· {productName}</span> : null}
               </button>
             )}
             {note.startedAt ? (
