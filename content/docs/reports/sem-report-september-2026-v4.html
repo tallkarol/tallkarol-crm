@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SEM Report v4 — Mineralife — September 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#F4F2EC;--surface:#FFF;--surface-2:#EDE9DE;--ink:#0F1615;--ink-2:#3D4947;--muted:#6E7A77;--line:rgba(15,22,21,.13);--line-soft:rgba(15,22,21,.07);--accent:#006965;--accent-ink:#00504D;--accent-soft:rgba(0,105,101,.10);--warn:#A45A1E;--warn-soft:rgba(164,90,30,.12);--crit:#8E3521;--crit-soft:rgba(142,53,33,.12);--good:#2E7D57;--good-soft:rgba(46,125,87,.12);--display:"Archivo",ui-sans-serif,system-ui,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--ui:ui-sans-serif,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6}
+.wrap{max-width:880px;margin:0 auto;padding:0 32px}
+@media(max-width:720px){.wrap{padding:0 20px}}
+h1,h2,h3,h4,.eyebrow,.chip,.num,th,.ui{font-family:var(--display)}
+h1{font-size:clamp(28px,4.2vw,40px);line-height:1.08;letter-spacing:-.02em;font-weight:700;margin:0 0 10px}
+h2{font-size:20px;line-height:1.2;letter-spacing:-.01em;font-weight:600;margin:0 0 12px}
+h3{font-size:15px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 14px}p:last-child{margin-bottom:0}
+code,.mono{font-family:var(--mono);font-size:.85em;background:var(--surface-2);padding:.1em .34em;border-radius:3px}
+.small{font-size:13.5px;line-height:1.5}.muted{color:var(--muted)}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 14px}
+header.rpt{padding:56px 0 28px;border-bottom:2px solid var(--ink)}
+section{padding:34px 0;border-bottom:1px solid var(--line)}
+.sec-label{display:flex;align-items:baseline;gap:10px;margin:0 0 16px}
+.sec-label .n{font-family:var(--mono);font-size:12px;color:var(--accent-ink)}
+.metastrip{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;margin-top:22px}
+.metastrip>div{flex:1 1 160px;padding:12px 16px;border-right:1px solid var(--line-soft)}
+.metastrip>div:last-child{border-right:0}
+.metastrip .k{font-family:var(--ui);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px}
+.metastrip .v{font-family:var(--display);font-size:14px;font-weight:500}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:720px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:1fr}.g2{grid-template-columns:1fr}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.stat .num{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.05;display:block;font-variant-numeric:tabular-nums}
+.stat .lbl{font-family:var(--ui);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:5px;display:block}
+.stat .sub{font-size:12.5px;color:var(--ink-2);margin-top:5px;display:block;line-height:1.35}
+.stat.good .num{color:var(--good)}.stat.warn .num{color:var(--warn)}.stat.crit .num{color:var(--crit)}.stat.accent .num{color:var(--accent-ink)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+.tablecard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 10px 6px;overflow-x:auto}
+th{text-align:left;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);font-family:var(--ui);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12px}
+.r{text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);font-family:var(--ui)}
+.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.ok{background:var(--good-soft);color:var(--good)}
+.chip.accent{background:var(--accent-soft);color:var(--accent-ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.card.tint{background:var(--surface-2);border-color:var(--line-soft)}
+.rail{border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.rail.crit{border-left-color:var(--crit)}.rail.good{border-left-color:var(--good)}.rail.warn{border-left-color:var(--warn)}
+.up{color:var(--good);font-weight:600}.down{color:var(--crit);font-weight:600}
+ul.tight{margin:0;padding-left:19px}ul.tight li{margin-bottom:5px}
+footer{padding:26px 0 56px;color:var(--muted);font-size:12.5px;font-family:var(--ui)}
+@media print{body{background:#fff;font-size:12pt}section{page-break-inside:avoid}header.rpt{padding-top:0}}
+.toc{background:var(--surface-2);border:1px solid var(--line-soft);border-radius:8px;padding:16px 20px;margin-top:26px}
+.toc ol{margin:0;padding-left:20px;columns:2;column-gap:30px}
+.toc li{margin-bottom:5px;font-size:14px}
+.toc a{color:var(--ink);text-decoration:none}
+.toc a:hover{color:var(--accent-ink);text-decoration:underline}
+@media(max-width:640px){.toc ol{columns:1}}
+.statusrow{display:grid;grid-template-columns:88px 1fr;gap:14px;padding:11px 0;border-bottom:1px solid var(--line-soft);align-items:start}
+.statusrow:last-child{border-bottom:0}
+.statusrow .st{font-family:var(--ui);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:4px;text-align:center;white-space:nowrap}
+.st.done{background:var(--good-soft);color:var(--good)}
+.st.part{background:var(--warn-soft);color:var(--warn)}
+.st.open{background:var(--crit-soft);color:var(--crit)}
+.statusrow .what{font-size:14px}
+.statusrow .what b{font-weight:600}
+.statusrow .what .why{display:block;font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.45}
+.stack{display:grid;gap:14px}
+.new{background:var(--warn-soft);color:var(--warn);font-family:var(--ui);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:2px 7px;border-radius:4px;display:inline-block;vertical-align:middle;margin-left:7px}
+.fixed{background:var(--good-soft);color:var(--good);font-family:var(--ui);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:2px 7px;border-radius:4px;display:inline-block;vertical-align:middle;margin-left:7px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="rpt">
+  <p class="eyebrow">Tall Karol &middot; Mineralife Nutraceuticals &middot; mycustommanufacturer.com</p>
+  <h1>SEM Report v4</h1>
+  <p class="muted" style="font-size:17px">September 2026, read from the live systems on 28 September. The first
+  month in this series whose numbers can be trusted &mdash; and the first that can be judged on results rather
+  than on plumbing.</p>
+  <div class="metastrip">
+    <div><span class="k">Measurement</span><span class="v">Working &mdash; 1,164 users vs 131 in August</span></div>
+    <div><span class="k">Paid spend</span><span class="v">$474.54 &middot; 160 clicks &middot; 0 leads</span></div>
+    <div><span class="k">Biggest channel</span><span class="v">LinkedIn &mdash; and it is not working</span></div>
+    <div><span class="k">Index</span><span class="v">62 of 63</span></div>
+  </div>
+  <div class="toc">
+    <ol>
+      <li><a href="#s1">What this month actually shows</a></li>
+      <li><a href="#s2">The measurement fix held</a></li>
+      <li><a href="#s3">LinkedIn is half the traffic</a></li>
+      <li><a href="#s4">Google Ads: a full month</a></li>
+      <li><a href="#s5">Where the money went</a></li>
+      <li><a href="#s6">The five enquiries, and where they came from</a></li>
+      <li><a href="#s7">Organic search</a></li>
+      <li><a href="#s8">Index check</a></li>
+      <li><a href="#s9">Site health</a></li>
+      <li><a href="#s10">What to do, in order</a></li>
+      <li><a href="#s11">Carried over from v3</a></li>
+      <li><a href="#s12">How this was verified</a></li>
+    </ol>
+  </div>
+</header>
+
+<section id="s1">
+  <div class="sec-label"><span class="n">01</span><h2>What this month actually shows</h2></div>
+  <p>Version three was a report about a broken instrument. It found that Analytics had been recording roughly one
+  visitor in twelve since 17 July, and nothing at all for three days at the start of September. That was fixed on
+  4 September. This report is the first in the series written from numbers that are actually measuring the site.</p>
+  <p>Three things stand out, and none of them is the thing the account was set up to prove.</p>
+  <div class="stack" style="margin-top:16px">
+    <div class="card rail good">
+      <h3>The fix worked, and held for twenty-four days</h3>
+      <p class="small">September recorded 1,164 visitors against August&rsquo;s 131 &mdash; not growth, but the
+      same traffic finally being counted. Analytics now captures about 58% of what the cookieless counter sees,
+      against roughly 8% before. Nothing has regressed since.</p>
+    </div>
+    <div class="card rail crit">
+      <h3>LinkedIn is now half of all traffic, and it is the worst traffic on the site</h3>
+      <p class="small">638 of September&rsquo;s 1,248 sessions came from LinkedIn paid social, at engagement
+      rates of 17% and 2%. Google&rsquo;s paid search traffic engages at 60%. LinkedIn produced no enquiries. It
+      is also not in the Google Ads account, so nothing in the previous reports has been watching it.</p>
+    </div>
+    <div class="card rail warn">
+      <h3>A month of rebuilt search advertising produced no enquiries at all</h3>
+      <p class="small">$474.54 bought 160 clicks across the two B2B campaigns. The traffic is genuinely relevant
+      and genuinely engaged. It converted nothing. September&rsquo;s five enquiries came from direct visits,
+      organic search and a trade-show referral &mdash; not one from advertising.</p>
+    </div>
+  </div>
+</section>
+
+<section id="s2">
+  <div class="sec-label"><span class="n">02</span><h2>The measurement fix held</h2></div>
+  <div class="grid g4">
+    <div class="stat good"><span class="num">1,164</span><span class="lbl">Visitors, September</span><span class="sub">131 in August</span></div>
+    <div class="stat good"><span class="num">1,248</span><span class="lbl">Sessions</span><span class="sub">161 in August</span></div>
+    <div class="stat"><span class="num">58%</span><span class="lbl">Of the cookieless count</span><span class="sub">~8% before the fix</span></div>
+    <div class="stat good"><span class="num">5</span><span class="lbl">Enquiries recorded</span><span class="sub">0 in August &mdash; none were counted</span></div>
+  </div>
+  <p style="margin-top:16px">The gap between the two counters is now explainable rather than alarming: it is the
+  European visitors who are still not measured, plus everyone who declines. Both counters move together
+  day to day, which is what proves the instrument is sound.</p>
+  <div class="tablecard" style="margin-top:16px">
+  <table>
+    <thead><tr><th>Day</th><th class="r">Analytics visitors</th><th class="r">Cookieless visitors</th><th class="r">Paid sessions</th><th class="r">Enquiries</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">20 Sep</td><td class="r">58</td><td class="r">60</td><td class="r">35</td><td class="r">&mdash;</td></tr>
+      <tr><td class="mono">21 Sep</td><td class="r">46</td><td class="r">71</td><td class="r">35</td><td class="r">&mdash;</td></tr>
+      <tr><td class="mono">22 Sep</td><td class="r">53</td><td class="r">92</td><td class="r">23</td><td class="r">1</td></tr>
+      <tr><td class="mono">23 Sep</td><td class="r">38</td><td class="r">74</td><td class="r">21</td><td class="r">&mdash;</td></tr>
+      <tr><td class="mono">24 Sep</td><td class="r">38</td><td class="r">64</td><td class="r">26</td><td class="r">&mdash;</td></tr>
+      <tr><td class="mono">25 Sep</td><td class="r">57</td><td class="r">61</td><td class="r">31</td><td class="r">1</td></tr>
+      <tr><td class="mono">26 Sep</td><td class="r">39</td><td class="r">78</td><td class="r">29</td><td class="r">&mdash;</td></tr>
+      <tr><td class="mono">27 Sep</td><td class="r">39</td><td class="r">48</td><td class="r">39</td><td class="r">&mdash;</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="small muted" style="margin-top:10px"><b>One warning about the &ldquo;paid sessions&rdquo; column.</b>
+  It counts LinkedIn as well as Google. Of September&rsquo;s 754 paid sessions, 638 are LinkedIn and only 108 are
+  Google search. Anyone reading a dashboard figure for &ldquo;paid traffic&rdquo; and assuming it means the search
+  campaigns will be wrong by a factor of six.</p>
+  <p style="margin-top:14px">August cannot be compared with September on any Analytics figure, and it is worth
+  being blunt about why: the August numbers were never a measurement of August. Comparisons in this report are
+  made against the cookieless counter or against Search Console and Google Ads, all three of which were
+  unaffected.</p>
+</section>
+
+<section id="s3">
+  <div class="sec-label"><span class="n">03</span><h2>LinkedIn is half the traffic</h2></div>
+  <p>This is new since the last report and it is the largest single fact about September. Nobody has been
+  reporting on it because it sits outside the Google Ads account these reports read.</p>
+  <div class="tablecard">
+  <table>
+    <thead><tr><th>Channel</th><th class="r">Sessions</th><th class="r">Share</th><th class="r">Engagement</th><th>Enquiries</th></tr></thead>
+    <tbody>
+      <tr><td><b>LinkedIn paid social</b></td><td class="r">540</td><td class="r">43%</td><td class="r"><span class="down">17%</span></td><td><span class="chip crit">none</span></td></tr>
+      <tr><td><b>LinkedIn paid social</b> <span class="muted">(second tag)</span></td><td class="r">98</td><td class="r">8%</td><td class="r"><span class="down">2%</span></td><td><span class="chip crit">none</span></td></tr>
+      <tr><td>Direct</td><td class="r">301</td><td class="r">24%</td><td class="r">24%</td><td><span class="chip ok">2</span></td></tr>
+      <tr><td>Google organic</td><td class="r">142</td><td class="r">11%</td><td class="r"><span class="up">62%</span></td><td><span class="chip ok">1</span></td></tr>
+      <tr><td>Google paid &mdash; Core Terms</td><td class="r">63</td><td class="r">5%</td><td class="r"><span class="up">60%</span></td><td><span class="chip crit">none</span></td></tr>
+      <tr><td>Google paid &mdash; Competitors</td><td class="r">45</td><td class="r">4%</td><td class="r">51%</td><td><span class="chip crit">none</span></td></tr>
+      <tr><td>Trade-show referral <span class="muted">(SupplySide)</span></td><td class="r">&mdash;</td><td class="r">&mdash;</td><td class="r">&mdash;</td><td><span class="chip ok">1</span></td></tr>
+      <tr><td>ChatGPT</td><td class="r">7</td><td class="r">&lt;1%</td><td class="r">43%</td><td><span class="muted">&mdash;</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="margin-top:14px">An engagement rate of 2% means 98 of every 100 sessions leave without doing
+  anything measurable. 17% is not much better. For comparison, the paid search traffic these reports have been
+  worrying about engages at 60% &mdash; it is the best paid traffic the site gets, by a wide margin, and there is
+  six times less of it.</p>
+  <div class="card rail crit" style="margin-top:16px">
+    <h3>The question this raises</h3>
+    <p class="small">Nobody has told us what the LinkedIn spend is, and it is not visible in any system these
+    reports can read. If it costs anything material, it is buying 638 sessions that do nothing while the
+    best-performing paid channel on the site runs on $474 a month. <b>That comparison cannot be made without the
+    LinkedIn budget.</b> It is the single most valuable number missing from this report.</p>
+  </div>
+  <p class="small muted" style="margin-top:14px">Two smaller notes from the same table. Six sessions came from
+  <code>localhost</code> &mdash; a developer machine is still reaching the production property despite the
+  internal-traffic work, so the exclusion is not catching everything. And seven sessions arrived from ChatGPT,
+  which is worth knowing as a trend even at this size: AI assistants have started citing the site.</p>
+</section>
+
+<section id="s4">
+  <div class="sec-label"><span class="n">04</span><h2>Google Ads: a full month</h2></div>
+  <p>Both campaigns ran the whole month on the rebuilt settings. This is the first fair look at them.</p>
+  <div class="grid g4">
+    <div class="stat"><span class="num">$474.54</span><span class="lbl">September spend</span><span class="sub">$307.49 in August</span></div>
+    <div class="stat"><span class="num">160</span><span class="lbl">Clicks</span><span class="sub">791 in August &mdash; mostly junk</span></div>
+    <div class="stat"><span class="num">$2.97</span><span class="lbl">Average cost per click</span><span class="sub">$0.39 in August</span></div>
+    <div class="stat crit"><span class="num">0</span><span class="lbl">Conversions</span><span class="sub">Third month running</span></div>
+  </div>
+  <div class="tablecard" style="margin-top:16px">
+  <table>
+    <thead><tr><th>Campaign</th><th class="r">Impressions</th><th class="r">Clicks</th><th class="r">Spend</th><th class="r">Cost per click</th><th class="r">Engagement</th></tr></thead>
+    <tbody>
+      <tr><td><b>Core Terms</b></td><td class="r">1,234</td><td class="r">85</td><td class="r">$243.83</td><td class="r">$2.87</td><td class="r"><span class="up">60%</span></td></tr>
+      <tr><td><b>Competitors</b></td><td class="r">1,015</td><td class="r">75</td><td class="r">$230.71</td><td class="r">$3.08</td><td class="r">51%</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <h3 style="margin-top:22px">Week by week, the two campaigns are moving apart</h3>
+  <div class="tablecard">
+  <table>
+    <thead><tr><th>Week of</th><th>Campaign</th><th class="r">Clicks</th><th class="r">Spend</th><th class="r">Cost per click</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">31 Aug</td><td>Competitors</td><td class="r">32</td><td class="r">$38.24</td><td class="r">$1.19</td></tr>
+      <tr><td class="mono">7 Sep</td><td>Competitors</td><td class="r">19</td><td class="r">$82.45</td><td class="r"><span class="down">$4.34</span></td></tr>
+      <tr><td class="mono">14 Sep</td><td>Competitors</td><td class="r">13</td><td class="r">$56.67</td><td class="r"><span class="down">$4.36</span></td></tr>
+      <tr><td class="mono">21 Sep</td><td>Competitors</td><td class="r">10</td><td class="r">$45.39</td><td class="r"><span class="down">$4.54</span></td></tr>
+      <tr><td class="mono">28 Sep</td><td>Competitors</td><td class="r">1</td><td class="r">$7.96</td><td class="r"><span class="down">$7.96</span></td></tr>
+      <tr><td class="mono" style="border-top:2px solid var(--line)">31 Aug</td><td style="border-top:2px solid var(--line)">Core Terms</td><td class="r" style="border-top:2px solid var(--line)">19</td><td class="r" style="border-top:2px solid var(--line)">$65.26</td><td class="r" style="border-top:2px solid var(--line)">$3.43</td></tr>
+      <tr><td class="mono">7 Sep</td><td>Core Terms</td><td class="r">22</td><td class="r">$54.93</td><td class="r"><span class="up">$2.50</span></td></tr>
+      <tr><td class="mono">14 Sep</td><td>Core Terms</td><td class="r">23</td><td class="r">$66.20</td><td class="r">$2.88</td></tr>
+      <tr><td class="mono">21 Sep</td><td>Core Terms</td><td class="r">19</td><td class="r">$50.99</td><td class="r">$2.68</td></tr>
+      <tr><td class="mono">28 Sep</td><td>Core Terms</td><td class="r">2</td><td class="r">$6.45</td><td class="r">$3.23</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="small muted" style="margin-top:10px">The week of 28 September is two days old, which is why both rows
+  are small.</p>
+  <p style="margin-top:14px"><b>Competitors is failing in slow motion.</b> Its cost per click has risen every
+  single week &mdash; $1.19, $4.34, $4.36, $4.54, $7.96 &mdash; while its clicks fell from 32 to 10 over the same
+  four full weeks. It is paying more each week for less. <b>Core Terms is steady</b> at $2.50&ndash;$3.43 with
+  clicks holding around twenty a week, and it engages better. On a month of evidence, Core Terms is the better
+  campaign and Competitors is the one to question.</p>
+</section>
+
+<section id="s5">
+  <div class="sec-label"><span class="n">05</span><h2>Where the money went</h2></div>
+  <p>The search terms explain the rising cost, and they are uncomfortable reading: the account&rsquo;s most
+  expensive purchases in September were other manufacturers&rsquo; brand names.</p>
+  <div class="tablecard">
+  <table>
+    <thead><tr><th>What was searched</th><th>Campaign</th><th class="r">Clicks</th><th class="r">Spend</th><th class="r">Per click</th></tr></thead>
+    <tbody>
+      <tr><td><code>smp nutra</code></td><td class="muted">Competitors</td><td class="r">11</td><td class="r">$53.38</td><td class="r">$4.85</td></tr>
+      <tr><td><code>supplement manufacturers</code></td><td class="muted">Competitors</td><td class="r">2</td><td class="r">$21.36</td><td class="r"><span class="down">$10.68</span></td></tr>
+      <tr><td><code>supplements manufacturers</code></td><td class="muted">Competitors</td><td class="r">6</td><td class="r">$11.95</td><td class="r">$1.99</td></tr>
+      <tr><td><code>makers nutrition</code></td><td class="muted">Competitors</td><td class="r">2</td><td class="r">$10.54</td><td class="r">$5.27</td></tr>
+      <tr><td><code>vitaquest</code> <span class="muted">+ 2 variants</span></td><td class="muted">Competitors</td><td class="r">3</td><td class="r">$21.22</td><td class="r">$7.07</td></tr>
+      <tr><td><code>nutraceutical company</code></td><td class="muted">Core Terms</td><td class="r">3</td><td class="r">$7.70</td><td class="r">$2.57</td></tr>
+      <tr><td><code>covert nutra</code></td><td class="muted">Core Terms</td><td class="r">3</td><td class="r">$6.50</td><td class="r">$2.17</td></tr>
+      <tr><td><code>smpnutra</code> &middot; <code>smp supplement manufacturing partner</code></td><td class="muted">Competitors</td><td class="r">2</td><td class="r">$12.26</td><td class="r">$6.13</td></tr>
+      <tr><td><code>reliance vitamins</code></td><td class="muted">Competitors</td><td class="r">1</td><td class="r">$5.39</td><td class="r">$5.39</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="margin-top:14px">Roughly <b>$109 of September&rsquo;s $474</b> &mdash; about a quarter of the budget
+  &mdash; went on searches for named competitors: SMP Nutra, Vitaquest, Makers Nutrition, Reliance Vitamins,
+  Covert Nutra. None produced an enquiry. That is the whole premise of the Competitors campaign, and a month of
+  data says the premise does not hold at these prices: somebody typing a competitor&rsquo;s company name is
+  usually looking for that company, not for an alternative.</p>
+  <div class="card tint" style="margin-top:14px">
+    <h3>Two specific things to fix this week</h3>
+    <p class="small"><code>supplement manufacturers</code> cost <b>$10.68 a click</b> for two clicks. It is a
+    broad head term with no buying intent attached and it is the most expensive thing in the account. And
+    <code>covert nutra</code> &mdash; a competitor&rsquo;s name &mdash; is being bought inside <b>Core Terms</b>,
+    which is supposed to be the non-competitor campaign. That one is a leak, not a strategy.</p>
+  </div>
+</section>
+
+<section id="s6">
+  <div class="sec-label"><span class="n">06</span><h2>The five enquiries, and where they came from</h2></div>
+  <p>September produced four enquiries and one catalogue download. For the first time these are properly
+  recorded, so the sources are known rather than guessed.</p>
+  <div class="tablecard">
+  <table>
+    <thead><tr><th>Date</th><th>What</th><th>Source</th><th>&nbsp;</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">5 Sep</td><td>Catalogue download</td><td><code>comanufacturers.com</code> referral</td><td><span class="chip">directory listing</span></td></tr>
+      <tr><td class="mono">9 Sep</td><td>Enquiry</td><td>Direct visit</td><td></td></tr>
+      <tr><td class="mono">17 Sep</td><td>Enquiry</td><td>Google organic</td><td><span class="chip ok">free</span></td></tr>
+      <tr><td class="mono">22 Sep</td><td>Enquiry</td><td><code>exhibitor.supplysideglobal.com</code></td><td><span class="chip accent">trade show</span></td></tr>
+      <tr><td class="mono">25 Sep</td><td>Enquiry</td><td>Direct visit</td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="card rail crit" style="margin-top:16px">
+    <h3>Not one enquiry came from advertising</h3>
+    <p class="small">160 paid clicks and 108 paid search sessions produced zero enquiries in September, and the
+    638 LinkedIn sessions produced zero as well. Every enquiry the site received came from somewhere that costs
+    nothing per click: a direct visit, an organic search, a trade-show exhibitor page, and a directory listing.</p>
+    <p class="small">This also settles a question left open in version three. Google Ads reports zero conversions
+    not because the import is broken &mdash; it is correctly configured, enabled and primary &mdash; but because
+    there has genuinely been nothing to import. The reporting is honest. The advertising is what is not
+    working.</p>
+  </div>
+  <p style="margin-top:16px">Two of the four enquiries are worth noticing for what they suggest about where
+  effort pays. The SupplySide exhibitor page and the <code>comanufacturers.com</code> directory are both
+  low-cost listings, and between them they produced as many leads in September as $474 of search advertising and
+  an unknown LinkedIn budget did: two, against zero.</p>
+</section>
+
+<section id="s7">
+  <div class="sec-label"><span class="n">07</span><h2>Organic search</h2></div>
+  <div class="grid g4">
+    <div class="stat"><span class="num">29,430</span><span class="lbl">Impressions, September</span><span class="sub">36,968 in August</span></div>
+    <div class="stat"><span class="num">123</span><span class="lbl">Clicks</span><span class="sub">140 in August</span></div>
+    <div class="stat good"><span class="num">1.0</span><span class="lbl">Brand-term position</span><span class="sub">Recovered from 8.5</span></div>
+    <div class="stat"><span class="num">1</span><span class="lbl">Enquiry from organic</span><span class="sub">Free, and the only paid-media match</span></div>
+  </div>
+  <p class="small muted" style="margin-top:12px">Search Console reports three days behind, so September here is
+  25 usable days against August&rsquo;s 31. Per-day the two months are close to level.</p>
+
+  <h3 style="margin-top:22px">The brand-term problem has fixed itself</h3>
+  <p>Version three flagged that the company had fallen from first to eighth on its own name and said to check
+  again in a week. It recovered without intervention, which supports the explanation given at the time &mdash;
+  Google reshuffling between the two hostnames rather than anything wrong with the site.</p>
+  <div class="tablecard">
+  <table>
+    <thead><tr><th>Fortnight</th><th class="r">Clicks</th><th class="r">Position</th><th>&nbsp;</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">4&ndash;17 Aug</td><td class="r">16</td><td class="r">1.00</td><td></td></tr>
+      <tr><td class="mono">18&ndash;31 Aug</td><td class="r">18</td><td class="r"><span class="down">8.52</span></td><td><span class="chip crit">the drop</span></td></tr>
+      <tr><td class="mono">1&ndash;14 Sep</td><td class="r">9</td><td class="r"><span class="up">1.00</span></td><td><span class="chip ok">recovered</span></td></tr>
+      <tr><td class="mono">15&ndash;25 Sep</td><td class="r">10</td><td class="r"><span class="up">1.00</span></td><td><span class="chip ok">holding</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="small muted" style="margin-top:10px">Query: <code>mineralife nutraceuticals</code>. Closed as an
+  issue.</p>
+
+  <h3 style="margin-top:22px">The hostname split has not fixed itself</h3>
+  <div class="tablecard">
+  <table>
+    <thead><tr><th>Homepage address in Search Console</th><th class="r">Impressions</th><th class="r">Clicks</th><th class="r">Position</th><th class="r">Click rate</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">https://mycustommanufacturer.com/ <span class="muted">(no www)</span></td><td class="r">25,509</td><td class="r">35</td><td class="r">5.3</td><td class="r"><span class="down">0.14%</span></td></tr>
+      <tr><td class="mono">https://www.mycustommanufacturer.com/</td><td class="r">3,274</td><td class="r">70</td><td class="r">25.1</td><td class="r">2.14%</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="margin-top:14px">This is the same picture as August and it is now the biggest unexploited opportunity
+  in the report. The address without <code>www</code> holds <b>87% of all homepage impressions at an average
+  position of 5.3</b> &mdash; genuinely good placement &mdash; and converts 0.14% of them into clicks. The
+  <code>www</code> address ranks far worse but earns clicks fifteen times more efficiently.</p>
+  <p>The redirect and the canonical tag were verified correct in version three, so this is not a configuration
+  fault; Google is simply still serving the old address for most queries, three weeks on. What it means
+  practically is that <b>25,000 monthly impressions are being wasted on a listing nobody clicks</b>, and the
+  listing text is the only variable left. That is a title and description rewrite, not an engineering job.</p>
+
+  <h3 style="margin-top:22px">Still almost entirely a brand-name audience</h3>
+  <p class="small">Nine of September&rsquo;s ten most-clicked queries are the company&rsquo;s own name or a
+  misspelling of it. The exception is <code>supplements manufacturers usa</code> &mdash; 2 clicks from 84
+  impressions at position 1.7. The commercial terms rank; they are not clicked. Organic search is currently
+  serving people who already know the company, which is worth remembering when reading its single enquiry as a
+  success.</p>
+</section>
+
+<section id="s8">
+  <div class="sec-label"><span class="n">08</span><h2>Index check</h2></div>
+  <p>Sixty-two of sixty-three submitted pages are indexed &mdash; the best result recorded in this series. The
+  Boulder page came in on 28 September, which closes the last of the four coverage problems opened in August.</p>
+  <div class="grid g4">
+    <div class="stat good"><span class="num">62/63</span><span class="lbl">Indexed</span><span class="sub">98% of the sitemap</span></div>
+    <div class="stat good"><span class="num">4</span><span class="lbl">Coverage problems fixed</span><span class="sub">All those opened in August</span></div>
+    <div class="stat warn"><span class="num">1</span><span class="lbl">Still not indexed</span></div>
+    <div class="stat"><span class="num">16</span><span class="lbl">New watch-only notices</span><span class="sub">Stale crawl dates</span></div>
+  </div>
+  <div class="tablecard" style="margin-top:16px">
+  <table>
+    <thead><tr><th>Scan</th><th class="r">Indexed</th><th>Movement</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">30 Aug</td><td class="r">59 / 63</td><td class="muted">baseline</td></tr>
+      <tr><td class="mono">2 Sep</td><td class="r">60 / 63</td><td><span class="chip ok">Las Vegas page</span></td></tr>
+      <tr><td class="mono">4 Sep</td><td class="r">61 / 63</td><td><span class="chip ok">glutathione post</span></td></tr>
+      <tr><td class="mono">28 Sep</td><td class="r">62 / 63</td><td><span class="chip ok">Boulder page</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="stack" style="margin-top:20px">
+    <div class="statusrow"><span class="st open">5 scans</span><span class="what">
+      <b>/blog/mineralife-is-hiring</b>
+      <span class="why">The one page still not indexed. &ldquo;Discovered &mdash; currently not indexed&rdquo;
+      since 2 September, when the clean address replaced the earlier one containing an emoji. A recruitment post
+      is low-value for search, so this is a tidiness matter rather than a commercial one.</span></span></div>
+    <div class="statusrow"><span class="st part">new</span><span class="what">
+      <b>Sixteen pages have not been recrawled recently <span class="new">new signal</span></b>
+      <span class="why">A new check reports pages Google has not revisited in a while &mdash; the oldest at 72
+      days. All sixteen are blog posts, plus the <code>/serving</code> index. They are indexed and ranking; this
+      is flagged at watch level only, and Google recrawls on its own schedule. Worth knowing because a page that
+      has not been recrawled in ten weeks will not reflect any edits made to it since.</span></span></div>
+  </div>
+  <p class="small muted" style="margin-top:16px">Filed against maintenance task <code>b008884d</code>.</p>
+</section>
+
+<section id="s9">
+  <div class="sec-label"><span class="n">09</span><h2>Site health</h2></div>
+  <div class="grid g4">
+    <div class="stat good"><span class="num">100%</span><span class="lbl">Uptime, 30 days</span><span class="sub">206 ms average</span></div>
+    <div class="stat good"><span class="num">89</span><span class="lbl">Speed, mobile</span><span class="sub">Unchanged since 4 Sept</span></div>
+    <div class="stat"><span class="num">67</span><span class="lbl">Speed, desktop</span><span class="sub">Bounces between 67 and 100</span></div>
+    <div class="stat good"><span class="num">100</span><span class="lbl">Accessibility &amp; SEO</span><span class="sub">Mobile, both</span></div>
+  </div>
+  <p style="margin-top:16px">The desktop speed score has now been measured at 99, 67, 82, 100 and 67 across the
+  month. That spread is the measurement, not the site &mdash; a point worth holding onto, because version three
+  briefly reported a speed regression on the strength of one low reading and had to retract it. Mobile, which is
+  the more stable of the two and the one that matters for ranking, has sat at 89&ndash;90 throughout.</p>
+  <p class="small muted">Google still has no field data from real visitors, so all of this is laboratory
+  measurement. With traffic now being recorded properly, field data should start to appear over the coming
+  months, and it will be worth more than any of these numbers.</p>
+</section>
+
+<section id="s10">
+  <div class="sec-label"><span class="n">10</span><h2>What to do, in order</h2></div>
+  <div class="stack">
+    <div class="statusrow"><span class="st open">decide</span><span class="what">
+      <b>Tell us what LinkedIn costs</b>
+      <span class="why">It is half the site&rsquo;s traffic, engages at 2&ndash;17%, and has produced nothing. It
+      cannot be judged without its budget, and it may well be the largest line in the marketing spend. Everything
+      else on this list is smaller than this question.</span></span></div>
+    <div class="statusrow"><span class="st open">this week</span><span class="what">
+      <b>Stop buying <code>supplement manufacturers</code> and the competitor names in Core Terms</b>
+      <span class="why">$10.68 a click for a head term with no intent, and <code>covert nutra</code> leaking into
+      the campaign that is supposed to exclude competitors. Both are negative keywords, ten minutes of
+      work.</span></span></div>
+    <div class="statusrow"><span class="st open">this week</span><span class="what">
+      <b>Rewrite the homepage title and description</b>
+      <span class="why">25,509 impressions at position 5.3 converting at 0.14%. The ranking is already earned and
+      the listing text is the only thing losing the click. Highest-return change in this
+      report.</span></span></div>
+    <div class="statusrow"><span class="st part">decide</span><span class="what">
+      <b>Question the Competitors campaign</b>
+      <span class="why">A month of evidence: cost per click up every week from $1.19 to $7.96, clicks down from 32
+      to 10, $230 spent, a quarter of the whole budget on rival brand names, no enquiries. Either cut it and move
+      its budget to Core Terms, or accept it as brand-defence spending and stop judging it on
+      leads.</span></span></div>
+    <div class="statusrow"><span class="st part">this month</span><span class="what">
+      <b>Do more of what actually produced enquiries</b>
+      <span class="why">The SupplySide exhibitor page and the <code>comanufacturers.com</code> directory each
+      produced a lead in September &mdash; matching the combined output of all paid media. Industry directories
+      and exhibitor listings are cheap and nobody has been working them
+      deliberately.</span></span></div>
+    <div class="statusrow"><span class="st part">tidy</span><span class="what">
+      <b>Finish excluding the developer machine</b>
+      <span class="why">Six sessions from <code>localhost</code> still reached the production property in
+      September. The internal-traffic exclusion shipped on 4 September is not catching
+      everything.</span></span></div>
+    <div class="statusrow"><span class="st done">hold</span><span class="what">
+      <b>Judging Core Terms on conversions</b>
+      <span class="why">85 clicks in its first full month, engaging at 60% &mdash; the best paid traffic on the
+      site. Zero enquiries from 85 clicks is disappointing but not yet conclusive for a considered B2B purchase.
+      Give it October, with the negatives added.</span></span></div>
+  </div>
+</section>
+
+<section id="s11">
+  <div class="sec-label"><span class="n">11</span><h2>Carried over from v3</h2></div>
+  <div class="stack">
+    <div class="statusrow"><span class="st done">closed</span><span class="what">
+      <b>Analytics measuring only 8% of visitors <span class="fixed">fixed 4 Sep</span></b>
+      <span class="why">Consent defaults made regional and the configuration tag retriggered. Twenty-four days of
+      clean data since.</span></span></div>
+    <div class="statusrow"><span class="st done">closed</span><span class="what">
+      <b>Ownership of the Performance Max campaign <span class="fixed">answered</span></b>
+      <span class="why">Zemvelo&rsquo;s. Confirmed independently of the campaign name by its own conversion
+      actions, which are all Zemvelo checkout events. Mineralife&rsquo;s spend figures stand.</span></span></div>
+    <div class="statusrow"><span class="st done">closed</span><span class="what">
+      <b>Importing enquiries into Google Ads <span class="fixed">verified correct</span></b>
+      <span class="why">Enabled, primary, Submit lead form. The zero is real: no paid click has produced an
+      enquiry for it to import. See section 06.</span></span></div>
+    <div class="statusrow"><span class="st done">closed</span><span class="what">
+      <b>Brand term lost from first place <span class="fixed">recovered</span></b>
+      <span class="why">Back at position 1.00 for both September fortnights, without
+      intervention.</span></span></div>
+    <div class="statusrow"><span class="st open">still open</span><span class="what">
+      <b>European visitors who accept cookies after the page loads are still not measured</b>
+      <span class="why">Unchanged in twenty-four days. The container is still on version 15 and the configuration
+      tag still carries the &ldquo;require additional consent&rdquo; check that stops the Google tag loading at
+      all, instead of letting Consent Mode gate it. Retested on the live site today: pressing Accept grants
+      consent and no measurement follows. It costs the report its European visibility and nothing
+      else &mdash; the United States, which is the whole paid audience, is measured correctly.</span></span></div>
+    <div class="statusrow"><span class="st open">still open</span><span class="what">
+      <b>The homepage hostname split</b>
+      <span class="why">Three weeks on, unchanged. Now reframed as an opportunity rather than a fault &mdash; see
+      section 07.</span></span></div>
+  </div>
+</section>
+
+<section id="s12">
+  <div class="sec-label"><span class="n">12</span><h2>How this was verified</h2></div>
+  <p class="small">Every figure was read from the live systems on 28 September 2026. All credentials were tested
+  before the run and all are valid.</p>
+  <ul class="tight small">
+    <li><b>Index scan</b> &mdash; URL Inspection API against <code>sc-domain:mycustommanufacturer.com</code>, 63
+      sitemap URLs, run 28 September.</li>
+    <li><b>Advertising</b> &mdash; Google Ads API, account 624-370-2566: campaign, search-term and
+      conversion-action reports, queried by day and by week for the whole of September, plus the full conversion
+      action list and the campaign inventory.</li>
+    <li><b>Analytics</b> &mdash; Analytics Data API against property 395780153: daily series, channels with
+      engagement rates, event counts, enquiry sources by campaign, and countries.</li>
+    <li><b>Search Console</b> &mdash; Search Analytics API: queries and pages for September, and the brand term
+      compared fortnight by fortnight back to 4 August.</li>
+    <li><b>Tag Manager</b> &mdash; container GTM-5B83HMG read through the API; the live version&rsquo;s tag,
+      trigger and consent tables inspected directly.</li>
+    <li><b>Site</b> &mdash; the live homepage driven in a real headless browser to retest the consent path, with
+      every network request and cookie captured.</li>
+    <li><b>Speed and uptime</b> &mdash; PageSpeed Insights, live mobile and desktop audits; UptimeRobot monitor
+      803863309.</li>
+  </ul>
+  <p class="small" style="margin-top:14px">One number this report cannot supply is the LinkedIn spend, which is
+  not in any system we read. Section 03 explains why it matters.</p>
+</section>
+
+<footer>
+  Tall Karol &middot; SEM Report v4 &middot; Mineralife Nutraceuticals, LLC &middot; supersedes SEM report v3 of
+  3&ndash;4 September 2026 &middot; verified against Google Ads account 624-370-2566, Google Analytics property
+  395780153, Search Console <code>sc-domain:mycustommanufacturer.com</code>, Tag Manager container GTM-5B83HMG
+  and the production site &middot; full re-run 28 September 2026, the first month measured end to end
+</footer>
+
+</div>
+</body>
+</html>
