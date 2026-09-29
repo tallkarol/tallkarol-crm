@@ -3,7 +3,6 @@ import { markColor } from "@/lib/client-colors"
 
 import Link from "next/link"
 import {
-  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -12,7 +11,7 @@ import {
 } from "react"
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
 import { EventModal } from "@/components/calendar/EventModal"
-import { meetingsInWindow, moveMeeting } from "@/lib/calendar-actions"
+import { moveMeeting } from "@/lib/calendar-actions"
 import type { MeetingSource } from "@/lib/calendar"
 import type { UpcomingMeeting } from "@/lib/calendar-types"
 import { cn } from "@/lib/cn"
@@ -137,6 +136,9 @@ function saveHiddenSources(hidden: Set<string>) {
 
 type ToastState = { message: string; undo?: () => void }
 
+type WindowData = { meetings: UpcomingMeeting[]; sources: MeetingSource[] }
+type WindowResult = { ok: true; data: WindowData } | { ok: false; error: string }
+
 type DragState = {
   id: string
   dx: number
@@ -166,9 +168,11 @@ export function WeekBoard({
   const [openMeeting, setOpenMeeting] = useState<UpcomingMeeting | null>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
 
-  const cacheRef = useRef<Map<string, { meetings: UpcomingMeeting[]; sources: MeetingSource[] }>>(
-    new Map()
-  )
+  const cacheRef = useRef<Map<string, WindowData>>(new Map())
+  const inflightRef = useRef<Map<string, Promise<WindowResult>>>(new Map())
+  // Moves confirmed this session, laid over every window as it is cached, so a
+  // window fetched (or seeded) before the drag cannot put the event back.
+  const movedRef = useRef<Map<string, { startsAt: string; endsAt: string }>>(new Map())
   const dragRef = useRef<DragState | null>(null)
   const colRefs = useRef<(HTMLDivElement | null)[]>([])
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -177,15 +181,50 @@ export function WeekBoard({
   useEffect(() => {
     const today = startOfDay(new Date())
     setStart(today)
-    cacheRef.current.set(dayKey(today, false), {
-      meetings: initialMeetings,
-      sources: initialSources,
-    })
+    // The server sends today's window and the one on each side in one read.
+    const seed = { meetings: initialMeetings, sources: initialSources }
+    for (const shift of [-WINDOW_DAYS, 0, WINDOW_DAYS]) {
+      cacheRef.current.set(dayKey(addDays(today, shift), false), seed)
+    }
     setHidden(loadHiddenSources())
     // Only the mount-time snapshot seeds the cache; later prop updates (a
     // server refresh from elsewhere on the page) aren't expected mid-session.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  function withMoves(list: UpcomingMeeting[]) {
+    if (movedRef.current.size === 0) return list
+    return list.map((m) => {
+      const moved = movedRef.current.get(m.id)
+      return moved ? { ...m, ...moved } : m
+    })
+  }
+
+  /** One request per window however many callers ask; the answer is cached. */
+  function fetchWindow(targetStart: Date): Promise<WindowResult> {
+    const key = dayKey(targetStart, false)
+    const running = inflightRef.current.get(key)
+    if (running) return running
+    const query = new URLSearchParams({
+      from: addDays(targetStart, -1).toISOString(),
+      to: addDays(targetStart, WINDOW_DAYS + 1).toISOString(),
+    })
+    const request = fetch(`/api/calendar/window?${query}`, { cache: "no-store" })
+      .then((res) => res.json() as Promise<WindowResult>)
+      .catch((): WindowResult => ({ ok: false, error: "Could not load that week." }))
+      .then((result) => {
+        inflightRef.current.delete(key)
+        if (result.ok) {
+          cacheRef.current.set(key, {
+            meetings: withMoves(result.data.meetings),
+            sources: result.data.sources,
+          })
+        }
+        return result
+      })
+    inflightRef.current.set(key, request)
+    return request
+  }
 
   function showToast(message: string, undo?: () => void) {
     if (toastTimer.current) clearTimeout(toastTimer.current)
@@ -199,51 +238,53 @@ export function WeekBoard({
     }
   }, [])
 
-  const loadWindow = useCallback(async (targetStart: Date) => {
-    const key = dayKey(targetStart, false)
-    const cached = cacheRef.current.get(key)
+  async function showWindow(targetStart: Date) {
+    // Every call takes a number, cached or not: a slow answer for a window
+    // you have already paged away from must not replace the one on screen.
+    const seq = (requestSeq.current += 1)
+    const cached = cacheRef.current.get(dayKey(targetStart, false))
     if (cached) {
+      setLoading(false)
       setMeetings(cached.meetings)
       setSources(cached.sources)
       return
     }
-    const seq = (requestSeq.current += 1)
     setLoading(true)
-    const from = addDays(targetStart, -1)
-    const to = addDays(targetStart, WINDOW_DAYS + 1)
-    const result = await meetingsInWindow(from.toISOString(), to.toISOString())
-    if (seq !== requestSeq.current) return // a newer window request has since landed
+    const result = await fetchWindow(targetStart)
+    if (seq !== requestSeq.current) return
     setLoading(false)
     if (!result.ok) {
       showToast(result.error)
       return // keep whatever was already on screen
     }
-    cacheRef.current.set(key, result.data)
-    setMeetings(result.data.meetings)
+    const loaded = cacheRef.current.get(dayKey(targetStart, false))
+    setMeetings(loaded?.meetings ?? result.data.meetings)
     setSources(result.data.sources)
-  }, [])
-
-  function goPrev() {
-    setStart((current) => {
-      if (!current) return current
-      const next = addDays(current, -WINDOW_DAYS)
-      void loadWindow(next)
-      return next
-    })
   }
-  function goNext() {
-    setStart((current) => {
-      if (!current) return current
-      const next = addDays(current, WINDOW_DAYS)
-      void loadWindow(next)
-      return next
-    })
+
+  function page(shift: number) {
+    if (!start) return
+    const next = addDays(start, shift)
+    setStart(next)
+    void showWindow(next)
   }
   function goToday() {
     const today = startOfDay(new Date())
     setStart(today)
-    void loadWindow(today)
+    void showWindow(today)
   }
+
+  // Keep the window on each side of the one showing in the cache, so the
+  // next ‹ or › draws at once.
+  useEffect(() => {
+    if (!start) return
+    for (const shift of [-WINDOW_DAYS, WINDOW_DAYS]) {
+      const neighbour = addDays(start, shift)
+      if (!cacheRef.current.has(dayKey(neighbour, false))) void fetchWindow(neighbour)
+    }
+    // fetchWindow only reaches refs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [start])
 
   function toggleHidden(id: string) {
     setHidden((current) => {
@@ -305,29 +346,26 @@ export function WeekBoard({
 
   async function runMove(meeting: UpcomingMeeting, shift: number) {
     if (shift === 0) return
-    const prevMeetings = meetings
+    const place = (times: { startsAt: string; endsAt: string }) => (list: UpcomingMeeting[]) =>
+      list.map((m) => (m.id === meeting.id ? { ...m, ...times } : m))
     const nextStart = new Date(new Date(meeting.startsAt).getTime() + shift * DAY_MS)
     const nextEnd = new Date(new Date(meeting.endsAt).getTime() + shift * DAY_MS)
-    setMeetings((list) =>
-      list.map((m) =>
-        m.id === meeting.id
-          ? { ...m, startsAt: nextStart.toISOString(), endsAt: nextEnd.toISOString() }
-          : m
-      )
-    )
+    setMeetings(place({ startsAt: nextStart.toISOString(), endsAt: nextEnd.toISOString() }))
     const result = await moveMeeting(meeting.id, shift)
     if (!result.ok) {
-      setMeetings(prevMeetings)
+      // Put back only this event: the card may have paged to another window meanwhile.
+      setMeetings(place({ startsAt: meeting.startsAt, endsAt: meeting.endsAt }))
       showToast(result.error)
       return
     }
     const confirmedStart = result.data.startsAt
     const confirmedEnd = result.data.endsAt
-    setMeetings((list) =>
-      list.map((m) =>
-        m.id === meeting.id ? { ...m, startsAt: confirmedStart, endsAt: confirmedEnd } : m
-      )
-    )
+    const confirmed = { startsAt: confirmedStart, endsAt: confirmedEnd }
+    movedRef.current.set(meeting.id, confirmed)
+    for (const [key, data] of Array.from(cacheRef.current)) {
+      cacheRef.current.set(key, { ...data, meetings: place(confirmed)(data.meetings) })
+    }
+    setMeetings(place(confirmed))
     const when = movedWhenLabel(new Date(confirmedStart), meeting.allDay)
     showToast(`Moved “${meeting.title || meeting.source}” to ${when}`, () => {
       void runMove(
@@ -439,13 +477,13 @@ export function WeekBoard({
           {start ? rangeLabel(start) : " "}
         </span>
         <Card surface="well" radius="lg" elevation="none" className="ml-0.5 inline-flex items-center gap-0.5 p-0.5" role="group" aria-label="Move the window">
-          <button type="button" aria-label="Previous five days" onClick={goPrev} className={segBtn} data-track="home.week.prev">
+          <button type="button" aria-label="Previous five days" onClick={() => page(-WINDOW_DAYS)} className={segBtn} data-track="home.week.prev">
             <ChevronLeft className="size-3.5" aria-hidden />
           </button>
           <button type="button" aria-label="Jump to today" onClick={goToday} className={segBtn} data-track="home.week.today">
             Today
           </button>
-          <button type="button" aria-label="Next five days" onClick={goNext} className={segBtn} data-track="home.week.next">
+          <button type="button" aria-label="Next five days" onClick={() => page(WINDOW_DAYS)} className={segBtn} data-track="home.week.next">
             <ChevronRight className="size-3.5" aria-hidden />
           </button>
         </Card>

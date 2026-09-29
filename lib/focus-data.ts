@@ -4,6 +4,7 @@ import { deliverables, focusItems, inboxMail, projects, supportTickets, taskItem
 import { ATTENTION_RULES } from "@/lib/attention"
 import { dueLabelFor, isFocusKind, paperFor, type FocusCard, type FocusKind } from "@/lib/focus"
 import { ROUTES } from "@/lib/nav"
+import { oncePerRequest } from "@/lib/request-cache"
 import { isOpenState, ticketPriority, ticketState } from "@/lib/support"
 
 /**
@@ -29,11 +30,16 @@ export type FocusSet = {
   focusedTaskIds: Set<string>
 }
 
-export async function focusFor(
+export function focusFor(
   /** Null is the house set: rows for records with no client, which live only on the global tray. */
   client: { id: string; slug: string; name: string } | null,
   now = new Date()
 ): Promise<FocusSet> {
+  // Once per request: a room's layout (the strip) and its Board both read it.
+  return oncePerRequest(`focus:${client?.id ?? "house"}`, () => readFocus(client, now))
+}
+
+async function readFocus(client: { id: string; slug: string; name: string } | null, now: Date): Promise<FocusSet> {
   const today = isoDay(now)
   const rows = await db.query.focusItems.findMany({
     where: client ? eq(focusItems.clientId, client.id) : isNull(focusItems.clientId),

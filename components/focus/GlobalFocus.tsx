@@ -114,14 +114,18 @@ export function GlobalFocus({
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
   useEffect(() => setCards(initial), [initial])
 
-  function run(work: () => Promise<unknown>) {
-    start(async () => {
-      try {
-        await work()
-      } finally {
-        router.refresh()
-      }
-    })
+  /**
+   * Save without a transition, so a link clicked meanwhile is not held until
+   * the save lands. The action revalidates, so its own response carries the
+   * fresh page; a second render is only needed to undo the local copy when it fails.
+   */
+  function run(work: () => Promise<{ ok: boolean }>) {
+    work().then(
+      (result) => {
+        if (!result.ok) router.refresh()
+      },
+      () => router.refresh()
+    )
   }
 
   function changeMode(next: FocusMode) {

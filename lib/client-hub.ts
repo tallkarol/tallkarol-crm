@@ -32,6 +32,7 @@ import type {
 } from "@/db/schema"
 import { ATTENTION_RULES } from "@/lib/attention"
 import { clientColor } from "@/lib/client-colors"
+import { oncePerRequest } from "@/lib/request-cache"
 import { isOpenState, ticketPriority, ticketState } from "@/lib/support"
 import type { TicketState } from "@/lib/support"
 import { currentMonth, monthBounds, shiftMonth } from "@/lib/timesheet"
@@ -97,7 +98,12 @@ export type RosterData = {
   totals: { clients: number; retainerHours: number; outstandingCents: number }
 }
 
-export async function loadClientRoster(now = new Date()): Promise<RosterData> {
+/** Once per request: the admin layout's clients panel and a room's panel both read it. */
+export function loadClientRoster(now = new Date()): Promise<RosterData> {
+  return oncePerRequest("roster", () => readClientRoster(now))
+}
+
+async function readClientRoster(now: Date): Promise<RosterData> {
   const month = currentMonth(now)
   const { start: monthStart } = monthBounds(month)
   const today = isoDay(now)

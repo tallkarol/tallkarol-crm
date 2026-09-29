@@ -93,14 +93,18 @@ export function BoardRoom({
     })
   }
 
-  function run(work: () => Promise<unknown>) {
-    start(async () => {
-      try {
-        await work()
-      } finally {
-        router.refresh()
-      }
-    })
+  /**
+   * Save without a transition, so a link clicked meanwhile is not held until
+   * the save lands. The action revalidates, so its own response carries the
+   * fresh page; a second render is only needed to undo the local copy when it fails.
+   */
+  function run(work: () => Promise<{ ok: boolean }>) {
+    work().then(
+      (result) => {
+        if (!result.ok) router.refresh()
+      },
+      () => router.refresh()
+    )
   }
 
   /** Reorder the local copy the way the server will. */
@@ -232,10 +236,10 @@ export function BoardRoom({
           onPromote={onPromote}
           onAdd={async (title) => {
             const result = await createTask({ title, clientId: client.id, source: "manual" })
-            if (result.ok) {
-              await addFocusAction({ clientId: client.id, clientSlug: client.slug, refKind: "task", refId: result.data.id })
-            }
-            router.refresh()
+            const added = result.ok
+              ? await addFocusAction({ clientId: client.id, clientSlug: client.slug, refKind: "task", refId: result.data.id })
+              : result
+            if (!added.ok) router.refresh()
           }}
         />
         <div className="border-t border-line pt-3">{middle}</div>

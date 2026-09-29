@@ -52,9 +52,11 @@ export async function getUpcomingMeetings(): Promise<{
   sources: MeetingSource[]
 }> {
   const day = 86_400_000
+  // Today's 5-day window plus the one on each side (with WeekBoard's one-day
+  // padding), so the card's first ‹ or › needs no request.
   return getMeetingsInWindow(
-    new Date(Date.now() - 2 * day),
-    new Date(Date.now() + 9 * day)
+    new Date(Date.now() - 7 * day),
+    new Date(Date.now() + 12 * day)
   )
 }
 

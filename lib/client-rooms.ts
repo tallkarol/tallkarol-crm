@@ -13,6 +13,7 @@ import { loadMonitorBoard } from "@/lib/monitors"
 import { ROUTES } from "@/lib/nav"
 import { ticketPriority } from "@/lib/support"
 import { loadSiteUptimeBoard } from "@/lib/uptimerobot"
+import { oncePerRequest } from "@/lib/request-cache"
 import { approvalLine } from "@/lib/waiting"
 import { approvalFacts } from "@/lib/waiting-data"
 import { CLIENT_STATUS_LABEL } from "@/lib/work"
@@ -45,7 +46,12 @@ export function shortOf(name: string) {
 const ACTIVE_STATUSES = new Set(["active_retainer", "project_started", "deposit_paid", "deliverable_invoice_submitted"])
 const QUIET_STATUSES = new Set(["completed_work", "lapsed_retainer", "project_finished", "lost"])
 
-export async function loadClientShell(slug: string): Promise<ClientShell | null> {
+/** Once per request: the room's layout and page (and metadata) each ask for it. */
+export function loadClientShell(slug: string): Promise<ClientShell | null> {
+  return oncePerRequest(`shell:${slug}`, () => readClientShell(slug))
+}
+
+async function readClientShell(slug: string): Promise<ClientShell | null> {
   const row = await db.query.clients.findFirst({
     where: eq(clients.slug, slug),
     columns: { id: true, slug: true, name: true, status: true },
@@ -276,7 +282,12 @@ function ageLabel(ms: number) {
  * (late ones first), parked agent writes, and proposals from meeting notes.
  * The same rule the Inbox room's "Needs you" lens uses.
  */
-export async function loadSignals(client: ClientShell, now = new Date()): Promise<SignalsData> {
+export function loadSignals(client: ClientShell, now = new Date()): Promise<SignalsData> {
+  // Once per request: the room's panel and the Board both show it.
+  return oncePerRequest(`signals:${client.id}`, () => readSignals(client, now))
+}
+
+async function readSignals(client: ClientShell, now: Date): Promise<SignalsData> {
   const [inbox, approvals, notes] = await Promise.all([
     loadInbox(now).catch(() => null),
     approvalFacts().catch(() => []),

@@ -46,12 +46,17 @@ export function InboxTriageBar({ item, clientId, clientSlug }: { item: TriageIte
   const [composing, setComposing] = useState(false)
   const [taskTitle, setTaskTitle] = useState(item.title)
 
-  function run(action: () => Promise<Result>) {
+  /**
+   * `refresh: false` for an action that revalidates — its response already
+   * carries the fresh page. Dismiss and the others write without revalidating,
+   * so they still ask for one.
+   */
+  function run(action: () => Promise<Result>, { refresh = true } = {}) {
     setError(null)
     start(async () => {
       const result = await action()
       if (!result.ok) setError(result.error ?? "That didn't work.")
-      else router.refresh()
+      else if (refresh) router.refresh()
     })
   }
 
@@ -166,7 +171,7 @@ export function InboxTriageBar({ item, clientId, clientSlug }: { item: TriageIte
           type="button"
           disabled={pending}
           className={BTN}
-          onClick={() => run(() => addFocusAction({ clientId, clientSlug, refKind: item.kind as "ticket" | "mail", refId: item.refId }))}
+          onClick={() => run(() => addFocusAction({ clientId, clientSlug, refKind: item.kind as "ticket" | "mail", refId: item.refId }), { refresh: false })}
         >
           <StickyNote className="size-3" aria-hidden />
           Focus

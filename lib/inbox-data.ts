@@ -4,6 +4,7 @@ import { clients, inboxMail, inboxState } from "@/db/schema"
 import { clientColor } from "@/lib/client-colors"
 import { readLead } from "@/lib/lead"
 import { ROUTES } from "@/lib/nav"
+import { oncePerRequest } from "@/lib/request-cache"
 import { ticketNumber, ticketPriority, ticketState } from "@/lib/support"
 import type { InboxData, InboxItem, InboxItemState, InboxKind, InboxLens } from "@/lib/inbox"
 import { INBOX_KINDS, toSeverity } from "@/lib/inbox"
@@ -26,7 +27,12 @@ function snippetOf(text: string, max = 160) {
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat
 }
 
-export async function loadInbox(now = new Date()): Promise<InboxData> {
+/** Once per request: the shell's badges, Unread, Signals and the page all read it. */
+export function loadInbox(now = new Date()): Promise<InboxData> {
+  return oncePerRequest("inbox", () => readInbox(now))
+}
+
+async function readInbox(now: Date): Promise<InboxData> {
   let ready = true
 
   const [inquiries, tickets, messages, mail, events, states, clientRows] = await Promise.all([

@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useTransition } from "react"
 import { ArrowLeft, Check, StickyNote } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { markColor } from "@/lib/client-colors"
@@ -19,7 +18,6 @@ import { ROUTES, clientRoomOf } from "@/lib/nav"
 export function FocusStrip({ cards, queued, client }: { cards: FocusCard[]; queued: number; client: { slug: string; color: string } }) {
   const pathname = usePathname()
   const router = useRouter()
-  const [, start] = useTransition()
   if (clientRoomOf(pathname) === "board") return null
 
   return (
@@ -50,10 +48,13 @@ export function FocusStrip({ cards, queued, client }: { cards: FocusCard[]; queu
                 aria-label="Done"
                 title="Done"
                 onClick={() =>
-                  start(async () => {
-                    await completeFocusAction(card.id)
-                    router.refresh()
-                  })
+                  // The action's response carries the fresh page; refresh only to recover.
+                  completeFocusAction(card.id).then(
+                    (result) => {
+                      if (!result.ok) router.refresh()
+                    },
+                    () => router.refresh()
+                  )
                 }
                 className="grid size-[22px] shrink-0 place-items-center rounded text-[--paper-ink-2] hover:bg-[--paper-line] hover:text-[--paper-ink]"
               >
