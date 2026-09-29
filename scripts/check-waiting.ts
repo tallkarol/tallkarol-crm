@@ -123,9 +123,9 @@ console.log("\nThe strip allow-list")
     check("the list is not empty", CONFIRM_FROM_STRIP.length > 0, true)
     check("no duplicates", new Set(CONFIRM_FROM_STRIP).size, CONFIRM_FROM_STRIP.length)
 
-    // The four that must never be confirmable from one line. Named rather than
+    // The punch tools must never be confirmable from one line. Named rather than
     // derived, so widening the allow-list has to argue with this list first.
-    for (const name of ["edit_punch", "split_punch", "drop_punch", "approve_punch"]) {
+    for (const name of ["create_punch", "edit_punch", "split_punch", "drop_punch", "approve_punch"]) {
       check(`${name} is never confirmed blind`, confirmsFromStrip(name), false)
     }
     check("propose_pack_line is never confirmed blind", confirmsFromStrip("propose_pack_line"), false)

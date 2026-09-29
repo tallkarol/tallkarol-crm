@@ -60,7 +60,7 @@ six.
 A punch can be changed in any state, not only while it waits in Review. The
 review screen keeps its own narrow edit; the chat's punch tools
 (`lib/chat/tools-time.ts`) call `lib/punches.ts`: `findPunches`,
-`revisePunch`, `splitPunch`, `dropAnyPunch`, plus the existing
+`createPunch`, `revisePunch`, `splitPunch`, `dropAnyPunch`, plus the existing
 `approvePunch`. Each write has a `plan*` twin that works the change out
 without writing it, and the chat's preview card is drawn from that plan.
 
@@ -83,6 +83,12 @@ without writing it, and the chat's preview card is drawn from that plan.
   dropping the approved side deletes its line. The chat card's idempotency key
   is the new piece's `client_request_id`, so a confirmed split never happens
   twice.
+- **Create** (`createPunch`, the chat's `create_punch`) adds a span that was
+  never clocked: client or project, local times on a day (default today), a
+  summary. With a clock-out it lands in Review, source `chat`; without one it
+  runs from the clock-in. It never writes a timesheet line — approving is a
+  separate call. The card's idempotency key is its `client_request_id`, and an
+  overlap with another punch on the same target is a warning, not a refusal.
 - **Drop** discards any punch. For an approved one the line is deleted, since
   that line is the money, and the punch stays as discarded, so "where did that
   hour go" still has an answer.

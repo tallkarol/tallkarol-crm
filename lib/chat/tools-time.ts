@@ -5,14 +5,17 @@ import { hoursLabel, ISO_DAY, num, range, str, type ToolPreview, type ToolSpec }
 import { approvalBlocker, occurredOnIn, parsePunchTime, wallClockIn } from "@/lib/punch"
 import {
   approvePunch,
+  createPunch,
   dropAnyPunch,
   findPunches,
+  planCreate,
   planDropAny,
   planRevision,
   planSplit,
   punchDetail,
   revisePunch,
   splitPunch,
+  type PunchCreate,
   type PunchDetail,
   type PunchRevision,
   type PunchSplit,
@@ -24,7 +27,8 @@ import type { TimePunch } from "@/db/schema"
  * Punches from the chat: every state, not just the running clock. A punch in
  * Review, an approved one whose line is already on the timesheet, a discarded
  * one — all of them can be listed, edited, split, dropped or approved here,
- * each write previewed and confirmed like every other chat write.
+ * and a missed span can be punched after the fact. Each write is previewed and
+ * confirmed like every other chat write.
  *
  * The rules live in lib/punches.ts (planRevision / planSplit / planDropAny),
  * and the preview is built from the same plan the write executes. A month an
@@ -127,7 +131,7 @@ function timeArg(args: Record<string, unknown>, key: string, day: string, tz: st
 const listPunches: ToolSpec = {
   name: "list_punches",
   description:
-    "Clock punches in any state: 'review' (stopped, waiting for approval — the default), 'running', 'approved' (already on the timesheet), 'discarded', or 'all'. Returns punch ids plus local clock times. Call this before edit_punch, split_punch, drop_punch or approve_punch.",
+    "Clock punches in any state: 'review' (stopped, waiting for approval — the default), 'running', 'approved' (already on the timesheet), 'discarded', or 'all'. Returns punch ids plus local clock times. Call this before edit_punch, split_punch, drop_punch or approve_punch. To add a span that was never punched, use create_punch.",
   mutating: false,
   parameters: {
     type: "object",
@@ -161,6 +165,78 @@ const listPunches: ToolSpec = {
     })
     if (!result.ok) throw new Error(result.error)
     return { timeZone: result.data.timeZone, punches: result.data.punches.map(describe) }
+  },
+}
+
+/* ---------- create ---------- */
+
+async function createFrom(args: Record<string, unknown>, userId: string, requestId: string): Promise<PunchCreate> {
+  const clientSlug = str(args, "clientSlug")
+  const projectSlug = str(args, "projectSlug")
+  if (!clientSlug && !projectSlug) throw new Error("`clientSlug` is required — call list_clients for slugs.")
+  const tz = await workspaceTimezone()
+  const dayArg = str(args, "day")
+  if (dayArg && !ISO_DAY.test(dayArg)) throw new Error("`day` must be YYYY-MM-DD.")
+  const day = dayArg ?? occurredOnIn(new Date(), tz)
+  const startedAt = timeArg(args, "clockIn", day, tz)
+  if (!startedAt) throw new Error("`clockIn` is required — the local time the work started, e.g. '2:57 PM'.")
+  const projectId = await projectIdFor(projectSlug)
+  const summary = args.summary
+  return {
+    userId,
+    clientId: await clientIdFor(clientSlug),
+    projectId: projectId ?? null,
+    startedAt,
+    endedAt: timeArg(args, "clockOut", day, tz) ?? null,
+    note: typeof summary === "string" ? summary : undefined,
+    requestId,
+  }
+}
+
+const createPunchTool: ToolSpec = {
+  name: "create_punch",
+  description:
+    "Add a punch that was never clocked — a span Karol worked but did not punch. Times are local wall-clock on `day` (default today). With a clockOut the punch lands in Review; without one it starts running from clockIn. It is NOT on the timesheet until approve_punch. Previewed and confirmed first.",
+  mutating: true,
+  parameters: {
+    type: "object",
+    properties: {
+      clientSlug: { type: "string", description: "From list_clients. Optional when projectSlug is given." },
+      projectSlug: { type: "string", description: "Project slug; its client wins." },
+      day: { type: "string", description: "YYYY-MM-DD the times are on. Defaults to today." },
+      clockIn: { type: "string", description: "'2:57 PM', '14:57', or an ISO instant." },
+      clockOut: { type: "string", description: "Same formats. Omit to start a running punch." },
+      summary: { type: "string", description: "What the time bought, in Karol's invoice voice." },
+    },
+    required: ["clockIn"],
+  },
+  async preview(args, ctx) {
+    const planned = await planCreate(await createFrom(args, ctx.userId, ctx.idempotencyKey))
+    if (!planned.ok) throw new Error(planned.error)
+    const plan = planned.data
+    const tz = await workspaceTimezone()
+    return {
+      title: "New punch",
+      fields: [
+        { label: "Client", value: plan.clientName },
+        { label: "Project", value: plan.projectName ?? "—" },
+        { label: "Day", value: occurredOnIn(plan.startedAt, tz) },
+        { label: "Clock", value: spanLabel(plan, tz) },
+        { label: "Hours", value: plan.endedAt ? hoursLabel(plan.hours) : "running" },
+        { label: "Summary", value: plan.note || "—" },
+        { label: "Status", value: STATUS_WORDS[plan.status] },
+      ],
+      note: plan.replayOf
+        ? "Already created by this card — confirming changes nothing."
+        : [...plan.warnings, plan.status === "stopped" ? "Waits in Review — approve it to bill it." : null]
+            .filter(Boolean)
+            .join(" "),
+    }
+  },
+  async run(args, ctx) {
+    const result = await createPunch(await createFrom(args, ctx.userId, ctx.idempotencyKey))
+    if (!result.ok) throw new Error(result.error)
+    return { punch: describe(result.data.punch), replayed: result.data.replayed, warnings: result.data.warnings }
   },
 }
 
@@ -454,6 +530,7 @@ const approvePunchTool: ToolSpec = {
 
 export const TIME_TOOLS: readonly ToolSpec[] = [
   listPunches,
+  createPunchTool,
   editPunch,
   splitPunchTool,
   dropPunchTool,

@@ -12,5 +12,6 @@ export function sourceLabel(source: string) {
   if (source === "agent") return "Agent"
   if (source === "recorder") return "Recorder"
   if (source === "clock") return "Clock"
+  if (source === "chat") return "Chat"
   return "Manual"
 }

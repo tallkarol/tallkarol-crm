@@ -79,7 +79,7 @@ export function hoursLabel(hours: number): string {
  * say everything they are about to do in their title".
  *
  * Out, and why: `create_calendar_event` puts something where other people can
- * see it; the four `*_punch` tools move billable time and their fields are the
+ * see it; the `*_punch` tools move billable time and their fields are the
  * whole point; the inbox triage four and `inbox_to_*` file things under a
  * client, which is the field you are checking; `propose_pack_line` writes a
  * sentence into a client's pack, and a sentence cannot be judged by its title.

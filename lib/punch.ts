@@ -20,8 +20,10 @@ export const MAX_BACKDATE_MS = 24 * 60 * 60 * 1000
 /**
  * How a punch was made. `agent` rows are written already-approved by
  * `logAgentTime` — the approval happened in the chat that proposed them.
+ * `chat` rows are spans Karol told the chat about after the fact
+ * (`create_punch`); they wait in Review like any other.
  */
-export type PunchSource = "api" | "watch" | "web" | "agent" | "recorder"
+export type PunchSource = "api" | "watch" | "web" | "agent" | "recorder" | "chat"
 
 /** Y/M/D/h/m for an instant, read in the given zone. */
 function zoned(at: Date, timeZone: string) {

@@ -3,7 +3,8 @@
  * plants yesterday and then deletes (with any timesheet line it made):
  * edit in review, split with a drop and a replay, approve, edit an approved
  * punch (the line follows), the billed-month guard, split an approved punch,
- * drop it (the line goes), reopen it. No running punch is ever planted — it
+ * drop it (the line goes), reopen it, and create one after the fact (with a
+ * replay and the overlap warning). No running punch is ever planted — it
  * would show on Karol's floating clock.
  *
  *   npm run check:punch:db
@@ -177,6 +178,27 @@ async function main() {
       future = (e as Error).message
     }
     check("a future time is refused", future.includes("future"), future)
+
+    /* ---------- create after the fact ---------- */
+    const createArgs = { clientSlug: client.slug, day: yesterday, clockIn: "2:57 PM", clockOut: "3:09 PM", summary: `${tag} created` }
+    const createPreview = await tool("create_punch").preview!(createArgs, ctx("c1"))
+    const createClock = createPreview.fields.find((f) => f.label === "Clock")?.value
+    check("create preview shows the span and hours", createClock === "2:57 PM – 3:09 PM" && createPreview.fields.some((f) => f.label === "Hours" && f.value === "0.20 h"), JSON.stringify(createPreview.fields))
+    const created = (await tool("create_punch").run(createArgs, ctx("c1"))) as { punch: { punchId: string; status: string; source: string }; replayed: boolean }
+    madeIds.push(created.punch.punchId)
+    const c = await db.query.timePunches.findFirst({ where: eq(timePunches.id, created.punch.punchId) })
+    check("create writes a punch in Review, source chat, no line", c?.status === "stopped" && c.source === "chat" && c.timeEntryId === null && c.note === `${tag} created` && c.startedAt.toISOString() === local("2:57 PM").toISOString())
+    const createdAgain = (await tool("create_punch").run(createArgs, ctx("c1"))) as { punch: { punchId: string }; replayed: boolean }
+    check("a confirmed create replays instead of punching twice", createdAgain.replayed && createdAgain.punch.punchId === created.punch.punchId)
+    const overlapPreview = await tool("create_punch").preview!({ ...createArgs, clockIn: "3:00 PM", clockOut: "3:30 PM" }, ctx("c2"))
+    check("an overlap on the same target is a warning", (overlapPreview.note ?? "").includes("overlaps"), overlapPreview.note)
+    let backwards = ""
+    try {
+      await tool("create_punch").preview!({ ...createArgs, clockIn: "3:09 PM", clockOut: "2:57 PM" }, ctx("c3"))
+    } catch (e) {
+      backwards = (e as Error).message
+    }
+    check("a clock-out before the clock-in is refused", backwards.includes("before the clock-in"), backwards)
   } finally {
     const rows = await db.query.timePunches.findMany({ where: inArray(timePunches.id, madeIds) })
     const entryIds = rows.map((r) => r.timeEntryId).filter((x): x is string => Boolean(x))

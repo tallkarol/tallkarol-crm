@@ -183,6 +183,7 @@ never writes SQL and cannot reach anything not on this list.
 | `hand_back` | a note from this desk into the thread that handed the work (`from_thread_id`); no turn | **yes** |
 | `log_time` | `logAgentTime` (`lib/punches.ts`) | **yes** |
 | `list_punches` | `findPunches` — any state: review, running, approved, discarded | no |
+| `create_punch` | `createPunch` — a span never clocked; lands in Review, or runs without a clock-out | **yes** |
 | `edit_punch` | `revisePunch` — an approved punch's timesheet line follows | **yes** |
 | `split_punch` | `splitPunch` — the second piece goes to Review, or is dropped | **yes** |
 | `drop_punch` | `dropAnyPunch` — an approved punch's line is deleted | **yes** |

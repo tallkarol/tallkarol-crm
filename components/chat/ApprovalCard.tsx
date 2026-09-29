@@ -30,6 +30,7 @@ const VERB: Record<string, string> = {
   route_to: "Hand it over",
   solve_task: "Open the solve thread",
   hand_back: "Hand it back",
+  create_punch: "Add the punch",
   edit_punch: "Change the punch",
   split_punch: "Split the punch",
   drop_punch: "Drop the punch",

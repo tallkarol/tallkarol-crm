@@ -14,6 +14,7 @@ import type { TimePunch } from "@/db/schema"
 import {
   approvalBlocker,
   elapsedLabel,
+  LONG_PUNCH_HOURS,
   occurredOnIn,
   parseInstant,
   parsePunchTime,
@@ -1581,6 +1582,180 @@ export async function splitPunch(
     throw error
   }
   return readBoth(secondId, false)
+}
+
+/* ---------- create ---------- */
+
+export type PunchCreate = {
+  userId: string
+  clientId?: string | null
+  projectId?: string | null
+  startedAt: Date
+  /** Omitted: the punch starts running from `startedAt`. */
+  endedAt?: Date | null
+  note?: string
+  /** The chat call's idempotency key — a confirmed create never happens twice. */
+  requestId: string
+}
+
+export type CreatePlan = {
+  clientId: string
+  clientName: string
+  projectId: string | null
+  projectName: string | null
+  status: "running" | "stopped"
+  startedAt: Date
+  endedAt: Date | null
+  hours: number
+  note: string
+  replayOf: string | null
+  warnings: string[]
+}
+
+/**
+ * A punch made after the fact — "I was on GDI 2:57 to 3:09". It lands in
+ * Review like a punch from the watch, never straight on the timesheet;
+ * approving it is a separate call.
+ */
+export async function planCreate(input: PunchCreate): Promise<PunchResult<CreatePlan>> {
+  const replay = await db.query.timePunches.findFirst({
+    where: and(eq(timePunches.userId, input.userId), eq(timePunches.clientRequestId, input.requestId)),
+    with: withParties,
+  })
+  if (replay) {
+    const row = replay as PunchRow
+    const tz = await workspaceTimezone()
+    const view = toView(row, tz)
+    return {
+      ok: true,
+      data: {
+        clientId: row.clientId,
+        clientName: view.clientName,
+        projectId: row.projectId,
+        projectName: view.projectName,
+        status: row.status === "running" ? "running" : "stopped",
+        startedAt: new Date(row.startedAt),
+        endedAt: row.endedAt ? new Date(row.endedAt) : null,
+        hours: view.hours,
+        note: row.note,
+        replayOf: row.id,
+        warnings: [],
+      },
+    }
+  }
+
+  const startedAt = input.startedAt
+  const endedAt = input.endedAt ?? null
+  const now = Date.now()
+  if (Number.isNaN(startedAt.getTime()) || (endedAt && Number.isNaN(endedAt.getTime()))) {
+    return { ok: false, status: 400, error: "That time is not valid." }
+  }
+  if (endedAt && endedAt.getTime() <= startedAt.getTime()) {
+    return { ok: false, status: 400, error: "The clock-out would be at or before the clock-in." }
+  }
+  if (startedAt.getTime() > now + 60_000 || (endedAt && endedAt.getTime() > now + 60_000)) {
+    return { ok: false, status: 400, error: "That time is in the future." }
+  }
+  if (endedAt && endedAt.getTime() - startedAt.getTime() > 24 * 3_600_000) {
+    return { ok: false, status: 400, error: "A punch can't be longer than 24 hours." }
+  }
+
+  const target = await resolveTarget({ clientId: input.clientId, projectId: input.projectId })
+  if ("error" in target) return { ok: false, status: 400, error: target.error }
+  const [client, project] = await Promise.all([
+    db.query.clients.findFirst({ where: eq(clients.id, target.clientId), columns: { name: true } }),
+    target.projectId
+      ? db.query.projects.findFirst({ where: eq(projects.id, target.projectId), columns: { name: true } })
+      : null,
+  ])
+
+  const warnings: string[] = []
+  const sameTarget = and(
+    eq(timePunches.userId, input.userId),
+    eq(timePunches.clientId, target.clientId),
+    target.projectId ? eq(timePunches.projectId, target.projectId) : isNull(timePunches.projectId)
+  )
+  if (!endedAt) {
+    const running = await db.query.timePunches.findFirst({
+      where: and(sameTarget, eq(timePunches.status, "running")),
+      columns: { id: true },
+    })
+    if (running) {
+      return { ok: false, status: 409, error: "That one is already running — edit its clock-in with edit_punch instead." }
+    }
+  }
+  // Overlap is allowed (two clients at once happens), but on the same target
+  // it is usually the same work punched twice — say so on the card.
+  const overlapping = await db.query.timePunches.findFirst({
+    where: and(
+      sameTarget,
+      ne(timePunches.status, "discarded"),
+      sql`${timePunches.startedAt} < ${(endedAt ?? new Date(now)).toISOString()}::timestamptz`,
+      sql`coalesce(${timePunches.endedAt}, now()) > ${startedAt.toISOString()}::timestamptz`
+    ),
+    columns: { id: true },
+  })
+  if (overlapping) warnings.push("It overlaps another punch on the same client and project.")
+  const hours = endedAt ? punchHours(startedAt, endedAt) : 0
+  if (hours > LONG_PUNCH_HOURS) warnings.push(`Over ${LONG_PUNCH_HOURS} hours — check the times.`)
+
+  return {
+    ok: true,
+    data: {
+      clientId: target.clientId,
+      clientName: client?.name ?? "Unknown client",
+      projectId: target.projectId,
+      projectName: project?.name ?? null,
+      status: endedAt ? "stopped" : "running",
+      startedAt,
+      endedAt,
+      hours,
+      note: (input.note ?? "").trim(),
+      replayOf: null,
+      warnings,
+    },
+  }
+}
+
+export async function createPunch(
+  input: PunchCreate
+): Promise<PunchResult<{ punch: PunchDetail; replayed: boolean; warnings: string[] }>> {
+  const planned = await planCreate(input)
+  if (!planned.ok) return planned
+  const plan = planned.data
+  const readBack = async (id: string, replayed: boolean) => {
+    const punch = await punchDetail(input.userId, id)
+    if (!punch) return { ok: false as const, status: 500, error: "Could not read that punch back." }
+    return { ok: true as const, data: { punch, replayed, warnings: plan.warnings } }
+  }
+  if (plan.replayOf) return readBack(plan.replayOf, true)
+
+  try {
+    const [created] = await db
+      .insert(timePunches)
+      .values({
+        userId: input.userId,
+        clientId: plan.clientId,
+        projectId: plan.projectId,
+        startedAt: plan.startedAt,
+        endedAt: plan.endedAt,
+        status: plan.status,
+        note: plan.note,
+        source: "chat",
+        clientRequestId: input.requestId,
+      })
+      .returning({ id: timePunches.id })
+    return readBack(created.id, false)
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      const winner = await db.query.timePunches.findFirst({
+        where: and(eq(timePunches.userId, input.userId), eq(timePunches.clientRequestId, input.requestId)),
+        columns: { id: true },
+      })
+      if (winner) return readBack(winner.id, true)
+    }
+    throw error
+  }
 }
 
 /* ---------- drop ---------- */
