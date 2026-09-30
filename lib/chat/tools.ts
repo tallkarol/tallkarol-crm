@@ -1,11 +1,13 @@
 import { asc, eq } from "drizzle-orm"
 import { db } from "@/db"
 import { clients, projects, sites } from "@/db/schema"
+import { BILLING_TOOLS } from "@/lib/chat/tools-billing"
 import { BOARD_TOOLS } from "@/lib/chat/tools-board"
 import { INBOX_TOOLS } from "@/lib/chat/tools-inbox"
 import { INSPIRATION_TOOLS } from "@/lib/chat/tools-inspiration"
 import { DESK_TOOLS } from "@/lib/chat/tools-desk"
 import { PACK_TOOLS } from "@/lib/chat/tools-packs"
+import { SEARCH_TOOLS } from "@/lib/chat/tools-search"
 import { TIME_TOOLS } from "@/lib/chat/tools-time"
 import {
   hoursLabel,
@@ -398,6 +400,8 @@ export const TOOLS: readonly ToolSpec[] = [
   ...PACK_TOOLS,
   ...DESK_TOOLS,
   ...TIME_TOOLS,
+  ...SEARCH_TOOLS,
+  ...BILLING_TOOLS,
   logTime,
   createTask,
   refreshInsights,
@@ -415,6 +419,8 @@ export function toolSource(name: string): string {
   if (PACK_TOOLS.some((t) => t.name === name)) return "lib/chat/tools-packs.ts"
   if (DESK_TOOLS.some((t) => t.name === name)) return "lib/chat/tools-desk.ts"
   if (TIME_TOOLS.some((t) => t.name === name)) return "lib/chat/tools-time.ts"
+  if (SEARCH_TOOLS.some((t) => t.name === name)) return "lib/chat/tools-search.ts"
+  if (BILLING_TOOLS.some((t) => t.name === name)) return "lib/chat/tools-billing.ts"
   return "lib/chat/tools.ts"
 }
 

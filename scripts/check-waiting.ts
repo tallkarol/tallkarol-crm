@@ -129,6 +129,8 @@ console.log("\nThe strip allow-list")
       check(`${name} is never confirmed blind`, confirmsFromStrip(name), false)
     }
     check("propose_pack_line is never confirmed blind", confirmsFromStrip("propose_pack_line"), false)
+    check("draft_invoice is never confirmed blind", confirmsFromStrip("draft_invoice"), false)
+    check("edit_task is never confirmed blind", confirmsFromStrip("edit_task"), false)
     check("create_calendar_event is never confirmed blind", confirmsFromStrip("create_calendar_event"), false)
     check("inbox_to_ticket is never confirmed blind", confirmsFromStrip("inbox_to_ticket"), false)
   }

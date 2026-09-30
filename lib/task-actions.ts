@@ -1,13 +1,14 @@
 "use server"
 
-import { and, eq, isNull, sql } from "drizzle-orm"
+import { and, eq, sql } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { db } from "@/db"
-import { chatThreads, taskItems, taskViews, tasks } from "@/db/schema"
+import { taskItems, taskViews, tasks } from "@/db/schema"
 import type { Cadence } from "@/db/schema"
 import { getSessionUser } from "@/lib/auth"
 import { CLIENT_PAGES, ROUTES } from "@/lib/nav"
 import { completeTask } from "@/lib/task-complete"
+import { applyTaskPatch, planTaskPatch, type TaskPatch } from "@/lib/task-edit"
 import { cleanLabels, resolveTaskTarget } from "@/lib/task-insert"
 
 type Ok<T = undefined> = T extends undefined
@@ -163,21 +164,6 @@ export async function reorderAttentionTasks(ids: string[]): Promise<Result> {
   return { ok: true }
 }
 
-export type TaskPatch = {
-  title?: string
-  notes?: string
-  labels?: string[]
-  dueOn?: string | null
-  snoozedUntil?: string | null
-  cadence?: Cadence
-  priority?: number
-  clientId?: string | null
-  projectId?: string | null
-  productId?: string | null
-  deliverableId?: string | null
-  retainerId?: string | null
-}
-
 export async function updateTask(id: string, patch: TaskPatch): Promise<Result> {
   const user = await getSessionUser()
   if (!user) return { ok: false, error: "Sign in first." }
@@ -185,78 +171,10 @@ export async function updateTask(id: string, patch: TaskPatch): Promise<Result> 
   const existing = await db.query.tasks.findFirst({ where: eq(tasks.id, id) })
   if (!existing) return { ok: false, error: "Task not found." }
 
-  const values: Record<string, unknown> = { updatedAt: new Date() }
-
-  if (patch.title !== undefined) {
-    const title = patch.title.trim().slice(0, 300)
-    if (!title) return { ok: false, error: "A task needs a title." }
-    values.title = title
-  }
-  if (patch.notes !== undefined) values.notes = patch.notes.slice(0, 4000)
-  if (patch.labels !== undefined) values.labels = cleanLabels(patch.labels)
-
-  if (patch.dueOn !== undefined) {
-    if (patch.dueOn && !isDay(patch.dueOn)) {
-      return { ok: false, error: "That due date is not valid." }
-    }
-    values.dueOn = patch.dueOn || null
-  }
-  if (patch.snoozedUntil !== undefined) {
-    if (patch.snoozedUntil && !isDay(patch.snoozedUntil)) {
-      return { ok: false, error: "That snooze date is not valid." }
-    }
-    values.snoozedUntil = patch.snoozedUntil || null
-  }
-  if (patch.cadence !== undefined) {
-    if (!CADENCES.includes(patch.cadence)) {
-      return { ok: false, error: "Unknown repeat." }
-    }
-    values.cadence = patch.cadence
-  }
-  if (patch.priority !== undefined) {
-    if (![1, 2, 3].includes(patch.priority)) {
-      return { ok: false, error: "Priority must be high, normal or low." }
-    }
-    values.priority = patch.priority
-  }
-
-  const retargeting =
-    patch.clientId !== undefined ||
-    patch.projectId !== undefined ||
-    patch.productId !== undefined ||
-    patch.deliverableId !== undefined
-  if (retargeting) {
-    const target = await resolveTaskTarget({
-      clientId:
-        patch.clientId !== undefined ? patch.clientId : existing.clientId,
-      projectId:
-        patch.projectId !== undefined ? patch.projectId : existing.projectId,
-      productId:
-        patch.productId !== undefined ? patch.productId : existing.productId,
-      deliverableId:
-        patch.deliverableId !== undefined
-          ? patch.deliverableId
-          : existing.deliverableId,
-    })
-    if ("error" in target) return { ok: false, error: target.error }
-    values.clientId = target.clientId
-    values.projectId = target.projectId
-    values.productId = target.productId
-    values.deliverableId = target.deliverableId
-    // A move writes the new house's retainer, including null — otherwise a
-    // hand-set retainer on the old client follows the task across.
-    values.retainerId = target.retainerId
-  }
-  if (patch.retainerId !== undefined) values.retainerId = patch.retainerId || null
-
-  await db.update(tasks).set(values).where(eq(tasks.id, id))
-
-  if (retargeting) {
-    await db
-      .update(chatThreads)
-      .set({ clientId: (values.clientId as string | null) ?? null })
-      .where(and(eq(chatThreads.taskId, id), isNull(chatThreads.archivedAt)))
-  }
+  // The rules live in lib/task-edit.ts, shared with the chat's edit_task.
+  const planned = await planTaskPatch(existing, patch)
+  if (!planned.ok) return planned
+  await applyTaskPatch(id, planned)
 
   touch(id)
   return { ok: true }

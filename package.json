@@ -35,6 +35,8 @@
     "db:dry-run": "tsx scripts/migrate-dry-run.ts",
     "check:punch": "tsx scripts/check-punch.ts",
     "check:punch:db": "tsx --env-file-if-exists=.env.local scripts/check-punch-edit-db.ts",
+    "check:chat:billing:db": "tsx --env-file-if-exists=.env.local scripts/check-chat-search-billing-db.ts",
+    "check:task:edit:db": "tsx --env-file-if-exists=.env.local scripts/check-task-edit-db.ts",
     "icons": "python3 scripts/make-icons.py",
     "check:tasks": "tsx scripts/check-tasks.ts",
     "check:attention": "tsx scripts/check-attention.ts",

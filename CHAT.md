@@ -177,6 +177,7 @@ never writes SQL and cannot reach anything not on this list.
 | `dismiss_leftoff` | `dismissNote` | **yes** |
 | `complete_task` | `completeTask` | **yes** |
 | `reschedule_task` | direct `tasks` update | **yes** |
+| `edit_task` | `planTaskPatch` / `applyTaskPatch` (`lib/task-edit.ts`, the board's `updateTask` core) + `completeTask` to reopen — title, notes (replace/append), client, project, priority, stage, labels | **yes** |
 | `propose_pack_line` | `pack-lines.ts`, written by the **worker** on the Mac | **yes** |
 | `route_to` | `send()` — a new thread addressed to another desk, the brief as its first message | **yes** |
 | `solve_task` | `insertTaskRow` + `startTaskThread` — files the task (or takes `taskId`) and opens its Solve thread, pointed back here | **yes** |
@@ -189,7 +190,23 @@ never writes SQL and cannot reach anything not on this list.
 | `drop_punch` | `dropAnyPunch` — an approved punch's line is deleted | **yes** |
 | `approve_punch` | `approvePunch` | **yes** |
 | `create_task` | `resolveTaskTarget` + `insertTaskRow` | **yes** |
+| `search_crm` | `searchCrm` (`lib/crm-search.ts`) — every term, across meetings, documents, contracts, tickets, mail, tasks, chats, sessions, billing and the rest; private threads never | no |
+| `read_record` | `readRecord` — one hit in full, with its children; long text paged by `offset` | no |
+| `list_billing` | `billingOverview` (`lib/invoice-drafts.ts`) — unbilled months, fee deliverables, unpaid invoices | no |
+| `draft_invoice` | `planMonthDraft` / `planDeliverableDraft` + `writeDraft` — a **draft** on the client's own number sequence; never sent | **yes** |
 | `refresh_insights` | `refreshInsights` (`lib/insights/refresh.ts`, no session — the action wraps the same lib) | **yes** |
+
+`search_crm` is the one to reach for before saying something is not in the
+CRM: every term must appear (a quoted phrase stays together), hits come back
+newest first with counts per kind, and `read_record` opens one — a meeting
+with its items and transcript, a proposal/report/worksheet's document text
+from `content/docs`, a ticket with its thread. Left out on purpose: the
+vault, auth tables and **private** threads. `draft_invoice` bills either a
+client-month of unbilled lines at the retainer rate (NNN-M / NNN-Z when the
+client has that sequence, else SLUG-YYYY-MM; the month's lines are linked) or
+a deliverable's fee (PREFIX-NNN). One draft per client-month and per
+deliverable, so a second confirm returns the first. Sending, marking sent and
+marking paid stay on the invoice page. `npm run check:chat:billing:db`.
 
 `peek_agent_mailbox` is the live JMAP read of **agent@** — id, headers, and
 snippet, nothing written, nothing sent. `read_mail` opens one of those by
