@@ -1,6 +1,6 @@
 import { asc, eq } from "drizzle-orm"
 import { db } from "@/db"
-import { calendarSources, clients, projects, tasks } from "@/db/schema"
+import { calendarSources, clients, projects, sessionNotes, tasks } from "@/db/schema"
 import type { Task } from "@/db/schema"
 import { getMeetingsInWindow } from "@/lib/calendar"
 import { PERSONAL_CALENDAR_ID, writeCalendarEvent } from "@/lib/calendar-write"
@@ -11,6 +11,20 @@ import { completeTask } from "@/lib/task-complete"
 import { applyTaskPatch, planTaskPatch, type TaskPatch } from "@/lib/task-edit"
 import { loadWaiting } from "@/lib/waiting-data"
 import { ISO_DAY, range, str, type ToolPreview, type ToolSpec } from "@/lib/chat/tool-helpers"
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * The task a write names, or a refusal the model can act on. A card for a
+ * task that does not exist could only fail on Confirm, so it is never drawn.
+ */
+async function findTask(args: Record<string, unknown>): Promise<Task> {
+  const id = str(args, "taskId")
+  if (!id) throw new Error("`taskId` is required — call list_tasks for ids.")
+  const task = UUID.test(id) ? await db.query.tasks.findFirst({ where: eq(tasks.id, id) }) : undefined
+  if (!task) throw new Error(`No task with id "${id}". Call list_tasks and use a taskId from it.`)
+  return task
+}
 
 function emails(args: Record<string, unknown>, key: string): string[] {
   const value = args[key]
@@ -127,7 +141,7 @@ export const listTasksTool: ToolSpec = {
     return {
       total: rows.length,
       tasks: rows.slice(0, 60).map((t) => ({
-        id: t.id,
+        taskId: t.id,
         title: t.title,
         client: t.clientSlug,
         project: t.projectSlug,
@@ -289,16 +303,34 @@ export const dismissLeftOffTool: ToolSpec = {
   },
   async preview(args) {
     const ref = str(args, "sessionRef")
+    if (!ref) throw new Error("`sessionRef` is required — call list_leftoff for refs.")
     const board = await loadLeftOff()
-    const note = ref ? board.notes.find((n) => n.sessionRef === ref) : null
+    const note = board.notes.find((n) => n.sessionRef === ref)
+    if (note) {
+      return {
+        title: "Dismiss leftover",
+        fields: [
+          { label: "Ref", value: ref },
+          { label: "Title", value: note.title || "—" },
+          { label: "State", value: note.state },
+        ],
+      }
+    }
+    // Off the board is not the same as missing: dismissNote writes any row
+    // with that ref, so only a ref with no row at all is refused.
+    const row = await db.query.sessionNotes.findFirst({
+      where: eq(sessionNotes.sessionRef, ref),
+      columns: { title: true, state: true, dismissedAt: true },
+    })
+    if (!row) throw new Error(`No leftover row with ref "${ref}". Call list_leftoff and use a ref from it.`)
     return {
       title: "Dismiss leftover",
       fields: [
-        { label: "Ref", value: ref ?? "—" },
-        { label: "Title", value: note?.title ?? "—" },
-        { label: "State", value: note?.state ?? "—" },
+        { label: "Ref", value: ref },
+        { label: "Title", value: row.title || "—" },
+        { label: "State", value: row.state },
       ],
-      note: note ? undefined : "No matching row on the board right now.",
+      note: row.dismissedAt ? "Already dismissed — confirming changes nothing." : "Not on the board right now.",
     }
   },
   async run(args) {
@@ -320,15 +352,13 @@ export const completeTaskTool: ToolSpec = {
     required: ["taskId"],
   },
   async preview(args) {
-    const id = str(args, "taskId")
-    const task = id ? await db.query.tasks.findFirst({ where: eq(tasks.id, id) }) : null
+    const task = await findTask(args)
     return {
       title: "Complete task",
       fields: [
-        { label: "Task", value: task?.title ?? id ?? "—" },
-        { label: "Due", value: task?.dueOn ?? "—" },
+        { label: "Task", value: task.title },
+        { label: "Due", value: task.dueOn ?? "—" },
       ],
-      note: task ? undefined : "No task with that id.",
     }
   },
   async run(args, ctx) {
@@ -354,24 +384,16 @@ export const rescheduleTaskTool: ToolSpec = {
     required: ["taskId"],
   },
   async preview(args) {
-    const id = str(args, "taskId")
+    const task = await findTask(args)
     const dueOn = str(args, "dueOn")
-    const task = id ? await db.query.tasks.findFirst({ where: eq(tasks.id, id) }) : null
-    if (task && dueOn && !ISO_DAY.test(dueOn)) {
-      return {
-        title: "Reschedule task",
-        fields: [{ label: "Task", value: task.title }],
-        note: "That due date is not valid. Use YYYY-MM-DD.",
-      }
-    }
+    if (dueOn && !ISO_DAY.test(dueOn)) throw new Error("`dueOn` must be YYYY-MM-DD.")
     return {
       title: "Reschedule task",
       fields: [
-        { label: "Task", value: task?.title ?? id ?? "—" },
-        { label: "Due now", value: task?.dueOn ?? "—" },
+        { label: "Task", value: task.title },
+        { label: "Due now", value: task.dueOn ?? "—" },
         { label: "Due after", value: dueOn ?? "cleared" },
       ],
-      note: task ? undefined : "No task with that id.",
     }
   },
   async run(args) {
@@ -439,10 +461,7 @@ type TaskEdit = {
  * what moves and a confirm on an already-edited task is a no-op.
  */
 async function taskEditFrom(args: Record<string, unknown>): Promise<TaskEdit> {
-  const id = str(args, "taskId")
-  if (!id) throw new Error("`taskId` is required — call list_tasks for ids.")
-  const task = await db.query.tasks.findFirst({ where: eq(tasks.id, id) })
-  if (!task) throw new Error("No task with that id. Call list_tasks.")
+  const task = await findTask(args)
   const patch: TaskPatch = {}
   const warnings: string[] = []
 

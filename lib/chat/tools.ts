@@ -21,7 +21,7 @@ import { refreshInsights as refreshInsightsForSite } from "@/lib/insights/refres
 import { logAgentTime } from "@/lib/punches"
 import { ledgerEntries } from "@/lib/sheets"
 import { searchSessions } from "@/lib/leftoff-history"
-import { insertTaskRow, resolveTaskTarget } from "@/lib/task-insert"
+import { insertTaskRow, openTaskWithTitle, resolveTaskTarget } from "@/lib/task-insert"
 
 /**
  * What the chat can actually do.
@@ -246,7 +246,8 @@ const logTime: ToolSpec = {
 
 const createTask: ToolSpec = {
   name: "create_task",
-  description: "File a task on the board. Previewed and confirmed before it is written.",
+  description:
+    "File a NEW task on the board. To change one that exists — title, notes, client, stage, priority — use edit_task (reschedule_task for the date). The card warns when an open task with the same title is already on that client. Previewed and confirmed before it is written.",
   mutating: true,
   parameters: {
     type: "object",
@@ -270,6 +271,9 @@ const createTask: ToolSpec = {
     // card must not say "Due: next friday" and then write NULL.
     const dueOn = str(args, "dueOn")
     if (dueOn && !ISO_DAY.test(dueOn)) throw new Error("`dueOn` must be YYYY-MM-DD.")
+    // Filing the same task twice is how the board got its duplicates; say so
+    // on the card, with the id the chat needs to edit the one that exists.
+    const existing = await openTaskWithTitle(client?.id ?? null, str(args, "title") ?? "")
     return {
       title: "Task preview",
       fields: [
@@ -278,6 +282,9 @@ const createTask: ToolSpec = {
         { label: "Due", value: dueOn ?? "—" },
         { label: "Notes", value: str(args, "notes") ?? "—" },
       ],
+      note: existing
+        ? `An open task with this title is already on ${client?.name ?? "the house board"} (taskId ${existing.id}${existing.dueOn ? `, due ${existing.dueOn}` : ""}). To change that one, use edit_task instead of filing a second.`
+        : undefined,
     }
   },
   async run(args, ctx) {

@@ -1,3 +1,4 @@
+import { and, eq, isNull } from "drizzle-orm"
 import { db } from "@/db"
 import { tasks } from "@/db/schema"
 import type { Cadence } from "@/db/schema"
@@ -131,6 +132,30 @@ export function cleanLabels(raw: unknown): string[] {
     .filter((v): v is string => typeof v === "string" && v.trim().length > 0)
     .map((v) => v.trim().slice(0, 60))
     .slice(0, 10)
+}
+
+/** "Book flights Kraków → Cleveland" and "book flights krakow cleveland" are one title. */
+export function titleKey(title: string) {
+  return title
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+}
+
+/**
+ * The open task a new one would duplicate: same client (or both house tasks)
+ * and the same title once case, accents and punctuation are set aside.
+ */
+export async function openTaskWithTitle(clientId: string | null, title: string) {
+  const key = titleKey(title)
+  if (!key) return null
+  const rows = await db.query.tasks.findMany({
+    where: and(eq(tasks.status, "open"), clientId ? eq(tasks.clientId, clientId) : isNull(tasks.clientId)),
+    columns: { id: true, title: true, dueOn: true, boardStage: true },
+  })
+  return rows.find((row) => titleKey(row.title) === key) ?? null
 }
 
 export async function insertTaskRow(writer: TaskWriter, input: TaskRowInput) {

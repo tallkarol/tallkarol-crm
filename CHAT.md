@@ -174,9 +174,9 @@ never writes SQL and cannot reach anything not on this list.
 | `assign_inbox_item` | `assignInboxClient` | **yes** |
 | `inbox_to_ticket` | `mailToTicketById` | **yes** |
 | `inbox_to_task` | `makeInboxTask` | **yes** |
-| `dismiss_leftoff` | `dismissNote` | **yes** |
-| `complete_task` | `completeTask` | **yes** |
-| `reschedule_task` | direct `tasks` update | **yes** |
+| `dismiss_leftoff` | `dismissNote` — refuses a ref with no `session_notes` row | **yes** |
+| `complete_task` | `completeTask` — refuses an unknown `taskId` | **yes** |
+| `reschedule_task` | direct `tasks` update — refuses an unknown `taskId` or a date that is not a day | **yes** |
 | `edit_task` | `planTaskPatch` / `applyTaskPatch` (`lib/task-edit.ts`, the board's `updateTask` core) + `completeTask` to reopen — title, notes (replace/append), client, project, priority, stage, labels | **yes** |
 | `propose_pack_line` | `pack-lines.ts`, written by the **worker** on the Mac | **yes** |
 | `route_to` | `send()` — a new thread addressed to another desk, the brief as its first message | **yes** |
@@ -189,7 +189,7 @@ never writes SQL and cannot reach anything not on this list.
 | `split_punch` | `splitPunch` — the second piece goes to Review, or is dropped | **yes** |
 | `drop_punch` | `dropAnyPunch` — an approved punch's line is deleted | **yes** |
 | `approve_punch` | `approvePunch` | **yes** |
-| `create_task` | `resolveTaskTarget` + `insertTaskRow` | **yes** |
+| `create_task` | `resolveTaskTarget` + `insertTaskRow`; the card warns (with the `taskId`) when `openTaskWithTitle` finds that title open on the same client | **yes** |
 | `search_crm` | `searchCrm` (`lib/crm-search.ts`) — every term, across meetings, documents, contracts, tickets, mail, tasks, chats, sessions, billing and the rest; private threads never | no |
 | `read_record` | `readRecord` — one hit in full, with its children; long text paged by `offset` | no |
 | `list_billing` | `billingOverview` (`lib/invoice-drafts.ts`) — unbilled months, fee deliverables, unpaid invoices | no |
@@ -207,6 +207,12 @@ client has that sequence, else SLUG-YYYY-MM; the month's lines are linked) or
 a deliverable's fee (PREFIX-NNN). One draft per client-month and per
 deliverable, so a second confirm returns the first. Sending, marking sent and
 marking paid stay on the invoice page. `npm run check:chat:billing:db`.
+
+A card that could only fail on Confirm is never drawn: a write whose target
+does not exist (an unknown `taskId`, leftover ref or client slug, a date that
+is not a day) refuses at preview, so the failed row goes back to the model and
+it corrects itself. `list_tasks` hands out `taskId`, the name every task tool
+takes. `npm run check:task:edit:db`.
 
 `peek_agent_mailbox` is the live JMAP read of **agent@** — id, headers, and
 snippet, nothing written, nothing sent. `read_mail` opens one of those by

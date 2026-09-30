@@ -5,7 +5,10 @@
  * (retainer and the bound thread follow, the old project clears), a project
  * that names its own client, stage changes, reopening a done task through a
  * stage, and the refusals. The shared core is the same one the board's
- * updateTask runs.
+ * updateTask runs. Then how the task tools fit together: list_tasks hands
+ * out `taskId`, create_task warns when the title is already open on that
+ * client, and complete/reschedule/dismiss/assign refuse a card that could
+ * only fail.
  *
  *   npm run check:task:edit:db
  */
@@ -137,6 +140,39 @@ async function main() {
     await tool.run({ taskId: id, labels: "none", notes: "" }, ctx("c1"))
     t = await read()
     check("labels none and empty notes clear them", t?.labels.length === 0 && t.notes === "")
+
+    /* ---------- the task tools together ---------- */
+    const other = (name: string) => {
+      const spec = toolByName(name)
+      if (!spec) throw new Error(`${name} missing`)
+      return spec
+    }
+    const refusal = async (name: string, args: Record<string, unknown>) => {
+      try {
+        await other(name).preview!(args, ctx(`x-${name}`))
+        return ""
+      } catch (e) {
+        return (e as Error).message
+      }
+    }
+    const listed = (await other("list_tasks").run({ q: tag, clientSlug: "mineralife" }, ctx("l1"))) as { tasks: Record<string, unknown>[] }
+    const row = listed.tasks.find((x) => x.taskId === id)
+    check("list_tasks hands out taskId, not id", Boolean(row) && !("id" in (row ?? {})), JSON.stringify(row))
+
+    const dupe = await other("create_task").preview!({ title: `${tag.toUpperCase()} Renamed!`, clientSlug: "mineralife" }, ctx("d1"))
+    check("create_task warns about the open task with that title", (dupe.note ?? "").includes(id) && (dupe.note ?? "").includes("edit_task"), dupe.note)
+    const elsewhere = await other("create_task").preview!({ title: `${tag} renamed`, clientSlug: "gdi" }, ctx("d2"))
+    check("the same title on another client is not a duplicate", elsewhere.note === undefined, elsewhere.note)
+
+    const bogus = "00000000-0000-4000-8000-000000000000"
+    check("complete_task refuses an unknown task", (await refusal("complete_task", { taskId: bogus })).includes("No task with id"))
+    check("complete_task refuses a title passed as an id", (await refusal("complete_task", { taskId: "Zemvelo UX audit" })).includes("No task with id"))
+    check("reschedule_task refuses an unknown task", (await refusal("reschedule_task", { taskId: bogus, dueOn: "2026-10-12" })).includes("No task with id"))
+    check("reschedule_task refuses a date that is not a day", (await refusal("reschedule_task", { taskId: id, dueOn: "next friday" })).includes("YYYY-MM-DD"))
+    check("dismiss_leftoff refuses a ref with no row", (await refusal("dismiss_leftoff", { sessionRef: `${tag}-nope` })).includes("No leftover row"))
+    check("assign_inbox_item refuses an unknown client", (await refusal("assign_inbox_item", { key: "mail:x", clientSlug: `${tag}-nope` })).includes("No client with slug"))
+    const ok = await other("complete_task").preview!({ taskId: id }, ctx("k1"))
+    check("complete_task still draws a card for a real task", ok.fields[0]?.value === `${tag} renamed`, JSON.stringify(ok.fields))
   } finally {
     await db.delete(chatThreads).where(eq(chatThreads.id, thread.id))
     await db.delete(tasks).where(eq(tasks.id, id))

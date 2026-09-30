@@ -300,17 +300,17 @@ export const assignInboxItemTool: ToolSpec = {
     required: ["key", "clientSlug"],
   },
   async preview(args) {
+    const key = str(args, "key")
     const slug = str(args, "clientSlug")
-    const client = slug
-      ? await db.query.clients.findFirst({ where: eq(clients.slug, slug) })
-      : null
+    if (!key || !slug) throw new Error("`key` and `clientSlug` are required.")
+    const client = await db.query.clients.findFirst({ where: eq(clients.slug, slug) })
+    if (!client) throw new Error(`No client with slug "${slug}". Call list_clients and use a slug from it.`)
     return {
       title: "Assign inbox item",
       fields: [
-        { label: "Item", value: str(args, "key") ?? "—" },
-        { label: "Client", value: client?.name ?? slug ?? "—" },
+        { label: "Item", value: key },
+        { label: "Client", value: client.name },
       ],
-      note: client ? undefined : `No client matches "${slug ?? ""}".`,
     }
   },
   async run(args) {
